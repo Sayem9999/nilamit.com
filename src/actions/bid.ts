@@ -35,7 +35,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
 
   try {
     // SERIALIZABLE transaction with row-level locking
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
       // Lock the auction row — prevents concurrent bid race conditions
       const [auction] = await tx.$queryRaw<Array<{
         id: string;
