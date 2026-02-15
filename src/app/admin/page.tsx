@@ -5,6 +5,13 @@ import { formatBDT, formatRelativeTime } from '@/lib/format';
 import { Users, Gavel, TrendingUp, Shield, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
+type AdminUsersResult = Awaited<ReturnType<typeof getAdminUsers>>;
+type AdminUser = AdminUsersResult['users'][number];
+type AdminAuctionsResult = Awaited<ReturnType<typeof getAdminAuctions>>;
+type AdminAuction = AdminAuctionsResult['auctions'][number];
+type AdminStatsResult = Awaited<ReturnType<typeof getAdminStats>>;
+type RecentUser = AdminStatsResult['recentUsers'][number];
+
 export default async function AdminPage() {
   const session = await auth();
   const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
@@ -64,7 +71,7 @@ export default async function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {users.users.map((u) => (
+                  {users.users.map((u: AdminUser) => (
                     <tr key={u.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900 text-xs">{u.name || 'No name'}</p>
@@ -108,7 +115,7 @@ export default async function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {auctions.auctions.map((a) => (
+                  {auctions.auctions.map((a: AdminAuction) => (
                     <tr key={a.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <Link href={`/auctions/${a.id}`} className="font-medium text-gray-900 text-xs hover:text-primary-600">
@@ -138,7 +145,7 @@ export default async function AdminPage() {
       <div className="mt-10">
         <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">Recent Signups</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {stats.recentUsers.map((u) => (
+          {stats.recentUsers.map((u: RecentUser) => (
             <div key={u.id} className="bg-white border border-gray-100 rounded-xl p-3">
               <p className="text-xs font-medium text-gray-900 truncate">{u.name || u.email}</p>
               <p className="text-xs text-gray-400">{formatRelativeTime(u.createdAt)}</p>
