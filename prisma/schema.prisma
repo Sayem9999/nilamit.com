@@ -1,0 +1,161 @@
+// Prisma Schema for nilamit.com — C2C Auction Marketplace (Bangladesh)
+// Database: PostgreSQL via Supabase
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── User ─────────────────────────────────────────────
+model User {
+  id              String   @id @default(cuid())
+  name            String?
+  email           String   @unique
+  emailVerified   DateTime?
+  image           String?
+  phone           String?  @unique
+  isPhoneVerified Boolean  @default(false)
+  reputationScore Int      @default(0)
+  googleId        String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  accounts          Account[]
+  sessions          Session[]
+  auctionsAsSeller  Auction[]  @relation("Seller")
+  auctionsAsWinner  Auction[]  @relation("Winner")
+  bids              Bid[]
+  phoneVerifications PhoneVerification[]
+  bidDeposits       BidDeposit[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+// ─── Auth.js Required Models ──────────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Auction ──────────────────────────────────────────
+model Auction {
+  id              String        @id @default(cuid())
+  title           String
+  description     String        @db.Text
+  images          String[]      // Array of image URLs
+  category        String
+  startingPrice   Float
+  currentPrice    Float
+  minBidIncrement Float         @default(10)
+  startTime       DateTime
+  endTime         DateTime
+  status          AuctionStatus @default(draft)
+  
+  sellerId        String
+  seller          User          @relation("Seller", fields: [sellerId], references: [id])
+  winnerId        String?
+  winner          User?         @relation("Winner", fields: [winnerId], references: [id])
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  bids            Bid[]
+  bidDeposits     BidDeposit[]
+
+  @@index([status, endTime])
+  @@index([category])
+  @@index([sellerId])
+}
+
+enum AuctionStatus {
+  draft
+  active
+  completed
+  cancelled
+}
+
+// ─── Bid ──────────────────────────────────────────────
+model Bid {
+  id        String   @id @default(cuid())
+  amount    Float
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  bidderId  String
+  bidder    User     @relation(fields: [bidderId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([auctionId, createdAt(sort: Desc)])
+  @@index([bidderId])
+}
+
+// ─── Phone Verification (OTP) ─────────────────────────
+model PhoneVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone     String
+  otp       String   // Hashed OTP
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId, phone])
+}
+
+// ─── Bid Deposit (Trust Mechanism) ────────────────────
+model BidDeposit {
+  id        String        @id @default(cuid())
+  amount    Float
+  status    DepositStatus @default(held)
+  bidderId  String
+  bidder    User          @relation(fields: [bidderId], references: [id])
+  auctionId String
+  auction   Auction       @relation(fields: [auctionId], references: [id])
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([bidderId, auctionId])
+}
+
+enum DepositStatus {
+  held
+  released
+  forfeited
+}
