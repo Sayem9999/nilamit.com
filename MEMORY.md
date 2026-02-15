@@ -23,7 +23,7 @@
 | ---------------- | ------------------------------------------------------------------------------------------------ |
 | Pinokio Location | `C:\pinokio` — local app launcher                                                                |
 | Pinokio App      | `C:\pinokio\api\nilamit.com` — 5 scripts (pinokio.js, install.js, start.js, update.js, reset.js) |
-| Tailscale        | Used for public access via Funnel (`tailscale funnel --bg 3000`)                                 |
+| Tailscale        | Public URL: `https://desktop-ajdgsgd.tail4e4049.ts.net/` via Funnel                              |
 | Project Dir      | `c:\nilamit.com`                                                                                 |
 | GitHub Repo      | `Sayem9999/nilamit.com`                                                                          |
 
