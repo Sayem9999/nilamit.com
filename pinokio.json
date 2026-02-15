@@ -1,0 +1,29 @@
+{
+  "title": "nilamit.com",
+  "description": "Bangladesh's Trusted Auction Marketplace",
+  "icon": "🏛️",
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "npm install"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "npx prisma generate"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "npm run dev",
+        "on": [{
+          "event": "/.*(ready|started).*/i",
+          "done": true
+        }]
+      }
+    }
+  ]
+}

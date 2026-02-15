@@ -265,9 +265,128 @@ sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d nilamit.com -d www.nilamit.com
 ```
 
+## 8. Local Launch with Pinokio + Tailscale (Self-Hosted, Free)
+
+> 💡 Run nilamit.com from your own PC/laptop and make it accessible on the internet — **completely free**, no cloud servers needed.
+
+### What You Need
+
+- [Pinokio](https://pinokio.computer) — One-click local app launcher
+- [Tailscale](https://tailscale.com) — Free mesh VPN + Funnel for public access
+- Your local machine running 24/7 (or whenever you want the site live)
+
+### Step 1: Install Tailscale
+
+1. Download from [tailscale.com/download](https://tailscale.com/download)
+2. Sign in with Google/GitHub/Microsoft
+3. Your machine gets a Tailscale IP (e.g., `100.x.x.x`)
+
+### Step 2: Enable Tailscale Funnel (Public Access)
+
+Tailscale Funnel exposes your local port to the internet with a free HTTPS URL.
+
+```powershell
+# Enable Funnel (one-time)
+tailscale funnel --bg 3000
+```
+
+This gives you a public URL like:
+
+```
+https://your-machine-name.tail1234.ts.net
+```
+
+> ⚠️ **Funnel must be enabled** in Tailscale Admin Console → DNS → Enable HTTPS & Funnel
+
+### Step 3: Set Up Project via Pinokio
+
+Create a Pinokio script file to auto-launch nilamit.com:
+
+**`pinokio.json`** (place in project root):
+
+```json
+{
+  "title": "nilamit.com",
+  "description": "Bangladesh's Trusted Auction Marketplace",
+  "icon": "🏛️",
+  "run": [
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "npm install"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "npx prisma generate"
+      }
+    },
+    {
+      "method": "shell.run",
+      "params": {
+        "message": "npm run dev",
+        "on": [
+          {
+            "event": "/.*(ready|started).*/i",
+            "done": true
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+**Or launch manually:**
+
+```powershell
+cd c:\nilamit.com
+npm run dev
+```
+
+### Step 4: Configure Environment
+
+Update `.env.local` with your Tailscale Funnel URL:
+
+```
+AUTH_URL="https://your-machine-name.tail1234.ts.net"
+```
+
+Update Google OAuth redirect URI to:
+
+```
+https://your-machine-name.tail1234.ts.net/api/auth/callback/google
+```
+
+### Step 5: Access Your Site
+
+| Access Type           | URL                                         |
+| --------------------- | ------------------------------------------- |
+| **Local**             | `http://localhost:3000`                     |
+| **Tailscale network** | `http://100.x.x.x:3000` (your devices)      |
+| **Public (Funnel)**   | `https://your-machine-name.tail1234.ts.net` |
+
+### Custom Domain with Tailscale
+
+To use `nilamit.com` with Tailscale Funnel:
+
+1. Add a CNAME record for `nilamit.com` → `your-machine-name.tail1234.ts.net`
+2. Or use Tailscale's custom domain feature (requires configuring DNS)
+
+### Pros & Cons of Local Hosting
+
+| ✅ Pros                            | ❌ Cons                         |
+| ---------------------------------- | ------------------------------- |
+| Completely free forever            | Your PC must be on              |
+| Full control over data             | Slower than CDN                 |
+| No bandwidth limits                | No auto-scaling                 |
+| Easy to debug                      | IP may change without Tailscale |
+| Great for Bangladesh (low latency) |                                 |
+
 ---
 
-## 8. Post-Deployment Checklist
+## 9. Post-Deployment Checklist
 
 - [ ] Database migrated (`npx prisma migrate deploy`)
 - [ ] Google OAuth callback URL updated for production domain
@@ -279,7 +398,7 @@ sudo certbot --nginx -d nilamit.com -d www.nilamit.com
 
 ---
 
-## 9. Monitoring & Maintenance
+## 10. Monitoring & Maintenance
 
 ### Database Backups
 

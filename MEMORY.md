@@ -13,9 +13,19 @@
 | Framework | Next.js 15+ (App Router) | SSR for SEO, Server Actions for secure bid logic                                 |
 | Database  | PostgreSQL via Supabase  | Real `SELECT FOR UPDATE` row locking; Supabase provides auth fallback + realtime |
 | Auth      | Auth.js v5 (NextAuth)    | Google Provider + custom email OTP; extensible                                   |
-| ORM       | Prisma 6                 | Type-safe queries, schema-as-code, migration history                             |
+| ORM       | Prisma 7                 | Type-safe queries, schema-as-code, migration history                             |
 | Styling   | Tailwind CSS 4           | White/blue theme; utility-first for rapid iteration                              |
 | SMS       | Pluggable interface      | GreenWeb/BulksmsBD adapters; easy to swap                                        |
+
+### 2026-02-16 — Infrastructure & Local Hosting
+
+| Item             | Details                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
+| Pinokio Location | `C:\pinokio` — local app launcher                                                                |
+| Pinokio App      | `C:\pinokio\api\nilamit.com` — 5 scripts (pinokio.js, install.js, start.js, update.js, reset.js) |
+| Tailscale        | Used for public access via Funnel (`tailscale funnel --bg 3000`)                                 |
+| Project Dir      | `c:\nilamit.com`                                                                                 |
+| GitHub Repo      | `Sayem9999/nilamit.com`                                                                          |
 
 ### 2026-02-16 — Trust Architecture
 
@@ -36,6 +46,8 @@
 4. **Timezone**: All `endTime` comparisons use UTC internally. Display converts to `Asia/Dhaka` on the client.
 
 5. **Image uploads**: v1 uses URL strings. Future: integrate Supabase Storage or Cloudinary.
+
+6. **Prisma 7 breaking change**: Datasource `url` no longer goes in `schema.prisma`. It's now in `prisma.config.ts`. The schema only has `provider`.
 
 ---
 
