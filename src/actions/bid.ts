@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import type { PlaceBidResult } from '@/types';
+import { pusherServer } from '@/lib/pusher-server';
 
 const SOFT_CLOSE_WINDOW_MS = 2 * 60 * 1000; // 2 minutes
 const SOFT_CLOSE_EXTENSION_MS = 2 * 60 * 1000; // Extend by 2 minutes
@@ -35,7 +36,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
 
   // Phase 2: High-stakes Bid Deposit Check
   if (amount >= 10000) {
-    const fullUser = await prisma.user.findUnique({
+    const fullUser = await (prisma.user as any).findUnique({
       where: { id: userId },
       select: { isVerifiedSeller: true, bidDeposits: { where: { auctionId, status: 'held' } } }
     });
@@ -142,6 +143,21 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
     if (result.prevBidder?.email && result.prevBidder.email !== session.user.email) {
       sendOutbidEmail(result.prevBidder.email, result.auctionTitle, amount, auctionId).catch(console.error);
     }
+
+    // Phase 4: Push Real-time Updates
+    await pusherServer.trigger(`auction-${auctionId}`, 'new-bid', {
+      amount,
+      endTime: result.newEndTime,
+      bidderName: session.user.name || 'Someone',
+    }).catch(console.error);
+
+    // Global Ticker Update
+    await pusherServer.trigger('global-ticker', 'new-activity', {
+      bidder: session.user.name || 'Someone',
+      auctionTitle: result.auctionTitle,
+      amount,
+      auctionId,
+    }).catch(console.error);
 
     return {
       success: true,

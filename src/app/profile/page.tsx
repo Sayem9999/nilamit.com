@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { updateProfile } from '@/actions/user';
 import { sendPhoneOTP, verifyPhoneOTP } from '@/actions/phone';
-import { User, Phone, Shield, CheckCircle, Edit3, Save } from 'lucide-react';
+import { User, Phone, Shield, CheckCircle, Edit3, Save, Star, MessageSquare } from 'lucide-react';
+import { ReviewList } from '@/components/review/ReviewList';
 
 export default function ProfilePage() {
   const { data: session, update, status } = useSession();
@@ -24,11 +25,6 @@ export default function ProfilePage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session?.user?.name) {
-      setName(session.user.name);
-    }
-  }, [session]);
 
   if (status === 'loading') {
     return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" /></div>;
@@ -108,11 +104,26 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Reputation */}
-        <div className="mb-4">
-          <label className="text-xs font-medium text-gray-500 mb-1 block">Reputation Score</label>
-          <span className="text-sm text-gray-700">{(user?.reputationScore as number) || 0} points</span>
+        {/* Reputation Card */}
+        <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl p-5 mb-4 text-white shadow-lg shadow-primary-200">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[10px] font-black uppercase tracking-widest opacity-80">Reputation Score</label>
+            <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
+          </div>
+          <div className="flex items-end gap-2">
+            <span className="text-3xl font-black">{(user?.reputationScore as number) || 0}</span>
+            <span className="text-xs font-bold opacity-80 mb-1">Points</span>
+          </div>
+          <p className="text-[10px] mt-2 opacity-70 font-medium italic">Score is calculated based on transaction volume and positive reviews.</p>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="mb-8">
+        <h2 className="font-heading font-bold text-xl text-gray-900 mb-4 flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-primary-600" /> Received Reviews
+        </h2>
+        <ReviewList userId={session.user?.id || ''} />
       </div>
 
       {/* Phone Verification */}

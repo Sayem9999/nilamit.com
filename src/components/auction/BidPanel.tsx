@@ -7,6 +7,7 @@ import { formatBDT } from '@/lib/format';
 import { TrendingUp, AlertCircle, CheckCircle, Shield, Clock } from 'lucide-react';
 import { CountdownTimer } from './CountdownTimer';
 import { useSettings } from '@/context/SettingsContext';
+import { pusherClient } from '@/lib/pusher-client';
 
 interface BidPanelProps {
   auctionId: string;
@@ -36,39 +37,28 @@ export function BidPanel({
   const [result, setResult] = useState<{ success: boolean; error?: string; antiSnipeTriggered?: boolean } | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
 
-  // Polling for real-time updates
+  // Phase 4: Real-time Updates via Pusher
   useEffect(() => {
     if (isExpired) return;
 
-    const poll = async () => {
-      try {
-        const { getAuction } = await import('@/actions/auction');
-        const updated = await getAuction(auctionId);
-        if (updated) {
-          if (updated.currentPrice !== latestPrice) {
-            setLatestPrice(updated.currentPrice);
-          }
-          const upEndTime = new Date(updated.endTime);
-          if (upEndTime.getTime() !== latestEndTime.getTime()) {
-            setLatestEndTime(upEndTime);
-          }
-        }
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
-    };
+    const channel = pusherClient.subscribe(`auction-${auctionId}`);
 
-    const interval = setInterval(poll, 5000); // 5 seconds
-    return () => clearInterval(interval);
-  }, [auctionId, isExpired, latestPrice, latestEndTime]);
+    channel.bind('new-bid', (data: { amount: number; endTime: string | Date }) => {
+      setLatestPrice(data.amount);
+      setLatestEndTime(new Date(data.endTime));
+    });
+
+    return () => {
+      pusherClient.unsubscribe(`auction-${auctionId}`);
+    };
+  }, [auctionId, isExpired]);
 
   // Sync bid amount if price changes and current amount is now too low
   useEffect(() => {
     const minRequired = latestPrice + minBidIncrement;
-    if (bidAmount < minRequired) {
-      setBidAmount(minRequired);
-    }
-  }, [latestPrice, minBidIncrement, bidAmount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setBidAmount(prev => prev < minRequired ? minRequired : prev);
+  }, [latestPrice, minBidIncrement]);
 
   const minBid = latestPrice + minBidIncrement;
   const quickBids = [minBid, minBid + minBidIncrement * 2, minBid + minBidIncrement * 5];

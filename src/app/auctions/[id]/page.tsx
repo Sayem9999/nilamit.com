@@ -4,7 +4,10 @@ import { notFound } from 'next/navigation';
 import { formatBDT, formatRelativeTime } from '@/lib/format';
 import { CountdownTimer } from '@/components/auction/CountdownTimer';
 import BidPanelWrapper from '@/components/auction/BidPanelWrapper';
-import { Clock, Users, Eye, Shield, User, Star, CheckCircle, TrendingUp } from 'lucide-react';
+import { Clock, Users, Eye, Shield, User, Star, CheckCircle, TrendingUp, Award, MessageSquare } from 'lucide-react';
+import { canReviewAuction } from '@/actions/review';
+import { ReviewForm } from '@/components/review/ReviewForm';
+import { auth } from '@/lib/auth';
 
 import { useSettings } from '@/context/SettingsContext';
 
@@ -14,6 +17,7 @@ interface Props {
 
 export default async function AuctionDetailPage({ params }: Props) {
   const { id } = await params;
+  const session = await auth();
   const auction = await getAuction(id);
   // Note: Settings are client-side, but we can pass them via a wrapper if needed.
   // For now, let's make the image gallery a client component or handle it there.
@@ -134,6 +138,26 @@ export default async function AuctionDetailPage({ params }: Props) {
               </div>
             )}
           </div>
+
+          {/* Review Section (Phase 3) */}
+          {auction.status === 'SOLD' && (
+            <div className="mt-12 pt-12 border-t border-gray-100">
+              {await canReviewAuction(id) ? (
+                <div className="max-w-2xl">
+                  <ReviewForm 
+                    auctionId={id} 
+                    toId={session?.user?.id === auction.sellerId ? (auction.winnerId || '') : auction.sellerId}
+                    recipientName={session?.user?.id === auction.sellerId ? (auction.winner?.name || 'Winner') : (auction.seller.name || 'Seller')}
+                  />
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-2xl p-6 flex items-center gap-4 text-gray-500">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <p className="font-medium">Transaction complete. feedback has been recorded.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right: Bid Panel + Seller Info */}

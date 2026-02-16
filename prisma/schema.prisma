@@ -32,6 +32,10 @@ model User {
   bids              Bid[]
   phoneVerifications PhoneVerification[]
   bidDeposits       BidDeposit[]
+  
+  // Reputation (Phase 3)
+  reviewsGiven      Review[]   @relation("ReviewsFrom")
+  reviewsReceived   Review[]   @relation("ReviewsTo")
 
   @@index([email])
   @@index([phone])
@@ -99,6 +103,7 @@ model Auction {
   // Relations
   bids            Bid[]
   bidDeposits     BidDeposit[]
+  reviews         Review[]
 
   @@index([status, endTime])
   @@index([category])
@@ -162,4 +167,24 @@ enum DepositStatus {
   held
   released
   forfeited
+}
+
+// ─── Review (Trust System) ────────────────────────────
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int      @default(5) // 1 to 5
+  comment   String?  @db.Text
+  
+  fromId    String
+  from      User     @relation("ReviewsFrom", fields: [fromId], references: [id])
+  toId      String
+  to        User     @relation("ReviewsTo", fields: [toId], references: [id])
+  
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  
+  createdAt DateTime @default(now())
+
+  @@unique([fromId, auctionId]) // One review per auction per user
+  @@index([toId])
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Shield, Clock, Users, Zap, MapPin } from 'lucide-react';
+import { Shield, Clock, Users, Zap, MapPin, Star } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import { CountdownTimer } from './CountdownTimer';
 import type { AuctionWithSeller } from '@/types';
@@ -61,6 +61,12 @@ export default function AuctionCard({ auction }: { auction: AuctionWithSeller })
             <span className="text-xs font-semibold text-gray-700 truncate">{auction.seller.name || 'Seller'}</span>
             {auction.seller.isVerifiedSeller && (
               <Shield className="w-3 h-3 text-blue-500 fill-blue-500/10 flex-shrink-0" />
+            )}
+            {auction.seller.reputationScore > 0 && (
+              <div className="flex items-center gap-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">
+                <Star className="w-2.5 h-2.5 fill-amber-600" />
+                {auction.seller.reputationScore}
+              </div>
             )}
             {auction.location && (
               <div className="flex items-center gap-0.5 text-xs text-gray-400 ml-auto">

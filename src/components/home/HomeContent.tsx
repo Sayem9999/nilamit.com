@@ -8,6 +8,8 @@ import { useLanguage } from '@/context/LanguageContext';
 import AuctionCard from '@/components/auction/AuctionCard';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { pusherClient } from '@/lib/pusher-client';
+import { useEffect } from 'react';
 
 interface LatestActivity {
   id: string;
@@ -23,10 +25,32 @@ interface HomeContentProps {
   latestActivity?: LatestActivity[];
 }
 
-export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActivity = [] }: HomeContentProps) {
+export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActivity: initialActivity = [] }: HomeContentProps) {
   const { t } = useLanguage();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activities, setActivities] = useState<LatestActivity[]>(initialActivity);
+
+  // Phase 4: Live Ticker Updates
+  useEffect(() => {
+    const channel = pusherClient.subscribe('global-ticker');
+    
+    channel.bind('new-activity', (data: any) => {
+      const newActivity: LatestActivity = {
+        id: Math.random().toString(),
+        amount: data.amount,
+        createdAt: new Date(),
+        bidder: { name: data.bidder },
+        auction: { id: data.auctionId, title: data.auctionTitle }
+      };
+      
+      setActivities(prev => [newActivity, ...prev].slice(0, 10));
+    });
+
+    return () => {
+      pusherClient.unsubscribe('global-ticker');
+    };
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,10 +79,10 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
   return (
     <>
       {/* Live Ticker */}
-      {latestActivity.length > 0 && (
+      {activities.length > 0 && (
         <div className="bg-gray-900 overflow-hidden py-2 hidden sm:block">
           <div className="flex animate-marquee whitespace-nowrap">
-            {[...latestActivity, ...latestActivity].map((activity, i) => (
+            {[...activities, ...activities].map((activity, i) => (
               <div key={i} className="flex items-center gap-2 mx-8 text-[11px] font-bold text-gray-400">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                 <span className="text-white">{activity.bidder.name}</span>
