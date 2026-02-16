@@ -37,6 +37,10 @@ model User {
   reviewsGiven      Review[]   @relation("ReviewsFrom")
   reviewsReceived   Review[]   @relation("ReviewsTo")
 
+  // Phase 9
+  watchlist         Watchlist[]
+  reportsSubmitted  AuctionReport[]
+
   @@index([email])
   @@index([phone])
 }
@@ -110,6 +114,10 @@ model Auction {
   bids            Bid[]
   bidDeposits     BidDeposit[]
   reviews         Review[]
+
+  // Phase 9
+  watchlist       Watchlist[]
+  reports         AuctionReport[]
 
   @@index([status, endTime])
   @@index([category])
@@ -200,4 +208,44 @@ model Review {
 
   @@unique([fromId, auctionId]) // One review per auction per user
   @@index([toId])
+}
+
+// ─── Watchlist (Phase 9) ─────────────────────────────
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, auctionId])
+  @@index([userId])
+  @@index([auctionId])
+}
+
+// ─── Auction Report (Phase 9) ───────────────────────
+model AuctionReport {
+  id          String       @id @default(cuid())
+  reason      String
+  description String?      @db.Text
+  status      ReportStatus @default(PENDING)
+  
+  auctionId   String
+  auction     Auction      @relation(fields: [auctionId], references: [id])
+  reporterId  String
+  reporter    User         @relation(fields: [reporterId], references: [id])
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([auctionId])
+  @@index([reporterId])
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
 }
