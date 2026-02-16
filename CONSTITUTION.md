@@ -51,6 +51,7 @@
 3. **Never skip phone verification** — no backdoors for bidding/selling
 4. **Always use parameterized queries** — Prisma handles this, never raw-dog SQL
 5. **Always handle errors gracefully** — show Bengali-friendly error messages
+6. **No Quick Fixes / Placeholders** — Implementation must be production-ready. No `console.log` for critical notifications (email/SMS). No bypassing logic. If a feature isn't ready, disable it.
 
 ---
 

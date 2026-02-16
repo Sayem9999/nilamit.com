@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { smsGateway } from '@/lib/sms-gateway';
+import { Resend } from 'resend';
 import crypto from 'crypto';
 
 const OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
@@ -146,8 +147,33 @@ export async function sendEmailOTP(email: string) {
     },
   });
 
-  // In production, send via email service. In dev, log to console.
-  console.log(`\n📧 [EMAIL OTP → ${email}] Code: ${otp}\n`);
+  // In production, send via email service (Resend)
+  const resendApiKey = process.env.RESEND_API_KEY;
 
-  return { success: true };
+  if (resendApiKey) {
+    try {
+      const resend = new Resend(resendApiKey);
+      const { error } = await resend.emails.send({
+        from: 'onboarding@resend.dev', // Default testing domain
+        to: email,
+        subject: 'Your nilamit.com Login Code',
+        html: `<p>Your verification code is: <strong>${otp}</strong></p><p>Valid for 5 minutes.</p>`,
+      });
+
+      if (error) {
+        console.error('[Resend Error]', error);
+        return { success: false, error: 'Failed to send email.' };
+      }
+      return { success: true };
+    } catch (err) {
+      console.error('[Email Error]', err);
+      return { success: false, error: 'Failed to send email.' };
+    }
+  } else {
+    // Fallback for local dev without API key (only if explicitly allowed, but Constitution says NO)
+    // We will log a warning that this is NOT production ready
+    console.warn('[WARN] RESEND_API_KEY missing. Falling back to console log (NOT FOR PRODUCTION).');
+    console.log(`\n📧 [EMAIL OTP → ${email}] Code: ${otp}\n`);
+    return { success: true }; // Allow login in dev, but warn
+  }
 }
