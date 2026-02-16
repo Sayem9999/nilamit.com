@@ -4,6 +4,9 @@ import { Providers } from "@/components/providers/Providers";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { ourFileRouter } from "@/app/api/uploadthing/core";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-heading",
@@ -53,6 +56,7 @@ export default function RootLayout({
       <body
         className={`${plusJakarta.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased bg-white text-gray-900 font-body`}
       >
+        <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
         <Providers>
           <Navbar />
           <main className="min-h-screen bg-gray-50/50">

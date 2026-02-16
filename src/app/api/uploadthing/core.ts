@@ -4,7 +4,9 @@ import { auth } from "@/lib/auth";
 const f = createUploadthing();
  
 const handleAuth = async () => {
+  console.log("UploadThing: Checking auth...");
   const session = await auth();
+  console.log("UploadThing: Session:", session?.user?.id);
   if (!session?.user?.id) throw new Error("Unauthorized");
   return { userId: session.user.id };
 };
