@@ -1,5 +1,5 @@
 import { getAuctions } from '@/actions/auction';
-import { AuctionCard } from '@/components/auction/AuctionCard';
+import AuctionCard from '@/components/auction/AuctionCard';
 import { CATEGORIES } from '@/types';
 import Link from 'next/link';
 import { Search, SlidersHorizontal } from 'lucide-react';

@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useState } from 'react';
-import { Menu, X, Gavel, User, LogOut, Plus, LayoutDashboard, Globe, Zap, ZapOff } from 'lucide-react';
+import { Menu, X, Gavel, User, LogOut, Plus, LayoutDashboard, Globe, Zap, ZapOff, Volume2, VolumeX } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
 
 export function Navbar() {
   const { data: session } = useSession();
   const { locale, setLocale, t } = useLanguage();
-  const { lightweightMode, toggleLightweightMode } = useSettings();
+  const { lightweightMode, toggleLightweightMode, soundEffectsEnabled, toggleSoundEffects } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleLanguage = () => {
@@ -53,6 +53,18 @@ export function Navbar() {
             >
               {lightweightMode ? <ZapOff className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
               {lightweightMode ? 'Standard' : 'Lite'}
+            </button>
+
+            <button
+              onClick={toggleSoundEffects}
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg ${
+                !soundEffectsEnabled 
+                  ? 'bg-red-50 text-red-700 border border-red-100' 
+                  : 'bg-gray-50 text-gray-600 hover:text-primary-600'
+              }`}
+              title={soundEffectsEnabled ? 'Mute Sounds' : 'Unmute Sounds'}
+            >
+              {soundEffectsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
 
             <Link href="/auctions" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">

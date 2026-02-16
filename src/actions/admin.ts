@@ -59,7 +59,7 @@ export async function getAdminUsers(page = 1, limit = 20, search?: string) {
 export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
   await requireAdmin();
 
-  const where = status ? { status: status as 'ACTIVE' | 'SOLD' | 'EXPIRED' | 'CANCELLED' | 'DRAFT' } : {};
+  const where = status ? { status: status as any } : {};
 
   const [auctions, total] = await Promise.all([
     prisma.auction.findMany({
@@ -79,6 +79,18 @@ export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
 export async function adminUpdateUser(userId: string, data: { reputationScore?: number; isPhoneVerified?: boolean }) {
   await requireAdmin();
   return prisma.user.update({ where: { id: userId }, data });
+}
+
+/** Admin: toggle verified seller status */
+export async function adminToggleVerification(userId: string) {
+  await requireAdmin();
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { isVerifiedSeller: true } });
+  if (!user) throw new Error('User not found');
+  
+  return prisma.user.update({
+    where: { id: userId },
+    data: { isVerifiedSeller: !user.isVerifiedSeller }
+  });
 }
 
 /** Admin: force-cancel an auction */

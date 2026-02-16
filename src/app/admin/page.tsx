@@ -1,9 +1,10 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getAdminStats, getAdminUsers, getAdminAuctions } from '@/actions/admin';
+import { getAdminStats, getAdminUsers, getAdminAuctions, adminToggleVerification } from '@/actions/admin';
 import { formatBDT, formatRelativeTime } from '@/lib/format';
-import { Users, Gavel, TrendingUp, Shield, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Gavel, TrendingUp, Shield, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { VerificationToggle } from './VerificationToggle';
 
 type AdminUsersResult = Awaited<ReturnType<typeof getAdminUsers>>;
 type AdminUser = AdminUsersResult['users'][number];
@@ -66,12 +67,13 @@ export default async function AdminPage() {
                   <tr>
                     <th className="text-left px-4 py-3 font-medium text-gray-500">User</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500">Phone</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">Trust</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500">Rep</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500">Activity</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {users.users.map((u: AdminUser) => (
+                  {users.users.map((u: any) => (
                     <tr key={u.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900 text-xs">{u.name || 'No name'}</p>
@@ -87,6 +89,9 @@ export default async function AdminPage() {
                             <XCircle className="w-3 h-3" /> No
                           </span>
                         )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <VerificationToggle userId={u.id} initialStatus={!!u.isVerifiedSeller} />
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-600">{u.reputationScore}</td>
                       <td className="px-4 py-3 text-xs text-gray-400">
@@ -115,7 +120,7 @@ export default async function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {auctions.auctions.map((a: AdminAuction) => (
+                  {auctions.auctions.map((a: any) => (
                     <tr key={a.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <Link href={`/auctions/${a.id}`} className="font-medium text-gray-900 text-xs hover:text-primary-600">
@@ -124,9 +129,10 @@ export default async function AdminPage() {
                         <p className="text-xs text-gray-400">{a.seller?.name || a.seller?.email}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          a.status === 'active' ? 'bg-green-100 text-green-700'
-                          : a.status === 'completed' ? 'bg-blue-100 text-blue-700'
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          a.status === 'ACTIVE' ? 'bg-green-100 text-green-700'
+                          : a.status === 'SOLD' ? 'bg-blue-100 text-blue-700'
+                          : a.status === 'EXPIRED' ? 'bg-amber-100 text-amber-700'
                           : 'bg-gray-100 text-gray-600'
                         }`}>{a.status}</span>
                       </td>
@@ -145,13 +151,14 @@ export default async function AdminPage() {
       <div className="mt-10">
         <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">Recent Signups</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {stats.recentUsers.map((u: RecentUser) => (
+          {stats.recentUsers.map((u: any) => (
             <div key={u.id} className="bg-white border border-gray-100 rounded-xl p-3">
               <p className="text-xs font-medium text-gray-900 truncate">{u.name || u.email}</p>
               <p className="text-xs text-gray-400">{formatRelativeTime(u.createdAt)}</p>
               <div className="flex items-center gap-2 mt-1">
-                {u.isPhoneVerified && <span className="text-xs text-green-600">✓ Verified</span>}
-                <span className="text-xs text-gray-400">Rep: {u.reputationScore}</span>
+                {u.isPhoneVerified && <span className="text-xs text-green-600">✓ Ph</span>}
+                {u.isVerifiedSeller && <span className="text-xs text-blue-600 flex items-center gap-0.5"><Shield className="w-2.5 h-2.5" /> Ver</span>}
+                <span className="text-xs text-gray-400 ml-auto">Rep: {u.reputationScore}</span>
               </div>
             </div>
           ))}

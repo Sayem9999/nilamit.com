@@ -12,8 +12,8 @@ export default async function DashboardPage() {
   if (!session) redirect('/login');
 
   const [myBids, myAuctions] = await Promise.all([getMyBids(), getMyAuctions()]);
-  const activeBids = myBids.filter(b => b.auction.status === 'active');
-
+  const activeBids = myBids.filter(b => (b.auction as any).status === 'ACTIVE');
+  const wonBids = myBids.filter(b => (b.auction as any).status === 'SOLD' && (b.auction as any).winnerId === session!.user!.id);
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="font-heading font-bold text-2xl text-gray-900 mb-6">Dashboard</h1>
@@ -21,7 +21,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {[
           { label: 'Active Bids', value: activeBids.length, icon: TrendingUp },
-          { label: 'Won', value: myBids.filter(b => b.auction.status === 'completed').length, icon: Gavel },
+          { label: 'Won', value: wonBids.length, icon: Gavel },
           { label: 'My Auctions', value: myAuctions.length, icon: Package },
           { label: 'Total Bids', value: myBids.length, icon: Clock },
         ].map((s) => (
@@ -57,9 +57,9 @@ export default async function DashboardPage() {
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <div className="text-right">
-                  <p className="price text-sm text-primary-700">{formatBDT(bid.auction.currentPrice)}</p>
-                  {bid.auction.status === 'active' && <CountdownTimer endTime={bid.auction.endTime} className="text-xs" />}
-                </div>
+                   <p className="price text-sm text-primary-700">{formatBDT(bid.auction.currentPrice)}</p>
+                   {(bid.auction as any).status === 'ACTIVE' && <CountdownTimer endTime={bid.auction.endTime} className="text-xs" />}
+                 </div>
                 <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-primary-500" />
               </div>
             </Link>
@@ -82,9 +82,9 @@ export default async function DashboardPage() {
             <Link key={a.id} href={`/auctions/${a.id}`}
               className="flex items-center justify-between bg-white border border-gray-100 rounded-xl p-4 hover:border-primary-200 transition-colors group">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate group-hover:text-primary-600">{a.title}</p>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${a.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{a.status}</span>
-              </div>
+                 <p className="text-sm font-medium text-gray-900 truncate group-hover:text-primary-600">{a.title}</p>
+                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${(a as any).status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{a.status}</span>
+               </div>
               <span className="price text-primary-700">{formatBDT(a.currentPrice)}</span>
             </Link>
           ))}

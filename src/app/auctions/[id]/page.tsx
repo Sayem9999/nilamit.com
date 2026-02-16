@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { formatBDT, formatRelativeTime } from '@/lib/format';
 import { CountdownTimer } from '@/components/auction/CountdownTimer';
 import BidPanelWrapper from '@/components/auction/BidPanelWrapper';
-import { Clock, Users, Eye, Shield, User, Star, CheckCircle } from 'lucide-react';
+import { Clock, Users, Eye, Shield, User, Star, CheckCircle, TrendingUp } from 'lucide-react';
 
 import { useSettings } from '@/context/SettingsContext';
 
@@ -65,10 +65,10 @@ export default async function AuctionDetailPage({ params }: Props) {
                   </span>
                 )}
                 {auction.status === 'ACTIVE' && (
-                  <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md border border-green-100 animate-pulse">
-                    LIVE
-                  </span>
-                )}
+        <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold animate-pulse">
+          <TrendingUp className="w-3.5 h-3.5" /> LIVE
+        </div>
+      )}
               </div>
             <h1 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900 mb-3">
               {auction.title}
@@ -169,7 +169,7 @@ export default async function AuctionDetailPage({ params }: Props) {
               <div>
                 <p className="font-medium text-gray-900 flex items-center gap-1.5">
                   {auction.seller.name || 'Seller'}
-                  {auction.seller.isVerifiedSeller && (
+                  {(auction.seller as any).isVerifiedSeller && (
                     <Shield className="w-4 h-4 text-blue-500 fill-blue-500/10" />
                   )}
                 </p>

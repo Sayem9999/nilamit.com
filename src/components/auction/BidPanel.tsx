@@ -6,6 +6,7 @@ import { placeBid } from '@/actions/bid';
 import { formatBDT } from '@/lib/format';
 import { TrendingUp, AlertCircle, CheckCircle, Shield, Clock } from 'lucide-react';
 import { CountdownTimer } from './CountdownTimer';
+import { useSettings } from '@/context/SettingsContext';
 
 interface BidPanelProps {
   auctionId: string;
@@ -27,6 +28,7 @@ export function BidPanel({
   onBidPlaced,
 }: BidPanelProps) {
   const { data: session } = useSession();
+  const { soundEffectsEnabled } = useSettings();
   const [latestPrice, setLatestPrice] = useState(currentPrice);
   const [latestEndTime, setLatestEndTime] = useState(new Date(endTime));
   const [bidAmount, setBidAmount] = useState(currentPrice + minBidIncrement);
@@ -83,6 +85,13 @@ export function BidPanel({
       const res = await placeBid(auctionId, bidAmount);
       setResult(res);
       if (res.success) {
+        // Sound Effect
+        if (soundEffectsEnabled) {
+          const audio = new Audio('/sounds/gavel.mp3');
+          audio.volume = 0.5;
+          audio.play().catch(e => console.error('Audio play failed:', e));
+        }
+
         // Price will update via next poll or immediately here for better UX
         const newPrice = bidAmount;
         setLatestPrice(newPrice);
