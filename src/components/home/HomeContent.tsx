@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Gavel, Shield, Clock, Users, ArrowRight, CheckCircle, Phone, TrendingUp } from 'lucide-react';
 import { CATEGORIES } from '@/types';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function HomeContent() {
   const { t } = useLanguage();

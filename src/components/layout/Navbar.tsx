@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { Menu, X, Gavel, User, LogOut, Plus, LayoutDashboard, Globe, Zap, ZapOff, Volume2, VolumeX, Bell, BellOff } from 'lucide-react';
 import { requestNotificationPermission } from '@/lib/notifications';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
 
 export function Navbar() {

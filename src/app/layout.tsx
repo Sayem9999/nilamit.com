@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
-import { SessionProvider } from "next-auth/react";
-import { SettingsProvider } from "@/context/SettingsContext";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+import { Providers } from "@/components/providers/Providers";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -36,23 +34,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  console.log('[Layout] Rendering RootLayout');
   return (
     <html lang="en">
       <body
         className={`${plusJakarta.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased bg-white text-gray-900 font-body`}
       >
-        <SessionProvider>
-          <SettingsProvider>
-            <LanguageProvider>
-              <Navbar />
-              <main className="min-h-screen bg-gray-50/50">
-                {children}
-              </main>
-              <Footer />
-            </LanguageProvider>
-          </SettingsProvider>
-        </SessionProvider>
+        <Providers>
+          <Navbar />
+          <main className="min-h-screen bg-gray-50/50">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
