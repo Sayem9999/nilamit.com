@@ -1,0 +1,16 @@
+name: Auction Closure Cron
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: "*/15 * * * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  close-auctions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Auction Closure API
+        run: |
+          curl -X GET "https://nilamit.com/api/cron/close-auctions" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
