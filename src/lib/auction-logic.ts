@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { Resend } from 'resend';
+import { AuctionStatus, OrderStatus } from '@prisma/client';
 
 /**
  * Closes a single auction if it has ended.
@@ -18,7 +19,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
     },
   });
 
-  if (!auction || (auction.status as string) !== 'ACTIVE') return false;
+  if (!auction || auction.status !== AuctionStatus.ACTIVE) return false;
 
   const now = new Date();
   if (auction.endTime > now) return false;
@@ -28,11 +29,15 @@ export async function closeAuctionIfEnded(auctionId: string) {
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
   if (highestBid) {
+    const commissionEarned = highestBid.amount * (auction.commissionRate || 0.05);
+    
     await prisma.auction.update({
       where: { id: auction.id },
       data: {
-        status: 'SOLD' as any,
+        status: AuctionStatus.SOLD,
         winnerId: highestBid.bidder.id,
+        commissionEarned,
+        deliveryStatus: OrderStatus.PENDING,
       },
     });
 
@@ -48,7 +53,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
   } else {
     await prisma.auction.update({
       where: { id: auction.id },
-      data: { status: 'EXPIRED' as any },
+      data: { status: AuctionStatus.EXPIRED },
     });
   }
 
@@ -61,7 +66,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
 export async function closeAllEndedAuctions() {
   const auctions = await prisma.auction.findMany({
     where: {
-      status: 'ACTIVE' as any,
+      status: AuctionStatus.ACTIVE,
       endTime: { lte: new Date() },
     },
   });

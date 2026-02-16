@@ -1,12 +1,14 @@
 import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { getAdminStats, getAdminUsers, getAdminAuctions, adminToggleVerification } from '@/actions/admin';
+import { getAdminStats, getAdminUsers, getAdminAuctions } from '@/actions/admin';
 import { formatBDT, formatRelativeTime } from '@/lib/format';
-import { Users, Gavel, TrendingUp, Shield, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Users, Gavel, TrendingUp, Shield, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { VerificationToggle } from './VerificationToggle';
 
 export const dynamic = 'force-dynamic';
+
+import { AuctionStatus, OrderStatus } from '@prisma/client';
 
 type AdminUsersResult = Awaited<ReturnType<typeof getAdminUsers>>;
 type AdminUser = AdminUsersResult['users'][number];
@@ -43,7 +45,7 @@ export default async function AdminPage() {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-10">
         {[
           { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'blue' },
-          { label: 'Verified', value: stats.verifiedUsers, icon: CheckCircle, color: 'green' },
+          { label: 'Revenue (৳)', value: formatBDT(stats.totalRevenue), icon: TrendingUp, color: 'green' },
           { label: 'Auctions', value: stats.totalAuctions, icon: Gavel, color: 'purple' },
           { label: 'Active', value: stats.activeAuctions, icon: TrendingUp, color: 'orange' },
           { label: 'Total Bids', value: stats.totalBids, icon: TrendingUp, color: 'indigo' },
@@ -75,7 +77,7 @@ export default async function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {users.users.map((u: any) => (
+                  {users.users.map((u: AdminUser) => (
                     <tr key={u.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900 text-xs">{u.name || 'No name'}</p>
@@ -88,7 +90,7 @@ export default async function AdminPage() {
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-xs text-gray-400">
-                            <XCircle className="w-3 h-3" /> No
+                             No
                           </span>
                         )}
                       </td>
@@ -119,10 +121,11 @@ export default async function AdminPage() {
                     <th className="text-left px-4 py-3 font-medium text-gray-500">Status</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500">Price</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500">Bids</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">Delivery</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {auctions.auctions.map((a: any) => (
+                  {auctions.auctions.map((a: AdminAuction) => (
                     <tr key={a.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <Link href={`/auctions/${a.id}`} className="font-medium text-gray-900 text-xs hover:text-primary-600">
@@ -132,14 +135,41 @@ export default async function AdminPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          a.status === 'ACTIVE' ? 'bg-green-100 text-green-700'
-                          : a.status === 'SOLD' ? 'bg-blue-100 text-blue-700'
-                          : a.status === 'EXPIRED' ? 'bg-amber-100 text-amber-700'
+                          (a.status as AuctionStatus) === 'ACTIVE' ? 'bg-green-100 text-green-700'
+                          : (a.status as AuctionStatus) === 'SOLD' ? 'bg-blue-100 text-blue-700'
+                          : (a.status as AuctionStatus) === 'EXPIRED' ? 'bg-amber-100 text-amber-700'
                           : 'bg-gray-100 text-gray-600'
                         }`}>{a.status}</span>
                       </td>
                       <td className="px-4 py-3 price text-xs text-primary-700">{formatBDT(a.currentPrice)}</td>
                       <td className="px-4 py-3 text-xs text-gray-600">{a._count?.bids || 0}</td>
+                      <td className="px-4 py-3">
+                        {(a.status as AuctionStatus) === 'SOLD' ? (
+                          <form action={async (formData) => {
+                            'use server';
+                            await adminUpdateDelivery(a.id, formData.get('status') as OrderStatus);
+                          }}>
+                            <select 
+                              name="status"
+                              defaultValue={a.deliveryStatus || 'PENDING'}
+                              onChange={(e) => e.target.form?.requestSubmit()}
+                              className={`text-[10px] font-bold uppercase tracking-wider rounded-lg border-0 py-1 pl-2 pr-6 cursor-pointer focus:ring-2 focus:ring-primary-500 ${
+                                (a.deliveryStatus as OrderStatus) === 'DELIVERED' ? 'bg-green-100 text-green-700'
+                                : (a.deliveryStatus as OrderStatus) === 'SHIPPED' ? 'bg-purple-100 text-purple-700'
+                                : (a.deliveryStatus as OrderStatus) === 'RECEIVED' ? 'bg-gray-100 text-gray-700'
+                                : 'bg-amber-100 text-amber-700'
+                              }`}
+                            >
+                              <option value="PENDING">Pending</option>
+                              <option value="SHIPPED">Shipped</option>
+                              <option value="DELIVERED">Delivered</option>
+                              <option value="RECEIVED">Received</option>
+                            </select>
+                          </form>
+                        ) : (
+                          <span className="text-xs text-gray-300">—</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -153,7 +183,7 @@ export default async function AdminPage() {
       <div className="mt-10">
         <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">Recent Signups</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {stats.recentUsers.map((u: any) => (
+          {stats.recentUsers.map((u: RecentUser) => (
             <div key={u.id} className="bg-white border border-gray-100 rounded-xl p-3">
               <p className="text-xs font-medium text-gray-900 truncate">{u.name || u.email}</p>
               <p className="text-xs text-gray-400">{formatRelativeTime(u.createdAt)}</p>

@@ -91,6 +91,12 @@ model Auction {
   startTime       DateTime
   endTime         DateTime
   status          AuctionStatus @default(DRAFT)
+  isFeatured      Boolean       @default(false)
+  commissionRate  Float         @default(0.05) // 5% default commission
+  commissionEarned Float?       // Calculated on SOLD
+  
+  deliveryStatus  OrderStatus?   @default(PENDING) // Assigned on SOLD
+  trackingNumber  String?
   
   sellerId        String
   seller          User          @relation("Seller", fields: [sellerId], references: [id])
@@ -109,6 +115,13 @@ model Auction {
   @@index([category])
   @@index([location])
   @@index([sellerId])
+}
+
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  RECEIVED
 }
 
 enum AuctionStatus {

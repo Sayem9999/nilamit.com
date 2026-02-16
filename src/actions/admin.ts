@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { AuctionStatus, OrderStatus } from '@prisma/client';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
@@ -17,16 +18,28 @@ async function requireAdmin() {
 export async function getAdminStats() {
   await requireAdmin();
 
-  const [totalUsers, verifiedUsers, totalAuctions, activeAuctions, totalBids, recentUsers] = await Promise.all([
+  const [totalUsers, verifiedUsers, totalAuctions, activeAuctions, totalBids, revenueStats, recentUsers] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { isPhoneVerified: true } }),
     prisma.auction.count(),
-    prisma.auction.count({ where: { status: 'ACTIVE' } }),
+    prisma.auction.count({ where: { status: AuctionStatus.ACTIVE } }),
     prisma.bid.count(),
-    prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 10, select: { id: true, name: true, email: true, isPhoneVerified: true, reputationScore: true, createdAt: true } }),
+    prisma.auction.aggregate({
+      where: { status: AuctionStatus.SOLD },
+      _sum: { commissionEarned: true }
+    }),
+    prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 10, select: { id: true, name: true, email: true, isPhoneVerified: true, isVerifiedSeller: true, reputationScore: true, createdAt: true } }),
   ]);
 
-  return { totalUsers, verifiedUsers, totalAuctions, activeAuctions, totalBids, recentUsers };
+  return { 
+    totalUsers, 
+    verifiedUsers, 
+    totalAuctions, 
+    activeAuctions, 
+    totalBids, 
+    totalRevenue: (revenueStats._sum.commissionEarned as number | null) || 0,
+    recentUsers 
+  };
 }
 
 /** List all users with pagination */
@@ -44,7 +57,7 @@ export async function getAdminUsers(page = 1, limit = 20, search?: string) {
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       where,
-      select: { id: true, name: true, email: true, phone: true, isPhoneVerified: true, reputationScore: true, createdAt: true, _count: { select: { bids: true, auctionsAsSeller: true } } },
+      select: { id: true, name: true, email: true, phone: true, isPhoneVerified: true, isVerifiedSeller: true, reputationScore: true, createdAt: true, _count: { select: { bids: true, auctionsAsSeller: true } } },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,
@@ -59,7 +72,7 @@ export async function getAdminUsers(page = 1, limit = 20, search?: string) {
 export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
   await requireAdmin();
 
-  const where = status ? { status: status as any } : {};
+  const where = status ? { status: status as AuctionStatus } : {};
 
   const [auctions, total] = await Promise.all([
     prisma.auction.findMany({
@@ -93,8 +106,14 @@ export async function adminToggleVerification(userId: string) {
   });
 }
 
+/** Admin: update delivery status */
+export async function adminUpdateDelivery(auctionId: string, status: OrderStatus) {
+  await requireAdmin();
+  return prisma.auction.update({ where: { id: auctionId }, data: { deliveryStatus: status } });
+}
+
 /** Admin: force-cancel an auction */
 export async function adminCancelAuction(auctionId: string) {
   await requireAdmin();
-  return prisma.auction.update({ where: { id: auctionId }, data: { status: 'CANCELLED' } });
+  return prisma.auction.update({ where: { id: auctionId }, data: { status: AuctionStatus.CANCELLED } });
 }
