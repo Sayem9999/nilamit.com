@@ -3,7 +3,7 @@ import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { SessionProvider } from "next-auth/react";
+import { Providers } from "@/components/providers/Providers";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-heading",
@@ -39,13 +39,13 @@ export default function RootLayout({
       <body
         className={`${plusJakarta.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased bg-white text-gray-900 font-body`}
       >
-        <SessionProvider>
+        <Providers>
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-1">{children}</main>
             <Footer />
           </div>
-        </SessionProvider>
+        </Providers>
       </body>
     </html>
   );
