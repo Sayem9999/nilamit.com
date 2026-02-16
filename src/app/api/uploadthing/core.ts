@@ -4,11 +4,21 @@ import { auth } from "@/lib/auth";
 const f = createUploadthing();
  
 const handleAuth = async () => {
-  console.log("UploadThing: Checking auth...");
-  const session = await auth();
-  console.log("UploadThing: Session:", session?.user?.id);
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  return { userId: session.user.id };
+  console.log("UploadThing: 🔒 Middleware started - Checking session...");
+  try {
+    const session = await auth();
+    console.log("UploadThing: 👤 Session found:", session?.user?.email);
+    
+    if (!session?.user?.id) {
+        console.error("UploadThing: ❌ No user ID in session. Rejecting.");
+        throw new Error("Unauthorized");
+    }
+    
+    return { userId: session.user.id };
+  } catch (err) {
+    console.error("UploadThing: 💥 Auth Error:", err);
+    throw err;
+  }
 };
  
 export const ourFileRouter = {
