@@ -1,12 +1,14 @@
-```javascript
+import { getAdminStats } from '@/actions/admin';
+import { getSystemConfig, getFeaturedAuctions } from '@/actions/admin-content';
+import { AdminLayout } from './AdminLayout';
+import { SystemTab } from './tabs/SystemTab';
+import { ContentTab } from './tabs/ContentTab';
 import { ModerationTab } from './tabs/ModerationTab';
+import { Users, Package, TrendingUp, DollarSign } from 'lucide-react';
 
-// ... (existing imports)
-
-      system={<SystemTab />}
-    />
-  );
-}
+function OverviewTab({ stats }: { stats: any }) {
+  return (
+    <div className="space-y-8">
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total Users" value={stats.totalUsers} icon={<Users className="w-5 h-5 text-blue-600" />} color="bg-blue-50" />
@@ -15,7 +17,7 @@ import { ModerationTab } from './tabs/ModerationTab';
         <StatCard label="Revenue" value={`৳${stats.totalRevenue}`} icon={<DollarSign className="w-5 h-5 text-amber-600" />} color="bg-amber-50" />
       </div>
 
-      {/* Recent Activity Section (Simplified for now) */}
+      {/* Recent Activity Section */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <h3 className="font-heading font-semibold text-lg text-gray-900 mb-4">Recent Users</h3>
         <div className="overflow-x-auto">
@@ -72,10 +74,12 @@ function StatCard({ label, value, icon, color }: any) {
 export default async function AdminPage() {
   const systemConfig = await getSystemConfig();
   const featuredAuctions = await getFeaturedAuctions();
+  const adminStats = await getAdminStats();
 
   return (
     <AdminLayout 
-      overview={<OverviewTab />}
+      overview={<OverviewTab stats={adminStats} />}
+      moderation={<ModerationTab />}
       content={<ContentTab initialConfig={systemConfig} featuredAuctions={featuredAuctions} />}
       system={<SystemTab />}
     />
