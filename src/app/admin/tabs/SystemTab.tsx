@@ -16,7 +16,7 @@ export function SystemTab() {
       const result = await adminWipeTestData();
       if (result.success) {
         setStatus('success');
-        setMessage(result.message);
+        setMessage(result.message || 'Success');
       } else {
         setStatus('error');
         setMessage(result.error || 'Failed to wipe data');
