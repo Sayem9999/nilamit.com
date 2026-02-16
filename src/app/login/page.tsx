@@ -39,7 +39,9 @@ export default function LoginPage() {
       if (result?.error) {
         setError('Invalid OTP. Please try again.');
       } else {
-        window.location.href = '/auctions';
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auctions';
+        }
       }
     });
   };
