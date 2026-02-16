@@ -1,9 +1,11 @@
 'use server';
 
 import { prisma } from '@/lib/db';
+import { Resend } from 'resend';
 import { auth } from '@/lib/auth';
 import type { AuctionFilters, CreateAuctionInput } from '@/types';
 import { closeAuctionIfEnded, closeAllEndedAuctions } from '@/lib/auction-logic';
+import { AuctionStatus } from '@prisma/client';
 
 /**
  * Create a new auction (requires phone verification)
@@ -37,7 +39,7 @@ export async function createAuction(input: CreateAuctionInput) {
         endTime: new Date(input.endTime),
         location: input.location,
         sellerId: session.user.id,
-        status: 'ACTIVE',
+        status: 'ACTIVE' as any,
       },
     });
 
@@ -161,7 +163,7 @@ export async function cancelAuction(id: string) {
 
   await prisma.auction.update({
     where: { id },
-    data: { status: 'CANCELLED' },
+    data: { status: 'CANCELLED' as any },
   });
 
   return { success: true };

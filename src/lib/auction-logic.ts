@@ -18,7 +18,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
     },
   });
 
-  if (!auction || auction.status !== 'ACTIVE') return false;
+  if (!auction || (auction.status as string) !== 'ACTIVE') return false;
 
   const now = new Date();
   if (auction.endTime > now) return false;
@@ -31,7 +31,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
     await prisma.auction.update({
       where: { id: auction.id },
       data: {
-        status: 'SOLD',
+        status: 'SOLD' as any,
         winnerId: highestBid.bidder.id,
       },
     });
@@ -48,7 +48,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
   } else {
     await prisma.auction.update({
       where: { id: auction.id },
-      data: { status: 'EXPIRED' },
+      data: { status: 'EXPIRED' as any },
     });
   }
 
@@ -61,7 +61,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
 export async function closeAllEndedAuctions() {
   const auctions = await prisma.auction.findMany({
     where: {
-      status: 'ACTIVE',
+      status: 'ACTIVE' as any,
       endTime: { lte: new Date() },
     },
   });
