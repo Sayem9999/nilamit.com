@@ -59,7 +59,7 @@ export async function getAuction(id: string) {
   return prisma.auction.findUnique({
     where: { id },
     include: {
-      seller: { select: { id: true, name: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true } },
+      seller: { select: { id: true, name: true, email: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true } },
       bids: {
         include: { bidder: { select: { id: true, name: true, image: true } } },
         orderBy: { createdAt: 'desc' },
@@ -113,7 +113,7 @@ export async function getAuctions(filters: AuctionFilters = {}) {
     prisma.auction.findMany({
       where,
       include: {
-        seller: { select: { id: true, name: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true } },
+        seller: { select: { id: true, name: true, email: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true } },
         _count: { select: { bids: true } },
       },
       orderBy: sortBy === 'bids' ? { bids: { _count: sortOrder } } : orderBy,
@@ -159,7 +159,7 @@ export async function getSpecializedFeeds() {
         endTime: { gte: now, lte: soon },
       },
       include: {
-        seller: { select: { id: true, name: true, image: true, isVerifiedSeller: true, reputationScore: true, isPhoneVerified: true } },
+        seller: { select: { id: true, name: true, email: true, image: true, isVerifiedSeller: true, reputationScore: true, isPhoneVerified: true } },
         _count: { select: { bids: true } },
       },
       orderBy: { endTime: 'asc' },
