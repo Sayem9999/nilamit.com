@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Gavel, Shield, Clock, Users, ArrowRight, CheckCircle, Phone, TrendingUp, Zap, Sparkles, MapPin, Bell } from 'lucide-react';
-import { CATEGORIES } from '@/types';
+import { CATEGORIES, AuctionWithSeller } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
+import AuctionCard from '@/components/auction/AuctionCard';
 
-export function HomeContent() {
+export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: AuctionWithSeller[] }) {
   const { t } = useLanguage();
 
   const containerVariants = {
@@ -215,6 +216,47 @@ export function HomeContent() {
           </div>
         </div>
       </section>
+
+      {/* Trending Section */}
+      {trendingAuctions.length > 0 && (
+        <section className="py-16 sm:py-24 bg-gray-50/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex items-end justify-between mb-10"
+            >
+              <div>
+                <h2 className="font-heading font-black text-3xl sm:text-4xl text-gray-900 tracking-tight">
+                  <span className="text-primary-600">Trending</span> Auctions
+                </h2>
+                <p className="mt-2 text-gray-500 font-medium">Most popular items right now</p>
+              </div>
+              <Link 
+                href="/auctions?sortBy=bids&sortOrder=desc"
+                className="group flex items-center gap-2 text-primary-600 font-bold hover:text-primary-700 transition-colors"
+              >
+                View All <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
+
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8"
+            >
+              {trendingAuctions.slice(0, 4).map((auction) => (
+                <motion.div key={auction.id} variants={itemVariants}>
+                  <AuctionCard auction={auction} />
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Categories */}
       <section className="py-16 sm:py-20 bg-white">
