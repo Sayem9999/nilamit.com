@@ -6,6 +6,8 @@ import { Users, Gavel, TrendingUp, Shield, CheckCircle, XCircle, Loader2 } from 
 import Link from 'next/link';
 import { VerificationToggle } from './VerificationToggle';
 
+export const dynamic = 'force-dynamic';
+
 type AdminUsersResult = Awaited<ReturnType<typeof getAdminUsers>>;
 type AdminUser = AdminUsersResult['users'][number];
 type AdminAuctionsResult = Awaited<ReturnType<typeof getAdminAuctions>>;
