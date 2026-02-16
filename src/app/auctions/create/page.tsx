@@ -4,8 +4,8 @@ import { useState, useTransition, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { createAuction } from '@/actions/auction';
-import { CATEGORIES } from '@/types';
-import { ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { CATEGORIES, LOCATIONS } from '@/types';
+import { ArrowLeft, ArrowRight, Check, AlertCircle, MapPin } from 'lucide-react';
 import { ImageUpload } from '@/components/upload/ImageUpload';
 
 type Step = 'details' | 'pricing' | 'schedule' | 'review';
@@ -25,6 +25,7 @@ export default function CreateAuctionPage() {
     minBidIncrement: 10,
     startTime: '',
     endTime: '',
+    location: 'mirpur',
   });
 
   useEffect(() => {
@@ -125,6 +126,21 @@ export default function CreateAuctionPage() {
               </select>
             </div>
             <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Location</label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <select
+                  value={form.location}
+                  onChange={(e) => updateForm('location', e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none appearance-none"
+                >
+                  {LOCATIONS.map((loc) => (
+                    <option key={loc.id} value={loc.id}>{loc.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">Images</label>
               <ImageUpload
                 value={form.images}
@@ -196,6 +212,7 @@ export default function CreateAuctionPage() {
             <div className="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
               <div><strong className="text-gray-700">Title:</strong> <span className="text-gray-600">{form.title}</span></div>
               <div><strong className="text-gray-700">Category:</strong> <span className="text-gray-600">{form.category}</span></div>
+              <div><strong className="text-gray-700">Location:</strong> <span className="text-gray-600 uppercase font-semibold">{form.location}</span></div>
               <div><strong className="text-gray-700">Starting Price:</strong> <span className="price text-primary-700">৳{form.startingPrice}</span></div>
               <div><strong className="text-gray-700">Min Increment:</strong> <span className="price text-gray-600">৳{form.minBidIncrement}</span></div>
               <div><strong className="text-gray-700">Duration:</strong> <span className="text-gray-600">{form.startTime} → {form.endTime}</span></div>

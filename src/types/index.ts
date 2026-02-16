@@ -5,6 +5,7 @@ export type AuctionStatus = 'DRAFT' | 'ACTIVE' | 'SOLD' | 'EXPIRED' | 'CANCELLED
 export type AuctionWithSeller = Auction & {
   seller: any; // Temporarily using any to bypass stale Prisma client recognition of isVerifiedSeller
   _count?: { bids: number };
+  location?: string | null;
 };
 
 export type AuctionWithBids = AuctionWithSeller & {
@@ -33,17 +34,32 @@ export interface CreateAuctionInput {
   minBidIncrement?: number;
   startTime: string;
   endTime: string;
+  location?: string;
 }
 
 export interface AuctionFilters {
   status?: AuctionStatus;
   category?: string;
+  location?: string;
   search?: string;
   sortBy?: 'endTime' | 'currentPrice' | 'createdAt' | 'bids';
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
 }
+
+export const LOCATIONS = [
+  { id: 'mirpur', label: 'Mirpur' },
+  { id: 'banani', label: 'Banani' },
+  { id: 'dhanmondi', label: 'Dhanmondi' },
+  { id: 'gulshan', label: 'Gulshan' },
+  { id: 'uttara', label: 'Uttara' },
+  { id: 'motijheel', label: 'Motijheel' },
+  { id: 'mohammadpur', label: 'Mohammadpur' },
+  { id: 'badda', label: 'Badda' },
+  { id: 'khilgaon', label: 'Khilgaon' },
+  { id: 'farmgate', label: 'Farmgate' },
+] as const;
 
 export const CATEGORIES = [
   { slug: 'mobile-phones', label: 'Mobile Phones', icon: '📱' },

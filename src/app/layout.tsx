@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { SettingsProvider } from "@/context/SettingsContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -43,11 +44,13 @@ export default function RootLayout({
       >
         <SessionProvider>
           <SettingsProvider>
-            <Navbar />
-            <main className="min-h-screen bg-gray-50/50">
-              {children}
-            </main>
-            <Footer />
+            <LanguageProvider>
+              <Navbar />
+              <main className="min-h-screen bg-gray-50/50">
+                {children}
+              </main>
+              <Footer />
+            </LanguageProvider>
           </SettingsProvider>
         </SessionProvider>
       </body>

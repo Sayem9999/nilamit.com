@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Shield, Clock, Users, Zap } from 'lucide-react';
+import { Shield, Clock, Users, Zap, MapPin } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import { CountdownTimer } from './CountdownTimer';
 import type { AuctionWithSeller } from '@/types';
@@ -38,9 +38,9 @@ export default function AuctionCard({ auction }: { auction: AuctionWithSeller })
           {/* Status badge */}
           <div className="absolute top-3 left-3">
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-              auction.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+              (auction as any).status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
             }`}>
-              {auction.status === 'ACTIVE' ? 'Live' : auction.status}
+              {(auction as any).status === 'ACTIVE' ? 'Live' : (auction as any).status}
             </span>
           </div>
           {/* Category */}
@@ -61,6 +61,12 @@ export default function AuctionCard({ auction }: { auction: AuctionWithSeller })
             <span className="text-xs font-semibold text-gray-700 truncate">{auction.seller.name || 'Seller'}</span>
             {auction.seller.isVerifiedSeller && (
               <Shield className="w-3 h-3 text-blue-500 fill-blue-500/10 flex-shrink-0" />
+            )}
+            {auction.location && (
+              <div className="flex items-center gap-0.5 text-xs text-gray-400 ml-auto">
+                <MapPin className="w-2.5 h-2.5" />
+                <span className="capitalize">{auction.location}</span>
+              </div>
             )}
           </div>
           {/* Price */}

@@ -34,6 +34,7 @@ export async function createAuction(input: CreateAuctionInput) {
         minBidIncrement: input.minBidIncrement || 10,
         startTime: new Date(input.startTime),
         endTime: new Date(input.endTime),
+        location: input.location,
         sellerId: session.user.id,
         status: 'ACTIVE',
       },
@@ -81,6 +82,7 @@ export async function getAuctions(filters: AuctionFilters = {}) {
   const where: Record<string, unknown> = {};
   if (status) where.status = status;
   if (category) where.category = category;
+  if (filters.location) where.location = filters.location;
   if (search) {
     where.OR = [
       { title: { contains: search, mode: 'insensitive' } },

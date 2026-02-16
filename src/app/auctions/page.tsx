@@ -1,8 +1,8 @@
 import { getAuctions } from '@/actions/auction';
 import AuctionCard from '@/components/auction/AuctionCard';
-import { CATEGORIES } from '@/types';
 import Link from 'next/link';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, MapPin } from 'lucide-react';
+import { CATEGORIES, LOCATIONS } from '@/types';
 import type { AuctionStatus } from '@/types';
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
     sortOrder?: string;
     page?: string;
     status?: string;
+    location?: string;
   }>;
 }
 
@@ -25,7 +26,8 @@ export default async function AuctionsPage({ searchParams }: Props) {
     sortBy: (params.sortBy as 'endTime' | 'currentPrice' | 'createdAt' | 'bids') || 'endTime',
     sortOrder: (params.sortOrder as 'asc' | 'desc') || 'asc',
     page,
-    status: (params.status as AuctionStatus) || 'active',
+    status: (params.status as any) || 'ACTIVE',
+    location: params.location,
     limit: 12,
   });
 
@@ -112,6 +114,43 @@ export default async function AuctionsPage({ searchParams }: Props) {
                   }`}
                 >
                   {sort.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Location */}
+          <div className="mt-6">
+            <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+              <MapPin className="w-4 h-4" /> Location
+            </h3>
+            <div className="space-y-1">
+              <Link
+                href={`/auctions?${new URLSearchParams({
+                  ...(params.category ? { category: params.category } : {}),
+                  ...(params.search ? { search: params.search } : {}),
+                  ...(params.sortBy ? { sortBy: params.sortBy } : {}),
+                }).toString()}`}
+                className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                  !params.location ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                All Bangladesh
+              </Link>
+              {LOCATIONS.map((loc) => (
+                <Link
+                  key={loc.id}
+                  href={`/auctions?${new URLSearchParams({
+                    ...(params.category ? { category: params.category } : {}),
+                    ...(params.search ? { search: params.search } : {}),
+                    ...(params.sortBy ? { sortBy: params.sortBy } : {}),
+                    location: loc.id,
+                  }).toString()}`}
+                  className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                    params.location === loc.id ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {loc.label}
                 </Link>
               ))}
             </div>
