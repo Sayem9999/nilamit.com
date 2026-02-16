@@ -3,8 +3,14 @@ import { getAuctionBids } from '@/actions/bid';
 import { notFound } from 'next/navigation';
 import { formatBDT, formatRelativeTime } from '@/lib/format';
 import { CountdownTimer } from '@/components/auction/CountdownTimer';
-import { BidPanel } from '@/components/auction/BidPanel';
+import { CountdownTimer } from '@/components/auction/CountdownTimer';
+import dynamic from 'next/dynamic';
 import { Clock, Users, Eye, Shield, User, Star } from 'lucide-react';
+
+const BidPanel = dynamic(
+  () => import('@/components/auction/BidPanel').then((mod) => mod.BidPanel),
+  { ssr: false }
+);
 
 interface Props {
   params: Promise<{ id: string }>;
