@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Gavel, Shield, Clock, Users, ArrowRight, CheckCircle, Phone, TrendingUp, Zap, Sparkles } from 'lucide-react';
+import { Gavel, Shield, Clock, Users, ArrowRight, CheckCircle, Phone, TrendingUp, Zap, Sparkles, MapPin, Bell } from 'lucide-react';
 import { CATEGORIES } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -62,6 +62,18 @@ export function HomeContent() {
               <motion.p variants={itemVariants} className="mt-8 text-xl text-gray-500 max-w-xl leading-relaxed font-medium">
                 {t.home.hero_desc}
               </motion.p>
+              
+              <motion.div variants={itemVariants} className="mt-8 flex flex-wrap gap-4 text-sm font-semibold">
+                <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                  <MapPin className="w-4 h-4 text-primary-500" /> Area Filters
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                  <Bell className="w-4 h-4 text-orange-500" /> Real-time Alerts
+                </div>
+                <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                  <Zap className="w-4 h-4 text-yellow-500" /> Anti-Snipe
+                </div>
+              </motion.div>
               
               <motion.div variants={itemVariants} className="mt-10 flex flex-col sm:flex-row gap-4">
                 <Link
@@ -156,6 +168,19 @@ export function HomeContent() {
               </motion.div>
 
               <motion.div 
+                animate={{ x: [0, 20, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                className="absolute top-1/4 -right-16 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-orange-100/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                    <Bell className="w-4 h-4 text-orange-600" />
+                  </div>
+                  <div className="text-xs font-bold text-gray-900 whitespace-nowrap">Instant Notify</div>
+                </div>
+              </motion.div>
+
+              <motion.div 
                 animate={{ y: [0, 20, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                 className="absolute -bottom-10 -right-8 z-30 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl rotate-6"
@@ -168,6 +193,19 @@ export function HomeContent() {
                     <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Status</div>
                     <div className="text-xs font-bold text-gray-900">Verified Seller</div>
                   </div>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                className="absolute -left-20 bottom-12 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-primary-100/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-primary-600" />
+                  </div>
+                  <div className="text-xs font-bold text-gray-900">Area Filters Active</div>
                 </div>
               </motion.div>
 
