@@ -3,7 +3,7 @@
 import { UploadDropzone } from "@/lib/uploadthing";
 import { X, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ImageUploadProps {
   value: string[];
@@ -13,6 +13,19 @@ interface ImageUploadProps {
 
 export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+        <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex items-center justify-center text-gray-400">
+            <Loader2 className="w-6 h-6 animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <div>
