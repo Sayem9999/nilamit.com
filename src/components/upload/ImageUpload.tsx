@@ -1,6 +1,12 @@
-'use client';
+import { toast } from "react-hot-toast";
 
-import { UploadDropzone } from "@/lib/uploadthing";
+// ... inside component
+
+        onUploadError={(error: Error) => {
+          console.error("Upload Error:", error);
+          toast.error(`Upload failed: ${error.message}`);
+          setIsUploading(false);
+        }}
 import { X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -60,7 +66,8 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
           setIsUploading(false);
         }}
         onUploadError={(error: Error) => {
-          alert(`ERROR! ${error.message}`);
+          console.error("UploadThing Error:", error);
+          toast.error(`Upload failed: ${error.message}`);
           setIsUploading(false);
         }}
         appearance={{
