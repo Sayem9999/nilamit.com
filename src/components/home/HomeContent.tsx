@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { Gavel, Shield, Clock, Users, ArrowRight, CheckCircle, Phone, TrendingUp, Zap, Sparkles, MapPin, Bell, Search } from 'lucide-react';
 import { CATEGORIES, AuctionWithSeller } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
@@ -27,7 +27,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
     }
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -35,12 +35,12 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
     visible: { 
       opacity: 1, 
       y: 0, 
-      transition: { duration: 0.6, ease: "easeOut" } 
+      transition: { duration: 0.6, ease: "easeOut" as const } 
     }
   };
 
@@ -159,7 +159,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
             <motion.div 
               initial={{ opacity: 0, scale: 0.8, x: 50 }}
               whileInView={{ opacity: 1, scale: 1, x: 0 }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 1, ease: "easeOut" as const }}
               className="hidden lg:block relative"
             >
               {/* Main Card */}
@@ -208,7 +208,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
               {/* Floating Decorations */}
               <motion.div 
                 animate={{ y: [0, -20, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" as const }}
                 className="absolute -top-12 -left-12 z-30 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl -rotate-12"
               >
                 <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mb-2">
@@ -220,7 +220,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
 
               <motion.div 
                 animate={{ x: [0, 20, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" as const, delay: 0.5 }}
                 className="absolute top-1/4 -right-16 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-orange-100/50"
               >
                 <div className="flex items-center gap-3">
@@ -233,7 +233,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
 
               <motion.div 
                 animate={{ y: [0, 20, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" as const, delay: 1 }}
                 className="absolute -bottom-10 -right-8 z-30 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl rotate-6"
               >
                 <div className="flex items-center gap-3">
