@@ -146,6 +146,39 @@ export async function getMyAuctions() {
 }
 
 /**
+ * Get specialized feeds for the home page (Ending Soon, etc.)
+ */
+export async function getSpecializedFeeds() {
+  const now = new Date();
+  const soon = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Next 24 hours
+
+  const [endingSoon, latestBids] = await Promise.all([
+    prisma.auction.findMany({
+      where: {
+        status: 'ACTIVE' as any,
+        endTime: { gte: now, lte: soon },
+      },
+      include: {
+        seller: { select: { name: true, image: true, isVerifiedSeller: true } },
+        _count: { select: { bids: true } },
+      },
+      orderBy: { endTime: 'asc' },
+      take: 4,
+    }),
+    prisma.bid.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: {
+        bidder: { select: { name: true } },
+        auction: { select: { title: true, id: true } },
+      },
+    }),
+  ]);
+
+  return { endingSoon, latestBids };
+}
+
+/**
  * Cancel an auction (only seller, only if no bids)
  */
 export async function cancelAuction(id: string) {

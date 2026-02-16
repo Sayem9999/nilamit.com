@@ -1,12 +1,21 @@
 import { HomeContent } from '@/components/home/HomeContent';
-import { getAuctions } from '@/actions/auction';
+import { getAuctions, getSpecializedFeeds } from '@/actions/auction';
 
 export default async function HomePage() {
-  const { auctions: trendingAuctions } = await getAuctions({
-    sortBy: 'bids',
-    sortOrder: 'desc',
-    limit: 8
-  });
+  const [{ auctions: trendingAuctions }, { endingSoon, latestBids }] = await Promise.all([
+    getAuctions({
+      sortBy: 'bids',
+      sortOrder: 'desc',
+      limit: 8
+    }),
+    getSpecializedFeeds()
+  ]);
 
-  return <HomeContent trendingAuctions={trendingAuctions as any} />;
+  return (
+    <HomeContent 
+      trendingAuctions={trendingAuctions as any} 
+      endingSoon={endingSoon as any}
+      latestActivity={latestBids as any}
+    />
+  );
 }

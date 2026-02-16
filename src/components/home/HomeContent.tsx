@@ -2,13 +2,30 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Gavel, Shield, Clock, Users, ArrowRight, CheckCircle, Phone, TrendingUp, Zap, Sparkles, MapPin, Bell } from 'lucide-react';
+import { Gavel, Shield, Clock, Users, ArrowRight, CheckCircle, Phone, TrendingUp, Zap, Sparkles, MapPin, Bell, Search } from 'lucide-react';
 import { CATEGORIES, AuctionWithSeller } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import AuctionCard from '@/components/auction/AuctionCard';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: AuctionWithSeller[] }) {
+interface HomeContentProps {
+  trendingAuctions?: AuctionWithSeller[];
+  endingSoon?: AuctionWithSeller[];
+  latestActivity?: any[];
+}
+
+export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActivity = [] }: HomeContentProps) {
   const { t } = useLanguage();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/auctions?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -20,18 +37,42 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
 
   const itemVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } 
+    }
   };
 
   return (
     <>
+      {/* Live Ticker */}
+      {latestActivity.length > 0 && (
+        <div className="bg-gray-900 overflow-hidden py-2 hidden sm:block">
+          <div className="flex animate-marquee whitespace-nowrap">
+            {[...latestActivity, ...latestActivity].map((activity, i) => (
+              <div key={i} className="flex items-center gap-2 mx-8 text-[11px] font-bold text-gray-400">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-white">{activity.bidder.name}</span>
+                <span>bid ৳{activity.amount.toLocaleString()} on</span>
+                <Link href={`/auctions/${activity.auction.id}`} className="text-primary-400 hover:underline">
+                  {activity.auction.title}
+                </Link>
+                <Clock className="w-3 h-3 ml-1" />
+                <span>{new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-white border-b border-gray-100">
         {/* Animated Background Elements */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary-50/50 rounded-full blur-[120px] -mr-96 -mt-96 opacity-60" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-50/50 rounded-full blur-[100px] -ml-40 -mb-40 opacity-40" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 sm:pt-32 sm:pb-36">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 sm:pt-24 sm:pb-36">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             
             {/* Left Content */}
@@ -42,7 +83,7 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
               viewport={{ once: true }}
               className="relative z-10"
             >
-              <motion.div variants={itemVariants} className="inline-flex items-center gap-2 bg-primary-50 text-primary-700 border border-primary-100 rounded-full px-4 py-1.5 text-sm font-semibold mb-8 shadow-sm">
+              <motion.div variants={itemVariants} className="inline-flex items-center gap-2 bg-primary-50 text-primary-700 border border-primary-100 rounded-full px-4 py-1.5 text-sm font-semibold mb-6 shadow-sm">
                 <Sparkles className="w-4 h-4 text-primary-500 animate-pulse" />
                 {t.home.hero_badge}
               </motion.div>
@@ -60,37 +101,46 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
                 </span>
               </motion.h1>
               
-              <motion.p variants={itemVariants} className="mt-8 text-xl text-gray-500 max-w-xl leading-relaxed font-medium">
+              <motion.p variants={itemVariants} className="mt-6 text-lg text-gray-500 max-w-xl leading-relaxed font-medium">
                 {t.home.hero_desc}
               </motion.p>
               
-              <motion.div variants={itemVariants} className="mt-8 flex flex-wrap gap-4 text-sm font-semibold">
-                <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+              {/* Hero Search Bar */}
+              <motion.form 
+                variants={itemVariants}
+                onSubmit={handleSearch}
+                className="mt-10 relative max-w-xl bg-white rounded-2xl shadow-xl shadow-gray-200/50 border-2 border-primary-100 p-2 flex gap-2"
+              >
+                <div className="flex-1 px-4 flex items-center gap-3">
+                  <Search className="w-5 h-5 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Search watches, cameras, electronics..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-full bg-transparent focus:outline-none text-gray-900 font-medium placeholder:text-gray-400"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2"
+                >
+                  Search
+                </button>
+              </motion.form>
+
+              <motion.div variants={itemVariants} className="mt-8 flex flex-wrap gap-4 text-[13px] font-bold">
+                <div className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-3 py-1.5 rounded-lg border border-gray-100">
                   <MapPin className="w-4 h-4 text-primary-500" /> Area Filters
                 </div>
-                <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                <div className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-3 py-1.5 rounded-lg border border-gray-100">
                   <Bell className="w-4 h-4 text-orange-500" /> Real-time Alerts
                 </div>
-                <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                <div className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-3 py-1.5 rounded-lg border border-gray-100">
                   <Zap className="w-4 h-4 text-yellow-500" /> Anti-Snipe
                 </div>
               </motion.div>
               
-              <motion.div variants={itemVariants} className="mt-10 flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/auctions"
-                  className="group relative inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-primary-200 hover:scale-105 active:scale-95 transition-all"
-                >
-                  {t.home.cta_browse} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link
-                  href="/auctions/create"
-                  className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-100 hover:bg-gray-50 text-gray-700 font-bold px-8 py-4 rounded-2xl transition-all hover:border-gray-200 shadow-sm"
-                >
-                  {t.home.cta_sell}
-                </Link>
-              </motion.div>
-
               <motion.div variants={itemVariants} className="mt-12 flex items-center gap-6 text-gray-400">
                 <div className="flex -space-x-3">
                   {[1,2,3,4].map(i => (
@@ -109,7 +159,7 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
             <motion.div 
               initial={{ opacity: 0, scale: 0.8, x: 50 }}
               whileInView={{ opacity: 1, scale: 1, x: 0 }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
               className="hidden lg:block relative"
             >
               {/* Main Card */}
@@ -158,7 +208,7 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
               {/* Floating Decorations */}
               <motion.div 
                 animate={{ y: [0, -20, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 4, repeat: Infinity, ease: [0.42, 0, 0.58, 1] }}
                 className="absolute -top-12 -left-12 z-30 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl -rotate-12"
               >
                 <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mb-2">
@@ -170,7 +220,7 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
 
               <motion.div 
                 animate={{ x: [0, 20, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                transition={{ duration: 6, repeat: Infinity, ease: [0.42, 0, 0.58, 1], delay: 0.5 }}
                 className="absolute top-1/4 -right-16 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-orange-100/50"
               >
                 <div className="flex items-center gap-3">
@@ -183,7 +233,7 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
 
               <motion.div 
                 animate={{ y: [0, 20, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                transition={{ duration: 5, repeat: Infinity, ease: [0.42, 0, 0.58, 1], delay: 1 }}
                 className="absolute -bottom-10 -right-8 z-30 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl rotate-6"
               >
                 <div className="flex items-center gap-3">
@@ -199,7 +249,7 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
 
               <motion.div 
                 animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                transition={{ duration: 8, repeat: Infinity, ease: [0.42, 0, 0.58, 1] }}
                 className="absolute -left-20 bottom-12 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-primary-100/50"
               >
                 <div className="flex items-center gap-3">
@@ -258,8 +308,38 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
         </section>
       )}
 
+      {/* Ending Soon Section */}
+      {endingSoon.length > 0 && (
+        <section className="py-16 sm:py-24 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex items-center gap-3 mb-10"
+            >
+              <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
+                <Clock className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <h2 className="font-heading font-black text-3xl sm:text-4xl text-gray-900 tracking-tight">
+                  <span className="text-red-600">Ending</span> Soon
+                </h2>
+                <p className="mt-1 text-gray-500 font-medium">Grab them before they&apos;re gone!</p>
+              </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+              {endingSoon.map((auction) => (
+                <AuctionCard key={auction.id} auction={auction} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Categories */}
-      <section className="py-16 sm:py-20 bg-white">
+      <section className="py-16 sm:py-20 bg-gray-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">{t.home.categories_title}</h2>
@@ -270,10 +350,10 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
               <Link
                 key={cat.slug}
                 href={`/auctions?category=${cat.slug}`}
-                className="bg-gray-50 hover:bg-primary-50 border border-gray-100 hover:border-primary-200 rounded-2xl p-5 text-center transition-all group"
+                className="bg-white hover:bg-primary-50 border border-gray-100 hover:border-primary-200 rounded-2xl p-5 text-center transition-all group shadow-sm hover:shadow-md"
               >
-                <div className="text-3xl mb-2">{cat.icon}</div>
-                <p className="text-sm font-medium text-gray-700 group-hover:text-primary-700">{cat.label}</p>
+                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{cat.icon}</div>
+                <p className="text-sm font-bold text-gray-700 group-hover:text-primary-700">{cat.label}</p>
               </Link>
             ))}
           </div>
@@ -281,7 +361,7 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
       </section>
 
       {/* How It Works */}
-      <section className="py-16 sm:py-20 bg-gray-50">
+      <section className="py-16 sm:py-20 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">{t.home.how_title}</h2>
@@ -301,7 +381,7 @@ export function HomeContent({ trendingAuctions = [] }: { trendingAuctions?: Auct
                   {i + 1}
                 </div>
                 <h3 className="font-heading font-semibold text-gray-900 mb-2">{step.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{step.desc}</p>
+                <p className="text-sm text-gray-500 leading-relaxed max-w-[250px] mx-auto">{step.desc}</p>
               </div>
             ))}
           </div>
