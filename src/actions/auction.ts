@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import type { AuctionFilters, CreateAuctionInput } from '@/types';
+import { closeAuctionIfEnded, closeAllEndedAuctions } from '@/lib/auction-logic';
 
 /**
  * Create a new auction (requires phone verification)
@@ -50,6 +51,9 @@ export async function createAuction(input: CreateAuctionInput) {
  * Get a single auction with seller info and bids
  */
 export async function getAuction(id: string) {
+  // Passive check: Ensure the auction is closed if time is up
+  await closeAuctionIfEnded(id);
+  
   return prisma.auction.findUnique({
     where: { id },
     include: {
@@ -78,6 +82,12 @@ export async function getAuctions(filters: AuctionFilters = {}) {
     page = 1,
     limit = 12,
   } = filters;
+
+  // Proactive check: On browse, occasionally sweep for ended auctions
+  // This helps keep the "Active" list fresh
+  if (Math.random() > 0.8) { 
+    closeAllEndedAuctions().catch(console.error);
+  }
 
   const where: Record<string, unknown> = {};
   if (status) where.status = status;
