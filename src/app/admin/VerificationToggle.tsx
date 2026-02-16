@@ -18,7 +18,7 @@ export function VerificationToggle({ userId, initialStatus }: VerificationToggle
     try {
       await adminToggleVerification(userId);
       setIsVerified(!isVerified);
-    } catch (error) {
+    } catch {
       alert('Verification toggle failed');
     } finally {
       setIsLoading(false);
