@@ -63,7 +63,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { isPhoneVerified: true, phone: true, reputationScore: true },
+          select: { isPhoneVerified: true, phone: true, reputationScore: true, email: true },
         });
         if (dbUser) {
           token.isPhoneVerified = dbUser.isPhoneVerified;
@@ -71,15 +71,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.reputationScore = dbUser.reputationScore;
         }
       }
+      
+      // Admin Check
+      const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
+      if (token.email && adminEmails.includes(token.email)) {
+        token.isAdmin = true;
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        const u = session.user as unknown as Record<string, unknown>;
+        const u = session.user as any; // Cast to allow custom properties
         u.isPhoneVerified = token.isPhoneVerified;
         u.phone = token.phone;
         u.reputationScore = token.reputationScore;
+        u.isAdmin = token.isAdmin;
       }
       return session;
     },
