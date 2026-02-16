@@ -8,6 +8,8 @@ import { TrendingUp, AlertCircle, CheckCircle, Shield, Clock } from 'lucide-reac
 import { CountdownTimer } from './CountdownTimer';
 import { useSettings } from '@/context/SettingsContext';
 import { pusherClient } from '@/lib/pusher-client';
+import { useSound } from '@/hooks/useSound';
+import { Volume2, VolumeX } from 'lucide-react';
 
 interface BidPanelProps {
   auctionId: string;
@@ -29,7 +31,8 @@ export function BidPanel({
   onBidPlaced,
 }: BidPanelProps) {
   const { data: session } = useSession();
-  const { soundEffectsEnabled } = useSettings();
+  const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
+  const { play: playGavel } = useSound('/sounds/gavel.mp3');
   const [latestPrice, setLatestPrice] = useState(currentPrice);
   const [latestEndTime, setLatestEndTime] = useState(new Date(endTime));
   const [bidAmount, setBidAmount] = useState(currentPrice + minBidIncrement);
@@ -46,6 +49,7 @@ export function BidPanel({
     channel.bind('new-bid', (data: { amount: number; endTime: string | Date }) => {
       setLatestPrice(data.amount);
       setLatestEndTime(new Date(data.endTime));
+      playGavel(); // Trigger sound for real-time bids
     });
 
     return () => {
@@ -53,13 +57,6 @@ export function BidPanel({
     };
   }, [auctionId, isExpired]);
 
-  // Sync bid amount if price changes and current amount is now too low
-  useEffect(() => {
-    const minRequired = latestPrice + minBidIncrement;
-    if (bidAmount < minRequired) {
-      setBidAmount(minRequired);
-    }
-  }, [latestPrice, minBidIncrement, bidAmount]);
 
   const minBid = latestPrice + minBidIncrement;
   const quickBids = [minBid, minBid + minBidIncrement * 2, minBid + minBidIncrement * 5];
@@ -76,12 +73,9 @@ export function BidPanel({
       const res = await placeBid(auctionId, bidAmount);
       setResult(res);
       if (res.success) {
-        // Sound Effect
-        if (soundEffectsEnabled) {
-          const audio = new Audio('/sounds/gavel.mp3');
-          audio.volume = 0.5;
-          audio.play().catch(e => console.error('Audio play failed:', e));
-        }
+        // Sound Effect handled by setLatestPrice if we want it to triggers
+        // or manually here for faster feedback
+        playGavel();
 
         // Price will update via next poll or immediately here for better UX
         const newPrice = bidAmount;
@@ -104,9 +98,20 @@ export function BidPanel({
           <TrendingUp className="w-5 h-5 text-primary-600" />
           Place Your Bid
         </h3>
-        <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg">
-          <Clock className="w-4 h-4" />
-          <CountdownTimer endTime={latestEndTime} />
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={toggleSoundEffects}
+            className={`p-1.5 rounded-lg transition-colors ${
+              soundEffectsEnabled ? 'text-primary-600 bg-primary-50' : 'text-gray-400 bg-gray-50'
+            }`}
+            title={soundEffectsEnabled ? 'Mute' : 'Unmute'}
+          >
+            {soundEffectsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </button>
+          <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg">
+            <Clock className="w-4 h-4" />
+            <CountdownTimer endTime={latestEndTime} />
+          </div>
         </div>
       </div>
 

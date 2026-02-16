@@ -3,6 +3,7 @@ import { getAuctionBids } from '@/actions/bid';
 import { formatBDT, formatRelativeTime } from '@/lib/format';
 import { CountdownTimer } from '@/components/auction/CountdownTimer';
 import BidPanelWrapper from '@/components/auction/BidPanelWrapper';
+import { StickyBidBar } from '@/components/auction/StickyBidBar';
 import { Clock, Users, Eye, Shield, User, Star, CheckCircle, TrendingUp } from 'lucide-react';
 import { canReviewAuction } from '@/actions/review';
 import { ReviewForm } from '@/components/review/ReviewForm';
@@ -24,7 +25,8 @@ export default async function AuctionDetailPage({ params }: Props) {
   const bids = await getAuctionBids(id);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+      <StickyBidBar currentPrice={auction.currentPrice} targetId="mobile-bid-anchor" />
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left: Details */}
         <div className="flex-1">
@@ -158,7 +160,7 @@ export default async function AuctionDetailPage({ params }: Props) {
         </div>
 
         {/* Right: Bid Panel + Seller Info */}
-        <div className="lg:w-96 flex-shrink-0 space-y-6">
+        <div id="mobile-bid-anchor" className="lg:w-96 flex-shrink-0 space-y-6">
           {/* Price Card */}
           <div className="bg-gradient-to-br from-primary-50 to-white border border-primary-100 rounded-2xl p-6">
             <p className="text-xs font-medium text-primary-600 mb-1">Current Bid</p>

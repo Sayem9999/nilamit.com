@@ -161,34 +161,81 @@ export function Navbar() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
+        <div className="md:hidden border-t border-gray-100 bg-white shadow-lg animate-in slide-in-from-top duration-300">
           <div className="px-4 py-4 space-y-2">
-            <Link href="/auctions" className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl" onClick={() => setMobileMenuOpen(false)}>
-              {t.nav.browse}
-            </Link>
-            {session ? (
-              <>
-                <Link href="/auctions/create" className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl" onClick={() => setMobileMenuOpen(false)}>
-                  {t.nav.sell}
-                </Link>
-                <Link href="/dashboard" className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl" onClick={() => setMobileMenuOpen(false)}>
-                  {t.nav.dashboard}
-                </Link>
-                <Link href="/profile" className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl" onClick={() => setMobileMenuOpen(false)}>
-                  {t.nav.profile}
-                </Link>
-                <button
-                  onClick={() => { signOut(); setMobileMenuOpen(false); }}
-                  className="block w-full text-left px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl"
-                >
-                   {t.nav.signout}
-                </button>
-              </>
-            ) : (
-              <Link href="/login" className="block px-4 py-3 text-sm font-semibold text-primary-600 bg-primary-50 rounded-xl text-center" onClick={() => setMobileMenuOpen(false)}>
-                 {t.nav.signin}
+            <div className="pt-2 pb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              {t.nav.settings}
+            </div>
+            <div className="grid grid-cols-2 gap-2 px-4 py-2">
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 rounded-xl"
+              >
+                <Globe className="w-4 h-4" />
+                {locale === 'en' ? 'বাংলা' : 'English'}
+              </button>
+              <button
+                onClick={toggleLightweightMode}
+                className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-xl border transition-colors ${
+                  lightweightMode 
+                    ? 'bg-amber-50 text-amber-700 border-amber-100' 
+                    : 'bg-gray-50 text-gray-700 border-transparent'
+                }`}
+              >
+                {lightweightMode ? <ZapOff className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                {lightweightMode ? 'Standard' : 'Lite'}
+              </button>
+              <button
+                onClick={toggleSoundEffects}
+                className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-xl border transition-colors ${
+                  !soundEffectsEnabled 
+                    ? 'bg-red-50 text-red-700 border-red-100' 
+                    : 'bg-gray-50 text-gray-700 border-transparent'
+                }`}
+              >
+                {soundEffectsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                {soundEffectsEnabled ? 'Sounds' : 'Muted'}
+              </button>
+              <button
+                onClick={handleToggleNotifications}
+                className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-xl border transition-colors ${
+                  notificationsEnabled 
+                    ? 'bg-blue-50 text-blue-700 border-blue-100' 
+                    : 'bg-gray-50 text-gray-700 border-transparent'
+                }`}
+              >
+                {notificationsEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+                {notificationsEnabled ? 'Alerts' : 'Silent'}
+              </button>
+            </div>
+            <div className="border-t border-gray-50 mt-2 pt-2">
+              <Link href="/auctions" className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl" onClick={() => setMobileMenuOpen(false)}>
+                {t.nav.browse}
               </Link>
-            )}
+              {session ? (
+                <>
+                  <Link href="/auctions/create" className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl" onClick={() => setMobileMenuOpen(false)}>
+                    {t.nav.sell}
+                  </Link>
+                  <Link href="/dashboard" className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl" onClick={() => setMobileMenuOpen(false)}>
+                    {t.nav.dashboard}
+                  </Link>
+                  <Link href="/profile" className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl" onClick={() => setMobileMenuOpen(false)}>
+                    {t.nav.profile}
+                  </Link>
+                  <button
+                    onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                    className="block w-full text-left px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl"
+                  >
+                    {t.nav.signout}
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" className="block px-4 py-3 text-sm font-semibold text-primary-600 bg-primary-50 rounded-xl text-center" onClick={() => setMobileMenuOpen(false)}>
+                  {t.nav.signin}
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -97,7 +97,7 @@ export async function adminUpdateUser(userId: string, data: { reputationScore?: 
 /** Admin: toggle verified seller status */
 export async function adminToggleVerification(userId: string) {
   await requireAdmin();
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { isVerifiedSeller: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { isVerifiedSeller: true } }) as any;
   if (!user) throw new Error('User not found');
   
   return prisma.user.update({
@@ -106,10 +106,13 @@ export async function adminToggleVerification(userId: string) {
   });
 }
 
-/** Admin: update delivery status */
-export async function adminUpdateDelivery(auctionId: string, status: OrderStatus) {
+/** Admin: update delivery status and tracking */
+export async function adminUpdateDelivery(auctionId: string, status: OrderStatus, trackingNumber?: string) {
   await requireAdmin();
-  return prisma.auction.update({ where: { id: auctionId }, data: { deliveryStatus: status } });
+  const data: any = { deliveryStatus: status };
+  if (trackingNumber !== undefined) data.trackingNumber = trackingNumber;
+  
+  return prisma.auction.update({ where: { id: auctionId }, data });
 }
 
 /** Admin: force-cancel an auction */

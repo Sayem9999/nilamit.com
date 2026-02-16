@@ -80,6 +80,25 @@ html {
   letter-spacing: -0.02em;
 }
 
+
+/* Mobile Refinements */
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+.container-tight {
+  @apply px-4 sm:px-6 lg:px-8;
+}
+
+/* Button Active States for Touch */
+button:active:not(:disabled), 
+a:active:not(:disabled) {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
 @keyframes marquee {
   0% {
     transform: translateX(0);

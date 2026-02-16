@@ -37,7 +37,7 @@ export default function AuctionCard({ auction }: { auction: AuctionWithSeller })
           )}
           {/* Status badge */}
           <div className="absolute top-3 left-3">
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+            <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${
               (auction as any).status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
             }`}>
               {(auction as any).status === 'ACTIVE' ? 'Live' : (auction as any).status}
@@ -52,13 +52,13 @@ export default function AuctionCard({ auction }: { auction: AuctionWithSeller })
         </div>
 
         {/* Content */}
-        <div className="p-4">
-          <h3 className="font-heading font-semibold text-gray-900 line-clamp-1 group-hover:text-primary-600 transition-colors">
+        <div className="p-3 sm:p-4">
+          <h3 className="font-heading font-semibold text-gray-900 text-sm sm:text-base line-clamp-1 group-hover:text-primary-600 transition-colors">
             {auction.title}
           </h3>
 
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-xs font-semibold text-gray-700 truncate">{auction.seller.name || 'Seller'}</span>
+          <div className="flex items-center gap-1 min-w-0 mt-0.5">
+            <span className="text-[10px] sm:text-xs font-semibold text-gray-700 truncate">{auction.seller.name || 'Seller'}</span>
             {auction.seller.isVerifiedSeller && (
               <Shield className="w-3 h-3 text-blue-500 fill-blue-500/10 flex-shrink-0" />
             )}
@@ -69,25 +69,25 @@ export default function AuctionCard({ auction }: { auction: AuctionWithSeller })
               </div>
             )}
             {auction.location && (
-              <div className="flex items-center gap-0.5 text-xs text-gray-400 ml-auto">
+              <div className="hidden sm:flex items-center gap-0.5 text-xs text-gray-400 ml-auto">
                 <MapPin className="w-2.5 h-2.5" />
                 <span className="capitalize">{auction.location}</span>
               </div>
             )}
           </div>
           {/* Price */}
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="price text-xl text-primary-700">{formatBDT(auction.currentPrice)}</span>
+          <div className="mt-1 sm:mt-2 flex items-baseline gap-1.5">
+            <span className="price text-lg sm:text-xl text-primary-700">{formatBDT(auction.currentPrice)}</span>
             {auction.currentPrice > auction.startingPrice && (
-              <span className="text-xs text-gray-400 line-through">{formatBDT(auction.startingPrice)}</span>
+              <span className="text-[10px] sm:text-xs text-gray-400 line-through">{formatBDT(auction.startingPrice)}</span>
             )}
           </div>
 
           {/* Meta */}
-          <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+          <div className="mt-2 sm:mt-3 flex items-center justify-between text-[10px] sm:text-xs text-gray-500 pt-2 border-t border-gray-50">
             <div className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
-              <CountdownTimer endTime={auction.endTime} className="text-xs" />
+              <CountdownTimer endTime={auction.endTime} className="text-[10px] sm:text-xs font-bold" />
             </div>
             <div className="flex items-center gap-1">
               <Users className="w-3.5 h-3.5" />

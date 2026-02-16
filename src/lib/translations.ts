@@ -9,6 +9,7 @@ export const translations = {
       profile: 'Profile',
       signin: 'Sign In',
       signout: 'Sign Out',
+      settings: 'Settings',
     },
     home: {
       hero_badge: 'Trusted by thousands across Bangladesh',
@@ -50,6 +51,7 @@ export const translations = {
       profile: 'প্রোফাইল',
       signin: 'লগ ইন',
       signout: 'লগ আউট',
+      settings: 'সেটিংস',
     },
     home: {
       hero_badge: 'বাংলাদেশের হাজারো মানুষের আস্থার প্রতীক',

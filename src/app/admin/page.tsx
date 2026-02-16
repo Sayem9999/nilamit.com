@@ -145,27 +145,45 @@ export default async function AdminPage() {
                       <td className="px-4 py-3 text-xs text-gray-600">{a._count?.bids || 0}</td>
                       <td className="px-4 py-3">
                         {(a.status as AuctionStatus) === 'SOLD' ? (
-                          <form action={async (formData) => {
-                            'use server';
-                            await adminUpdateDelivery(a.id, formData.get('status') as OrderStatus);
-                          }}>
-                            <select 
-                              name="status"
-                              defaultValue={a.deliveryStatus || 'PENDING'}
-                              onChange={(e) => e.target.form?.requestSubmit()}
-                              className={`text-[10px] font-bold uppercase tracking-wider rounded-lg border-0 py-1 pl-2 pr-6 cursor-pointer focus:ring-2 focus:ring-primary-500 ${
-                                (a.deliveryStatus as OrderStatus) === 'DELIVERED' ? 'bg-green-100 text-green-700'
-                                : (a.deliveryStatus as OrderStatus) === 'SHIPPED' ? 'bg-purple-100 text-purple-700'
-                                : (a.deliveryStatus as OrderStatus) === 'RECEIVED' ? 'bg-gray-100 text-gray-700'
-                                : 'bg-amber-100 text-amber-700'
-                              }`}
-                            >
-                              <option value="PENDING">Pending</option>
-                              <option value="SHIPPED">Shipped</option>
-                              <option value="DELIVERED">Delivered</option>
-                              <option value="RECEIVED">Received</option>
-                            </select>
-                          </form>
+                          <div className="flex flex-col gap-1.5">
+                            <form action={async (formData) => {
+                              'use server';
+                              await adminUpdateDelivery(
+                                a.id, 
+                                formData.get('status') as OrderStatus,
+                                formData.get('tracking') as string
+                              );
+                            }} className="flex flex-col gap-1">
+                              <select 
+                                name="status"
+                                defaultValue={a.deliveryStatus || 'PENDING'}
+                                onChange={(e) => e.target.form?.requestSubmit()}
+                                className={`text-[10px] font-bold uppercase tracking-wider rounded-lg border-0 py-1 pl-2 pr-6 cursor-pointer focus:ring-2 focus:ring-primary-500 w-full ${
+                                  (a.deliveryStatus as OrderStatus) === 'DELIVERED' ? 'bg-green-100 text-green-700'
+                                  : (a.deliveryStatus as OrderStatus) === 'SHIPPED' ? 'bg-purple-100 text-purple-700'
+                                  : (a.deliveryStatus as OrderStatus) === 'RECEIVED' ? 'bg-gray-100 text-gray-700'
+                                  : 'bg-amber-100 text-amber-700'
+                                }`}
+                              >
+                                <option value="PENDING">Pending</option>
+                                <option value="SHIPPED">Shipped</option>
+                                <option value="DELIVERED">Delivered</option>
+                                <option value="RECEIVED">Received</option>
+                              </select>
+                              <input 
+                                type="text"
+                                name="tracking"
+                                placeholder="Tracking #"
+                                defaultValue={a.trackingNumber || ''}
+                                onBlur={(e) => {
+                                  if (e.target.value !== (a.trackingNumber || '')) {
+                                    e.target.form?.requestSubmit();
+                                  }
+                                }}
+                                className="text-[10px] py-1 px-2 border border-gray-100 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500 w-full outline-none"
+                              />
+                            </form>
+                          </div>
                         ) : (
                           <span className="text-xs text-gray-300">—</span>
                         )}

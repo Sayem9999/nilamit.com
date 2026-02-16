@@ -166,7 +166,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
               <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
               {auctions.map((auction) => (
                 <AuctionCard key={auction.id} auction={auction} />
               ))}

@@ -80,7 +80,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
     <>
       {/* Live Ticker */}
       {activities.length > 0 && (
-        <div className="bg-gray-900 overflow-hidden py-2 hidden sm:block">
+        <div className="bg-gray-900 overflow-hidden py-2 block">
           <div className="flex animate-marquee whitespace-nowrap">
             {[...activities, ...activities].map((activity, i) => (
               <div key={i} className="flex items-center gap-2 mx-8 text-[11px] font-bold text-gray-400">
@@ -120,7 +120,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
                 {t.home.hero_badge}
               </motion.div>
               
-              <motion.h1 variants={itemVariants} className="font-heading font-black text-5xl sm:text-6xl lg:text-7xl text-gray-900 leading-[1.1] tracking-tight">
+              <motion.h1 variants={itemVariants} className="font-heading font-black text-4xl sm:text-6xl lg:text-7xl text-gray-900 leading-[1.1] tracking-tight text-center lg:text-left">
                 {t.home.hero_title_1}{' '}
                 <span className="relative inline-block">
                   <span className="relative z-10 text-primary-600 italic">{t.home.hero_title_2}</span>
@@ -128,12 +128,12 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
                     initial={{ width: 0 }}
                     whileInView={{ width: '100%' }}
                     transition={{ delay: 0.8, duration: 1.2 }}
-                    className="absolute bottom-2 left-0 h-3 bg-primary-100 -z-0 rounded-full"
+                    className="absolute bottom-1 sm:bottom-2 left-0 h-2 sm:h-3 bg-primary-100 -z-0 rounded-full"
                   />
                 </span>
               </motion.h1>
               
-              <motion.p variants={itemVariants} className="mt-6 text-lg text-gray-500 max-w-xl leading-relaxed font-medium">
+              <motion.p variants={itemVariants} className="mt-6 text-base sm:text-lg text-gray-500 max-w-xl leading-relaxed font-medium text-center lg:text-left mx-auto lg:mx-0">
                 {t.home.hero_desc}
               </motion.p>
               
@@ -338,7 +338,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+              className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8"
             >
               {trendingAuctions.slice(0, 4).map((auction) => (
                 <motion.div key={auction.id} variants={itemVariants}>
@@ -372,7 +372,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
               {endingSoon.map((auction) => (
                 <AuctionCard key={auction.id} auction={auction} />
               ))}

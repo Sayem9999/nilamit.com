@@ -1,7 +1,8 @@
 import type { Auction, Bid, User, AuctionStatus, OrderStatus } from '@prisma/client';
+export type { AuctionStatus, OrderStatus };
 
 export type AuctionWithSeller = Auction & {
-  seller: Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller'>;
+  seller: Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified'>;
   _count?: { bids: number };
   location?: string | null;
 };
