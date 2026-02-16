@@ -1,16 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { Clock, Users } from 'lucide-react';
+import { Shield, Clock, Users, Zap } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import { CountdownTimer } from './CountdownTimer';
 import type { AuctionWithSeller } from '@/types';
+import { useSettings } from '@/context/SettingsContext';
 
-interface AuctionCardProps {
-  auction: AuctionWithSeller;
-}
-
-export function AuctionCard({ auction }: AuctionCardProps) {
+export default function AuctionCard({ auction }: { auction: AuctionWithSeller }) {
+  const { lightweightMode } = useSettings();
+  const mainImage = auction.images[0] || '/placeholder.png';
   const bidCount = auction._count?.bids ?? 0;
 
   return (
@@ -18,25 +17,30 @@ export function AuctionCard({ auction }: AuctionCardProps) {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group-hover:-translate-y-1">
         {/* Image */}
         <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-          {auction.images[0] ? (
-            <img
-              src={auction.images[0]}
-              alt={auction.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300">
-              <span className="text-4xl">📦</span>
+          {lightweightMode ? (
+            <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-2 p-4 text-center">
+              <Zap className="w-8 h-8 text-amber-500 animate-pulse" />
+              <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Lite Mode Active</span>
             </div>
+          ) : (
+            auction.images[0] ? (
+              <img
+                src={mainImage}
+                alt={auction.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-300">
+                <span className="text-4xl">📦</span>
+              </div>
+            )
           )}
           {/* Status badge */}
           <div className="absolute top-3 left-3">
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-              auction.status === 'active'
-                ? 'bg-green-100 text-green-700'
-                : 'bg-gray-100 text-gray-600'
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+              auction.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
             }`}>
-              {auction.status === 'active' ? 'Live' : auction.status}
+              {auction.status === 'ACTIVE' ? 'Live' : auction.status}
             </span>
           </div>
           {/* Category */}
@@ -53,6 +57,12 @@ export function AuctionCard({ auction }: AuctionCardProps) {
             {auction.title}
           </h3>
 
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-xs font-semibold text-gray-700 truncate">{auction.seller.name || 'Seller'}</span>
+            {auction.seller.isVerifiedSeller && (
+              <Shield className="w-3 h-3 text-blue-500 fill-blue-500/10 flex-shrink-0" />
+            )}
+          </div>
           {/* Price */}
           <div className="mt-2 flex items-baseline gap-2">
             <span className="price text-xl text-primary-700">{formatBDT(auction.currentPrice)}</span>

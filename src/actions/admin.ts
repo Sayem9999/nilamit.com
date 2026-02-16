@@ -21,7 +21,7 @@ export async function getAdminStats() {
     prisma.user.count(),
     prisma.user.count({ where: { isPhoneVerified: true } }),
     prisma.auction.count(),
-    prisma.auction.count({ where: { status: 'active' } }),
+    prisma.auction.count({ where: { status: 'ACTIVE' } }),
     prisma.bid.count(),
     prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 10, select: { id: true, name: true, email: true, isPhoneVerified: true, reputationScore: true, createdAt: true } }),
   ]);
@@ -59,7 +59,7 @@ export async function getAdminUsers(page = 1, limit = 20, search?: string) {
 export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
   await requireAdmin();
 
-  const where = status ? { status: status as 'active' | 'completed' | 'cancelled' | 'draft' } : {};
+  const where = status ? { status: status as 'ACTIVE' | 'SOLD' | 'EXPIRED' | 'CANCELLED' | 'DRAFT' } : {};
 
   const [auctions, total] = await Promise.all([
     prisma.auction.findMany({
@@ -84,5 +84,5 @@ export async function adminUpdateUser(userId: string, data: { reputationScore?: 
 /** Admin: force-cancel an auction */
 export async function adminCancelAuction(auctionId: string) {
   await requireAdmin();
-  return prisma.auction.update({ where: { id: auctionId }, data: { status: 'cancelled' } });
+  return prisma.auction.update({ where: { id: auctionId }, data: { status: 'CANCELLED' } });
 }

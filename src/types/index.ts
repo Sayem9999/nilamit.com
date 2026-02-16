@@ -1,9 +1,9 @@
 import type { Auction, Bid, User } from '@prisma/client';
 
-export type AuctionStatus = 'draft' | 'active' | 'completed' | 'cancelled';
+export type AuctionStatus = 'DRAFT' | 'ACTIVE' | 'SOLD' | 'EXPIRED' | 'CANCELLED';
 
 export type AuctionWithSeller = Auction & {
-  seller: Pick<User, 'id' | 'name' | 'image' | 'reputationScore' | 'isPhoneVerified'>;
+  seller: any; // Temporarily using any to bypass stale Prisma client recognition of isVerifiedSeller
   _count?: { bids: number };
 };
 

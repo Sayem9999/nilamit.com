@@ -33,6 +33,23 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
     return { success: false, error: 'PHONE_NOT_VERIFIED' };
   }
 
+  // Phase 2: High-stakes Bid Deposit Check
+  if (amount >= 10000) {
+    const fullUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isVerifiedSeller: true, bidDeposits: { where: { auctionId, status: 'held' } } }
+    });
+    
+    // If not a verified seller/user AND no deposit held, block the bid
+    if (!fullUser?.isVerifiedSeller && (!fullUser?.bidDeposits || fullUser.bidDeposits.length === 0)) {
+      return { 
+        success: false, 
+        error: 'DEPOSIT_REQUIRED',
+        // Note: In a real app, we'd return a link to the deposit page
+      };
+    }
+  }
+
   try {
     // SERIALIZABLE transaction with row-level locking
     const result = await prisma.$transaction(async (tx) => {
@@ -56,7 +73,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         throw new Error('Auction not found.');
       }
 
-      if (auction.status !== 'active') {
+      if (auction.status !== 'ACTIVE') {
         throw new Error('This auction is not active.');
       }
 

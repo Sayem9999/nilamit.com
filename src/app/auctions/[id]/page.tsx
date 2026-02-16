@@ -4,7 +4,9 @@ import { notFound } from 'next/navigation';
 import { formatBDT, formatRelativeTime } from '@/lib/format';
 import { CountdownTimer } from '@/components/auction/CountdownTimer';
 import BidPanelWrapper from '@/components/auction/BidPanelWrapper';
-import { Clock, Users, Eye, Shield, User, Star } from 'lucide-react';
+import { Clock, Users, Eye, Shield, User, Star, CheckCircle } from 'lucide-react';
+
+import { useSettings } from '@/context/SettingsContext';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -13,8 +15,10 @@ interface Props {
 export default async function AuctionDetailPage({ params }: Props) {
   const { id } = await params;
   const auction = await getAuction(id);
-
-  if (!auction) notFound();
+  // Note: Settings are client-side, but we can pass them via a wrapper if needed.
+  // For now, let's make the image gallery a client component or handle it there.
+  
+  if (!auction) return <div>Auction not found</div>;
 
   const bids = await getAuctionBids(id);
 
@@ -51,16 +55,21 @@ export default async function AuctionDetailPage({ params }: Props) {
 
           {/* Title & Meta */}
           <div className="mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                auction.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-              }`}>
-                {auction.status === 'active' ? '🟢 Live' : auction.status}
-              </span>
-              <span className="bg-primary-100 text-primary-700 px-2.5 py-1 rounded-full text-xs font-medium">
-                {auction.category}
-              </span>
-            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-medium uppercase tracking-wider mb-2">
+                <span className="bg-primary-50 text-primary-700 px-2 py-1 rounded-md border border-primary-100">
+                  {auction.category}
+                </span>
+                {auction.location && (
+                  <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md border border-gray-200">
+                    📍 {auction.location}
+                  </span>
+                )}
+                {auction.status === 'ACTIVE' && (
+                  <span className="bg-green-50 text-green-700 px-2 py-1 rounded-md border border-green-100 animate-pulse">
+                    LIVE
+                  </span>
+                )}
+              </div>
             <h1 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900 mb-3">
               {auction.title}
             </h1>
@@ -158,11 +167,16 @@ export default async function AuctionDetailPage({ params }: Props) {
                 )}
               </div>
               <div>
-                <p className="font-medium text-gray-900">{auction.seller.name || 'Seller'}</p>
+                <p className="font-medium text-gray-900 flex items-center gap-1.5">
+                  {auction.seller.name || 'Seller'}
+                  {auction.seller.isVerifiedSeller && (
+                    <Shield className="w-4 h-4 text-blue-500 fill-blue-500/10" />
+                  )}
+                </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   {auction.seller.isPhoneVerified && (
-                    <span className="flex items-center gap-1 text-green-600">
-                      <Shield className="w-3 h-3" /> Verified
+                    <span className="flex items-center gap-1 text-green-600 font-medium">
+                      <CheckCircle className="w-3 h-3" /> Verified Phone
                     </span>
                   )}
                   <span className="flex items-center gap-1">

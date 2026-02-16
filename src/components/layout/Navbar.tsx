@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { useState } from 'react';
-import { Menu, X, Gavel, User, LogOut, Plus, LayoutDashboard, Globe } from 'lucide-react';
+import { Menu, X, Gavel, User, LogOut, Plus, LayoutDashboard, Globe, Zap, ZapOff } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSettings } from '@/context/SettingsContext';
 
 export function Navbar() {
   const { data: session } = useSession();
   const { locale, setLocale, t } = useLanguage();
+  const { lightweightMode, toggleLightweightMode } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleLanguage = () => {
@@ -34,9 +36,23 @@ export function Navbar() {
             <button
               onClick={toggleLanguage}
               className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors bg-gray-50 px-3 py-1.5 rounded-lg"
+              title={locale === 'en' ? 'Switch to Bangla' : 'English এ পরিবর্তন করুন'}
             >
               <Globe className="w-4 h-4" />
               {locale === 'en' ? 'বাংলা' : 'English'}
+            </button>
+
+            <button
+              onClick={toggleLightweightMode}
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg ${
+                lightweightMode 
+                  ? 'bg-amber-50 text-amber-700 border border-amber-100' 
+                  : 'bg-gray-50 text-gray-600 hover:text-primary-600'
+              }`}
+              title={lightweightMode ? 'Standard Mode (Show Images)' : 'Lightweight Mode (Save Data)'}
+            >
+              {lightweightMode ? <ZapOff className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+              {lightweightMode ? 'Standard' : 'Lite'}
             </button>
 
             <Link href="/auctions" className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">

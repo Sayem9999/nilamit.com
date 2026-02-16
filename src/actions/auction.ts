@@ -35,7 +35,7 @@ export async function createAuction(input: CreateAuctionInput) {
         startTime: new Date(input.startTime),
         endTime: new Date(input.endTime),
         sellerId: session.user.id,
-        status: 'active',
+        status: 'ACTIVE',
       },
     });
 
@@ -69,7 +69,7 @@ export async function getAuction(id: string) {
  */
 export async function getAuctions(filters: AuctionFilters = {}) {
   const {
-    status = 'active',
+    status = 'ACTIVE',
     category,
     search,
     sortBy = 'endTime',
@@ -149,7 +149,7 @@ export async function cancelAuction(id: string) {
 
   await prisma.auction.update({
     where: { id },
-    data: { status: 'cancelled' },
+    data: { status: 'CANCELLED' },
   });
 
   return { success: true };

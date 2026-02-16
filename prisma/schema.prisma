@@ -18,6 +18,7 @@ model User {
   image           String?
   phone           String?  @unique
   isPhoneVerified Boolean  @default(false)
+  isVerifiedSeller Boolean @default(false)
   reputationScore Int      @default(0)
   googleId        String?  @unique
   createdAt       DateTime @default(now())
@@ -79,12 +80,13 @@ model Auction {
   description     String        @db.Text
   images          String[]      // Array of image URLs
   category        String
+  location        String?       // mirpur, banani, dhanmondi, etc.
   startingPrice   Float
   currentPrice    Float
   minBidIncrement Float         @default(10)
   startTime       DateTime
   endTime         DateTime
-  status          AuctionStatus @default(draft)
+  status          AuctionStatus @default(DRAFT)
   
   sellerId        String
   seller          User          @relation("Seller", fields: [sellerId], references: [id])
@@ -100,14 +102,16 @@ model Auction {
 
   @@index([status, endTime])
   @@index([category])
+  @@index([location])
   @@index([sellerId])
 }
 
 enum AuctionStatus {
-  draft
-  active
-  completed
-  cancelled
+  DRAFT
+  ACTIVE
+  SOLD
+  EXPIRED
+  CANCELLED
 }
 
 // ─── Bid ──────────────────────────────────────────────

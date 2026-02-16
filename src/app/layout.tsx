@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
+import { SettingsProvider } from "@/context/SettingsContext";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Providers } from "@/components/providers/Providers";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-heading",
@@ -40,13 +41,15 @@ export default function RootLayout({
       <body
         className={`${plusJakarta.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased bg-white text-gray-900 font-body`}
       >
-        <Providers>
-          <div className="flex flex-col min-h-screen">
+        <SessionProvider>
+          <SettingsProvider>
             <Navbar />
-            <main className="flex-1">{children}</main>
+            <main className="min-h-screen bg-gray-50/50">
+              {children}
+            </main>
             <Footer />
-          </div>
-        </Providers>
+          </SettingsProvider>
+        </SessionProvider>
       </body>
     </html>
   );
