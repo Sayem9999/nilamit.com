@@ -123,15 +123,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
 
     // Send Outbid Notification (Async)
     if (result.prevBidder?.email && result.prevBidder.email !== session.user.email) {
-      const URGENT_WINDOW = 15 * 60 * 1000; // 15 minutes
-      
-      if (result.timeUntilEnd <= URGENT_WINDOW && result.prevBidder.phone) {
-        // Last minute: Send SMS
-        sendOutbidSMS(result.prevBidder.phone, result.auctionTitle, amount).catch(console.error);
-      } else {
-        // Early stage: Send Email
-        sendOutbidEmail(result.prevBidder.email, result.auctionTitle, amount, auctionId).catch(console.error);
-      }
+      sendOutbidEmail(result.prevBidder.email, result.auctionTitle, amount, auctionId).catch(console.error);
     }
 
     return {
@@ -146,13 +138,6 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
   }
 }
 
-async function sendOutbidSMS(phone: string, title: string, currentPrice: number) {
-  const { smsGateway } = await import('@/lib/sms-gateway');
-  await smsGateway.sendSMS(
-    phone,
-    `Outbid! Someone bid ৳${currentPrice.toLocaleString()} on "${title}". Bid back now at nilamit.com`
-  );
-}
 
 async function sendOutbidEmail(email: string, title: string, currentPrice: number, auctionId: string) {
   const resendApiKey = process.env.RESEND_API_KEY;

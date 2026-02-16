@@ -18,7 +18,7 @@
 | SMS       | Pluggable interface      | GreenWeb/BulksmsBD adapters; easy to swap                                        |
 | Images    | Uploadthing              | Drag-and-drop support; replaces brittle manual URL entry                         |
 | Updates   | Polling (5s)             | Real-time price updates for active auctions without full refresh                 |
-| Notify    | Email / SMS Tiered       | Email for early bids; SMS for last 15 mins (saves Resend quota)                  |
+| Notify    | Email Notifications      | Automated alerts via Resend whenever a user is outbid                            |
 
 ### 2026-02-16 — Infrastructure & Local Hosting
 
