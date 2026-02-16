@@ -9,10 +9,18 @@ import AuctionCard from '@/components/auction/AuctionCard';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+interface LatestActivity {
+  id: string;
+  amount: number;
+  createdAt: Date;
+  bidder: { name: string | null };
+  auction: { id: string; title: string };
+}
+
 interface HomeContentProps {
   trendingAuctions?: AuctionWithSeller[];
   endingSoon?: AuctionWithSeller[];
-  latestActivity?: any[];
+  latestActivity?: LatestActivity[];
 }
 
 export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActivity = [] }: HomeContentProps) {
