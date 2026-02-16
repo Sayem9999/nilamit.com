@@ -56,9 +56,10 @@ export function BidPanel({
   // Sync bid amount if price changes and current amount is now too low
   useEffect(() => {
     const minRequired = latestPrice + minBidIncrement;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    setBidAmount(prev => prev < minRequired ? minRequired : prev);
-  }, [latestPrice, minBidIncrement]);
+    if (bidAmount < minRequired) {
+      setBidAmount(minRequired);
+    }
+  }, [latestPrice, minBidIncrement, bidAmount]);
 
   const minBid = latestPrice + minBidIncrement;
   const quickBids = [minBid, minBid + minBidIncrement * 2, minBid + minBidIncrement * 5];

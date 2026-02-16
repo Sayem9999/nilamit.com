@@ -1,15 +1,12 @@
 import { getAuction } from '@/actions/auction';
 import { getAuctionBids } from '@/actions/bid';
-import { notFound } from 'next/navigation';
 import { formatBDT, formatRelativeTime } from '@/lib/format';
 import { CountdownTimer } from '@/components/auction/CountdownTimer';
 import BidPanelWrapper from '@/components/auction/BidPanelWrapper';
-import { Clock, Users, Eye, Shield, User, Star, CheckCircle, TrendingUp, Award, MessageSquare } from 'lucide-react';
+import { Clock, Users, Eye, Shield, User, Star, CheckCircle, TrendingUp } from 'lucide-react';
 import { canReviewAuction } from '@/actions/review';
 import { ReviewForm } from '@/components/review/ReviewForm';
 import { auth } from '@/lib/auth';
-
-import { useSettings } from '@/context/SettingsContext';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -120,7 +117,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                         {bid.bidder.image ? (
-                          <img src={bid.bidder.image} alt="" className="w-8 h-8 rounded-full" />
+                          <img src={bid.bidder.image} alt={bid.bidder.name || 'Bidder'} className="w-8 h-8 rounded-full" />
                         ) : (
                           <User className="w-4 h-4 text-primary-600" />
                         )}

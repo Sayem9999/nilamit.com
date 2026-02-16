@@ -203,16 +203,33 @@ railway up
 
 ### Environment Variables (All Platforms)
 
-| Variable               | Value                                              |
-| ---------------------- | -------------------------------------------------- |
-| `DATABASE_URL`         | Your Supabase/Railway PostgreSQL connection string |
-| `AUTH_SECRET`          | Generated secret (`openssl rand -base64 32`)       |
-| `AUTH_URL`             | `https://your-domain.com`                          |
-| `GOOGLE_CLIENT_ID`     | From Google Cloud Console                          |
-| `GOOGLE_CLIENT_SECRET` | From Google Cloud Console                          |
-| `SMS_PROVIDER`         | `console` (dev) or `greenweb`/`bulksmsbd` (prod)   |
-| `GREENWEB_TOKEN`       | (if using GreenWeb)                                |
-| `ADMIN_EMAILS`         | Your admin emails (comma-separated)                |
+| Variable                     | Value                                              |
+| ---------------------------- | -------------------------------------------------- |
+| `DATABASE_URL`               | Your Supabase/Railway PostgreSQL connection string |
+| `AUTH_SECRET`                | Generated secret (`openssl rand -base64 32`)       |
+| `AUTH_URL`                   | `https://your-domain.com`                          |
+| `GOOGLE_CLIENT_ID`           | From Google Cloud Console                          |
+| `GOOGLE_CLIENT_SECRET`       | From Google Cloud Console                          |
+| `SMS_PROVIDER`               | `console` (dev) or `greenweb`/`bulksmsbd` (prod)   |
+| `GREENWEB_TOKEN`             | (if using GreenWeb)                                |
+| `ADMIN_EMAILS`               | Your admin emails (comma-separated)                |
+| `PUSHER_APP_ID`              | From Pusher Dashboard (Channels App)               |
+| `PUSHER_KEY`                 | From Pusher Dashboard                              |
+| `PUSHER_SECRET`              | From Pusher Dashboard                              |
+| `PUSHER_CLUSTER`             | e.g., `ap1`                                        |
+| `NEXT_PUBLIC_PUSHER_KEY`     | Same as `PUSHER_KEY`                               |
+| `NEXT_PUBLIC_PUSHER_CLUSTER` | Same as `PUSHER_CLUSTER`                           |
+
+---
+
+## 11. Pusher Setup (Real-time Bidding)
+
+1. Create a free account at [Pusher.com](https://pusher.com)
+2. Create a new **Channels** app:
+   - Name: `nilamit-prod`
+   - Cluster: `ap1` (Singapore) or `mt1`
+3. Go to **App Keys** and copy the credentials.
+4. Add them to your environment variables. Without these, the bidding system will not update in real-time.
 
 ---
 
