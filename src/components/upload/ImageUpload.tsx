@@ -1,15 +1,10 @@
-import { toast } from "react-hot-toast";
+'use client';
 
-// ... inside component
-
-        onUploadError={(error: Error) => {
-          console.error("Upload Error:", error);
-          toast.error(`Upload failed: ${error.message}`);
-          setIsUploading(false);
-        }}
+import { UploadDropzone } from "@/lib/uploadthing";
 import { X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
 
 interface ImageUploadProps {
   value: string[];
