@@ -19,7 +19,7 @@ export default function CreateAuctionPage() {
   const [form, setForm] = useState({
     title: '',
     description: '',
-    images: [''],
+    images: [],
     category: 'electronics',
     startingPrice: 100,
     minBidIncrement: 10,
