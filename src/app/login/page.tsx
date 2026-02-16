@@ -2,46 +2,33 @@
 
 import { useState, useTransition } from 'react';
 import { signIn } from 'next-auth/react';
-import { sendEmailOTP } from '@/actions/phone';
+import { useRouter } from 'next/navigation';
 import { Gavel, Mail, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
+  const [password, setPassword] = useState('');
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
+  const router = useRouter();
 
-  const handleSendOTP = () => {
-    if (!email) return;
+  const handleLogin = () => {
+    if (!email || !password) return;
     setError('');
+    
     startTransition(async () => {
-      const result = await sendEmailOTP(email);
-      if (result.success) {
-        setStep('otp');
-      } else {
-        setError('Failed to send OTP. Please try again.');
-      }
-    });
-  };
-
-  const handleVerifyOTP = () => {
-    if (!otp) return;
-    setError('');
-    startTransition(async () => {
-      const result = await signIn('email-otp', {
+      const result = await signIn('credentials', {
         email,
-        otp,
+        password,
         redirect: false,
-        callbackUrl: '/auctions',
       });
+
       if (result?.error) {
-        setError('Invalid OTP. Please try again.');
+        setError('Invalid email or password.');
       } else {
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auctions';
-        }
+        router.push('/auctions');
+        router.refresh();
       }
     });
   };
@@ -85,68 +72,54 @@ export default function LoginPage() {
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
-          {step === 'email' ? (
-            /* Email Step */
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          {/* Email/Password Form */}
+          <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Password</label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendOTP()}
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                 />
               </div>
+
               <button
-                onClick={handleSendOTP}
-                disabled={isPending || !email}
-                className="w-full mt-4 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
               >
                 {isPending ? (
                   <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
                 ) : (
-                  <>Send OTP Code <ArrowRight className="w-4 h-4" /></>
+                  <>Sign In <ArrowRight className="w-4 h-4" /></>
                 )}
               </button>
             </div>
-          ) : (
-            /* OTP Step */
-            <div>
-              <p className="text-sm text-gray-500 mb-3">
-                We sent a 6-digit code to <strong className="text-gray-700">{email}</strong>
-              </p>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Verification Code</label>
-              <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                maxLength={6}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                onKeyDown={(e) => e.key === 'Enter' && handleVerifyOTP()}
-              />
-              <button
-                onClick={handleVerifyOTP}
-                disabled={isPending || otp.length !== 6}
-                className="w-full mt-4 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
-              >
-                {isPending ? (
-                  <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
-                ) : (
-                  'Verify & Sign In'
-                )}
-              </button>
-              <button
-                onClick={() => { setStep('email'); setOtp(''); }}
-                className="w-full mt-2 text-sm text-gray-500 hover:text-gray-700 py-2"
-              >
-                ← Back to email
-              </button>
-            </div>
-          )}
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="text-primary-600 font-semibold hover:underline">Sign up</Link>
+          </p>
 
           {error && (
             <p className="mt-3 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>

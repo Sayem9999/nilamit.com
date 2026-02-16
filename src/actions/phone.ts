@@ -63,17 +63,44 @@ export async function sendPhoneOTP(phone: string) {
     },
   });
 
+  console.log(`[sendPhoneOTP] Sending OTP to ${phone} via gateway '${process.env.SMS_PROVIDER || 'console'}'...`);
+
   // Send via SMS gateway
-  const result = await smsGateway.sendSMS(
+  const smsResult = await smsGateway.sendSMS(
     phone,
     `Your nilamit.com verification code is: ${otp}. Valid for 5 minutes. Do not share this code.`
   );
 
-  if (!result.success) {
-    return { success: false, error: 'Failed to send SMS. Please try again.' };
+  // Fallback: Send via Email (Resend) if SMS fails or is in dev mode
+  const resendApiKey = process.env.RESEND_API_KEY;
+  let emailSent = false;
+
+  if (resendApiKey && session.user.email) {
+    try {
+      const { Resend } = await import('resend');
+      const resend = new Resend(resendApiKey); // Use the key from env
+      
+      await resend.emails.send({
+        from: 'onboarding@resend.dev', // Default testing domain
+        to: session.user.email,
+        subject: 'Your Verification Code',
+        html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code is used to verify your phone number (${phone}).</p>`,
+      });
+      emailSent = true;
+      console.log(`[sendPhoneOTP] Fallback email sent to ${session.user.email}`);
+    } catch (error: any) {
+       console.error('[sendPhoneOTP] Resend fallback failed:', error?.message || error);
+       if (error?.message?.includes('only send to')) {
+         console.warn('⚠️ RESEND TEST MODE: You can only send emails to your own verified address. Verify a domain to send to others.');
+       }
+    }
   }
 
-  return { success: true };
+  if (!smsResult.success && !emailSent) {
+    return { success: false, error: 'Failed to send OTP via SMS or Email.' };
+  }
+
+  return { success: true, message: emailSent ? 'OTP sent to your email.' : 'OTP sent to your phone.' };
 }
 
 /**

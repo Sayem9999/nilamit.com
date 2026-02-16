@@ -16,6 +16,7 @@ model User {
   email           String   @unique
   emailVerified   DateTime?
   image           String?
+  password        String?  // Hashed password (Phase 1.5)
   phone           String?  @unique
   isPhoneVerified Boolean  @default(false)
   isVerifiedSeller Boolean @default(false)
@@ -248,4 +249,20 @@ enum ReportStatus {
   REVIEWED
   RESOLVED
   DISMISSED
+}
+
+// ─── System Config (Phase 11) ───────────────────────
+model SystemConfig {
+  id             String   @id @default("default")
+  
+  // Hero Section
+  heroTitle      String   @default("Buy & Sell in Real-time Auctions")
+  heroSubtitle   String   @default("Bangladesh's most trusted C2C marketplace.")
+  heroImage      String?
+  
+  // Announcement Bar
+  announcement   String?
+  showAnnouncement Boolean @default(false)
+  
+  updatedAt      DateTime @updatedAt
 }

@@ -49,7 +49,10 @@ export default function ProfilePage() {
     setMsg('');
     startTransition(async () => {
       const res = await sendPhoneOTP(phone);
-      if (res.success) { setPhoneStep('otp'); setMsg('OTP sent! Check your phone.'); }
+      if (res.success) { 
+        setPhoneStep('otp'); 
+        setMsg(res.message || 'OTP sent! Check your phone or email.'); 
+      }
       else setMsg(res.error || 'Failed to send OTP.');
     });
   };
@@ -157,6 +160,9 @@ export default function ProfilePage() {
               className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold px-5 py-2.5 rounded-xl text-sm">
               {isPending ? 'Sending...' : 'Send OTP'}
             </button>
+            {process.env.NODE_ENV === 'development' && (
+                <p className="text-[10px] text-gray-400 mt-2">Dev Mode: Check server console for OTP code.</p>
+            )}
           </div>
         ) : (
           <div>

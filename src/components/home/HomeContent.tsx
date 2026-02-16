@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
-import { Gavel, Shield, Clock, Users, ArrowRight, CheckCircle, Phone, TrendingUp, Zap, Sparkles, MapPin, Bell, Search } from 'lucide-react';
+import { Gavel, Shield, Clock, Users, ArrowRight, CheckCircle, Phone, TrendingUp, Zap, Sparkles, MapPin, Bell, Search, Star, Megaphone } from 'lucide-react';
 import { CATEGORIES, AuctionWithSeller } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import AuctionCard from '@/components/auction/AuctionCard';
@@ -22,10 +22,18 @@ interface LatestActivity {
 interface HomeContentProps {
   trendingAuctions?: AuctionWithSeller[];
   endingSoon?: AuctionWithSeller[];
+  featuredAuctions?: AuctionWithSeller[]; 
   latestActivity?: LatestActivity[];
+  systemConfig?: any;
 }
 
-export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActivity: initialActivity = [] }: HomeContentProps) {
+export function HomeContent({ 
+  trendingAuctions = [], 
+  endingSoon = [], 
+  featuredAuctions = [],
+  latestActivity: initialActivity = [],
+  systemConfig 
+}: HomeContentProps) {
   const { t } = useLanguage();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,6 +86,14 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
 
   return (
     <>
+      {/* Announcement Bar */}
+      {systemConfig?.showAnnouncement && systemConfig?.announcement && (
+        <div className="bg-indigo-600 text-white px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300">
+            <Megaphone className="w-4 h-4 animate-bounce" />
+            {systemConfig.announcement}
+        </div>
+      )}
+
       {/* Live Ticker */}
       {activities.length > 0 && (
         <div className="bg-gray-900 overflow-hidden py-2 block">
@@ -121,20 +137,26 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
               </motion.div>
               
               <motion.h1 variants={itemVariants} className="font-heading font-black text-4xl sm:text-6xl lg:text-7xl text-gray-900 leading-[1.1] tracking-tight text-center lg:text-left">
-                {t.home.hero_title_1}{' '}
-                <span className="relative inline-block">
-                  <span className="relative z-10 text-primary-600 italic">{t.home.hero_title_2}</span>
-                  <motion.span 
-                    initial={{ width: 0 }}
-                    whileInView={{ width: '100%' }}
-                    transition={{ delay: 0.8, duration: 1.2 }}
-                    className="absolute bottom-1 sm:bottom-2 left-0 h-2 sm:h-3 bg-primary-100 -z-0 rounded-full"
-                  />
-                </span>
+                {systemConfig?.heroTitle ? (
+                    systemConfig.heroTitle
+                ) : (
+                    <>
+                    {t.home.hero_title_1}{' '}
+                    <span className="relative inline-block">
+                    <span className="relative z-10 text-primary-600 italic">{t.home.hero_title_2}</span>
+                    <motion.span 
+                        initial={{ width: 0 }}
+                        whileInView={{ width: '100%' }}
+                        transition={{ delay: 0.8, duration: 1.2 }}
+                        className="absolute bottom-1 sm:bottom-2 left-0 h-2 sm:h-3 bg-primary-100 -z-0 rounded-full"
+                    />
+                    </span>
+                    </>
+                )}
               </motion.h1>
               
               <motion.p variants={itemVariants} className="mt-6 text-base sm:text-lg text-gray-500 max-w-xl leading-relaxed font-medium text-center lg:text-left mx-auto lg:mx-0">
-                {t.home.hero_desc}
+                {systemConfig?.heroSubtitle || t.home.hero_desc}
               </motion.p>
               
               {/* Hero Search Bar */}
@@ -213,13 +235,15 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
                 
                 <div className="aspect-[4/3] bg-gray-50 rounded-2xl mb-6 overflow-hidden relative group">
                   <img 
-                    src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800" 
+                    src={systemConfig?.heroImage || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800"}
                     alt="Auction Item" 
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-gray-900 shadow-sm">
-                    ৳ 45,000
-                  </div>
+                  {!systemConfig?.heroImage && (
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-gray-900 shadow-sm">
+                        ৳ 45,000
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -237,7 +261,7 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
                 </div>
               </div>
 
-              {/* Floating Decorations */}
+              {/* Floating Decorations (Kept same for visual flair) */}
               <motion.div 
                 animate={{ y: [0, -20, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" as const }}
@@ -249,55 +273,79 @@ export function HomeContent({ trendingAuctions = [], endingSoon = [], latestActi
                 <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">New Bid</div>
                 <div className="font-bold text-gray-900">+ ৳ 1,000</div>
               </motion.div>
+                
+                <motion.div 
+                    animate={{ x: [0, 20, 0] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" as const, delay: 0.5 }}
+                    className="absolute top-1/4 -right-16 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-orange-100/50"
+                >
+                    <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                        <Bell className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="text-xs font-bold text-gray-900 whitespace-nowrap">Instant Notify</div>
+                    </div>
+                </motion.div>
 
-              <motion.div 
-                animate={{ x: [0, 20, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" as const, delay: 0.5 }}
-                className="absolute top-1/4 -right-16 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-orange-100/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    <Bell className="w-4 h-4 text-orange-600" />
-                  </div>
-                  <div className="text-xs font-bold text-gray-900 whitespace-nowrap">Instant Notify</div>
-                </div>
-              </motion.div>
+                <motion.div 
+                    animate={{ y: [0, 20, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" as const, delay: 1 }}
+                    className="absolute -bottom-10 -right-8 z-30 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl rotate-6"
+                >
+                    <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Shield className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Status</div>
+                        <div className="text-xs font-bold text-gray-900">Verified Seller</div>
+                    </div>
+                    </div>
+                </motion.div>
 
-              <motion.div 
-                animate={{ y: [0, 20, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" as const, delay: 1 }}
-                className="absolute -bottom-10 -right-8 z-30 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl rotate-6"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Shield className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Status</div>
-                    <div className="text-xs font-bold text-gray-900">Verified Seller</div>
-                  </div>
-                </div>
-              </motion.div>
+                <motion.div 
+                    animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    className="absolute -left-20 bottom-12 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-primary-100/50"
+                >
+                    <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <MapPin className="w-4 h-4 text-primary-600" />
+                    </div>
+                    <div className="text-xs font-bold text-gray-900">Area Filters Active</div>
+                    </div>
+                </motion.div>
 
-              <motion.div 
-                animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className="absolute -left-20 bottom-12 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-primary-100/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-primary-600" />
-                  </div>
-                  <div className="text-xs font-bold text-gray-900">Area Filters Active</div>
-                </div>
-              </motion.div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary-100/30 rounded-full blur-[80px] -z-10" />
 
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary-100/30 rounded-full blur-[80px] -z-10" />
             </motion.div>
 
           </div>
         </div>
       </section>
+
+      {/* Featured Auctions (New Section Phase 11) */}
+      {featuredAuctions.length > 0 && (
+        <section className="py-16 bg-amber-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                        <Star className="w-6 h-6 text-amber-600 fill-amber-600" />
+                    </div>
+                    <div>
+                        <h2 className="font-heading font-black text-3xl text-gray-900">Featured items</h2>
+                        <p className="text-gray-500 text-sm font-medium">Handpicked by our curators</p>
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    {featuredAuctions.map((auction) => (
+                        <AuctionCard key={auction.id} auction={auction} />
+                    ))}
+                </div>
+            </div>
+        </section>
+      )}
 
       {/* Trending Section — High Prominence */}
       <section className="pb-24 pt-12 bg-white relative">

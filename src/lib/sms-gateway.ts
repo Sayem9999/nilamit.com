@@ -10,7 +10,7 @@ export interface SMSGateway {
 // ---- Console Gateway (Development) ----
 class ConsoleGateway implements SMSGateway {
   async sendSMS(phone: string, message: string) {
-    console.log(`\n📱 [SMS → ${phone}] ${message}\n`);
+    console.log(`\n📱 [SMS → ${phone}] ${message}\n----------------------------------------\n`);
     return { success: true, messageId: `dev-${Date.now()}` };
   }
 }

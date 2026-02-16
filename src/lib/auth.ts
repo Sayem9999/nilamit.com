@@ -3,6 +3,7 @@ import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(prisma),
@@ -13,41 +14,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
-      id: 'email-otp',
-      name: 'Email OTP',
+      id: 'credentials',
+      name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        otp: { label: 'OTP Code', type: 'text' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.otp) return null;
+        if (!credentials?.email || !credentials?.password) return null;
 
         const email = credentials.email as string;
-        const otp = credentials.otp as string;
+        const password = credentials.password as string;
 
-        // Verify OTP from verification tokens
-        const token = await prisma.verificationToken.findFirst({
-          where: {
-            identifier: email,
-            token: otp,
-            expires: { gt: new Date() },
-          },
-        });
-
-        if (!token) return null;
-
-        // Delete used token
-        await prisma.verificationToken.delete({
-          where: { identifier_token: { identifier: email, token: otp } },
-        });
-
-        // Find or create user
-        let user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
-          user = await prisma.user.create({
-            data: { email, name: email.split('@')[0] },
-          });
+        const user = await prisma.user.findUnique({ where: { email } });
+        
+        if (!user || !user.password) {
+            return null; // User not found or no password set
         }
+
+        const isValid = await bcrypt.compare(password, user.password);
+
+        if (!isValid) return null;
 
         return { id: user.id, email: user.email, name: user.name, image: user.image };
       },
