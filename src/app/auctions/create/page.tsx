@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { createAuction } from '@/actions/auction';
 import { CATEGORIES } from '@/types';
-import { ArrowLeft, ArrowRight, Upload, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { ImageUpload } from '@/components/upload/ImageUpload';
 
 type Step = 'details' | 'pricing' | 'schedule' | 'review';
 
@@ -124,28 +125,12 @@ export default function CreateAuctionPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Image URLs</label>
-              {form.images.map((img, i) => (
-                <div key={i} className="flex gap-2 mb-2">
-                  <input
-                    type="url"
-                    value={img}
-                    onChange={(e) => {
-                      const newImages = [...form.images];
-                      newImages[i] = e.target.value;
-                      updateForm('images', newImages);
-                    }}
-                    placeholder="https://..."
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                  />
-                </div>
-              ))}
-              <button
-                onClick={() => updateForm('images', [...form.images, ''])}
-                className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1 mt-1"
-              >
-                <Upload className="w-3 h-3" /> Add another image URL
-              </button>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Images</label>
+              <ImageUpload
+                value={form.images}
+                onChange={(urls: string[]) => updateForm('images', urls)}
+                onRemove={(url: string) => updateForm('images', form.images.filter((current) => current !== url))}
+              />
             </div>
           </div>
         )}

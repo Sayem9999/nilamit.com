@@ -35,17 +35,18 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
 
   try {
     // SERIALIZABLE transaction with row-level locking
-    const result = await prisma.$transaction(async (tx: Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
+    const result = await prisma.$transaction(async (tx) => {
       // Lock the auction row — prevents concurrent bid race conditions
       const [auction] = await tx.$queryRaw<Array<{
         id: string;
+        title: string;
         currentPrice: number;
         minBidIncrement: number;
         endTime: Date;
         status: string;
         sellerId: string;
       }>>`
-        SELECT id, "currentPrice", "minBidIncrement", "endTime", status, "sellerId"
+        SELECT id, title, "currentPrice", "minBidIncrement", "endTime", status, "sellerId"
         FROM "Auction"
         WHERE id = ${auctionId}
         FOR UPDATE
@@ -72,6 +73,13 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
       if (amount < minRequired) {
         throw new Error(`Bid must be at least ৳${minRequired.toLocaleString()}.`);
       }
+
+      // Identify previous high bidder for notification
+      const prevBid = await tx.bid.findFirst({
+        where: { auctionId },
+        orderBy: { amount: 'desc' },
+        include: { bidder: { select: { email: true, name: true, phone: true } } },
+      });
 
       // Create the bid
       const bid = await tx.bid.create({
@@ -101,10 +109,30 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         },
       });
 
-      return { bid, newEndTime, antiSnipeTriggered };
+      return { 
+        bid, 
+        newEndTime, 
+        antiSnipeTriggered, 
+        prevBidder: prevBid?.bidder,
+        auctionTitle: auction.title,
+        timeUntilEnd: timeUntilEnd
+      };
     }, {
       isolationLevel: 'Serializable',
     });
+
+    // Send Outbid Notification (Async)
+    if (result.prevBidder?.email && result.prevBidder.email !== session.user.email) {
+      const URGENT_WINDOW = 15 * 60 * 1000; // 15 minutes
+      
+      if (result.timeUntilEnd <= URGENT_WINDOW && result.prevBidder.phone) {
+        // Last minute: Send SMS
+        sendOutbidSMS(result.prevBidder.phone, result.auctionTitle, amount).catch(console.error);
+      } else {
+        // Early stage: Send Email
+        sendOutbidEmail(result.prevBidder.email, result.auctionTitle, amount, auctionId).catch(console.error);
+      }
+    }
 
     return {
       success: true,
@@ -116,6 +144,34 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
     const message = error instanceof Error ? error.message : 'Failed to place bid.';
     return { success: false, error: message };
   }
+}
+
+async function sendOutbidSMS(phone: string, title: string, currentPrice: number) {
+  const { smsGateway } = await import('@/lib/sms-gateway');
+  await smsGateway.sendSMS(
+    phone,
+    `Outbid! Someone bid ৳${currentPrice.toLocaleString()} on "${title}". Bid back now at nilamit.com`
+  );
+}
+
+async function sendOutbidEmail(email: string, title: string, currentPrice: number, auctionId: string) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (!resendApiKey) return;
+
+  const { Resend } = await import('resend');
+  const resend = new Resend(resendApiKey);
+
+  await resend.emails.send({
+    from: 'notifications@nilamit.com', // Update once domain is verified
+    to: email,
+    subject: `You've been outbid on: ${title}`,
+    html: `
+      <h2>You've been outbid!</h2>
+      <p>Someone placed a higher bid on <strong>${title}</strong>.</p>
+      <p>Current high bid: <strong>৳${currentPrice.toLocaleString()}</strong></p>
+      <p><a href="${process.env.NEXTAUTH_URL}/auctions/${auctionId}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px;">Bid Again Now</a></p>
+    `,
+  });
 }
 
 /**

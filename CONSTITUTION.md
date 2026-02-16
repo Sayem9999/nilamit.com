@@ -52,6 +52,7 @@
 4. **Always use parameterized queries** — Prisma handles this, never raw-dog SQL
 5. **Always handle errors gracefully** — show Bengali-friendly error messages
 6. **No Quick Fixes / Placeholders** — Implementation must be production-ready. No `console.log` for critical notifications (email/SMS). No bypassing logic. If a feature isn't ready, disable it.
+7. **Launch Readiness Protocol** — Every user flow (Bid, Sell, Auth) must be usable by a non-technical user. No manual image URLs; must use integrated uploads. No silent outbids; must use notifications.
 
 ---
 

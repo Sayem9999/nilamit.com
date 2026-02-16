@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { placeBid } from '@/actions/bid';
 import { formatBDT } from '@/lib/format';
-import { TrendingUp, AlertCircle, CheckCircle, Shield } from 'lucide-react';
+import { TrendingUp, AlertCircle, CheckCircle, Shield, Clock } from 'lucide-react';
+import { CountdownTimer } from './CountdownTimer';
 
 interface BidPanelProps {
   auctionId: string;
@@ -20,17 +21,54 @@ export function BidPanel({
   auctionId,
   currentPrice,
   minBidIncrement,
+  endTime,
   isExpired,
   sellerId,
   onBidPlaced,
 }: BidPanelProps) {
   const { data: session } = useSession();
+  const [latestPrice, setLatestPrice] = useState(currentPrice);
+  const [latestEndTime, setLatestEndTime] = useState(new Date(endTime));
   const [bidAmount, setBidAmount] = useState(currentPrice + minBidIncrement);
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{ success: boolean; error?: string; antiSnipeTriggered?: boolean } | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
 
-  const minBid = currentPrice + minBidIncrement;
+  // Polling for real-time updates
+  useEffect(() => {
+    if (isExpired) return;
+
+    const poll = async () => {
+      try {
+        const { getAuction } = await import('@/actions/auction');
+        const updated = await getAuction(auctionId);
+        if (updated) {
+          if (updated.currentPrice !== latestPrice) {
+            setLatestPrice(updated.currentPrice);
+          }
+          const upEndTime = new Date(updated.endTime);
+          if (upEndTime.getTime() !== latestEndTime.getTime()) {
+            setLatestEndTime(upEndTime);
+          }
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    };
+
+    const interval = setInterval(poll, 5000); // 5 seconds
+    return () => clearInterval(interval);
+  }, [auctionId, isExpired, latestPrice, latestEndTime]);
+
+  // Sync bid amount if price changes and current amount is now too low
+  useEffect(() => {
+    const minRequired = latestPrice + minBidIncrement;
+    if (bidAmount < minRequired) {
+      setBidAmount(minRequired);
+    }
+  }, [latestPrice, minBidIncrement, bidAmount]);
+
+  const minBid = latestPrice + minBidIncrement;
   const quickBids = [minBid, minBid + minBidIncrement * 2, minBid + minBidIncrement * 5];
 
   const handleBid = () => {
@@ -45,7 +83,10 @@ export function BidPanel({
       const res = await placeBid(auctionId, bidAmount);
       setResult(res);
       if (res.success) {
-        setBidAmount(bidAmount + minBidIncrement);
+        // Price will update via next poll or immediately here for better UX
+        const newPrice = bidAmount;
+        setLatestPrice(newPrice);
+        setBidAmount(newPrice + minBidIncrement);
         onBidPlaced?.();
       }
       if (res.error === 'PHONE_NOT_VERIFIED') {
@@ -58,10 +99,16 @@ export function BidPanel({
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-      <h3 className="font-heading font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <TrendingUp className="w-5 h-5 text-primary-600" />
-        Place Your Bid
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-heading font-semibold text-gray-900 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-primary-600" />
+          Place Your Bid
+        </h3>
+        <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg">
+          <Clock className="w-4 h-4" />
+          <CountdownTimer endTime={latestEndTime} />
+        </div>
+      </div>
 
       {isExpired ? (
         <div className="text-center py-6">
@@ -76,7 +123,7 @@ export function BidPanel({
           {/* Current Price */}
           <div className="bg-primary-50 rounded-xl p-4 mb-4">
             <p className="text-xs text-primary-600 font-medium mb-1">Current Price</p>
-            <p className="price text-2xl text-primary-700">{formatBDT(currentPrice)}</p>
+            <p className="price text-2xl text-primary-700">{formatBDT(latestPrice)}</p>
           </div>
 
           {/* Bid Input */}
