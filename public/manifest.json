@@ -1,0 +1,37 @@
+{
+  "name": "Nilamit Auction",
+  "short_name": "Nilamit",
+  "description": "Premium Bangladesh Auction Marketplace",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/next.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/next.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "finance"],
+  "shortcuts": [
+    {
+      "name": "Create Auction",
+      "url": "/auctions/create",
+      "icons": [{ "src": "/next.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/next.svg", "sizes": "192x192" }]
+    }
+  ]
+}

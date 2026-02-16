@@ -27,6 +27,14 @@ export const metadata: Metadata = {
   title: "nilamit.com — Bangladesh's Trusted Auction Marketplace",
   description: "Buy and sell through transparent auctions. Verified sellers, anti-sniping protection, and real-time bidding. Bangladesh's #1 C2C auction platform.",
   keywords: ["nilam", "auction", "bangladesh", "bidding", "marketplace", "নিলাম"],
+  manifest: "/manifest.json",
+  themeColor: "#6366f1",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Nilamit",
+  },
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
 };
 
 export default function RootLayout({
@@ -46,6 +54,21 @@ export default function RootLayout({
           </main>
           <Footer />
         </Providers>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('SW registered');
+                  }, function(err) {
+                    console.log('SW failed: ', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
