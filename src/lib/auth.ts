@@ -5,11 +5,12 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
-  providers: [
+    adapter: PrismaAdapter(prisma),
+    providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID || 'dummy',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy',
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       id: 'email-otp',
