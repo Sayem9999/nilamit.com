@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { updateProfile } from '@/actions/user';
@@ -8,18 +8,33 @@ import { sendPhoneOTP, verifyPhoneOTP } from '@/actions/phone';
 import { User, Phone, Shield, CheckCircle, Edit3, Save } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { data: session, update } = useSession();
+  const { data: session, update, status } = useSession();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(session?.user?.name || '');
+  const [name, setName] = useState('');
   const [phoneStep, setPhoneStep] = useState<'idle' | 'input' | 'otp'>('idle');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [msg, setMsg] = useState('');
 
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (session?.user?.name) {
+      setName(session.user.name);
+    }
+  }, [session]);
+
+  if (status === 'loading') {
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" /></div>;
+  }
+
   if (!session) {
-    router.push('/login');
     return null;
   }
 

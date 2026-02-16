@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { createAuction } from '@/actions/auction';
@@ -10,7 +10,7 @@ import { ArrowLeft, ArrowRight, Upload, Check, AlertCircle } from 'lucide-react'
 type Step = 'details' | 'pricing' | 'schedule' | 'review';
 
 export default function CreateAuctionPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
@@ -26,8 +26,17 @@ export default function CreateAuctionPage() {
     endTime: '',
   });
 
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
+  if (status === 'loading') {
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" /></div>;
+  }
+
   if (!session) {
-    router.push('/login');
     return null;
   }
 
