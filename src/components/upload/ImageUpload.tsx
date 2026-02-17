@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
+import { useSession } from "next-auth/react";
 
 interface ImageUploadProps {
   value: string[];
@@ -13,6 +14,7 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
+  const { data: session } = useSession();
   const [isUploading, setIsUploading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +28,11 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
+      if (!session?.user?.id) {
+        toast.error("You must be logged in to upload images");
+        return;
+      }
+
       setIsUploading(true);
 
       const newUrls: string[] = [...value];
@@ -33,7 +40,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
       for (const file of Array.from(files)) {
         const fileExt = file.name.split(".").pop();
         const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-        const filePath = `auctions/${fileName}`;
+        const filePath = `auctions/${session.user.id}/${fileName}`;
 
         const { error: uploadError, data } = await supabase.storage
           .from("auction-images")

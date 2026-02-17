@@ -1,19 +1,39 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { Resend } from 'resend';
 import { auth } from '@/lib/auth';
 import type { AuctionFilters, CreateAuctionInput } from '@/types';
 import { closeAuctionIfEnded, closeAllEndedAuctions } from '@/lib/auction-logic';
 import { AuctionStatus } from '@prisma/client';
+import { ERROR_CODES } from '@/lib/constants';
+
+const CreateAuctionSchema = z.object({
+  title: z.string().min(3).max(100),
+  description: z.string().min(10).max(2000),
+  images: z.array(z.string().url()).min(1),
+  category: z.string(),
+  startingPrice: z.number().positive(),
+  minBidIncrement: z.number().positive().optional(),
+  startTime: z.string().or(z.date()),
+  endTime: z.string().or(z.date()),
+  location: z.string().nullable().optional(),
+});
 
 /**
  * Create a new auction (requires phone verification)
  */
 export async function createAuction(input: CreateAuctionInput) {
+  // 1. Validation
+  const validation = CreateAuctionSchema.safeParse(input);
+  if (!validation.success) {
+    return { success: false, error: ERROR_CODES.VALIDATION_ERROR };
+  }
+
+  // 2. Authentication
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: 'You must be logged in.' };
+    return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
   }
 
   const user = await prisma.user.findUnique({
@@ -22,7 +42,7 @@ export async function createAuction(input: CreateAuctionInput) {
   });
 
   if (!user?.isPhoneVerified) {
-    return { success: false, error: 'PHONE_NOT_VERIFIED' };
+    return { success: false, error: ERROR_CODES.PHONE_NOT_VERIFIED };
   }
 
   try {
@@ -39,7 +59,7 @@ export async function createAuction(input: CreateAuctionInput) {
         endTime: new Date(input.endTime),
         location: input.location,
         sellerId: session.user.id,
-        status: 'ACTIVE' as any,
+        status: AuctionStatus.ACTIVE,
       },
     });
 
@@ -155,7 +175,7 @@ export async function getSpecializedFeeds() {
   const [endingSoon, latestBids] = await Promise.all([
     prisma.auction.findMany({
       where: {
-        status: 'ACTIVE' as any,
+        status: AuctionStatus.ACTIVE,
         endTime: { gte: now, lte: soon },
       },
       include: {
@@ -196,7 +216,7 @@ export async function cancelAuction(id: string) {
 
   await prisma.auction.update({
     where: { id },
-    data: { status: 'CANCELLED' as any },
+    data: { status: AuctionStatus.CANCELLED },
   });
 
   return { success: true };

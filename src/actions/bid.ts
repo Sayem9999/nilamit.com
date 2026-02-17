@@ -1,12 +1,16 @@
 'use server';
 
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import type { PlaceBidResult } from '@/types';
 import { pusherServer } from '@/lib/pusher-server';
+import { ERROR_CODES, SOFT_CLOSE_WINDOW_MS, SOFT_CLOSE_EXTENSION_MS } from '@/lib/constants';
 
-const SOFT_CLOSE_WINDOW_MS = 2 * 60 * 1000; // 2 minutes
-const SOFT_CLOSE_EXTENSION_MS = 2 * 60 * 1000; // Extend by 2 minutes
+const PlaceBidSchema = z.object({
+  auctionId: z.string().cuid(),
+  amount: z.number().positive(),
+});
 
 /**
  * placeBid — THE critical server action
@@ -17,36 +21,47 @@ const SOFT_CLOSE_EXTENSION_MS = 2 * 60 * 1000; // Extend by 2 minutes
  * Anti-sniping: If bid comes in within last 2 minutes, extends auction by 2 minutes.
  */
 export async function placeBid(auctionId: string, amount: number): Promise<PlaceBidResult> {
+  // 1. Validation
+  const validation = PlaceBidSchema.safeParse({ auctionId, amount });
+  if (!validation.success) {
+    return { success: false, error: ERROR_CODES.VALIDATION_ERROR };
+  }
+
+  // 2. Authentication
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: 'You must be logged in to bid.' };
+    return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
   }
 
   const userId = session.user.id;
 
-  // Check phone verification
+  // 3. User Checks (Phone verification & Bid Deposits)
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { isPhoneVerified: true },
+    select: { 
+      isPhoneVerified: true,
+      isVerifiedSeller: true,
+      bidDeposits: { 
+        where: { auctionId, status: 'held' } 
+      }
+    },
   });
 
-  if (!user?.isPhoneVerified) {
-    return { success: false, error: 'PHONE_NOT_VERIFIED' };
+  if (!user) {
+    return { success: false, error: ERROR_CODES.NOT_FOUND };
+  }
+
+  if (!user.isPhoneVerified) {
+    return { success: false, error: ERROR_CODES.PHONE_NOT_VERIFIED };
   }
 
   // Phase 2: High-stakes Bid Deposit Check
   if (amount >= 10000) {
-    const fullUser = await (prisma.user as any).findUnique({
-      where: { id: userId },
-      select: { isVerifiedSeller: true, bidDeposits: { where: { auctionId, status: 'held' } } }
-    });
-    
     // If not a verified seller/user AND no deposit held, block the bid
-    if (!fullUser?.isVerifiedSeller && (!fullUser?.bidDeposits || fullUser.bidDeposits.length === 0)) {
+    if (!user.isVerifiedSeller && (!user.bidDeposits || user.bidDeposits.length === 0)) {
       return { 
         success: false, 
-        error: 'DEPOSIT_REQUIRED',
-        // Note: In a real app, we'd return a link to the deposit page
+        error: ERROR_CODES.DEPOSIT_REQUIRED,
       };
     }
   }
@@ -71,25 +86,25 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
       `;
 
       if (!auction) {
-        throw new Error('Auction not found.');
+        throw new Error(ERROR_CODES.NOT_FOUND);
       }
 
       if (auction.status !== 'ACTIVE') {
-        throw new Error('This auction is not active.');
+        throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
       }
 
       const now = new Date();
       if (now >= auction.endTime) {
-        throw new Error('This auction has ended.');
+        throw new Error(ERROR_CODES.AUCTION_ENDED);
       }
 
       if (auction.sellerId === userId) {
-        throw new Error('You cannot bid on your own auction.');
+        throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
       }
 
       const minRequired = auction.currentPrice + auction.minBidIncrement;
       if (amount < minRequired) {
-        throw new Error(`Bid must be at least ৳${minRequired.toLocaleString()}.`);
+        throw new Error(`${ERROR_CODES.BID_TOO_LOW}: ৳${minRequired.toLocaleString()}`);
       }
 
       // Identify previous high bidder for notification
