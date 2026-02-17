@@ -5,9 +5,12 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
+import { authConfig } from '@/lib/auth.config';
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-    adapter: PrismaAdapter(prisma),
-    providers: [
+  ...authConfig,
+  adapter: PrismaAdapter(prisma),
+  providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID || 'dummy',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy',

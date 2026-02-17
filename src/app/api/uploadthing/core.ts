@@ -7,7 +7,7 @@ const handleAuth = async () => {
   console.log("UploadThing: 🔒 Middleware started - Checking session...");
   try {
     const session = await auth();
-    console.log("UploadThing: 👤 Session found:", session?.user?.email);
+    console.log("UploadThing: 👤 Session found:", JSON.stringify(session?.user, null, 2));
     
     if (!session?.user?.id) {
         console.error("UploadThing: ❌ No user ID in session. Rejecting.");
