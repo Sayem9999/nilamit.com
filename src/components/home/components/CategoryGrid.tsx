@@ -3,21 +3,19 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/types";
 
-import { TranslationType } from "@/types/home";
+import { useTranslations } from "next-intl";
 
-interface CategoryGridProps {
-  t: TranslationType;
-}
+export function CategoryGrid() {
+  const t = useTranslations("Home");
 
-export function CategoryGrid({ t }: CategoryGridProps) {
   return (
     <section className="py-16 sm:py-20 bg-gray-50/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">
-            {t.home.categories_title}
+            {t("categoriesTitle")}
           </h2>
-          <p className="mt-2 text-gray-500">{t.home.categories_subtitle}</p>
+          <p className="mt-2 text-gray-500">{t("categoriesSubtitle")}</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {CATEGORIES.filter((c) => c.slug !== "other").map((cat) => (

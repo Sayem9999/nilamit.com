@@ -1,15 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useTransition, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { placeBid } from '@/actions/bid';
-import { formatBDT } from '@/lib/format';
-import { TrendingUp, AlertCircle, CheckCircle, Shield, Clock } from 'lucide-react';
-import { CountdownTimer } from './CountdownTimer';
-import { useSettings } from '@/context/SettingsContext';
-import { pusherClient } from '@/lib/pusher-client';
-import { useSound } from '@/hooks/useSound';
-import { Volume2, VolumeX } from 'lucide-react';
+import { useState, useTransition, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { placeBid } from "@/actions/bid";
+import { formatBDT } from "@/lib/format";
+import {
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  Shield,
+  Clock,
+} from "lucide-react";
+import { CountdownTimer } from "./CountdownTimer";
+import { useSettings } from "@/context/SettingsContext";
+import { useAuctionBids } from "@/hooks/useAuctionBids";
+import { useSound } from "@/hooks/useSound";
+import { Volume2, VolumeX } from "lucide-react";
 
 interface BidPanelProps {
   auctionId: string;
@@ -32,39 +38,43 @@ export function BidPanel({
 }: BidPanelProps) {
   const { data: session } = useSession();
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
-  const { play: playGavel } = useSound('/sounds/gavel.mp3');
+  const { play: playGavel } = useSound("/sounds/gavel.mp3");
   const [latestPrice, setLatestPrice] = useState(currentPrice);
-  const [latestEndTime, setLatestEndTime] = useState(new Date(endTime));
+  const [latestEndTime] = useState(new Date(endTime));
   const [bidAmount, setBidAmount] = useState(currentPrice + minBidIncrement);
   const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState<{ success: boolean; error?: string; antiSnipeTriggered?: boolean } | null>(null);
+  const [result, setResult] = useState<{
+    success: boolean;
+    error?: string;
+    antiSnipeTriggered?: boolean;
+  } | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
 
-  // Phase 4: Real-time Updates via Pusher
+  const { newBids, currentEndTime } = useAuctionBids(auctionId);
+
+  // Sync real-time data from hook directly to display without setting state
+  const displayPrice = newBids.length > 0 ? newBids[0].amount : latestPrice;
+  const displayEndTime = currentEndTime
+    ? new Date(currentEndTime)
+    : latestEndTime;
+
+  // Track new bids for sound effect using previous length
   useEffect(() => {
-    if (isExpired) return;
-
-    const channel = pusherClient.subscribe(`auction-${auctionId}`);
-
-    channel.bind('new-bid', (data: { amount: number; endTime: string | Date }) => {
-      setLatestPrice(data.amount);
-      setLatestEndTime(new Date(data.endTime));
-      playGavel(); // Trigger sound for real-time bids
-    });
-
-    return () => {
-      pusherClient.unsubscribe(`auction-${auctionId}`);
-    };
-  }, [auctionId, isExpired]);
-
-
-  const minBid = latestPrice + minBidIncrement;
-  const quickBids = [minBid, minBid + minBidIncrement * 2, minBid + minBidIncrement * 5];
+    if (newBids.length > 0) {
+      playGavel();
+    }
+  }, [newBids.length, playGavel]);
+  const minBid = displayPrice + minBidIncrement;
+  const quickBids = [
+    minBid,
+    minBid + minBidIncrement * 2,
+    minBid + minBidIncrement * 5,
+  ];
 
   const handleBid = () => {
     if (!session) {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
       }
       return;
     }
@@ -83,7 +93,7 @@ export function BidPanel({
         setBidAmount(newPrice + minBidIncrement);
         onBidPlaced?.();
       }
-      if (res.error === 'PHONE_NOT_VERIFIED') {
+      if (res.error === "PHONE_NOT_VERIFIED") {
         setShowPhoneModal(true);
       }
     });
@@ -99,18 +109,24 @@ export function BidPanel({
           Place Your Bid
         </h3>
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={toggleSoundEffects}
             className={`p-1.5 rounded-lg transition-colors ${
-              soundEffectsEnabled ? 'text-primary-600 bg-primary-50' : 'text-gray-400 bg-gray-50'
+              soundEffectsEnabled
+                ? "text-primary-600 bg-primary-50"
+                : "text-gray-400 bg-gray-50"
             }`}
-            title={soundEffectsEnabled ? 'Mute' : 'Unmute'}
+            title={soundEffectsEnabled ? "Mute" : "Unmute"}
           >
-            {soundEffectsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {soundEffectsEnabled ? (
+              <Volume2 className="w-4 h-4" />
+            ) : (
+              <VolumeX className="w-4 h-4" />
+            )}
           </button>
           <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg">
             <Clock className="w-4 h-4" />
-            <CountdownTimer endTime={latestEndTime} />
+            <CountdownTimer endTime={displayEndTime} />
           </div>
         </div>
       </div>
@@ -121,19 +137,27 @@ export function BidPanel({
         </div>
       ) : isOwnAuction ? (
         <div className="text-center py-6 bg-gray-50 rounded-xl">
-          <p className="text-gray-500 text-sm">You cannot bid on your own auction</p>
+          <p className="text-gray-500 text-sm">
+            You cannot bid on your own auction
+          </p>
         </div>
       ) : (
         <>
           {/* Current Price */}
-          <div className="bg-primary-50 rounded-xl p-4 mb-4">
-            <p className="text-xs text-primary-600 font-medium mb-1">Current Price</p>
-            <p className="price text-2xl text-primary-700">{formatBDT(latestPrice)}</p>
+          <div className="bg-primary-50 rounded-xl p-4 mb-4 transition-all duration-300">
+            <p className="text-xs text-primary-600 font-medium mb-1">
+              Current Price
+            </p>
+            <p className="price text-2xl text-primary-700">
+              {formatBDT(displayPrice)}
+            </p>
           </div>
 
           {/* Bid Input */}
           <div className="mb-3">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">Your Bid (৳)</label>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">
+              Your Bid (৳)
+            </label>
             <input
               type="number"
               value={bidAmount}
@@ -142,7 +166,9 @@ export function BidPanel({
               step={minBidIncrement}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 price text-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
             />
-            <p className="text-xs text-gray-400 mt-1">Minimum bid: {formatBDT(minBid)}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              Minimum bid: {formatBDT(minBid)}
+            </p>
           </div>
 
           {/* Quick Bid Buttons */}
@@ -153,8 +179,8 @@ export function BidPanel({
                 onClick={() => setBidAmount(amount)}
                 className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
                   bidAmount === amount
-                    ? 'bg-primary-50 border-primary-200 text-primary-700'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    ? "bg-primary-50 border-primary-200 text-primary-700"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {formatBDT(amount)}
@@ -177,25 +203,34 @@ export function BidPanel({
 
           {/* Result */}
           {result && (
-            <div className={`mt-3 p-3 rounded-xl text-sm flex items-start gap-2 ${
-              result.success
-                ? 'bg-green-50 text-green-700'
-                : 'bg-red-50 text-red-600'
-            }`}>
+            <div
+              className={`mt-3 p-3 rounded-xl text-sm flex items-start gap-2 ${
+                result.success
+                  ? "bg-green-50 text-green-700"
+                  : "bg-red-50 text-red-600"
+              }`}
+            >
               {result.success ? (
                 <>
                   <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium">Bid placed successfully!</p>
                     {result.antiSnipeTriggered && (
-                      <p className="text-xs mt-1 text-green-600">⏱ Anti-sniping activated — auction extended by 2 minutes.</p>
+                      <p className="text-xs mt-1 text-green-600">
+                        ⏱ Anti-sniping activated — auction extended by 2
+                        minutes.
+                      </p>
                     )}
                   </div>
                 </>
               ) : (
                 <>
                   <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <p>{result.error === 'PHONE_NOT_VERIFIED' ? 'Please verify your phone number to bid.' : result.error}</p>
+                  <p>
+                    {result.error === "PHONE_NOT_VERIFIED"
+                      ? "Please verify your phone number to bid."
+                      : result.error}
+                  </p>
                 </>
               )}
             </div>
@@ -220,15 +255,24 @@ function PhoneVerificationPrompt({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl">
-        <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">Verify Your Phone</h3>
+        <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">
+          Verify Your Phone
+        </h3>
         <p className="text-sm text-gray-500 mb-4">
-          To ensure trust in our marketplace, please verify your Bangladesh phone number (+880) before bidding.
+          To ensure trust in our marketplace, please verify your Bangladesh
+          phone number (+880) before bidding.
         </p>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
+          >
             Later
           </button>
-          <a href="/profile" className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700">
+          <a
+            href="/profile"
+            className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700"
+          >
             Verify Now
           </a>
         </div>

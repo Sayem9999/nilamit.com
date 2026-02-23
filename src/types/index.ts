@@ -5,6 +5,7 @@ export type AuctionWithSeller = Auction & {
   seller: Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified'>;
   _count?: { bids: number };
   location?: string | null;
+  watchlist?: { userId: string }[];
 };
 
 export type AuctionWithBids = AuctionWithSeller & {

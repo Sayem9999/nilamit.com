@@ -18,7 +18,7 @@ import { SystemConfig, TranslationType } from "@/types/home";
 
 interface HeroSectionProps {
   systemConfig?: SystemConfig;
-  t: TranslationType;
+  t: any; // We'll pass the translation hook here from parent
 }
 
 export function HeroSection({ systemConfig, t }: HeroSectionProps) {
@@ -68,7 +68,7 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
               className="inline-flex items-center gap-2 bg-primary-50 text-primary-700 border border-primary-100 rounded-full px-4 py-1.5 text-sm font-semibold mb-6 shadow-sm"
             >
               <Sparkles className="w-4 h-4 text-primary-500 animate-pulse" />
-              {t.home.hero_badge}
+              {t("title")}
             </motion.div>
 
             <motion.h1
@@ -79,10 +79,10 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
                 systemConfig.heroTitle
               ) : (
                 <>
-                  {t.home.hero_title_1}{" "}
+                  {t("title")}{" "}
                   <span className="relative inline-block">
                     <span className="relative z-10 text-primary-600 italic">
-                      {t.home.hero_title_2}
+                      Marketplace
                     </span>
                     <motion.span
                       initial={{ width: 0 }}
@@ -99,7 +99,7 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
               variants={itemVariants}
               className="mt-6 text-base sm:text-lg text-gray-500 max-w-xl leading-relaxed font-medium text-center lg:text-left mx-auto lg:mx-0"
             >
-              {systemConfig?.heroSubtitle || t.home.hero_desc}
+              {systemConfig?.heroSubtitle || t("subtitle")}
             </motion.p>
 
             <motion.form
@@ -160,8 +160,8 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
                 ))}
               </div>
               <div className="text-sm font-medium">
-                <span className="text-gray-900 font-bold">2.4k+</span>{" "}
-                {t.home.how_subtitle}
+                <span className="text-gray-900 font-bold">2.4k+</span> Added
+                this week
               </div>
             </motion.div>
           </motion.div>

@@ -12,13 +12,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { TranslationType } from "@/types/home";
+import { useTranslations } from "next-intl";
 
-interface TrustFeaturesProps {
-  t: TranslationType;
-}
-
-export function TrustFeatures({ t }: TrustFeaturesProps) {
+export function TrustFeatures() {
+  const t = useTranslations("Home");
   return (
     <>
       {/* How It Works */}
@@ -26,26 +23,26 @@ export function TrustFeatures({ t }: TrustFeaturesProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">
-              {t.home.how_title}
+              {t("howTitle")}
             </h2>
-            <p className="mt-2 text-gray-500">{t.home.how_subtitle}</p>
+            <p className="mt-2 text-gray-500">{t("howSubtitle")}</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-8">
             {[
               {
                 icon: Users,
-                title: t.home.step_1_title,
-                desc: t.home.step_1_desc,
+                title: t("step1Title"),
+                desc: t("step1Desc"),
               },
               {
                 icon: Gavel,
-                title: t.home.step_2_title,
-                desc: t.home.step_2_desc,
+                title: t("step2Title"),
+                desc: t("step2Desc"),
               },
               {
                 icon: CheckCircle,
-                title: t.home.step_3_title,
-                desc: t.home.step_3_desc,
+                title: t("step3Title"),
+                desc: t("step3Desc"),
               },
             ].map((step, i) => (
               <div key={i} className="text-center">
@@ -72,31 +69,31 @@ export function TrustFeatures({ t }: TrustFeaturesProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">
-              {t.home.trust_title}
+              {t("trustTitle")}
             </h2>
-            <p className="mt-2 text-gray-500">{t.home.trust_subtitle}</p>
+            <p className="mt-2 text-gray-500">{t("trustSubtitle")}</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: Phone,
-                title: t.home.trust_1_title,
-                desc: t.home.trust_1_desc,
+                title: t("trust1Title"),
+                desc: t("trust1Desc"),
               },
               {
                 icon: Clock,
-                title: t.home.trust_2_title,
-                desc: t.home.trust_2_desc,
+                title: t("trust2Title"),
+                desc: t("trust2Desc"),
               },
               {
                 icon: Shield,
-                title: t.home.trust_3_title,
-                desc: t.home.trust_3_desc,
+                title: t("trust3Title"),
+                desc: t("trust3Desc"),
               },
               {
                 icon: TrendingUp,
-                title: t.home.trust_4_title,
-                desc: t.home.trust_4_desc,
+                title: t("trust4Title"),
+                desc: t("trust4Desc"),
               },
             ].map((feature, i) => (
               <div
@@ -120,14 +117,14 @@ export function TrustFeatures({ t }: TrustFeaturesProps) {
       <section className="py-16 sm:py-20 bg-gradient-to-r from-primary-600 to-primary-800">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="font-heading font-bold text-2xl sm:text-3xl text-white mb-4">
-            {t.home.cta_footer_title}
+            {t("ctaFooterTitle")}
           </h2>
-          <p className="text-primary-100 mb-8">{t.home.cta_footer_desc}</p>
+          <p className="text-primary-100 mb-8">{t("ctaFooterDesc")}</p>
           <Link
             href="/login"
             className="inline-flex items-center gap-2 bg-white text-primary-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-primary-50 transition-all shadow-lg"
           >
-            {t.home.cta_footer_btn} <ArrowRight className="w-4 h-4" />
+            {t("ctaFooterBtn")} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>

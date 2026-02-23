@@ -1,27 +1,51 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { Heart } from 'lucide-react';
-import { toggleWatchlist } from '@/actions/watchlist';
-import { toast } from 'react-hot-toast';
+import { useState, useTransition } from "react";
+import { Heart } from "lucide-react";
+import { toggleWatchlist } from "@/actions/watchlist";
+import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 interface WatchlistButtonProps {
   auctionId: string;
-  initialIsWatched: boolean;
+  initialIsWatchlisted?: boolean;
+  className?: string;
+  hoverOnly?: boolean;
 }
 
-export function WatchlistButton({ auctionId, initialIsWatched }: WatchlistButtonProps) {
-  const [isWatched, setIsWatched] = useState(initialIsWatched);
+export function WatchlistButton({
+  auctionId,
+  initialIsWatchlisted = false,
+  className = "",
+  hoverOnly = false,
+}: WatchlistButtonProps) {
+  const { data: session } = useSession();
+  const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const [isWatchlisted, setIsWatchlisted] = useState(initialIsWatchlisted);
 
-  const handleToggle = () => {
+  const handleToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!session) {
+      alert("Please sign in to add to watchlist");
+      return;
+    }
+
+    // Optimistic update
+    setIsWatchlisted(!isWatchlisted);
+
     startTransition(async () => {
-      const res = await toggleWatchlist(auctionId);
-      if (res.success) {
-        setIsWatched(res.watched!);
-        toast.success(res.watched ? 'Added to watchlist' : 'Removed from watchlist');
-      } else {
-        toast.error(res.error || 'Failed to update watchlist');
+      const result = await toggleWatchlist(auctionId, pathname);
+      if (!result.success) {
+        // Revert on failure
+        setIsWatchlisted(isWatchlisted);
+        if (result.error !== "Unauthorized") {
+          alert(result.error);
+        }
+      } else if (result.isWatchlisted !== undefined) {
+        setIsWatchlisted(result.isWatchlisted);
       }
     });
   };
@@ -30,14 +54,17 @@ export function WatchlistButton({ auctionId, initialIsWatched }: WatchlistButton
     <button
       onClick={handleToggle}
       disabled={isPending}
-      className={`p-2 rounded-full border transition-all ${
-        isWatched 
-          ? 'bg-rose-50 border-rose-100 text-rose-500 shadow-sm' 
-          : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200 hover:text-gray-600'
-      } disabled:opacity-50`}
-      title={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
+      className={`p-2 rounded-full backdrop-blur-md transition-all ${
+        isWatchlisted
+          ? "bg-red-50 text-red-500 hover:bg-red-100"
+          : "bg-white/80 text-gray-500 hover:text-red-500 hover:bg-white"
+      } ${hoverOnly ? "opacity-0 group-hover:opacity-100" : ""} ${className}`}
+      title={isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist"}
     >
-      <Heart className={`w-5 h-5 ${isWatched ? 'fill-current' : ''}`} />
+      <Heart
+        className="w-5 h-5 transition-transform"
+        fill={isWatchlisted ? "currentColor" : "none"}
+      />
     </button>
   );
 }

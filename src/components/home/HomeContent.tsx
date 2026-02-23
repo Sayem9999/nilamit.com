@@ -4,7 +4,7 @@ import { Variants } from "framer-motion";
 import { Megaphone, Star } from "lucide-react";
 import { AuctionWithSeller } from "@/types";
 import { SystemConfig } from "@/types/home"; // Added SystemConfig import
-import { useLanguage } from "@/context/LanguageContext";
+import { useTranslations } from "next-intl";
 import AuctionCard from "@/components/auction/AuctionCard";
 
 // Sub-components
@@ -30,7 +30,7 @@ export function HomeContent({
   latestActivity = [],
   systemConfig,
 }: HomeContentProps) {
-  const { t } = useLanguage();
+  const t = useTranslations();
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -103,10 +103,10 @@ export function HomeContent({
       <EndingSoonSection endingSoon={endingSoon} />
 
       {/* Categories */}
-      <CategoryGrid t={t} />
+      <CategoryGrid />
 
       {/* Trust & How It Works */}
-      <TrustFeatures t={t} />
+      <TrustFeatures />
     </>
   );
 }

@@ -5,17 +5,26 @@ import Image from "next/image";
 import { Shield, Clock, Users, Zap, MapPin, Star } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
+import { WatchlistButton } from "./WatchlistButton";
 import type { AuctionWithSeller } from "@/types";
+import { useSession } from "next-auth/react";
 import { useSettings } from "@/context/SettingsContext";
 
 export default function AuctionCard({
   auction,
+  locale,
 }: {
   auction: AuctionWithSeller;
+  locale?: string;
 }) {
+  const { data: session } = useSession();
   const { lightweightMode } = useSettings();
   const mainImage = auction.images[0] || "/placeholder.png";
   const bidCount = auction._count?.bids ?? 0;
+
+  const isWatchlisted =
+    auction.watchlist?.some((w: any) => w.userId === session?.user?.id) ??
+    false;
 
   return (
     <Link href={`/auctions/${auction.id}`} className="group">
@@ -53,10 +62,18 @@ export default function AuctionCard({
             </span>
           </div>
           {/* Category */}
-          <div className="absolute top-3 right-3 z-10">
+          <div className="absolute bottom-3 left-3 z-10">
             <span className="bg-primary-100/90 backdrop-blur-sm text-primary-700 px-2.5 py-1 rounded-full text-xs font-medium">
               {auction.category}
             </span>
+          </div>
+          {/* Watchlist Button */}
+          <div className="absolute top-3 right-3 z-10">
+            <WatchlistButton
+              auctionId={auction.id}
+              initialIsWatchlisted={isWatchlisted}
+              hoverOnly
+            />
           </div>
         </div>
 
