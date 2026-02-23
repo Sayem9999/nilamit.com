@@ -3,7 +3,13 @@
     "login": "Login",
     "home": "Home",
     "auctions": "Live Auctions",
-    "sell": "Sell Item"
+    "sell": "Sell Item",
+    "browse": "Browse",
+    "signin": "Sign In",
+    "signout": "Sign Out",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings"
   },
   "Auth": {
     "loginTitle": "Welcome back",
@@ -60,5 +66,7 @@
     "ctaFooterTitle": "Ready to get started?",
     "ctaFooterDesc": "Join thousands of users buying and selling every day.",
     "ctaFooterBtn": "Create an Account"
-  }
+  },
+  "title": "Bangladesh's Premier Auction House",
+  "subtitle": "Discover unique items or sell to thousands of verified buyers."
 }
