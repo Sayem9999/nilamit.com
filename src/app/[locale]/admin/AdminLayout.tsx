@@ -1,10 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { LayoutDashboard, ShieldAlert, Banknote, PenTool, Trash2, Menu } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import {
+  LayoutDashboard,
+  ShieldAlert,
+  Banknote,
+  PenTool,
+  Trash2,
+  Menu,
+  Users,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type Tab = 'overview' | 'moderation' | 'finance' | 'content' | 'system';
+type Tab =
+  | "overview"
+  | "moderation"
+  | "finance"
+  | "content"
+  | "system"
+  | "users";
 
 interface AdminLayoutProps {
   overview: React.ReactNode;
@@ -12,24 +26,33 @@ interface AdminLayoutProps {
   finance?: React.ReactNode;
   content?: React.ReactNode;
   system: React.ReactNode;
+  users?: React.ReactNode;
 }
 
-export function AdminLayout({ overview, moderation, finance, content, system }: AdminLayoutProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+export function AdminLayout({
+  overview,
+  moderation,
+  finance,
+  content,
+  system,
+  users,
+}: AdminLayoutProps) {
+  const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'moderation', label: 'Moderation', icon: ShieldAlert },
-    { id: 'finance', label: 'Finance', icon: Banknote },
-    { id: 'content', label: 'Content', icon: PenTool },
-    { id: 'system', label: 'System', icon: Trash2, danger: true },
+    { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "moderation", label: "Moderation", icon: ShieldAlert },
+    { id: "users", label: "Users", icon: Users },
+    { id: "finance", label: "Finance", icon: Banknote },
+    { id: "content", label: "Content", icon: PenTool },
+    { id: "system", label: "System", icon: Trash2, danger: true },
   ];
 
   return (
     <div className="flex min-h-screen bg-gray-50/50">
       {/* Mobile Sidebar Toggle */}
-      <button 
+      <button
         className="lg:hidden fixed bottom-4 right-4 z-50 bg-indigo-600 text-white p-3 rounded-full shadow-lg"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
@@ -37,10 +60,12 @@ export function AdminLayout({ overview, moderation, finance, content, system }: 
       </button>
 
       {/* Sidebar Navigation */}
-      <aside className={cn(
-        "fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:h-auto",
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:h-auto",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
         <div className="p-6">
           <h2 className="text-xl font-bold font-heading text-indigo-900 flex items-center gap-2">
             <ShieldAlert className="w-6 h-6 text-indigo-600" />
@@ -61,13 +86,21 @@ export function AdminLayout({ overview, moderation, finance, content, system }: 
                 }}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all",
-                  activeTab === tab.id 
-                    ? "bg-indigo-50 text-indigo-700 shadow-sm" 
+                  activeTab === tab.id
+                    ? "bg-indigo-50 text-indigo-700 shadow-sm"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                  tab.danger && activeTab === tab.id && "bg-red-50 text-red-700"
+                  tab.danger &&
+                    activeTab === tab.id &&
+                    "bg-red-50 text-red-700",
                 )}
               >
-                <Icon className={cn("w-5 h-5", tab.danger ? "text-red-500" : "text-gray-400", activeTab === tab.id && "text-current")} />
+                <Icon
+                  className={cn(
+                    "w-5 h-5",
+                    tab.danger ? "text-red-500" : "text-gray-400",
+                    activeTab === tab.id && "text-current",
+                  )}
+                />
                 {tab.label}
               </button>
             );
@@ -78,11 +111,15 @@ export function AdminLayout({ overview, moderation, finance, content, system }: 
       {/* Main Content Area */}
       <main className="flex-1 p-4 lg:p-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto">
-          {activeTab === 'overview' && overview}
-          {activeTab === 'moderation' && (moderation || <Placeholder tab="Moderation" />)}
-          {activeTab === 'finance' && (finance || <Placeholder tab="Finance" />)}
-          {activeTab === 'content' && (content || <Placeholder tab="Content" />)}
-          {activeTab === 'system' && system}
+          {activeTab === "overview" && overview}
+          {activeTab === "moderation" &&
+            (moderation || <Placeholder tab="Moderation" />)}
+          {activeTab === "finance" &&
+            (finance || <Placeholder tab="Finance" />)}
+          {activeTab === "content" &&
+            (content || <Placeholder tab="Content" />)}
+          {activeTab === "users" && (users || <Placeholder tab="Users" />)}
+          {activeTab === "system" && system}
         </div>
       </main>
     </div>

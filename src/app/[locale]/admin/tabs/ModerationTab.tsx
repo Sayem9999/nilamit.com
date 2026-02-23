@@ -6,15 +6,7 @@ import {
   resolveReport,
   suspendAuction,
 } from "@/actions/admin-moderation";
-import {
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  ExternalLink,
-  ShieldAlert,
-  Ban,
-  EyeOff,
-} from "lucide-react";
+import { CheckCircle, XCircle, ExternalLink, Ban } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 

@@ -1,9 +1,9 @@
-import { getAuctions } from '@/actions/auction';
-import AuctionCard from '@/components/auction/AuctionCard';
-import Link from 'next/link';
-import { Search, SlidersHorizontal, MapPin } from 'lucide-react';
-import { CATEGORIES, LOCATIONS } from '@/types';
-import type { AuctionStatus } from '@/types';
+import { getAuctions } from "@/actions/auction";
+import AuctionCard from "@/components/auction/AuctionCard";
+import Link from "next/link";
+import { Search, SlidersHorizontal, MapPin } from "lucide-react";
+import { CATEGORIES, LOCATIONS } from "@/types";
+import type { AuctionStatus } from "@/types";
 
 interface Props {
   searchParams: Promise<{
@@ -19,14 +19,16 @@ interface Props {
 
 export default async function AuctionsPage({ searchParams }: Props) {
   const params = await searchParams;
-  const page = parseInt(params.page || '1');
+  const page = parseInt(params.page || "1");
   const { auctions, total, pages } = await getAuctions({
     category: params.category,
     search: params.search,
-    sortBy: (params.sortBy as 'endTime' | 'currentPrice' | 'createdAt' | 'bids') || 'endTime',
-    sortOrder: (params.sortOrder as 'asc' | 'desc') || 'asc',
+    sortBy:
+      (params.sortBy as "endTime" | "currentPrice" | "createdAt" | "bids") ||
+      "endTime",
+    sortOrder: (params.sortOrder as "asc" | "desc") || "asc",
     page,
-    status: (params.status as any) || 'ACTIVE',
+    status: (params.status as AuctionStatus) || "ACTIVE",
     location: params.location,
     limit: 12,
   });
@@ -38,12 +40,15 @@ export default async function AuctionsPage({ searchParams }: Props) {
         <div>
           <h1 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">
             {params.category
-              ? CATEGORIES.find(c => c.slug === params.category)?.label || 'Auctions'
+              ? CATEGORIES.find((c) => c.slug === params.category)?.label ||
+                "Auctions"
               : params.search
                 ? `Results for "${params.search}"`
-                : 'Live Auctions'}
+                : "Live Auctions"}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">{total} auction{total !== 1 ? 's' : ''} found</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {total} auction{total !== 1 ? "s" : ""} found
+          </p>
         </div>
       </div>
 
@@ -73,7 +78,9 @@ export default async function AuctionsPage({ searchParams }: Props) {
               <Link
                 href="/auctions"
                 className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                  !params.category ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  !params.category
+                    ? "bg-primary-50 text-primary-700 font-medium"
+                    : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 All Categories
@@ -83,7 +90,9 @@ export default async function AuctionsPage({ searchParams }: Props) {
                   key={cat.slug}
                   href={`/auctions?category=${cat.slug}`}
                   className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                    params.category === cat.slug ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                    params.category === cat.slug
+                      ? "bg-primary-50 text-primary-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   {cat.icon} {cat.label}
@@ -94,13 +103,15 @@ export default async function AuctionsPage({ searchParams }: Props) {
 
           {/* Sort */}
           <div>
-            <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3">Sort By</h3>
+            <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3">
+              Sort By
+            </h3>
             <div className="space-y-1">
               {[
-                { value: 'endTime', label: 'Ending Soon' },
-                { value: 'currentPrice', label: 'Price' },
-                { value: 'createdAt', label: 'Newest' },
-                { value: 'bids', label: 'Most Bids' },
+                { value: "endTime", label: "Ending Soon" },
+                { value: "currentPrice", label: "Price" },
+                { value: "createdAt", label: "Newest" },
+                { value: "bids", label: "Most Bids" },
               ].map((sort) => (
                 <Link
                   key={sort.value}
@@ -110,7 +121,9 @@ export default async function AuctionsPage({ searchParams }: Props) {
                     sortBy: sort.value,
                   }).toString()}`}
                   className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                    params.sortBy === sort.value ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                    params.sortBy === sort.value
+                      ? "bg-primary-50 text-primary-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   {sort.label}
@@ -132,7 +145,9 @@ export default async function AuctionsPage({ searchParams }: Props) {
                   ...(params.sortBy ? { sortBy: params.sortBy } : {}),
                 }).toString()}`}
                 className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                  !params.location ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                  !params.location
+                    ? "bg-primary-50 text-primary-700 font-medium"
+                    : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 All Bangladesh
@@ -147,7 +162,9 @@ export default async function AuctionsPage({ searchParams }: Props) {
                     location: loc.id,
                   }).toString()}`}
                   className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                    params.location === loc.id ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                    params.location === loc.id
+                      ? "bg-primary-50 text-primary-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   {loc.label}
@@ -162,8 +179,12 @@ export default async function AuctionsPage({ searchParams }: Props) {
           {auctions.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-4xl mb-4">🔍</p>
-              <h3 className="font-heading font-semibold text-gray-900 mb-1">No auctions found</h3>
-              <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+              <h3 className="font-heading font-semibold text-gray-900 mb-1">
+                No auctions found
+              </h3>
+              <p className="text-sm text-gray-500">
+                Try adjusting your search or filters
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
@@ -187,8 +208,8 @@ export default async function AuctionsPage({ searchParams }: Props) {
                   }).toString()}`}
                   className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-medium transition-colors ${
                     p === page
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      ? "bg-primary-600 text-white"
+                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                   }`}
                 >
                   {p}

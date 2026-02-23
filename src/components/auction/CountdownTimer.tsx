@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { formatTimeRemaining } from '@/lib/format';
+import { useState, useEffect, useCallback } from "react";
+import { formatTimeRemaining } from "@/lib/format";
 
 interface CountdownTimerProps {
   endTime: Date | string;
@@ -9,36 +9,45 @@ interface CountdownTimerProps {
   className?: string;
 }
 
-export function CountdownTimer({ endTime, onExpired, className = '' }: CountdownTimerProps) {
-  const [timeLeft, setTimeLeft] = useState('');
-  const [isUrgent, setIsUrgent] = useState(false);
-  const [isExpired, setIsExpired] = useState(false);
-
-  const updateTimer = useCallback(() => {
+export function CountdownTimer({
+  endTime,
+  onExpired,
+  className = "",
+}: CountdownTimerProps) {
+  const computeState = useCallback(() => {
     const end = new Date(endTime);
-    const now = new Date();
-    const diff = end.getTime() - now.getTime();
+    const diff = end.getTime() - Date.now();
+    if (diff <= 0)
+      return { timeLeft: "Ended", isUrgent: false, isExpired: true };
+    return {
+      timeLeft: formatTimeRemaining(endTime),
+      isUrgent: diff < 60_000,
+      isExpired: false,
+    };
+  }, [endTime]);
 
-    if (diff <= 0) {
-      setTimeLeft('Ended');
-      setIsExpired(true);
-      onExpired?.();
-      return;
-    }
-
-    setIsUrgent(diff < 60 * 1000); // Less than 1 minute
-    setTimeLeft(formatTimeRemaining(endTime));
-  }, [endTime, onExpired]);
+  const initial = computeState();
+  const [timeLeft, setTimeLeft] = useState(initial.timeLeft);
+  const [isUrgent, setIsUrgent] = useState(initial.isUrgent);
+  const [isExpired, setIsExpired] = useState(initial.isExpired);
 
   useEffect(() => {
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
+    const tick = () => {
+      const s = computeState();
+      setTimeLeft(s.timeLeft);
+      setIsUrgent(s.isUrgent);
+      if (s.isExpired) {
+        setIsExpired(true);
+        onExpired?.();
+      }
+    };
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [updateTimer]);
+  }, [computeState, onExpired]);
 
   return (
     <span
-      className={`price ${isExpired ? 'text-gray-400' : isUrgent ? 'countdown-urgent font-bold' : 'text-gray-700'} ${className}`}
+      className={`price ${isExpired ? "text-gray-400" : isUrgent ? "countdown-urgent font-bold" : "text-gray-700"} ${className}`}
     >
       {timeLeft}
     </span>

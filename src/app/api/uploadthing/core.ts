@@ -4,29 +4,15 @@ import { auth } from "@/lib/auth";
 const f = createUploadthing();
  
 const handleAuth = async () => {
-  console.log("UploadThing: 🔒 Middleware started - Checking session...");
-  try {
-    const session = await auth();
-    console.log("UploadThing: 👤 Session found:", JSON.stringify(session?.user, null, 2));
-    
-    if (!session?.user?.id) {
-        console.error("UploadThing: ❌ No user ID in session. Rejecting.");
-        throw new Error("Unauthorized");
-    }
-    
-    return { userId: session.user.id };
-  } catch (err) {
-    console.error("UploadThing: 💥 Auth Error:", err);
-    throw err;
-  }
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  return { userId: session.user.id };
 };
  
 export const ourFileRouter = {
   auctionImage: f({ image: { maxFileSize: "4MB", maxFileCount: 4 } })
     .middleware(async () => await handleAuth())
-    .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata.userId);
-      console.log("file url", file.url);
+    .onUploadComplete(async ({ metadata }) => {
       return { uploadedBy: metadata.userId };
     }),
 } satisfies FileRouter;

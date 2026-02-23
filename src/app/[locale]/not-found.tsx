@@ -1,28 +1,35 @@
-'use client';
-
-import Link from 'next/link';
-import { useLanguage } from '@/context/LanguageContext';
-import { Gavel } from 'lucide-react';
+import Link from "next/link";
+import { Gavel } from "lucide-react";
 
 export default function NotFound() {
-  const { t } = useLanguage();
-
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
-      <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-6">
-        <Gavel className="w-8 h-8 text-primary-600" />
+      <div className="w-20 h-20 bg-primary-100 rounded-3xl flex items-center justify-center mb-6 shadow-sm">
+        <Gavel className="w-10 h-10 text-primary-600" />
       </div>
-      <h1 className="font-heading font-bold text-4xl text-gray-900 mb-2">404</h1>
-      <h2 className="font-heading font-semibold text-xl text-gray-700 mb-6">Page Not Found</h2>
-      <p className="text-gray-500 max-w-sm mb-8">
-        Oops! The page you are looking for doesn't exist or has been moved.
+      <h1 className="font-heading font-bold text-6xl text-gray-900 mb-2">
+        404
+      </h1>
+      <h2 className="font-heading font-semibold text-xl text-gray-600 mb-4">
+        Page Not Found
+      </h2>
+      <p className="text-gray-400 max-w-sm mb-8 text-sm leading-relaxed">
+        The page you&apos;re looking for doesn&apos;t exist or has been moved.
       </p>
-      <Link
-        href="/"
-        className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-xl transition-all shadow-sm"
-      >
-        Go Home
-      </Link>
+      <div className="flex gap-3">
+        <Link
+          href="/"
+          className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-xl transition-all shadow-sm text-sm"
+        >
+          Go Home
+        </Link>
+        <Link
+          href="/auctions"
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-8 py-3 rounded-xl transition-all text-sm"
+        >
+          Browse Auctions
+        </Link>
+      </div>
     </div>
   );
 }

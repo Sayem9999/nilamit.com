@@ -52,10 +52,16 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Nilamit",
   },
+  icons: {
+    icon: "/icon-512.png",
+    apple: "/icon-512.png",
+  },
 };
 
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+
+import { Toaster } from "react-hot-toast";
 
 export default async function RootLayout({
   children,
@@ -75,6 +81,17 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
           <Providers>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  borderRadius: "12px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                },
+              }}
+            />
             <Navbar />
             <main className="min-h-screen bg-gray-50/50">{children}</main>
             <Footer />

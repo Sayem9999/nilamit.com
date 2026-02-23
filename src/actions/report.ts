@@ -2,7 +2,6 @@
 
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { revalidatePath } from 'next/cache';
 
 /**
  * reportAuction — Allow users to flag problematic auctions
@@ -24,7 +23,7 @@ export async function reportAuction(auctionId: string, reason: string, descripti
     });
 
     return { success: true, report };
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Failed to submit report. You may have already reported this auction.' };
   }
 }
@@ -41,7 +40,7 @@ export async function getReports(status: 'PENDING' | 'RESOLVED' = 'PENDING') {
   }
 
   return prisma.auctionReport.findMany({
-    where: { status: status as any },
+    where: { status },
     include: {
       auction: { select: { title: true, id: true } },
       reporter: { select: { name: true, email: true } },

@@ -5,6 +5,7 @@ import { Heart } from "lucide-react";
 import { toggleWatchlist } from "@/actions/watchlist";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 
 interface WatchlistButtonProps {
   auctionId: string;
@@ -29,7 +30,7 @@ export function WatchlistButton({
     e.stopPropagation();
 
     if (!session) {
-      alert("Please sign in to add to watchlist");
+      toast.error("Please sign in to add to watchlist");
       return;
     }
 
@@ -39,13 +40,17 @@ export function WatchlistButton({
     startTransition(async () => {
       const result = await toggleWatchlist(auctionId, pathname);
       if (!result.success) {
-        // Revert on failure
         setIsWatchlisted(isWatchlisted);
         if (result.error !== "Unauthorized") {
-          alert(result.error);
+          toast.error(result.error || "Failed to update watchlist");
         }
       } else if (result.isWatchlisted !== undefined) {
         setIsWatchlisted(result.isWatchlisted);
+        toast.success(
+          result.isWatchlisted
+            ? "Added to watchlist"
+            : "Removed from watchlist",
+        );
       }
     });
   };

@@ -5,6 +5,7 @@ import { AdminLayout } from "./AdminLayout";
 import { SystemTab } from "./tabs/SystemTab";
 import { ContentTab } from "./tabs/ContentTab";
 import { ModerationTab } from "./tabs/ModerationTab";
+import { UsersTab } from "./tabs/UsersTab";
 import { Users, Package, TrendingUp, DollarSign } from "lucide-react";
 
 function OverviewTab({
@@ -150,6 +151,7 @@ export default async function AdminPage() {
         />
       }
       system={<SystemTab />}
+      users={<UsersTab />}
     />
   );
 }

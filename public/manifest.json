@@ -1,7 +1,7 @@
 {
-  "name": "Nilamit Auction",
+  "name": "Nilamit — Bangladesh Auction Marketplace",
   "short_name": "Nilamit",
-  "description": "Premium Bangladesh Auction Marketplace",
+  "description": "Buy and sell through transparent auctions. Verified sellers, anti-sniping protection, and real-time bidding.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,15 +9,9 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/next.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/next.svg",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
@@ -25,13 +19,15 @@
   "shortcuts": [
     {
       "name": "Create Auction",
-      "url": "/auctions/create",
-      "icons": [{ "src": "/next.svg", "sizes": "192x192" }]
+      "url": "/en/auctions/create"
     },
     {
       "name": "My Dashboard",
-      "url": "/dashboard",
-      "icons": [{ "src": "/next.svg", "sizes": "192x192" }]
+      "url": "/en/dashboard"
+    },
+    {
+      "name": "Browse Auctions",
+      "url": "/en/auctions"
     }
   ]
 }

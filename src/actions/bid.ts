@@ -192,18 +192,15 @@ async function sendOutbidEmail(email: string, title: string, currentPrice: numbe
   if (!resendApiKey) return;
 
   const { Resend } = await import('resend');
+  const { outbidEmailHtml } = await import('@/lib/emails');
   const resend = new Resend(resendApiKey);
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://nilamit.com';
 
   await resend.emails.send({
-    from: 'notifications@nilamit.com', // Update once domain is verified
+    from: 'notifications@nilamit.com',
     to: email,
     subject: `You've been outbid on: ${title}`,
-    html: `
-      <h2>You've been outbid!</h2>
-      <p>Someone placed a higher bid on <strong>${title}</strong>.</p>
-      <p>Current high bid: <strong>৳${currentPrice.toLocaleString()}</strong></p>
-      <p><a href="${process.env.NEXTAUTH_URL}/auctions/${auctionId}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px;">Bid Again Now</a></p>
-    `,
+    html: outbidEmailHtml(title, currentPrice, auctionId, baseUrl),
   });
 }
 
