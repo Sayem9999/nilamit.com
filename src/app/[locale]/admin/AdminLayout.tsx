@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 type Tab =
   | "overview"
   | "moderation"
-  | "finance"
+  | "metrics"
   | "content"
   | "system"
   | "users";
@@ -23,7 +23,7 @@ type Tab =
 interface AdminLayoutProps {
   overview: React.ReactNode;
   moderation?: React.ReactNode;
-  finance?: React.ReactNode;
+  metrics?: React.ReactNode;
   content?: React.ReactNode;
   system: React.ReactNode;
   users?: React.ReactNode;
@@ -32,7 +32,7 @@ interface AdminLayoutProps {
 export function AdminLayout({
   overview,
   moderation,
-  finance,
+  metrics,
   content,
   system,
   users,
@@ -44,7 +44,7 @@ export function AdminLayout({
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "moderation", label: "Moderation", icon: ShieldAlert },
     { id: "users", label: "Users", icon: Users },
-    { id: "finance", label: "Finance", icon: Banknote },
+    { id: "metrics", label: "Metrics", icon: Banknote },
     { id: "content", label: "Content", icon: PenTool },
     { id: "system", label: "System", icon: Trash2, danger: true },
   ];
@@ -114,8 +114,8 @@ export function AdminLayout({
           {activeTab === "overview" && overview}
           {activeTab === "moderation" &&
             (moderation || <Placeholder tab="Moderation" />)}
-          {activeTab === "finance" &&
-            (finance || <Placeholder tab="Finance" />)}
+          {activeTab === "metrics" &&
+            (metrics || <Placeholder tab="Metrics" />)}
           {activeTab === "content" &&
             (content || <Placeholder tab="Content" />)}
           {activeTab === "users" && (users || <Placeholder tab="Users" />)}
