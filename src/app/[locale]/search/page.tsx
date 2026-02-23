@@ -5,11 +5,12 @@ import type { AuctionWithSeller } from "@/types";
 
 export default async function SearchPage({
   searchParams,
-  params: { locale },
+  params,
 }: {
   searchParams: Promise<{ q?: string; category?: string; sort?: string }>;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const { q, category, sort } = await searchParams;
 
   const query = q || "";

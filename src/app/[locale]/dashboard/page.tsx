@@ -7,12 +7,13 @@ import Link from "next/link";
 import type { AuctionWithSeller } from "@/types";
 
 export default async function DashboardPage({
-  params: { locale },
+  params,
   searchParams,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ tab?: string }>;
 }) {
+  const { locale } = await params;
   const session = await auth();
   if (!session?.user) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/dashboard`);
