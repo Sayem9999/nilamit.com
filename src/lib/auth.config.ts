@@ -6,10 +6,5 @@ export const authConfig = {
   },
   providers: [],
   session: { strategy: 'jwt' },
-  callbacks: {
-    authorized({ auth }) {
-      const isLoggedIn = !!auth?.user;
-      return isLoggedIn;
-    },
-  },
+  callbacks: {},
 } satisfies NextAuthConfig;

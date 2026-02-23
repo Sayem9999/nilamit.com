@@ -1,6 +1,5 @@
 import createIntlMiddleware from 'next-intl/middleware';
 import NextAuth from 'next-auth';
-import { NextRequest } from 'next/server';
 import { authConfig } from '@/lib/auth.config';
 
 const intlMiddleware = createIntlMiddleware({
@@ -8,7 +7,7 @@ const intlMiddleware = createIntlMiddleware({
   defaultLocale: 'en'
 });
 
-const authMiddleware = NextAuth(authConfig).auth;
+const { auth } = NextAuth(authConfig);
 
 // Pages that require authentication
 const protectedPatterns = ['/dashboard', '/profile', '/auctions/create', '/admin'];
@@ -19,14 +18,21 @@ function isProtectedPage(pathname: string): boolean {
   return protectedPatterns.some(p => path.startsWith(p));
 }
 
-export default function middleware(req: NextRequest) {
-  if (isProtectedPage(req.nextUrl.pathname)) {
-    // Protected: run auth then intl
-    return (authMiddleware as any)(req, (req: NextRequest) => intlMiddleware(req));
+export default auth((req) => {
+  const isProtected = isProtectedPage(req.nextUrl.pathname);
+  
+  if (isProtected && !req.auth) {
+    const localeMatch = req.nextUrl.pathname.match(/^\/(en|bn)/);
+    const locale = localeMatch ? localeMatch[1] : 'en';
+    
+    const loginUrl = new URL(`/${locale}/login`, req.nextUrl);
+    loginUrl.searchParams.set('callbackUrl', req.url);
+    
+    return Response.redirect(loginUrl);
   }
-  // Public: just intl
+  
   return intlMiddleware(req);
-}
+});
 
 export const config = {
   matcher: ['/((?!api|_next|.*\\..*).*)']
