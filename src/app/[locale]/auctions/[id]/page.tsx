@@ -22,6 +22,8 @@ import { auth } from "@/lib/auth";
 import { WatchlistButton } from "@/components/auction/WatchlistButton";
 import { isWatched } from "@/actions/watchlist";
 import { ReportModal } from "@/components/auction/ReportModal";
+import { ShareButton } from "@/components/auction/ShareButton";
+import { BidHistory } from "@/components/auction/BidHistory";
 import { Metadata } from "next";
 import Script from "next/script";
 import { AuctionStatus } from "@prisma/client";
@@ -128,7 +130,17 @@ export default async function AuctionDetailPage({ params }: Props) {
               <h1 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">
                 {auction.title}
               </h1>
-              <WatchlistButton auctionId={id} initialIsWatchlisted={watched} />
+              <div className="flex items-center gap-2">
+                <ShareButton
+                  title={auction.title}
+                  auctionId={id}
+                  price={auction.currentPrice}
+                />
+                <WatchlistButton
+                  auctionId={id}
+                  initialIsWatchlisted={watched}
+                />
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1">
@@ -157,58 +169,15 @@ export default async function AuctionDetailPage({ params }: Props) {
           </div>
 
           {/* Bid History */}
-          <div>
-            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
-              Bid History ({bids.length})
-            </h2>
-            {bids.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-xl">
-                <p className="text-gray-400">No bids yet. Be the first!</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {bids.map((bid, i) => (
-                  <div
-                    key={bid.id}
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl ${
-                      i === 0
-                        ? "bg-primary-50 border border-primary-100"
-                        : "bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                        {bid.bidder.image ? (
-                          <Image
-                            src={bid.bidder.image}
-                            alt={bid.bidder.name || "Bidder"}
-                            width={32}
-                            height={32}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <User className="w-4 h-4 text-primary-600" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">
-                          {bid.bidder.name || "Anonymous"}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {formatRelativeTime(bid.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={`price text-sm ${i === 0 ? "text-primary-700 font-bold" : "text-gray-600"}`}
-                    >
-                      {formatBDT(bid.amount)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <BidHistory
+            auctionId={id}
+            initialBids={bids.map((b) => ({
+              id: b.id,
+              amount: b.amount,
+              createdAt: b.createdAt.toString(),
+              bidder: { name: b.bidder.name, id: b.bidder.id },
+            }))}
+          />
 
           {/* Review Section (Phase 3) */}
           {auction.status === AuctionStatus.SOLD && (
