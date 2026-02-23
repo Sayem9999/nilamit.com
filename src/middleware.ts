@@ -10,23 +10,24 @@ const intlMiddleware = createIntlMiddleware({
 
 const authMiddleware = NextAuth(authConfig).auth;
 
-export default function middleware(req: NextRequest) {
-  // Public pages that don't require authentication
-  const publicPathnameRegex = RegExp(
-    `^(/(${['en', 'bn'].join('|')}))?(/login|/register|/how-it-works|/contact)?/?$`,
-    'i'
-  );
-  
-  const isPublicPage = publicPathnameRegex.test(req.nextUrl.pathname);
+// Pages that require authentication
+const protectedPatterns = ['/dashboard', '/profile', '/auctions/create', '/admin'];
 
-  if (isPublicPage) {
-    return intlMiddleware(req);
-  } else {
+function isProtectedPage(pathname: string): boolean {
+  // Strip locale prefix
+  const path = pathname.replace(/^\/(en|bn)/, '') || '/';
+  return protectedPatterns.some(p => path.startsWith(p));
+}
+
+export default function middleware(req: NextRequest) {
+  if (isProtectedPage(req.nextUrl.pathname)) {
+    // Protected: run auth then intl
     return (authMiddleware as any)(req, (req: NextRequest) => intlMiddleware(req));
   }
+  // Public: just intl
+  return intlMiddleware(req);
 }
 
 export const config = {
-  // Skip all paths that should not be internationalized
   matcher: ['/((?!api|_next|.*\\..*).*)']
 };
