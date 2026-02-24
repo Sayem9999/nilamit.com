@@ -137,9 +137,11 @@ function StatCard({
 }
 
 export default async function AdminPage() {
-  const systemConfig = await getSystemConfig();
-  const featuredAuctions = await getFeaturedAuctions();
-  const adminStats = await getAdminStats();
+  const [systemConfig, featuredAuctions, adminStats] = await Promise.all([
+    getSystemConfig(),
+    getFeaturedAuctions(),
+    getAdminStats(),
+  ]);
 
   return (
     <AdminLayout
