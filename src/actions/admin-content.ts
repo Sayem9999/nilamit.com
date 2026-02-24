@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { Prisma } from '@prisma/client';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
@@ -13,19 +14,33 @@ async function requireAdmin() {
   }
 }
 
+function isDatabaseUnavailable(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === 'P1001'
+  );
+}
+
 export async function getSystemConfig() {
-  const config = await prisma.systemConfig.findUnique({ where: { id: 'default' } });
-  if (!config) {
-    // Return defaults if not found
-    return {
-      heroTitle: "Buy & Sell in Real-time Auctions",
-      heroSubtitle: "Bangladesh's most trusted C2C marketplace.",
-      heroImage: null,
-      announcement: null,
-      showAnnouncement: false,
-    };
+  const fallbackConfig = {
+    heroTitle: 'Buy & Sell in Real-time Auctions',
+    heroSubtitle: "Bangladesh's most trusted C2C marketplace.",
+    heroImage: null,
+    announcement: null,
+    showAnnouncement: false,
+  };
+
+  try {
+    const config = await prisma.systemConfig.findUnique({ where: { id: 'default' } });
+    return config ?? fallbackConfig;
+  } catch (error) {
+    if (isDatabaseUnavailable(error)) {
+      console.warn('[admin-content] DB unavailable while loading system config, using fallback values.');
+      return fallbackConfig;
+    }
+
+    throw error;
   }
-  return config;
 }
 
 export async function updateSystemConfig(data: {
@@ -63,8 +78,17 @@ export async function toggleFeaturedAuction(auctionId: string) {
 }
 
 export async function getFeaturedAuctions() {
-  return prisma.auction.findMany({
-    where: { isFeatured: true },
-    select: { id: true, title: true, currentPrice: true, images: true, status: true },
-  });
+  try {
+    return await prisma.auction.findMany({
+      where: { isFeatured: true },
+      select: { id: true, title: true, currentPrice: true, images: true, status: true },
+    });
+  } catch (error) {
+    if (isDatabaseUnavailable(error)) {
+      console.warn('[admin-content] DB unavailable while loading featured auctions, returning empty list.');
+      return [];
+    }
+
+    throw error;
+  }
 }
