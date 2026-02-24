@@ -7,27 +7,41 @@ import { ContentTab } from "./tabs/ContentTab";
 import { ModerationTab } from "./tabs/ModerationTab";
 import { UsersTab } from "./tabs/UsersTab";
 import { MetricsTab } from "./tabs/MetricsTab";
-import { Users, Package, TrendingUp, DollarSign } from "lucide-react";
+import { Users, Package, TrendingUp, DollarSign, AlertTriangle } from "lucide-react";
+import { isDatabaseUnavailableError } from "@/lib/db-errors";
+
+type RecentUser = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  reputationScore: number;
+  isVerifiedSeller: boolean;
+};
+
+type AdminOverviewStats = {
+  totalUsers: number;
+  activeAuctions: number;
+  totalBids: number;
+  totalRevenue: number;
+  recentUsers: RecentUser[];
+};
 
 function OverviewTab({
   stats,
+  isDegraded,
 }: {
-  stats: {
-    totalUsers: number;
-    activeAuctions: number;
-    totalBids: number;
-    totalRevenue: number;
-    recentUsers: {
-      id: string;
-      name: string | null;
-      email: string | null;
-      reputationScore: number;
-      isVerifiedSeller: boolean;
-    }[];
-  };
+  stats: AdminOverviewStats;
+  isDegraded?: boolean;
 }) {
   return (
     <div className="space-y-8">
+      {isDegraded ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 text-sm flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <p>Data is temporarily unavailable. Showing a degraded admin dashboard until the database connection recovers.</p>
+        </div>
+      ) : null}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
@@ -73,13 +87,7 @@ function OverviewTab({
             </thead>
             <tbody className="divide-y divide-gray-100">
               {stats.recentUsers.map(
-                (user: {
-                  id: string;
-                  name: string | null;
-                  email: string | null;
-                  reputationScore: number;
-                  isVerifiedSeller: boolean;
-                }) => (
+                (user: RecentUser) => (
                   <tr key={user.id} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3 font-medium text-gray-900">
                       {user.name}
@@ -136,14 +144,52 @@ function StatCard({
   );
 }
 
+const FALLBACK_SYSTEM_CONFIG = {
+  heroTitle: "Buy & Sell in Real-time Auctions",
+  heroSubtitle: "Bangladesh's most trusted C2C marketplace.",
+  heroImage: null,
+  announcement: null,
+  showAnnouncement: false,
+};
+
+const FALLBACK_ADMIN_STATS: AdminOverviewStats = {
+  totalUsers: 0,
+  activeAuctions: 0,
+  totalBids: 0,
+  totalRevenue: 0,
+  recentUsers: [],
+};
+
 export default async function AdminPage() {
-  const systemConfig = await getSystemConfig();
-  const featuredAuctions = await getFeaturedAuctions();
-  const adminStats = await getAdminStats();
+  let isDegraded = false;
+
+  const [systemConfig, featuredAuctions, adminStats] = await Promise.all([
+    getSystemConfig().catch((error) => {
+      if (isDatabaseUnavailableError(error)) {
+        isDegraded = true;
+        return FALLBACK_SYSTEM_CONFIG;
+      }
+      throw error;
+    }),
+    getFeaturedAuctions().catch((error) => {
+      if (isDatabaseUnavailableError(error)) {
+        isDegraded = true;
+        return [];
+      }
+      throw error;
+    }),
+    getAdminStats().catch((error) => {
+      if (isDatabaseUnavailableError(error)) {
+        isDegraded = true;
+        return FALLBACK_ADMIN_STATS;
+      }
+      throw error;
+    }),
+  ]);
 
   return (
     <AdminLayout
-      overview={<OverviewTab stats={adminStats} />}
+      overview={<OverviewTab stats={adminStats} isDegraded={isDegraded} />}
       moderation={<ModerationTab />}
       content={
         <ContentTab
