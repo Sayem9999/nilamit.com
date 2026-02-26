@@ -9,22 +9,23 @@ import { WatchlistButton } from "./WatchlistButton";
 import type { AuctionWithSeller } from "@/types";
 import { useSession } from "next-auth/react";
 import { useSettings } from "@/context/SettingsContext";
+import { useTranslations } from "next-intl";
 
 export default function AuctionCard({
   auction,
-  locale,
 }: {
   auction: AuctionWithSeller;
-  locale?: string;
 }) {
   const { data: session } = useSession();
   const { lightweightMode } = useSettings();
+  const t = useTranslations("Auction");
   const mainImage = auction.images[0] || "/placeholder.png";
   const bidCount = auction._count?.bids ?? 0;
 
   const isWatchlisted =
-    auction.watchlist?.some((w: any) => w.userId === session?.user?.id) ??
-    false;
+    auction.watchlist?.some(
+      (w: { userId: string }) => w.userId === session?.user?.id,
+    ) ?? false;
 
   return (
     <Link href={`/auctions/${auction.id}`} className="group">
@@ -35,7 +36,7 @@ export default function AuctionCard({
             <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-2 p-4 text-center">
               <Zap className="w-8 h-8 text-amber-500 animate-pulse" />
               <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
-                Lite Mode Active
+                {t("liteModeActive")}
               </span>
             </div>
           ) : (
@@ -58,7 +59,7 @@ export default function AuctionCard({
                   : "bg-gray-100 text-gray-600"
               }`}
             >
-              {auction.status === "ACTIVE" ? "Live" : auction.status}
+              {auction.status === "ACTIVE" ? t("live") : auction.status}
             </span>
           </div>
           {/* Category */}
@@ -85,7 +86,7 @@ export default function AuctionCard({
 
           <div className="flex items-center gap-1 min-w-0 mt-0.5">
             <span className="text-[10px] sm:text-xs font-semibold text-gray-700 truncate">
-              {auction.seller.name || "Seller"}
+              {auction.seller.name || t("seller")}
             </span>
             {auction.seller.isVerifiedSeller && (
               <Shield className="w-3 h-3 text-blue-500 fill-blue-500/10 flex-shrink-0" />
@@ -127,7 +128,7 @@ export default function AuctionCard({
             <div className="flex items-center gap-1">
               <Users className="w-3.5 h-3.5" />
               <span>
-                {bidCount} bid{bidCount !== 1 ? "s" : ""}
+                {bidCount} {t("bids")}
               </span>
             </div>
           </div>

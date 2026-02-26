@@ -157,7 +157,6 @@ export default async function SearchPage({
                   <AuctionCard
                     key={auction.id}
                     auction={auction as unknown as AuctionWithSeller}
-                    locale={locale}
                   />
                 ))}
               </div>

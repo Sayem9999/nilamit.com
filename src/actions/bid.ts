@@ -111,7 +111,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
       const prevBid = await tx.bid.findFirst({
         where: { auctionId },
         orderBy: { amount: 'desc' },
-        include: { bidder: { select: { email: true, name: true, phone: true } } },
+        include: { bidder: { select: { id: true, email: true, name: true, phone: true } } },
       });
 
       // Create the bid
@@ -147,6 +147,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         newEndTime, 
         antiSnipeTriggered, 
         prevBidder: prevBid?.bidder,
+        prevBidderId: prevBid?.bidderId,
         auctionTitle: auction.title,
         timeUntilEnd: timeUntilEnd
       };
@@ -154,9 +155,18 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
       isolationLevel: 'Serializable',
     });
 
-    // Send Outbid Notification (Async)
+    // Send Outbid Notification (Async & Real-time)
     if (result.prevBidder?.email && result.prevBidder.email !== session.user.email) {
       sendOutbidEmail(result.prevBidder.email, result.auctionTitle, amount, auctionId).catch(console.error);
+    }
+    
+    if (result.prevBidderId && result.prevBidderId !== session.user.id) {
+      await pusherServer.trigger(`user-${result.prevBidderId}`, 'outbid-alert', {
+        auctionId,
+        auctionTitle: result.auctionTitle,
+        amount,
+        newBidderName: session.user.name || undefined
+      }).catch(console.error);
     }
 
     // Phase 4: Push Real-time Updates

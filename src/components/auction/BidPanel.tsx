@@ -16,6 +16,8 @@ import { useSettings } from "@/context/SettingsContext";
 import { useAuctionBids } from "@/hooks/useAuctionBids";
 import { useSound } from "@/hooks/useSound";
 import { Volume2, VolumeX } from "lucide-react";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 interface BidPanelProps {
   auctionId: string;
@@ -39,6 +41,7 @@ export function BidPanel({
   const { data: session } = useSession();
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
   const { play: playGavel } = useSound("/sounds/gavel.mp3");
+  const t = useTranslations("BidPanel");
   const [latestPrice, setLatestPrice] = useState(currentPrice);
   const [latestEndTime] = useState(new Date(endTime));
   const [bidAmount, setBidAmount] = useState(currentPrice + minBidIncrement);
@@ -106,7 +109,7 @@ export function BidPanel({
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-heading font-semibold text-gray-900 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary-600" />
-          Place Your Bid
+          {t("placeBid")}
         </h3>
         <div className="flex items-center gap-2">
           <button
@@ -133,20 +136,18 @@ export function BidPanel({
 
       {isExpired ? (
         <div className="text-center py-6">
-          <p className="text-gray-500 font-medium">This auction has ended</p>
+          <p className="text-gray-500 font-medium">{t("auctionEnded")}</p>
         </div>
       ) : isOwnAuction ? (
         <div className="text-center py-6 bg-gray-50 rounded-xl">
-          <p className="text-gray-500 text-sm">
-            You cannot bid on your own auction
-          </p>
+          <p className="text-gray-500 text-sm">{t("cannotBidOwn")}</p>
         </div>
       ) : (
         <>
           {/* Current Price */}
           <div className="bg-primary-50 rounded-xl p-4 mb-4 transition-all duration-300">
             <p className="text-xs text-primary-600 font-medium mb-1">
-              Current Price
+              {t("currentPrice")}
             </p>
             <p className="price text-2xl text-primary-700">
               {formatBDT(displayPrice)}
@@ -156,7 +157,7 @@ export function BidPanel({
           {/* Bid Input */}
           <div className="mb-3">
             <label className="text-xs font-medium text-gray-500 mb-1 block">
-              Your Bid (৳)
+              {t("yourBid")}
             </label>
             <input
               type="number"
@@ -167,7 +168,7 @@ export function BidPanel({
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 price text-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Minimum bid: {formatBDT(minBid)}
+              {t("minimumBid")} {formatBDT(minBid)}
             </p>
           </div>
 
@@ -197,7 +198,9 @@ export function BidPanel({
             {isPending ? (
               <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
             ) : (
-              <>Bid {formatBDT(bidAmount)}</>
+              <>
+                {t("bidBtnPrefix")} {formatBDT(bidAmount)}
+              </>
             )}
           </button>
 
@@ -214,11 +217,10 @@ export function BidPanel({
                 <>
                   <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-medium">Bid placed successfully!</p>
+                    <p className="font-medium">{t("success")}</p>
                     {result.antiSnipeTriggered && (
                       <p className="text-xs mt-1 text-green-600">
-                        ⏱ Anti-sniping activated — auction extended by 2
-                        minutes.
+                        {t("antiSnipe")}
                       </p>
                     )}
                   </div>
@@ -228,7 +230,7 @@ export function BidPanel({
                   <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>
                     {result.error === "PHONE_NOT_VERIFIED"
-                      ? "Please verify your phone number to bid."
+                      ? t("phoneNotVerified")
                       : result.error}
                   </p>
                 </>
@@ -239,7 +241,7 @@ export function BidPanel({
           {/* Trust indicator */}
           <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
             <Shield className="w-3.5 h-3.5" />
-            <span>Protected by anti-sniping & secure transactions</span>
+            <span>{t("trustIndicator")}</span>
           </div>
         </>
       )}
@@ -252,29 +254,28 @@ export function BidPanel({
 }
 
 function PhoneVerificationPrompt({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("BidPanel");
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl">
         <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">
-          Verify Your Phone
+          {t("verifyPhone")}
         </h3>
-        <p className="text-sm text-gray-500 mb-4">
-          To ensure trust in our marketplace, please verify your Bangladesh
-          phone number (+880) before bidding.
-        </p>
+        <p className="text-sm text-gray-500 mb-4">{t("verifyPhoneDesc")}</p>
         <div className="flex gap-3">
           <button
             onClick={onClose}
             className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
           >
-            Later
+            {t("laterBtn")}
           </button>
-          <a
+          <Link
             href="/profile"
             className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700"
           >
-            Verify Now
-          </a>
+            {t("verifyNowBtn")}
+          </Link>
         </div>
       </div>
     </div>

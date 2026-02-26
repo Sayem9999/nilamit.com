@@ -1,6 +1,13 @@
-# 🧠 nilamit.com — Project Memory
+# 🧠 nilamit.com — Project Memory & Constitution
 
-> A living document of key decisions, discoveries, and gotchas. Updated as the project evolves.
+> A living document of key decisions, discoveries, and agent operating rules. Updated as the project evolves.
+
+---
+
+## Agent Constitution (CRITICAL RULES)
+
+1. **LEARN FROM PAST MISTAKES**: Do not make the same mistake twice. When a bug (like the D3 `ReferenceError`) occurs due to initialization order or missing dependencies, _internalize_ this pattern for all future files.
+2. **FUTURE-PROOFING**: Always anticipate edge cases based on prior failures. If an HTML artifact renders empty, immediately suspect script errors or import failures before replacing files blindly.
 
 ---
 
@@ -51,6 +58,8 @@
 5. **Image uploads**: v1 uses URL strings. Future: integrate Supabase Storage or Cloudinary.
 
 6. **Prisma 7 breaking change**: Datasource `url` no longer goes in `schema.prisma`. It's now in `prisma.config.ts`. The schema only has `provider`.
+
+7. **D3 & React Integration**: Strict Top-Down Initialization. When building D3 graphs in `useEffect` (like the Star Map), always initialize generic selections (`svg`, `g`, `defs`) _before_ applying handlers that reference them. E.g. defining `.on("zoom", () => g.attr(...))` will crash with a `ReferenceError` if `g` is initialized later in the hook.
 
 ---
 

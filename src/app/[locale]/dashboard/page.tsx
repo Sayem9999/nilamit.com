@@ -163,11 +163,7 @@ export default async function DashboardPage({
                 {watchlistAuctions.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {watchlistAuctions.map((auction) => (
-                      <AuctionCard
-                        key={auction.id}
-                        auction={auction}
-                        locale={locale}
-                      />
+                      <AuctionCard key={auction.id} auction={auction} />
                     ))}
                   </div>
                 ) : (
@@ -187,11 +183,7 @@ export default async function DashboardPage({
                 {activeBids.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {activeBids.map((auction) => (
-                      <AuctionCard
-                        key={auction.id}
-                        auction={auction}
-                        locale={locale}
-                      />
+                      <AuctionCard key={auction.id} auction={auction} />
                     ))}
                   </div>
                 ) : (
@@ -221,11 +213,7 @@ export default async function DashboardPage({
                 {myAuctions.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {myAuctions.map((auction) => (
-                      <AuctionCard
-                        key={auction.id}
-                        auction={auction}
-                        locale={locale}
-                      />
+                      <AuctionCard key={auction.id} auction={auction} />
                     ))}
                   </div>
                 ) : (

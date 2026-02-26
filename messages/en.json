@@ -68,5 +68,29 @@
     "ctaFooterBtn": "Create an Account"
   },
   "title": "Bangladesh's Premier Auction House",
-  "subtitle": "Discover unique items or sell to thousands of verified buyers."
+  "subtitle": "Discover unique items or sell to thousands of verified buyers.",
+  "Auction": {
+    "live": "Live",
+    "seller": "Seller",
+    "bids": "bids",
+    "liteModeActive": "Lite Mode Active",
+    "category": "Category"
+  },
+  "BidPanel": {
+    "placeBid": "Place Your Bid",
+    "currentPrice": "Current Price",
+    "yourBid": "Your Bid (৳)",
+    "minimumBid": "Minimum bid:",
+    "bidBtnPrefix": "Bid",
+    "auctionEnded": "This auction has ended",
+    "cannotBidOwn": "You cannot bid on your own auction",
+    "success": "Bid placed successfully!",
+    "antiSnipe": "⏱ Anti-sniping activated — auction extended by 2 minutes.",
+    "phoneNotVerified": "Please verify your phone number to bid.",
+    "trustIndicator": "Protected by anti-sniping & secure transactions",
+    "verifyPhone": "Verify Your Phone",
+    "verifyPhoneDesc": "To ensure trust in our marketplace, please verify your Bangladesh phone number (+880) before bidding.",
+    "laterBtn": "Later",
+    "verifyNowBtn": "Verify Now"
+  }
 }

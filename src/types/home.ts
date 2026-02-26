@@ -1,7 +1,3 @@
-import { translations } from '@/lib/translations';
-
-export type TranslationType = typeof translations['en'];
-
 export interface SystemConfig {
   id: string;
   heroTitle: string;
