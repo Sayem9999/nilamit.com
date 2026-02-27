@@ -41,6 +41,17 @@ model User {
   // Phase 9
   watchlist         Watchlist[]
   reportsSubmitted  AuctionReport[]
+  
+  // Elevation 7
+  preferences       UserPreference?
+  alerts            Alert[]
+  bulkOperations    BulkOperation[]
+  
+  // Elevation 8: Social Proof
+  winningStreak     Int      @default(0)
+  userLevel         Int      @default(1)
+  circlesOwned      AuctionCircle[] @relation("CircleOwner")
+  circleMemberships CircleMember[]
 
   @@index([email])
   @@index([phone])
@@ -119,6 +130,13 @@ model Auction {
   // Phase 9
   watchlist       Watchlist[]
   reports         AuctionReport[]
+  
+  // Elevation 7
+  alerts          Alert[]
+
+  // Elevation 8: Social
+  circleId        String?
+  circle          AuctionCircle? @relation(fields: [circleId], references: [id])
 
   @@index([status, endTime])
   @@index([category])
@@ -251,6 +269,61 @@ enum ReportStatus {
   DISMISSED
 }
 
+// ─── Behavioral Tracking (Elevation 7) ──────────────
+model UserPreference {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  viewedCategories String[] // Most viewed categories
+  searchHistory    String[] 
+  affinityScore   Json?    // Category -> score mapping for AI
+  
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── Smart Alerts (Elevation 7) ──────────────────────
+model Alert {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  auctionId       String?
+  auction         Auction?    @relation(fields: [auctionId], references: [id])
+  
+  type            AlertType
+  thresholdPrice  Float?
+  isActive        Boolean     @default(true)
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+}
+
+enum AlertType {
+  PRICE_DROP
+  ENDING_SOON
+  OUTBID
+  NEW_AUCTION_IN_CATEGORY
+}
+
+// ─── Bulk Operations (Elevation 7) ──────────────────
+model BulkOperation {
+  id              String   @id @default(cuid())
+  sellerId        String
+  seller          User     @relation(fields: [sellerId], references: [id])
+  
+  status          String   // PENDING, PROCESSING, COMPLETED, FAILED
+  fileName        String
+  totalRows       Int
+  processedRows   Int      @default(0)
+  errors          Json?    // Row -> Error message mapping
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 // ─── System Config (Phase 11) ───────────────────────
 model SystemConfig {
   id             String   @id @default("default")
@@ -265,4 +338,35 @@ model SystemConfig {
   showAnnouncement Boolean @default(false)
   
   updatedAt      DateTime @updatedAt
+}
+
+// ─── Auction Circles (Elevation 8) ──────────────────
+model AuctionCircle {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  inviteCode  String   @unique
+  
+  ownerId     String
+  owner       User     @relation("CircleOwner", fields: [ownerId], references: [id])
+  
+  members     CircleMember[]
+  auctions    Auction[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CircleMember {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  circleId    String
+  circle      AuctionCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  
+  joinedAt    DateTime @default(now())
+
+  @@unique([userId, circleId])
+  @@index([userId])
+  @@index([circleId])
 }

@@ -1,56 +1,82 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Bell, BellOff } from "lucide-react";
-import toast from "react-hot-toast";
+import { useState } from "react";
+import { createAlert } from "@/actions/alerts";
+import { Bell, Loader2 } from "lucide-react";
+import { AlertType } from "@prisma/client";
+import { toast } from "react-hot-toast";
 
 interface PriceAlertButtonProps {
   auctionId: string;
   currentPrice: number;
 }
 
-export function PriceAlertButton({
+export default function PriceAlertButton({
   auctionId,
   currentPrice,
 }: PriceAlertButtonProps) {
-  const [enabled, setEnabled] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isSetting, setIsSetting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [threshold, setThreshold] = useState(currentPrice);
 
-  const toggle = () => {
-    startTransition(() => {
-      setEnabled(!enabled);
+  const handleSetAlert = async () => {
+    setIsLoading(true);
+    // @ts-expect-error - Prisma type generation delay
+    const result = await createAlert("PRICE_DROP", auctionId, threshold);
+    setIsLoading(false);
 
-      if (!enabled) {
-        // Store in localStorage for now — can be upgraded to server-side
-        const alerts = JSON.parse(localStorage.getItem("priceAlerts") || "{}");
-        alerts[auctionId] = {
-          price: currentPrice,
-          createdAt: new Date().toISOString(),
-        };
-        localStorage.setItem("priceAlerts", JSON.stringify(alerts));
-        toast.success("Price alert set! You'll be notified of changes.");
-      } else {
-        const alerts = JSON.parse(localStorage.getItem("priceAlerts") || "{}");
-        delete alerts[auctionId];
-        localStorage.setItem("priceAlerts", JSON.stringify(alerts));
-        toast.success("Price alert removed");
-      }
-    });
+    if (result.success) {
+      toast.success("Price alert set successfully!");
+      setIsSetting(false);
+    } else {
+      toast.error(result.error || "Failed to set alert");
+    }
   };
+
+  if (isSetting) {
+    return (
+      <div className="flex flex-col gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 animate-in fade-in slide-in-from-top-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700">
+            Set Price Threshold
+          </span>
+          <button
+            onClick={() => setIsSetting(false)}
+            className="text-xs text-gray-500 hover:text-gray-900"
+          >
+            Cancel
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={threshold}
+            onChange={(e) => setThreshold(Number(e.target.value))}
+            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="Alert price..."
+          />
+          <button
+            onClick={handleSetAlert}
+            disabled={isLoading}
+            className="px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-700 disabled:opacity-50 flex items-center gap-1"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Set"}
+          </button>
+        </div>
+        <p className="text-[10px] text-gray-400">
+          We will notify you if the price drops below this amount.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <button
-      onClick={toggle}
-      disabled={isPending}
-      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-        enabled
-          ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
-          : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-      }`}
-      title={enabled ? "Remove price alert" : "Set price alert"}
+      onClick={() => setIsSetting(true)}
+      className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
     >
-      {enabled ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
-      {enabled ? "Alert Set" : "Price Alert"}
+      <Bell className="w-4 h-4" />
+      <span>Track Price</span>
     </button>
   );
 }

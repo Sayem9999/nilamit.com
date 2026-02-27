@@ -69,14 +69,11 @@ export async function createAuction(input: CreateAuctionInput) {
   }
 }
 
-/**
- * Get a single auction with seller info and bids
- */
 export async function getAuction(id: string) {
   // Passive check: Ensure the auction is closed if time is up
   await closeAuctionIfEnded(id);
   
-  return prisma.auction.findUnique({
+  const auction = await prisma.auction.findUnique({
     where: { id },
     include: {
       seller: { select: { id: true, name: true, email: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true } },
@@ -89,6 +86,13 @@ export async function getAuction(id: string) {
       _count: { select: { bids: true } },
     },
   });
+
+  if (auction) {
+    const { trackCategoryView } = await import("./recommendations");
+    await trackCategoryView(auction.category);
+  }
+
+  return auction;
 }
 
 /**

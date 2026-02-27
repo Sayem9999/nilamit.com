@@ -10,6 +10,7 @@ import type { AuctionWithSeller } from "@/types";
 import { useSession } from "next-auth/react";
 import { useSettings } from "@/context/SettingsContext";
 import { useTranslations } from "next-intl";
+import UserBadge from "../social/UserBadge";
 
 export default function AuctionCard({
   auction,
@@ -93,10 +94,12 @@ export default function AuctionCard({
               )}
             </div>
             {auction.seller.reputationScore > 0 && (
-              <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50/80 px-2 py-0.5 rounded-full border border-amber-100/50">
-                <Star className="w-2.5 h-2.5 fill-amber-600" />
-                {auction.seller.reputationScore}
-              </div>
+              <UserBadge
+                level={auction.seller.userLevel}
+                streak={auction.seller.winningStreak}
+                reputation={auction.seller.reputationScore}
+                className="scale-90 origin-left"
+              />
             )}
             {auction.location && (
               <div className="hidden sm:flex items-center gap-1 text-[11px] text-gray-400 ml-auto">

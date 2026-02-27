@@ -24,6 +24,8 @@ import { isWatched } from "@/actions/watchlist";
 import { ReportModal } from "@/components/auction/ReportModal";
 import { ShareButton } from "@/components/auction/ShareButton";
 import { BidHistory } from "@/components/auction/BidHistory";
+import PriceAlertButton from "@/components/auction/PriceAlertButton";
+import UserBadge from "@/components/social/UserBadge";
 import { Metadata } from "next";
 import Script from "next/script";
 import { AuctionStatus } from "@prisma/client";
@@ -223,6 +225,12 @@ export default async function AuctionDetailPage({ params }: Props) {
             <p className="text-xs text-gray-400">
               Started at {formatBDT(auction.startingPrice)}
             </p>
+            <div className="mt-4 pt-4 border-t border-primary-100/50">
+              <PriceAlertButton
+                auctionId={id}
+                currentPrice={auction.currentPrice}
+              />
+            </div>
           </div>
 
           {/* Bid Panel */}
@@ -261,16 +269,19 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <Shield className="w-4 h-4 text-blue-500 fill-blue-500/10" />
                   )}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+                <div className="flex flex-col gap-2 mt-2">
+                  <UserBadge
+                    // @ts-ignore
+                    level={auction.seller?.userLevel || 1}
+                    // @ts-ignore
+                    streak={auction.seller?.winningStreak || 0}
+                    reputation={auction.seller?.reputationScore || 0}
+                  />
                   {auction.seller?.isPhoneVerified && (
-                    <span className="flex items-center gap-1 text-green-600 font-medium">
+                    <span className="flex items-center gap-1 text-green-600 text-[10px] font-bold uppercase tracking-tight">
                       <CheckCircle className="w-3 h-3" /> Verified Phone
                     </span>
                   )}
-                  <span className="flex items-center gap-1">
-                    <Star className="w-3 h-3" />{" "}
-                    {auction.seller?.reputationScore || 0} rep
-                  </span>
                 </div>
               </div>
             </div>

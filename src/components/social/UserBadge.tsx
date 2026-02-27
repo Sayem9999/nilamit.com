@@ -1,0 +1,49 @@
+import { Trophy, Star, ChevronUp } from "lucide-react";
+
+interface UserBadgeProps {
+  level: number;
+  streak: number;
+  reputation: number;
+  className?: string;
+}
+
+export default function UserBadge({
+  level,
+  streak,
+  reputation,
+  className = "",
+}: UserBadgeProps) {
+  // Level color mapping
+  const getLevelColor = (lv: number) => {
+    if (lv >= 50) return "text-purple-600 bg-purple-50 border-purple-100";
+    if (lv >= 20) return "text-blue-600 bg-blue-50 border-blue-100";
+    if (lv >= 10) return "text-green-600 bg-green-50 border-green-100";
+    return "text-gray-600 bg-gray-50 border-gray-100";
+  };
+
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      {/* Level Badge */}
+      <div
+        className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-tight ${getLevelColor(level)}`}
+      >
+        <ChevronUp className="w-2.5 h-2.5" />
+        Lvl {level}
+      </div>
+
+      {/* Winning Streak */}
+      {streak > 0 && (
+        <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-full text-[10px] font-bold uppercase tracking-tight">
+          <Trophy className="w-2.5 h-2.5" />
+          {streak} Win Streak
+        </div>
+      )}
+
+      {/* Reputation */}
+      <div className="flex items-center gap-1 px-2 py-0.5 bg-primary-50 text-primary-600 border border-primary-100 rounded-full text-[10px] font-bold uppercase tracking-tight">
+        <Star className="w-2.5 h-2.5 fill-primary-600/10" />
+        {reputation} Rep
+      </div>
+    </div>
+  );
+}

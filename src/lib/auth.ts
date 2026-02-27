@@ -66,12 +66,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { isPhoneVerified: true, phone: true, reputationScore: true, email: true },
+          select: { isPhoneVerified: true, phone: true, reputationScore: true, email: true, isVerifiedSeller: true },
         });
         if (dbUser) {
           token.isPhoneVerified = dbUser.isPhoneVerified;
           token.phone = dbUser.phone;
           token.reputationScore = dbUser.reputationScore;
+          token.isVerifiedSeller = dbUser.isVerifiedSeller;
         }
       }
       
@@ -90,6 +91,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         u.isPhoneVerified = token.isPhoneVerified;
         u.phone = token.phone;
         u.reputationScore = token.reputationScore;
+        u.isVerifiedSeller = token.isVerifiedSeller;
         u.isAdmin = token.isAdmin;
       }
       return session;
