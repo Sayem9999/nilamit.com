@@ -49,7 +49,17 @@ export default async function SearchPage({
       where: whereClause,
       orderBy: orderByClause,
       include: {
-        seller: { select: { name: true, image: true, reputationScore: true } },
+        seller: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            isVerifiedSeller: true,
+            reputationScore: true,
+            isPhoneVerified: true,
+          },
+        },
         _count: { select: { bids: true } },
       },
       take: 24, // Initial load for performance
