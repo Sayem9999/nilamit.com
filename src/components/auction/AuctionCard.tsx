@@ -29,11 +29,11 @@ export default function AuctionCard({
 
   return (
     <Link href={`/auctions/${auction.id}`} className="group">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group-hover:-translate-y-1">
+      <div className="bg-white rounded-3xl border border-gray-100/50 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden group-hover:-translate-y-2">
         {/* Image */}
-        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+        <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
           {lightweightMode ? (
-            <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-2 p-4 text-center">
+            <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center gap-2 p-4 text-center">
               <Zap className="w-8 h-8 text-amber-500 animate-pulse" />
               <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
                 {t("liteModeActive")}
@@ -46,30 +46,29 @@ export default function AuctionCard({
                 alt={auction.title}
                 fill
                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </div>
           )}
           {/* Status badge */}
-          <div className="absolute top-3 left-3 z-10">
+          <div className="absolute top-4 left-4 z-10">
             <span
-              className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${
-                auction.status === "ACTIVE"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-600"
+              className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider glass shadow-sm ${
+                auction.status === "ACTIVE" ? "text-green-700" : "text-gray-600"
               }`}
             >
               {auction.status === "ACTIVE" ? t("live") : auction.status}
             </span>
           </div>
           {/* Category */}
-          <div className="absolute bottom-3 left-3 z-10">
-            <span className="bg-primary-100/90 backdrop-blur-sm text-primary-700 px-2.5 py-1 rounded-full text-xs font-medium">
+          <div className="absolute bottom-4 left-4 z-10">
+            <span className="glass backdrop-blur-md text-primary-700 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
               {auction.category}
             </span>
           </div>
           {/* Watchlist Button */}
-          <div className="absolute top-3 right-3 z-10">
+          <div className="absolute top-4 right-4 z-10">
             <WatchlistButton
               auctionId={auction.id}
               initialIsWatchlisted={isWatchlisted}
@@ -79,57 +78,65 @@ export default function AuctionCard({
         </div>
 
         {/* Content */}
-        <div className="p-3 sm:p-4">
-          <h3 className="font-heading font-semibold text-gray-900 text-sm sm:text-base line-clamp-1 group-hover:text-primary-600 transition-colors">
+        <div className="p-5">
+          <h3 className="font-heading font-bold text-gray-900 text-base sm:text-lg line-clamp-1 group-hover:text-primary-600 transition-colors duration-300">
             {auction.title}
           </h3>
 
-          <div className="flex items-center gap-1 min-w-0 mt-0.5">
-            <span className="text-[10px] sm:text-xs font-semibold text-gray-700 truncate">
-              {auction.seller.name || t("seller")}
-            </span>
-            {auction.seller.isVerifiedSeller && (
-              <Shield className="w-3 h-3 text-blue-500 fill-blue-500/10 flex-shrink-0" />
-            )}
+          <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs font-semibold text-gray-600 truncate">
+                {auction.seller.name || t("seller")}
+              </span>
+              {auction.seller.isVerifiedSeller && (
+                <Shield className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10 flex-shrink-0" />
+              )}
+            </div>
             {auction.seller.reputationScore > 0 && (
-              <div className="flex items-center gap-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">
+              <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50/80 px-2 py-0.5 rounded-full border border-amber-100/50">
                 <Star className="w-2.5 h-2.5 fill-amber-600" />
                 {auction.seller.reputationScore}
               </div>
             )}
             {auction.location && (
-              <div className="hidden sm:flex items-center gap-0.5 text-xs text-gray-400 ml-auto">
-                <MapPin className="w-2.5 h-2.5" />
+              <div className="hidden sm:flex items-center gap-1 text-[11px] text-gray-400 ml-auto">
+                <MapPin className="w-3 h-3" />
                 <span className="capitalize">{auction.location}</span>
               </div>
             )}
           </div>
-          {/* Price */}
-          <div className="mt-1 sm:mt-2 flex items-baseline gap-1.5">
-            <span className="price text-lg sm:text-xl text-primary-700">
-              {formatBDT(auction.currentPrice)}
-            </span>
-            {auction.currentPrice > auction.startingPrice && (
-              <span className="text-[10px] sm:text-xs text-gray-400 line-through">
-                {formatBDT(auction.startingPrice)}
-              </span>
-            )}
-          </div>
 
-          {/* Meta */}
-          <div className="mt-2 sm:mt-3 flex items-center justify-between text-[10px] sm:text-xs text-gray-500 pt-2 border-t border-gray-50">
-            <div className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              <CountdownTimer
-                endTime={auction.endTime}
-                className="text-[10px] sm:text-xs font-bold"
-              />
-            </div>
-            <div className="flex items-center gap-1">
-              <Users className="w-3.5 h-3.5" />
-              <span>
+          {/* Price & Bid Count */}
+          <div className="mt-4 flex flex-col gap-0.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                {t("currentPrice")}
+              </span>
+              <span className="flex items-center gap-1 text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md">
+                <Users className="w-3 h-3" />
                 {bidCount} {t("bids")}
               </span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="price text-2xl text-gray-900">
+                {formatBDT(auction.currentPrice)}
+              </span>
+              {auction.currentPrice > auction.startingPrice && (
+                <span className="text-xs text-gray-400 line-through">
+                  {formatBDT(auction.startingPrice)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Footer Meta */}
+          <div className="mt-4 pt-4 border-t border-gray-100/60 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-gray-500 bg-gray-50 py-1.5 px-3 rounded-xl border border-gray-100/50 w-full justify-center group-hover:bg-primary-50 group-hover:border-primary-100/50 transition-colors duration-300">
+              <Clock className="w-4 h-4 text-gray-400 group-hover:text-primary-500" />
+              <CountdownTimer
+                endTime={auction.endTime}
+                className="text-xs font-bold font-mono tracking-tight"
+              />
             </div>
           </div>
         </div>

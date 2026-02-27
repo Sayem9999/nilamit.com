@@ -88,9 +88,9 @@ export async function sendPhoneOTP(phone: string) {
       });
       emailSent = true;
       console.log(`[sendPhoneOTP] Fallback email sent to ${session.user.email}`);
-    } catch (error: any) {
-       console.error('[sendPhoneOTP] Resend fallback failed:', error?.message || error);
-       if (error?.message?.includes('only send to')) {
+    } catch (error) {
+       console.error('[sendPhoneOTP] Resend fallback failed:', error instanceof Error ? error.message : error);
+       if (error instanceof Error && error.message.includes('only send to')) {
          console.warn('⚠️ RESEND TEST MODE: You can only send emails to your own verified address. Verify a domain to send to others.');
        }
     }
@@ -162,6 +162,15 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
  */
 export async function sendEmailOTP(email: string) {
   const otp = generateOTP();
+
+  // Rate limiting: max 5 OTPs per hour per email
+  const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
+  const recentCount = await prisma.verificationToken.count({
+    where: { identifier: email, expires: { gt: oneHourAgo } },
+  });
+  if (recentCount >= MAX_OTP_PER_HOUR) {
+    return { success: false, error: 'Too many OTP requests. Please try again in an hour.' };
+  }
 
   // Store in verification tokens (used by Auth.js credential provider)
   await prisma.verificationToken.upsert({

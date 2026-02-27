@@ -80,6 +80,38 @@ html {
   letter-spacing: -0.02em;
 }
 
+/* Premium Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Refined Shadows */
+.shadow-premium {
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.05),
+    0 4px 6px -2px rgba(0, 0, 0, 0.02);
+}
+
+.shadow-premium-hover {
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.07),
+    0 10px 10px -5px rgba(0, 0, 0, 0.03);
+}
+
+/* Subtle mask for image gradients */
+.mask-gradient {
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
 
 /* Mobile Refinements */
 @layer base {
@@ -93,7 +125,7 @@ html {
 }
 
 /* Button Active States for Touch */
-button:active:not(:disabled), 
+button:active:not(:disabled),
 a:active:not(:disabled) {
   transform: scale(0.98);
   transition: transform 0.1s ease;

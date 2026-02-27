@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import type { AuctionFilters, CreateAuctionInput } from '@/types';
-import { closeAuctionIfEnded, closeAllEndedAuctions } from '@/lib/auction-logic';
+import { closeAuctionIfEnded } from '@/lib/auction-logic';
 import { AuctionStatus } from '@prisma/client';
 import { ERROR_CODES } from '@/lib/constants';
 
@@ -105,11 +105,8 @@ export async function getAuctions(filters: AuctionFilters = {}) {
     limit = 12,
   } = filters;
 
-  // Proactive check: On browse, occasionally sweep for ended auctions
-  // This helps keep the "Active" list fresh
-  if (Math.random() > 0.8) { 
-    closeAllEndedAuctions().catch(console.error);
-  }
+  // Proactive check: On browse, we rely on the scheduled cron job
+  // to keep the "Active" list fresh, avoiding per-request latency.
 
   const where: Record<string, unknown> = {};
   if (status) where.status = status;

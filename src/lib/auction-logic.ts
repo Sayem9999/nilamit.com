@@ -69,9 +69,12 @@ export async function closeAllEndedAuctions() {
       status: AuctionStatus.ACTIVE,
       endTime: { lte: new Date() },
     },
+    select: { id: true },
   });
 
-  for (const a of auctions) {
-    await closeAuctionIfEnded(a.id);
-  }
+  if (auctions.length === 0) return;
+
+  // Process in parallel to handle scale, limited by internal Promise.all 
+  // (could use p-limit for very high volume, but for now this is a huge win)
+  await Promise.all(auctions.map(a => closeAuctionIfEnded(a.id)));
 }

@@ -79,12 +79,12 @@ const rawFiles = [
   "src/components/home/HomeContent.tsx",
   "src/components/layout/Footer.tsx",
   "src/components/layout/Navbar.tsx",
+  "src/components/providers/NotificationProvider.tsx",
   "src/components/providers/Providers.tsx",
   "src/components/review/QuickReview.tsx",
   "src/components/review/ReviewForm.tsx",
   "src/components/review/ReviewList.tsx",
   "src/components/upload/ImageUpload.tsx",
-  "src/context/LanguageContext.tsx",
   "src/context/SettingsContext.tsx",
   "src/hooks/useAuctionBids.ts",
   "src/hooks/useSound.ts",
@@ -100,10 +100,14 @@ const rawFiles = [
   "src/lib/pusher-server.ts",
   "src/lib/sms-gateway.ts",
   "src/lib/supabase.ts",
-  "src/lib/translations.ts",
   "src/lib/uploadthing.ts",
   "src/lib/utils.ts",
   "src/types/home.ts",
+  "src/app/[locale]/seller/performance/page.tsx",
+  "src/actions/search.ts",
+  "src/actions/seller-success.ts",
+  "src/lib/reputation.ts",
+  "src/components/auction/LoadMore.tsx",
   "src/types/index.ts",
   "src/i18n.ts",
   "src/middleware.ts",
@@ -309,7 +313,7 @@ export default function StarMapVisualization() {
       value: 3,
     });
     links.push({
-      source: "src/context/LanguageContext.tsx",
+      source: "src/components/providers/NotificationProvider.tsx",
       target: "src/components/providers/Providers.tsx",
       value: 4,
     });
@@ -320,7 +324,7 @@ export default function StarMapVisualization() {
     });
     links.push({
       source: "src/i18n.ts",
-      target: "src/context/LanguageContext.tsx",
+      target: "src/app/[locale]/layout.tsx",
       value: 3,
     });
 

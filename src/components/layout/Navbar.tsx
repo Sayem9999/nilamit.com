@@ -63,7 +63,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
+    <nav className="sticky top-0 z-50 glass !bg-white/70 border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -78,22 +78,25 @@ export function Navbar() {
 
           {/* Search Bar (Desktop) */}
           <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
-            <form action={`/${locale}/search`} className="w-full relative">
-              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <form
+              action={`/${locale}/search`}
+              className="w-full relative group"
+            >
+              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-primary-500 transition-colors" />
               <input
                 type="search"
                 name="q"
                 placeholder="Search auctions..."
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-gray-50/50 border border-gray-200/60 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm font-medium"
               />
             </form>
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors bg-gray-50 px-3 py-1.5 rounded-lg"
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-primary-600 hover:bg-white transition-all glass px-3 py-1.5 rounded-lg shadow-sm"
               title={
                 locale === "en" ? "Switch to Bangla" : "English এ পরিবর্তন করুন"
               }
@@ -104,10 +107,10 @@ export function Navbar() {
 
             <button
               onClick={toggleLightweightMode}
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg ${
+              className={`flex items-center gap-1.5 text-sm font-semibold transition-all px-3 py-1.5 rounded-lg shadow-sm ${
                 lightweightMode
                   ? "bg-amber-50 text-amber-700 border border-amber-100"
-                  : "bg-gray-50 text-gray-600 hover:text-primary-600"
+                  : "glass text-gray-600 hover:text-primary-600 hover:bg-white"
               }`}
               title={
                 lightweightMode
@@ -125,10 +128,10 @@ export function Navbar() {
 
             <button
               onClick={toggleSoundEffects}
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg ${
+              className={`flex items-center gap-1.5 text-sm font-semibold transition-all px-2.5 py-1.5 rounded-lg shadow-sm ${
                 !soundEffectsEnabled
                   ? "bg-red-50 text-red-700 border border-red-100"
-                  : "bg-gray-50 text-gray-600 hover:text-primary-600"
+                  : "glass text-gray-600 hover:text-primary-600 hover:bg-white"
               }`}
               title={soundEffectsEnabled ? "Mute Sounds" : "Unmute Sounds"}
             >
@@ -141,10 +144,10 @@ export function Navbar() {
 
             <button
               onClick={handleToggleNotifications}
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg ${
+              className={`flex items-center gap-1.5 text-sm font-semibold transition-all px-2.5 py-1.5 rounded-lg shadow-sm ${
                 notificationsEnabled
                   ? "bg-blue-50 text-blue-700 border border-blue-100"
-                  : "bg-gray-50 text-gray-600 hover:text-primary-600"
+                  : "glass text-gray-600 hover:text-primary-600 hover:bg-white"
               }`}
               title={
                 notificationsEnabled

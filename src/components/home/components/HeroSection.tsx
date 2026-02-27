@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Shield,
   Gavel,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,7 +19,7 @@ import { SystemConfig } from "@/types/home";
 
 interface HeroSectionProps {
   systemConfig?: SystemConfig;
-  t: any; // We'll pass the translation hook here from parent
+  t: (key: string) => string;
 }
 
 export function HeroSection({ systemConfig, t }: HeroSectionProps) {
@@ -129,13 +130,13 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
               variants={itemVariants}
               className="mt-8 flex flex-wrap gap-4 text-[13px] font-bold"
             >
-              <div className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <div className="flex items-center gap-1.5 text-gray-500 glass px-3 py-1.5 rounded-lg border border-gray-100/50 shadow-sm">
                 <MapPin className="w-4 h-4 text-primary-500" /> Area Filters
               </div>
-              <div className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <div className="flex items-center gap-1.5 text-gray-500 glass px-3 py-1.5 rounded-lg border border-gray-100/50 shadow-sm">
                 <Bell className="w-4 h-4 text-orange-500" /> Real-time Alerts
               </div>
-              <div className="flex items-center gap-1.5 text-gray-500 bg-gray-50/50 px-3 py-1.5 rounded-lg border border-gray-100">
+              <div className="flex items-center gap-1.5 text-gray-500 glass px-3 py-1.5 rounded-lg border border-gray-100/50 shadow-sm">
                 <Zap className="w-4 h-4 text-yellow-500" /> Anti-Snipe
               </div>
             </motion.div>
@@ -173,10 +174,10 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
             transition={{ duration: 1, ease: "easeOut" as const }}
             className="hidden lg:block relative"
           >
-            <div className="relative z-20 bg-white rounded-[2rem] shadow-2xl shadow-primary-200/50 p-6 border border-gray-100 rotate-2">
+            <div className="relative z-20 bg-white rounded-[2.5rem] shadow-premium p-6 border border-gray-100/50 rotate-2">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center border border-green-100/50">
                     <TrendingUp className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
@@ -188,12 +189,12 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
                     </span>
                   </div>
                 </div>
-                <div className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter animate-pulse">
+                <div className="glass text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter animate-pulse shadow-sm">
                   Hot Deal
                 </div>
               </div>
 
-              <div className="aspect-[4/3] bg-gray-50 rounded-2xl mb-6 overflow-hidden relative group">
+              <div className="aspect-[4/3] bg-gray-50 rounded-2xl mb-6 overflow-hidden relative group border border-gray-100/50">
                 <Image
                   src={
                     systemConfig?.heroImage ||
@@ -205,24 +206,26 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
                   className="object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 {!systemConfig?.heroImage && (
-                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-gray-900 shadow-sm">
+                  <div className="absolute top-4 right-4 glass px-3 py-1 rounded-full text-xs font-bold text-gray-900 shadow-sm border border-white/50">
                     ৳ 45,000
                   </div>
                 )}
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500 font-medium">Current Bid</span>
-                  <span className="font-bold text-primary-600 text-lg">
+                  <span className="font-bold text-primary-600 text-xl tracking-tight">
                     ৳ 45,800
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs pb-4 border-b border-gray-100">
+                <div className="flex items-center justify-between text-xs pb-4 border-b border-gray-100/60">
                   <span className="text-gray-400">Total Bidders</span>
-                  <span className="font-bold text-gray-700">24 People</span>
+                  <span className="font-bold text-gray-700 flex items-center gap-1">
+                    <Users className="w-3 h-3 text-primary-500" /> 24 People
+                  </span>
                 </div>
-                <button className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-all">
+                <button className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-all shadow-lg hover:shadow-black/20">
                   Place Your Bid
                 </button>
               </div>
@@ -235,7 +238,7 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
                 repeat: Infinity,
                 ease: "easeInOut" as const,
               }}
-              className="absolute -top-12 -left-12 z-30 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl -rotate-12"
+              className="absolute -top-12 -left-12 z-30 glass border border-white/50 rounded-2xl p-4 shadow-xl -rotate-12"
             >
               <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mb-2">
                 <Gavel className="w-5 h-5 text-primary-600" />
@@ -243,7 +246,9 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
                 New Bid
               </div>
-              <div className="font-bold text-gray-900">+ ৳ 1,000</div>
+              <div className="font-bold text-gray-900 leading-none">
+                + ৳ 1,000
+              </div>
             </motion.div>
 
             <motion.div
@@ -254,10 +259,10 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
                 ease: "easeInOut" as const,
                 delay: 0.5,
               }}
-              className="absolute top-1/4 -right-16 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-orange-100/50"
+              className="absolute top-1/4 -right-16 z-30 glass border border-white/50 rounded-2xl p-4 shadow-xl shadow-orange-100/20"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-100/80 rounded-full flex items-center justify-center">
                   <Bell className="w-4 h-4 text-orange-600" />
                 </div>
                 <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
@@ -274,10 +279,10 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
                 ease: "easeInOut" as const,
                 delay: 1,
               }}
-              className="absolute -bottom-10 -right-8 z-30 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl rotate-6"
+              className="absolute -bottom-10 -right-8 z-30 glass border border-white/50 rounded-2xl p-4 shadow-xl rotate-6"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-100/80 rounded-full flex items-center justify-center">
                   <Shield className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
@@ -294,10 +299,10 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
             <motion.div
               animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
               transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              className="absolute -left-20 bottom-12 z-30 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-4 shadow-xl shadow-primary-100/50"
+              className="absolute -left-20 bottom-12 z-30 glass border border-white/50 rounded-2xl p-4 shadow-xl shadow-primary-100/20"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-primary-100/80 rounded-full flex items-center justify-center">
                   <MapPin className="w-4 h-4 text-primary-600" />
                 </div>
                 <div className="text-xs font-bold text-gray-900">

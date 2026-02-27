@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import type { AuctionWithSeller } from "@/types";
+import LoadMore from "@/components/auction/LoadMore";
 
 export default async function SearchPage({
   searchParams,
@@ -17,38 +18,43 @@ export default async function SearchPage({
   const catFilter = category || "All";
   const sortBy = sort || "ending_soon";
 
-  // Build Prisma where clause
+  // Build Prisma where clause (Keyword fallback)
   const whereClause: Record<string, unknown> = {
     status: "ACTIVE",
   };
-
-  if (query) {
-    whereClause.OR = [
-      { title: { contains: query, mode: "insensitive" } },
-      { description: { contains: query, mode: "insensitive" } },
-    ];
-  }
 
   if (catFilter !== "All") {
     whereClause.category = catFilter;
   }
 
-  // Build Prisma orderBy clause
-  let orderByClause: Record<string, unknown> = { endTime: "asc" }; // ending soon default
-  if (sortBy === "price_asc") {
-    orderByClause = { currentPrice: "asc" };
-  } else if (sortBy === "price_desc") {
-    orderByClause = { currentPrice: "desc" };
-  }
+  let auctions: (AuctionWithSeller & { semanticScore?: number })[] = [];
 
-  const auctions = await prisma.auction.findMany({
-    where: whereClause,
-    orderBy: orderByClause,
-    include: {
-      seller: { select: { name: true, image: true } },
-      _count: { select: { bids: true } },
-    },
-  });
+  if (query) {
+    // Enterprise Strategy: Use Semantic Ranking for queries
+    const { getSmartSearchResults } = await import("@/actions/search");
+    auctions = await getSmartSearchResults(
+      query,
+      catFilter !== "All" ? catFilter : undefined,
+    );
+  } else {
+    // Build Prisma orderBy clause for general browsing
+    let orderByClause: Record<string, unknown> = { endTime: "asc" }; // ending soon default
+    if (sortBy === "price_asc") {
+      orderByClause = { currentPrice: "asc" };
+    } else if (sortBy === "price_desc") {
+      orderByClause = { currentPrice: "desc" };
+    }
+
+    auctions = await prisma.auction.findMany({
+      where: whereClause,
+      orderBy: orderByClause,
+      include: {
+        seller: { select: { name: true, image: true, reputationScore: true } },
+        _count: { select: { bids: true } },
+      },
+      take: 24, // Initial load for performance
+    });
+  }
 
   const categories = [
     "All",
@@ -152,13 +158,24 @@ export default async function SearchPage({
           {/* Results Grid */}
           <div className="flex-1">
             {auctions.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {auctions.map((auction) => (
-                  <AuctionCard
-                    key={auction.id}
-                    auction={auction as unknown as AuctionWithSeller}
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {auctions.map((auction) => (
+                    <AuctionCard
+                      key={auction.id}
+                      auction={auction as unknown as AuctionWithSeller}
+                    />
+                  ))}
+                </div>
+
+                {/* Lazy Loading (Enterprise Scale) */}
+                {!query && (
+                  <LoadMore
+                    initialPage={1}
+                    filters={{ category: catFilter, sortBy: sortBy as any }}
+                    locale={locale}
                   />
-                ))}
+                )}
               </div>
             ) : (
               <div className="bg-white p-12 text-center rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center">
