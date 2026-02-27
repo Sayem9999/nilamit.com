@@ -183,7 +183,6 @@ export default async function SearchPage({
                   <LoadMore
                     initialPage={1}
                     filters={{ category: catFilter, sortBy: sortBy as any }}
-                    locale={locale}
                   />
                 )}
               </div>
