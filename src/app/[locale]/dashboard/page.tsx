@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import AuctionCard from "@/components/auction/AuctionCard";
-import { Package, Heart, RefreshCw, LogOut } from "lucide-react";
+import { Package, Heart, RefreshCw, LogOut, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import type { AuctionWithSeller } from "@/types";
+import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 
 export default async function DashboardPage({
   params,
@@ -28,6 +29,7 @@ export default async function DashboardPage({
   let myAuctions: AuctionWithSeller[] = [];
   let watchlistAuctions: AuctionWithSeller[] = [];
   let activeBids: AuctionWithSeller[] = [];
+  let escrowTransactions: any[] = [];
 
   if (currentTab === "listings") {
     const rawAuctions = await prisma.auction.findMany({
@@ -94,6 +96,19 @@ export default async function DashboardPage({
       distinct: ["auctionId"],
     });
     activeBids = bids.map((b) => b.auction) as unknown as AuctionWithSeller[];
+  } else if (currentTab === "escrow") {
+    // Phase 10: Escrow logic
+    escrowTransactions = await prisma.escrowTransaction.findMany({
+      where: { buyerId: userId },
+      include: {
+        auction: {
+          include: {
+            seller: { select: { name: true, image: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
   }
 
   return (
@@ -128,6 +143,17 @@ export default async function DashboardPage({
               >
                 <RefreshCw className="w-4 h-4" />
                 Active Bids
+              </Link>
+              <Link
+                href={`/${locale}/dashboard?tab=escrow`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
+                  currentTab === "escrow"
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <CheckCircle className="w-4 h-4" />
+                Won / Escrow
               </Link>
               <Link
                 href={`/${locale}/dashboard?tab=listings`}
@@ -191,6 +217,28 @@ export default async function DashboardPage({
                     <RefreshCw className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">
                       You haven&apos;t placed any active bids recently.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {currentTab === "escrow" && (
+              <div>
+                <h2 className="text-xl font-heading font-semibold text-gray-900 mb-6">
+                  Won Auctions & Escrow Payments ({escrowTransactions.length})
+                </h2>
+                {escrowTransactions.length > 0 ? (
+                  <div className="space-y-4">
+                    {escrowTransactions.map((tx) => (
+                      <EscrowActionCard key={tx.id} transaction={tx} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
+                    <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">
+                      You haven&apos;t won any auctions yet.
                     </p>
                   </div>
                 )}

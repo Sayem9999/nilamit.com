@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth';
 import type { PlaceBidResult } from '@/types';
 import { pusherServer } from '@/lib/pusher-server';
 import { ERROR_CODES, SOFT_CLOSE_WINDOW_MS, SOFT_CLOSE_EXTENSION_MS } from '@/lib/constants';
+import { checkAndAwardBadges } from './gamification';
 
 const PlaceBidSchema = z.object({
   auctionId: z.string().cuid(),
@@ -78,8 +79,9 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         endTime: Date;
         status: string;
         sellerId: string;
+        startTime: Date;
       }>>`
-        SELECT id, title, "currentPrice", "minBidIncrement", "endTime", status, "sellerId"
+        SELECT id, title, "currentPrice", "minBidIncrement", "endTime", status, "sellerId", "startTime"
         FROM "Auction"
         WHERE id = ${auctionId}
         FOR UPDATE
@@ -149,7 +151,8 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         prevBidder: prevBid?.bidder,
         prevBidderId: prevBid?.bidderId,
         auctionTitle: auction.title,
-        timeUntilEnd: timeUntilEnd
+        timeUntilEnd: timeUntilEnd,
+        auctionStartTime: auction.startTime
       };
     }, {
       isolationLevel: 'Serializable',
@@ -169,8 +172,8 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
       }).catch(console.error);
     }
 
-    // Phase 4: Push Real-time Updates
-    await pusherServer.trigger(`auction-${auctionId}`, 'new-bid', {
+    // Phase 4: Push Real-time Updates to Presence Channel
+    await pusherServer.trigger(`presence-auction-${auctionId}`, 'new-bid', {
       amount,
       endTime: result.newEndTime,
       bidderName: session.user.name || 'Someone',
@@ -183,6 +186,15 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
       amount,
       auctionId,
     }).catch(console.error);
+
+    // Gamification Hook - Run asynchronously so it doesn't block the bid response length
+    checkAndAwardBadges(
+      userId,
+      auctionId,
+      amount,
+      result.antiSnipeTriggered,
+      result.auctionStartTime
+    ).catch(console.error);
 
     return {
       success: true,

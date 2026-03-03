@@ -52,6 +52,10 @@ model User {
   userLevel         Int      @default(1)
   circlesOwned      AuctionCircle[] @relation("CircleOwner")
   circleMemberships CircleMember[]
+  badges            UserBadge[]
+
+  // Sandbox Escrow (Phase 10)
+  escrowTransactions EscrowTransaction[]
 
   @@index([email])
   @@index([phone])
@@ -137,6 +141,9 @@ model Auction {
   // Elevation 8: Social
   circleId        String?
   circle          AuctionCircle? @relation(fields: [circleId], references: [id])
+  
+  // Sandbox Escrow (Phase 10)
+  escrowTransaction EscrowTransaction?
 
   @@index([status, endTime])
   @@index([category])
@@ -157,6 +164,7 @@ enum AuctionStatus {
   SOLD
   EXPIRED
   CANCELLED
+  AWAITING_PAYMENT // Added for Escrow Sandbox
 }
 
 // ─── Bid ──────────────────────────────────────────────
@@ -370,3 +378,44 @@ model CircleMember {
   @@index([userId])
   @@index([circleId])
 }
+
+// ─── Gamification (Phase 10) ────────────────────────
+model UserBadge {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  badgeId     String   // e.g., "early_bird", "sniper", "whale"
+  earnedAt    DateTime @default(now())
+  
+  @@unique([userId, badgeId]) // A user gets a specific badge type only once
+  @@index([userId])
+}
+
+// ─── Escrow Sandbox (Phase 10) ──────────────────────
+model EscrowTransaction {
+  id              String   @id @default(cuid())
+  
+  auctionId       String   @unique
+  auction         Auction  @relation(fields: [auctionId], references: [id])
+  
+  buyerId         String
+  buyer           User     @relation(fields: [buyerId], references: [id])
+  
+  amount          Float
+  status          EscrowStatus @default(PENDING) // PENDING -> HELD -> RELEASED/REFUNDED
+  
+  paymentMethod   String?  // simulated identifier
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([buyerId])
+}
+
+enum EscrowStatus {
+  PENDING
+  HELD
+  RELEASED
+  REFUNDED
+}
+

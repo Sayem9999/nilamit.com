@@ -12,11 +12,24 @@ export type RealTimeBid = {
 export function useAuctionBids(auctionId: string) {
   const [newBids, setNewBids] = useState<RealTimeBid[]>([]);
   const [currentEndTime, setCurrentEndTime] = useState<Date | string | null>(null);
+  const [viewers, setViewers] = useState<number>(0);
 
   useEffect(() => {
-    // Subscribe to the specific auction's channel
-    const channelName = `auction-${auctionId}`;
+    // Phase 4: Use Presence Channels
+    const channelName = `presence-auction-${auctionId}`;
     const channel = pusherClient.subscribe(channelName);
+
+    channel.bind('pusher:subscription_succeeded', (members: any) => {
+      setViewers(members.count);
+    });
+
+    channel.bind('pusher:member_added', () => {
+      setViewers((prev) => prev + 1);
+    });
+
+    channel.bind('pusher:member_removed', () => {
+      setViewers((prev) => Math.max(0, prev - 1));
+    });
 
     // Listen for the 'new-bid' event fired from actions/bid.ts
     channel.bind('new-bid', (data: RealTimeBid) => {
@@ -27,10 +40,10 @@ export function useAuctionBids(auctionId: string) {
     });
 
     return () => {
-      channel.unbind('new-bid');
+      channel.unbind_all();
       pusherClient.unsubscribe(channelName);
     };
   }, [auctionId]);
 
-  return { newBids, currentEndTime };
+  return { newBids, currentEndTime, viewers };
 }

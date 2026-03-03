@@ -4,12 +4,12 @@ import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { placeBid } from "@/actions/bid";
 import { formatBDT } from "@/lib/format";
-import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
   Shield,
   Clock,
+  Users,
 } from "lucide-react";
 import { CountdownTimer } from "./CountdownTimer";
 import { useSettings } from "@/context/SettingsContext";
@@ -53,7 +53,7 @@ export function BidPanel({
   } | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
 
-  const { newBids, currentEndTime } = useAuctionBids(auctionId);
+  const { newBids, currentEndTime, viewers } = useAuctionBids(auctionId);
 
   // Sync real-time data from hook directly to display without setting state
   const displayPrice = newBids.length > 0 ? newBids[0].amount : latestPrice;
@@ -112,6 +112,12 @@ export function BidPanel({
           {t("placeBid")}
         </h3>
         <div className="flex items-center gap-2">
+          {viewers > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-medium animate-pulse" title={`${viewers} person(s) currently viewing this auction`}>
+              <Users className="w-3.5 h-3.5" />
+              {viewers} {t("viewing", { fallback: "viewing" })}
+            </div>
+          )}
           <button
             onClick={toggleSoundEffects}
             className={`p-1.5 rounded-lg transition-colors ${
