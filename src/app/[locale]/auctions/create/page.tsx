@@ -1,52 +1,64 @@
-'use client';
+"use client";
 
-import { useState, useTransition, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { createAuction } from '@/actions/auction';
-import { CATEGORIES, LOCATIONS } from '@/types';
-import { ArrowLeft, ArrowRight, Check, AlertCircle, MapPin } from 'lucide-react';
-import { ImageUpload } from '@/components/upload/ImageUpload';
+import { useState, useTransition, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { createAuction } from "@/actions/auction";
+import { CATEGORIES, LOCATIONS } from "@/types";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  AlertCircle,
+  MapPin,
+} from "lucide-react";
+import { ImageUpload } from "@/components/upload/ImageUpload";
 
-type Step = 'details' | 'pricing' | 'schedule' | 'review';
+type Step = "details" | "pricing" | "schedule" | "review";
 
 export default function CreateAuctionPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState('');
-  const [step, setStep] = useState<Step>('details');
+  const [error, setError] = useState("");
+  const [step, setStep] = useState<Step>("details");
   const [form, setForm] = useState({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
     images: [],
-    category: 'electronics',
+    category: "electronics",
     startingPrice: 100,
     minBidIncrement: 10,
-    startTime: '',
-    endTime: '',
-    location: 'mirpur',
+    startTime: "",
+    endTime: "",
+    location: "mirpur",
+    reservePrice: undefined as number | undefined,
+    buyItNowPrice: undefined as number | undefined,
   });
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
+    if (status === "unauthenticated") {
+      router.push("/login");
     }
   }, [status, router]);
 
-  if (status === 'loading') {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" /></div>;
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" />
+      </div>
+    );
   }
 
   if (!session) {
     return null;
   }
 
-  const steps: Step[] = ['details', 'pricing', 'schedule', 'review'];
+  const steps: Step[] = ["details", "pricing", "schedule", "review"];
   const stepIndex = steps.indexOf(step);
 
   const handleSubmit = () => {
-    setError('');
+    setError("");
     startTransition(async () => {
       const result = await createAuction({
         ...form,
@@ -55,34 +67,44 @@ export default function CreateAuctionPage() {
       if (result.success && result.auction) {
         router.push(`/auctions/${result.auction.id}`);
       } else {
-        setError(result.error || 'Failed to create auction.');
-        if (result.error === 'PHONE_NOT_VERIFIED') {
-          setError('Please verify your phone number before selling. Go to your Profile to verify.');
+        setError(result.error || "Failed to create auction.");
+        if (result.error === "PHONE_NOT_VERIFIED") {
+          setError(
+            "Please verify your phone number before selling. Go to your Profile to verify.",
+          );
         }
       }
     });
   };
 
   const updateForm = (field: string, value: string | number | string[]) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="font-heading font-bold text-2xl text-gray-900 mb-2">Create Auction</h1>
+      <h1 className="font-heading font-bold text-2xl text-gray-900 mb-2">
+        Create Auction
+      </h1>
       <p className="text-sm text-gray-500 mb-8">List your item for bidding</p>
 
       {/* Step Indicator */}
       <div className="flex items-center gap-2 mb-8">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-              i <= stepIndex ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-400'
-            }`}>
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                i <= stepIndex
+                  ? "bg-primary-600 text-white"
+                  : "bg-gray-100 text-gray-400"
+              }`}
+            >
               {i < stepIndex ? <Check className="w-4 h-4" /> : i + 1}
             </div>
             {i < steps.length - 1 && (
-              <div className={`w-12 h-0.5 mx-1 ${i < stepIndex ? 'bg-primary-400' : 'bg-gray-200'}`} />
+              <div
+                className={`w-12 h-0.5 mx-1 ${i < stepIndex ? "bg-primary-400" : "bg-gray-200"}`}
+              />
             )}
           </div>
         ))}
@@ -90,136 +112,281 @@ export default function CreateAuctionPage() {
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         {/* Step: Details */}
-        {step === 'details' && (
+        {step === "details" && (
           <div className="space-y-4">
-            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">Item Details</h2>
+            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
+              Item Details
+            </h2>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Title</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Title
+              </label>
               <input
                 type="text"
                 value={form.title}
-                onChange={(e) => updateForm('title', e.target.value)}
+                onChange={(e) => updateForm("title", e.target.value)}
                 placeholder="e.g., iPhone 15 Pro Max 256GB"
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Description</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Description
+              </label>
               <textarea
                 value={form.description}
-                onChange={(e) => updateForm('description', e.target.value)}
+                onChange={(e) => updateForm("description", e.target.value)}
                 placeholder="Describe your item in detail..."
                 rows={4}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Category</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Category
+              </label>
               <select
                 value={form.category}
-                onChange={(e) => updateForm('category', e.target.value)}
+                onChange={(e) => updateForm("category", e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               >
                 {CATEGORIES.map((cat) => (
-                  <option key={cat.slug} value={cat.slug}>{cat.icon} {cat.label}</option>
+                  <option key={cat.slug} value={cat.slug}>
+                    {cat.icon} {cat.label}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Location</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Location
+              </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <select
                   value={form.location}
-                  onChange={(e) => updateForm('location', e.target.value)}
+                  onChange={(e) => updateForm("location", e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none appearance-none"
                 >
                   {LOCATIONS.map((loc) => (
-                    <option key={loc.id} value={loc.id}>{loc.label}</option>
+                    <option key={loc.id} value={loc.id}>
+                      {loc.label}
+                    </option>
                   ))}
                 </select>
               </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Images</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Images
+              </label>
               <ImageUpload
                 value={form.images}
-                onChange={(urls: string[]) => updateForm('images', urls)}
-                onRemove={(url: string) => updateForm('images', form.images.filter((current) => current !== url))}
+                onChange={(urls: string[]) => updateForm("images", urls)}
+                onRemove={(url: string) =>
+                  updateForm(
+                    "images",
+                    form.images.filter((current) => current !== url),
+                  )
+                }
               />
             </div>
           </div>
         )}
 
         {/* Step: Pricing */}
-        {step === 'pricing' && (
+        {step === "pricing" && (
           <div className="space-y-4">
-            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">Pricing</h2>
+            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
+              Pricing
+            </h2>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Starting Price (৳)</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Starting Price (৳)
+              </label>
               <input
                 type="number"
                 value={form.startingPrice}
-                onChange={(e) => updateForm('startingPrice', Number(e.target.value))}
+                onChange={(e) =>
+                  updateForm("startingPrice", Number(e.target.value))
+                }
                 min={1}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm price focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Minimum Bid Increment (৳)</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Minimum Bid Increment (৳)
+              </label>
               <input
                 type="number"
                 value={form.minBidIncrement}
-                onChange={(e) => updateForm('minBidIncrement', Number(e.target.value))}
+                onChange={(e) =>
+                  updateForm("minBidIncrement", Number(e.target.value))
+                }
                 min={1}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm price focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
-              <p className="text-xs text-gray-400 mt-1">Each new bid must be at least this much higher than the current price.</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Each new bid must be at least this much higher than the current
+                price.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100">
+              <label className="text-xs font-medium text-gray-900 mb-2 block">
+                Optional Upgrades
+              </label>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">
+                    Reserve Price (৳)
+                  </label>
+                  <input
+                    type="number"
+                    value={form.reservePrice ?? ""}
+                    onChange={(e) =>
+                      updateForm(
+                        "reservePrice",
+                        e.target.value
+                          ? Number(e.target.value)
+                          : (undefined as unknown as number),
+                      )
+                    }
+                    placeholder="Hidden minimum price..."
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Item won&apos;t sell unless bidding reaches this amount.
+                  </p>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">
+                    Buy It Now Price (৳)
+                  </label>
+                  <input
+                    type="number"
+                    value={form.buyItNowPrice ?? ""}
+                    onChange={(e) =>
+                      updateForm(
+                        "buyItNowPrice",
+                        e.target.value
+                          ? Number(e.target.value)
+                          : (undefined as unknown as number),
+                      )
+                    }
+                    placeholder="Instant purchase price..."
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Allow buyers to skip bidding and buy instantly.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* Step: Schedule */}
-        {step === 'schedule' && (
+        {step === "schedule" && (
           <div className="space-y-4">
-            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">Schedule</h2>
+            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
+              Schedule
+            </h2>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Start Time</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                Start Time
+              </label>
               <input
                 type="datetime-local"
                 value={form.startTime}
-                onChange={(e) => updateForm('startTime', e.target.value)}
+                onChange={(e) => updateForm("startTime", e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">End Time</label>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                End Time
+              </label>
               <input
                 type="datetime-local"
                 value={form.endTime}
-                onChange={(e) => updateForm('endTime', e.target.value)}
+                onChange={(e) => updateForm("endTime", e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
-              <p className="text-xs text-gray-400 mt-1">Anti-sniping: If a bid comes in the last 2 minutes, the auction extends automatically.</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Anti-sniping: If a bid comes in the last 2 minutes, the auction
+                extends automatically.
+              </p>
             </div>
           </div>
         )}
 
         {/* Step: Review */}
-        {step === 'review' && (
+        {step === "review" && (
           <div className="space-y-4">
-            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">Review & Publish</h2>
+            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
+              Review & Publish
+            </h2>
             <div className="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
-              <div><strong className="text-gray-700">Title:</strong> <span className="text-gray-600">{form.title}</span></div>
-              <div><strong className="text-gray-700">Category:</strong> <span className="text-gray-600">{form.category}</span></div>
-              <div><strong className="text-gray-700">Location:</strong> <span className="text-gray-600 uppercase font-semibold">{form.location}</span></div>
-              <div><strong className="text-gray-700">Starting Price:</strong> <span className="price text-primary-700">৳{form.startingPrice}</span></div>
-              <div><strong className="text-gray-700">Min Increment:</strong> <span className="price text-gray-600">৳{form.minBidIncrement}</span></div>
-              <div><strong className="text-gray-700">Duration:</strong> <span className="text-gray-600">{form.startTime} → {form.endTime}</span></div>
-              <div><strong className="text-gray-700">Images:</strong> <span className="text-gray-600">{form.images.filter(Boolean).length} uploaded</span></div>
+              <div>
+                <strong className="text-gray-700">Title:</strong>{" "}
+                <span className="text-gray-600">{form.title}</span>
+              </div>
+              <div>
+                <strong className="text-gray-700">Category:</strong>{" "}
+                <span className="text-gray-600">{form.category}</span>
+              </div>
+              <div>
+                <strong className="text-gray-700">Location:</strong>{" "}
+                <span className="text-gray-600 uppercase font-semibold">
+                  {form.location}
+                </span>
+              </div>
+              <div>
+                <strong className="text-gray-700">Starting Price:</strong>{" "}
+                <span className="price text-primary-700">
+                  ৳{form.startingPrice}
+                </span>
+              </div>
+              {form.reservePrice && (
+                <div>
+                  <strong className="text-gray-700">Reserve Price:</strong>{" "}
+                  <span className="price text-gray-600">
+                    ৳{form.reservePrice}
+                  </span>
+                </div>
+              )}
+              {form.buyItNowPrice && (
+                <div>
+                  <strong className="text-gray-700">Buy It Now:</strong>{" "}
+                  <span className="price text-accent-600">
+                    ৳{form.buyItNowPrice}
+                  </span>
+                </div>
+              )}
+              <div>
+                <strong className="text-gray-700">Min Increment:</strong>{" "}
+                <span className="price text-gray-600">
+                  ৳{form.minBidIncrement}
+                </span>
+              </div>
+              <div>
+                <strong className="text-gray-700">Duration:</strong>{" "}
+                <span className="text-gray-600">
+                  {form.startTime} → {form.endTime}
+                </span>
+              </div>
+              <div>
+                <strong className="text-gray-700">Images:</strong>{" "}
+                <span className="text-gray-600">
+                  {form.images.filter(Boolean).length} uploaded
+                </span>
+              </div>
             </div>
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700">
-              By publishing, your auction goes live immediately. You cannot cancel once bids are placed.
+              By publishing, your auction goes live immediately. You cannot
+              cancel once bids are placed.
             </div>
           </div>
         )}
@@ -241,7 +408,7 @@ export default function CreateAuctionPage() {
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
 
-          {step === 'review' ? (
+          {step === "review" ? (
             <button
               onClick={handleSubmit}
               disabled={isPending}
@@ -250,7 +417,7 @@ export default function CreateAuctionPage() {
               {isPending ? (
                 <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
               ) : (
-                'Publish Auction'
+                "Publish Auction"
               )}
             </button>
           ) : (

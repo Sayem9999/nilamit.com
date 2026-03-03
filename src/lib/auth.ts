@@ -52,7 +52,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         console.log(`[Auth] Login successful for: ${email}`);
-        return { id: user.id, email: user.email, name: user.name, image: user.image };
+        return { 
+          id: user.id, 
+          email: user.email, 
+          name: user.name, 
+          image: user.image,
+          isVerifiedSeller: user.isVerifiedSeller,
+          reputationScore: user.reputationScore,
+          isPhoneVerified: user.isPhoneVerified,
+          userLevel: user.userLevel,
+          winningStreak: user.winningStreak
+        };
       },
     }),
   ],
@@ -66,13 +76,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { isPhoneVerified: true, phone: true, reputationScore: true, email: true, isVerifiedSeller: true },
+          select: { 
+            isPhoneVerified: true, 
+            phone: true, 
+            reputationScore: true, 
+            email: true, 
+            isVerifiedSeller: true,
+            userLevel: true,
+            winningStreak: true
+          },
         });
         if (dbUser) {
           token.isPhoneVerified = dbUser.isPhoneVerified;
           token.phone = dbUser.phone;
           token.reputationScore = dbUser.reputationScore;
           token.isVerifiedSeller = dbUser.isVerifiedSeller;
+          token.userLevel = dbUser.userLevel;
+          token.winningStreak = dbUser.winningStreak;
         }
       }
       
@@ -92,6 +112,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         u.phone = token.phone;
         u.reputationScore = token.reputationScore;
         u.isVerifiedSeller = token.isVerifiedSeller;
+        u.userLevel = token.userLevel;
+        u.winningStreak = token.winningStreak;
         u.isAdmin = token.isAdmin;
       }
       return session;

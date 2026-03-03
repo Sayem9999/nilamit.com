@@ -2,8 +2,9 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { placeBid } from "@/actions/bid";
+import { placeBid, executeBuyItNow } from "@/actions/bid";
 import { formatBDT } from "@/lib/format";
+import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
@@ -26,6 +27,8 @@ interface BidPanelProps {
   endTime: Date | string;
   isExpired: boolean;
   sellerId: string;
+  reservePrice?: number | null;
+  buyItNowPrice?: number | null;
   onBidPlaced?: () => void;
 }
 
@@ -36,6 +39,8 @@ export function BidPanel({
   endTime,
   isExpired,
   sellerId,
+  reservePrice,
+  buyItNowPrice,
   onBidPlaced,
 }: BidPanelProps) {
   const { data: session } = useSession();
@@ -102,6 +107,32 @@ export function BidPanel({
     });
   };
 
+  const handleBuyItNow = () => {
+    if (!session) {
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      return;
+    }
+
+    if (
+      !confirm(
+        `Are you sure you want to buy this item now for ${formatBDT(buyItNowPrice as number)}?`,
+      )
+    ) {
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await executeBuyItNow(auctionId);
+      setResult(res);
+      if (res.success) {
+        playGavel();
+        onBidPlaced?.();
+      }
+    });
+  };
+
   const isOwnAuction = session?.user?.id === sellerId;
 
   return (
@@ -113,7 +144,10 @@ export function BidPanel({
         </h3>
         <div className="flex items-center gap-2">
           {viewers > 0 && (
-            <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-medium animate-pulse" title={`${viewers} person(s) currently viewing this auction`}>
+            <div
+              className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-medium animate-pulse"
+              title={`${viewers} person(s) currently viewing this auction`}
+            >
               <Users className="w-3.5 h-3.5" />
               {viewers} {t("viewing", { fallback: "viewing" })}
             </div>
@@ -158,7 +192,44 @@ export function BidPanel({
             <p className="price text-2xl text-primary-700">
               {formatBDT(displayPrice)}
             </p>
+            {reservePrice && displayPrice < reservePrice && (
+              <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter mt-1 bg-amber-50 px-2 py-0.5 rounded inline-block">
+                Reserve not met
+              </p>
+            )}
+            {reservePrice && displayPrice >= reservePrice && (
+              <p className="text-[10px] text-green-600 font-bold uppercase tracking-tighter mt-1 bg-green-50 px-2 py-0.5 rounded inline-block">
+                Reserve met
+              </p>
+            )}
           </div>
+
+          {/* Buy It Now option */}
+          {buyItNowPrice && (
+            <div className="mb-4">
+              <button
+                onClick={handleBuyItNow}
+                disabled={isPending}
+                className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center gap-0.5 overflow-hidden relative"
+              >
+                <div className="flex items-center gap-2 relative z-10 text-sm">
+                  <span>BUY IT NOW</span>
+                  <span className="w-1.5 h-1.5 bg-accent-400 rounded-full animate-ping" />
+                </div>
+                <div className="price text-lg relative z-10">
+                  {formatBDT(buyItNowPrice)}
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              </button>
+              <div className="flex items-center justify-center gap-4 mt-2">
+                <div className="h-px bg-gray-100 flex-1" />
+                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                  OR PLACE A BID
+                </span>
+                <div className="h-px bg-gray-100 flex-1" />
+              </div>
+            </div>
+          )}
 
           {/* Bid Input */}
           <div className="mb-3">

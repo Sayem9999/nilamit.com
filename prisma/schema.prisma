@@ -56,6 +56,7 @@ model User {
 
   // Sandbox Escrow (Phase 10)
   escrowTransactions EscrowTransaction[]
+  disputesOpened     Dispute[] @relation("DisputeOpener")
 
   @@index([email])
   @@index([phone])
@@ -107,6 +108,8 @@ model Auction {
   location        String?       // mirpur, banani, dhanmondi, etc.
   startingPrice   Float
   currentPrice    Float
+  reservePrice    Float?        // Optional minimum hidden price for item to sell
+  buyItNowPrice   Float?        // Optional instant purchase price
   minBidIncrement Float         @default(10)
   startTime       DateTime
   endTime         DateTime
@@ -409,7 +412,28 @@ model EscrowTransaction {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
+  dispute         Dispute?
+
   @@index([buyerId])
+}
+
+model Dispute {
+  id              String   @id @default(cuid())
+  transactionId   String   @unique
+  transaction     EscrowTransaction @relation(fields: [transactionId], references: [id])
+  openerId        String
+  opener          User     @relation("DisputeOpener", fields: [openerId], references: [id])
+  reason          String   @db.Text
+  status          DisputeStatus @default(OPEN)
+  resolution      String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED_SELLER // Escrow released
+  RESOLVED_BUYER  // Escrow refunded
 }
 
 enum EscrowStatus {
@@ -417,5 +441,6 @@ enum EscrowStatus {
   HELD
   RELEASED
   REFUNDED
+  DISPUTED
 }
 

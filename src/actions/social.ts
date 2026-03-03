@@ -15,7 +15,7 @@ export async function createAuctionCircle(name: string, description?: string) {
   const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
   try {
-    // @ts-expect-error - Prisma sync lag
+  
     const circle = await prisma.auctionCircle.create({
       data: {
         name,
@@ -46,15 +46,13 @@ export async function joinAuctionCircle(inviteCode: string) {
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
 
   try {
-    // @ts-expect-error - Prisma sync lag
+  
     const circle = await prisma.auctionCircle.findUnique({
       where: { inviteCode }
     });
 
     if (!circle) return { success: false, error: "Invalid invite code" };
 
-    // @ts-expect-error
-    // @ts-expect-error - Prisma sync lag
     await prisma.circleMember.create({
       data: {
         userId: session.user.id,
@@ -83,8 +81,6 @@ export async function getUserReputation(userId?: string) {
     userId = session.user.id;
   }
 
-  // @ts-expect-error
-  // @ts-expect-error - Prisma sync lag
   return prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -104,7 +100,7 @@ export async function getUserCircles() {
   const session = await auth();
   if (!session?.user?.id) return [];
   
-  // @ts-expect-error - Prisma sync lag
+
   return prisma.auctionCircle.findMany({
     where: {
       OR: [

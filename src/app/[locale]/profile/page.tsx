@@ -47,7 +47,7 @@ export default function ProfilePage() {
     return null;
   }
 
-  const user = session.user as Record<string, unknown>;
+  const user = session.user as unknown as Record<string, unknown>;
   const isPhoneVerified = user?.isPhoneVerified as boolean;
 
   const handleSaveName = () => {

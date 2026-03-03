@@ -20,7 +20,6 @@ export async function trackCategoryView(category: string) {
   const userId = session.user.id;
 
   try {
-    // @ts-expect-error
     const preferences = await prisma.userPreference.upsert({
       where: { userId },
       update: {
@@ -43,7 +42,6 @@ export async function trackCategoryView(category: string) {
 
     // Cleanup logic: Keep only last 50 viewed categories to prevent array bloat
     if (preferences.viewedCategories.length > 50) {
-      // @ts-expect-error
       await prisma.userPreference.update({
         where: { userId },
         data: {
@@ -74,7 +72,6 @@ export async function getRecommendations(limit: number = 6) {
   const userId = session.user.id;
 
   // 1. Get user preferences
-  // @ts-expect-error
   const prefs = await prisma.userPreference.findUnique({
     where: { userId }
   });

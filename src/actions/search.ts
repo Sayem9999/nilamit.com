@@ -33,7 +33,9 @@ export async function getSmartSearchResults(query: string, category?: string) {
           image: true, 
           isVerifiedSeller: true,
           reputationScore: true, 
-          isPhoneVerified: true
+          isPhoneVerified: true,
+          winningStreak: true,
+          userLevel: true
         } 
       },
       _count: { select: { bids: true } },

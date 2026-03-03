@@ -17,6 +17,8 @@ const CreateAuctionSchema = z.object({
   minBidIncrement: z.number().positive().optional(),
   startTime: z.string().or(z.date()),
   endTime: z.string().or(z.date()),
+  reservePrice: z.number().positive().optional(),
+  buyItNowPrice: z.number().positive().optional(),
   location: z.string().nullable().optional(),
 });
 
@@ -57,6 +59,8 @@ export async function createAuction(input: CreateAuctionInput) {
         minBidIncrement: input.minBidIncrement || 10,
         startTime: new Date(input.startTime),
         endTime: new Date(input.endTime),
+        reservePrice: input.reservePrice,
+        buyItNowPrice: input.buyItNowPrice,
         location: input.location,
         sellerId: session.user.id,
         status: AuctionStatus.ACTIVE,
@@ -76,7 +80,7 @@ export async function getAuction(id: string) {
   const auction = await prisma.auction.findUnique({
     where: { id },
     include: {
-      seller: { select: { id: true, name: true, email: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true } },
+      seller: { select: { id: true, name: true, email: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true, winningStreak: true, userLevel: true } },
       bids: {
         include: { bidder: { select: { id: true, name: true, image: true } } },
         orderBy: { createdAt: 'desc' },
@@ -134,7 +138,7 @@ export async function getAuctions(filters: AuctionFilters = {}) {
     prisma.auction.findMany({
       where,
       include: {
-        seller: { select: { id: true, name: true, email: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true } },
+        seller: { select: { id: true, name: true, email: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true, winningStreak: true, userLevel: true } },
         _count: { select: { bids: true } },
       },
       orderBy: sortBy === 'bids' ? { bids: { _count: sortOrder } } : orderBy,
@@ -180,7 +184,7 @@ export async function getSpecializedFeeds() {
         endTime: { gte: now, lte: soon },
       },
       include: {
-        seller: { select: { id: true, name: true, email: true, image: true, isVerifiedSeller: true, reputationScore: true, isPhoneVerified: true } },
+        seller: { select: { id: true, name: true, email: true, image: true, isVerifiedSeller: true, reputationScore: true, isPhoneVerified: true, winningStreak: true, userLevel: true } },
         _count: { select: { bids: true } },
       },
       orderBy: { endTime: 'asc' },

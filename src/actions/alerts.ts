@@ -14,7 +14,6 @@ export async function createAlert(type: AlertType, auctionId?: string, threshold
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
 
   try {
-    // @ts-expect-error
     const alert = await prisma.alert.create({
       data: {
         userId: session.user.id,
@@ -26,7 +25,7 @@ export async function createAlert(type: AlertType, auctionId?: string, threshold
 
     revalidatePath('/');
     return { success: true, alert };
-  } catch (error) {
+  } catch {
     return { success: false, error: "Failed to create alert" };
   }
 }
@@ -35,7 +34,6 @@ export async function getUserAlerts() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  // @ts-expect-error
   return prisma.alert.findMany({
     where: { userId: session.user.id, isActive: true },
     include: {
@@ -65,7 +63,7 @@ export async function checkAndTriggerPriceAlerts(auctionId: string, currentPrice
   const matchingAlerts = await prisma.alert.findMany({
     where: {
       auctionId,
-      type: AlertType.PRICE_DROP,
+      type: "PRICE_DROP" as AlertType,
       isActive: true,
       thresholdPrice: { gte: currentPrice }
     },

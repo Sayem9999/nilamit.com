@@ -1,5 +1,5 @@
 import React from "react";
-import { BADGE_CONFIG, BadgeType } from "@/actions/gamification";
+import { BADGE_CONFIG, BadgeType } from "@/lib/gamification-config";
 import {
   Tooltip,
   TooltipContent,

@@ -21,8 +21,11 @@ export default function PriceAlertButton({
 
   const handleSetAlert = async () => {
     setIsLoading(true);
-    // @ts-expect-error - Prisma type generation delay
-    const result = await createAlert("PRICE_DROP", auctionId, threshold);
+    const result = await createAlert(
+      "PRICE_DROP" as AlertType,
+      auctionId,
+      threshold,
+    );
     setIsLoading(false);
 
     if (result.success) {

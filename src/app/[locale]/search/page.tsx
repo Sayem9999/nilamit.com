@@ -58,6 +58,8 @@ export default async function SearchPage({
             isVerifiedSeller: true,
             reputationScore: true,
             isPhoneVerified: true,
+            winningStreak: true,
+            userLevel: true,
           },
         },
         _count: { select: { bids: true } },

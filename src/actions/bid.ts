@@ -209,6 +209,108 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
 }
 
 
+/**
+ * executeBuyItNow — Instant purchase
+ * 
+ * Bypasses bidding, sets status to SOLD, creates Escrow.
+ */
+export async function executeBuyItNow(auctionId: string): Promise<PlaceBidResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
+  }
+
+  const userId = session.user.id;
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const auction = await tx.auction.findUnique({
+        where: { id: auctionId },
+        select: {
+          id: true,
+          title: true,
+          buyItNowPrice: true,
+          status: true,
+          sellerId: true,
+          endTime: true,
+          startTime: true,
+        },
+      });
+
+      if (!auction || !auction.buyItNowPrice) {
+        throw new Error("This auction does not support Buy It Now.");
+      }
+
+      if (auction.status !== 'ACTIVE') {
+        throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
+      }
+
+      if (auction.sellerId === userId) {
+        throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
+      }
+
+      const binAmount = auction.buyItNowPrice;
+
+      // Create winner bid
+      const bid = await tx.bid.create({
+        data: {
+          amount: binAmount,
+          auctionId,
+          bidderId: userId,
+        },
+      });
+
+      // Close auction
+      await tx.auction.update({
+        where: { id: auctionId },
+        data: {
+          status: 'SOLD',
+          winnerId: userId,
+          currentPrice: binAmount,
+        },
+      });
+
+      // Create Escrow
+      await tx.escrowTransaction.create({
+        data: {
+          auctionId,
+          buyerId: userId,
+          amount: binAmount,
+          status: 'PENDING',
+        },
+      });
+
+      return { 
+        bid, 
+        auctionTitle: auction.title,
+        binAmount
+      };
+    });
+
+    // Real-time Updates
+    await pusherServer.trigger(`presence-auction-${auctionId}`, 'auction-sold', {
+      winnerName: session.user.name || 'Someone',
+      price: result.binAmount,
+    }).catch(console.error);
+
+    await pusherServer.trigger('global-ticker', 'new-activity', {
+      bidder: session.user.name || 'Someone',
+      auctionTitle: result.auctionTitle,
+      amount: result.binAmount,
+      auctionId,
+      type: 'BIN'
+    }).catch(console.error);
+
+    return {
+      success: true,
+      bid: result.bid,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to execute Buy It Now.';
+    return { success: false, error: message };
+  }
+}
+
 async function sendOutbidEmail(email: string, title: string, currentPrice: number, auctionId: string) {
   const resendApiKey = process.env.RESEND_API_KEY;
   if (!resendApiKey) return;
