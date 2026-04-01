@@ -10,7 +10,6 @@ export async function raiseDispute(transactionId: string, reason: string) {
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
   try {
-    // @ts-expect-error: Prisma schema sync lag
     const transaction = await prisma.escrowTransaction.findUnique({
       where: { id: transactionId },
       include: { dispute: true },
@@ -22,12 +21,10 @@ export async function raiseDispute(transactionId: string, reason: string) {
     if (transaction.dispute) return { success: false, error: 'Dispute already exists for this transaction.' };
 
     await prisma.$transaction([
-      // @ts-expect-error: Prisma schema sync lag
       prisma.escrowTransaction.update({
         where: { id: transactionId },
         data: { status: 'DISPUTED' as EscrowStatus },
       }),
-      // @ts-expect-error: Prisma schema sync lag
       prisma.dispute.create({
         data: {
           transactionId,
@@ -51,12 +48,10 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
   // Admin Check
-  // @ts-expect-error: isAdmin is added to session in auth.ts
   const isAdmin = session.user.isAdmin;
   if (!isAdmin) return { success: false, error: 'Unauthorized: Admin only' };
 
   try {
-    // @ts-expect-error: Prisma schema sync lag
     const dispute = await prisma.dispute.findUnique({
       where: { id: disputeId },
       include: { transaction: true },
@@ -70,12 +65,10 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
     const finalDisputeStatus = ruling === 'SELLER' ? DisputeStatus.RESOLVED_SELLER : DisputeStatus.RESOLVED_BUYER;
 
     await prisma.$transaction([
-      // @ts-expect-error: Prisma schema sync lag
       prisma.escrowTransaction.update({
         where: { id: transactionId },
         data: { status: finalEscrowStatus as EscrowStatus },
       }),
-      // @ts-expect-error: Prisma schema sync lag
       prisma.dispute.update({
         where: { id: disputeId },
         data: {
@@ -96,17 +89,15 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
 
 export async function getOpenDisputes() {
   const session = await auth();
-  // @ts-expect-error: isAdmin is added to session in auth.ts
   const isAdmin = session?.user?.isAdmin;
   if (!isAdmin) return [];
 
-  // @ts-expect-error: Prisma schema sync lag
   return prisma.dispute.findMany({
     where: { status: 'OPEN' as DisputeStatus },
     include: {
       transaction: {
         include: {
-          auction: { select: { title: true } },
+          auction: { select: { title: true, seller: { select: { name: true } } } },
           buyer: { select: { name: true, email: true } },
         }
       },

@@ -240,9 +240,7 @@ export default async function AuctionDetailPage({ params }: Props) {
             endTime={auction.endTime}
             isExpired={new Date() >= new Date(auction.endTime)}
             sellerId={auction.sellerId}
-            // @ts-expect-error: Prisma schema sync lag
             reservePrice={auction.reservePrice}
-            // @ts-expect-error: Prisma schema sync lag
             buyItNowPrice={auction.buyItNowPrice}
           />
 
@@ -274,9 +272,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                 </p>
                 <div className="flex flex-col gap-2 mt-2">
                   <UserBadge
-                    // @ts-expect-error: Prisma schema sync lag
                     level={auction.seller?.userLevel || 1}
-                    // @ts-expect-error: Prisma schema sync lag
                     streak={auction.seller?.winningStreak || 0}
                     reputation={auction.seller?.reputationScore || 0}
                   />
