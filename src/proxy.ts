@@ -21,7 +21,6 @@ function isProtectedPage(pathname: string): boolean {
 }
 
 export async function proxy(req: NextRequest) {
-  // @ts-expect-error - NextAuth v5 wrapping for Proxy convention
   return auth(async (innerReq) => {
     const isProtected = isProtectedPage(innerReq.nextUrl.pathname);
     
