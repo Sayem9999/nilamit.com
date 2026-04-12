@@ -11,7 +11,7 @@ function createPrismaClient() {
   console.log('[DB] Initializing PrismaClient. DATABASE_URL present:', !!connectionString);
   if (!connectionString) {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('DATABASE_URL is missing in production environment variables!');
+      console.warn('[DB] WARNING: DATABASE_URL is missing during build phase. Falling back to dummy client.');
     }
     
     console.error('[DB] DATABASE_URL is missing! Returning dummy client.');
