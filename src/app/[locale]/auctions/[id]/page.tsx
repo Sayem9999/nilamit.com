@@ -1,4 +1,6 @@
 import { getAuction } from "@/actions/auction";
+export const dynamic = "force-dynamic";
+
 import { getAuctionBids } from "@/actions/bid";
 import { formatBDT, formatRelativeTime } from "@/lib/format";
 import { CountdownTimer } from "@/components/auction/CountdownTimer";
@@ -100,6 +102,7 @@ export default async function AuctionDetailPage({ params }: Props) {
       />
       <StickyBidBar
         currentPrice={auction.currentPrice}
+        endTime={auction.endTime}
         targetId="mobile-bid-anchor"
       />
       <div className="flex flex-col lg:flex-row gap-8">

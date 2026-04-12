@@ -34,3 +34,49 @@ export async function adminWipeTestData() {
     return { success: false, error: 'Failed to wipe data: ' + err.message };
   }
 }
+
+export async function exportTransactionsCSV() {
+  try {
+    await requireAdmin();
+
+    // Fetch all SOLD auctions with winner data
+    const auctions = await prisma.auction.findMany({
+      where: {
+        status: 'SOLD',
+      },
+      include: {
+        winner: { select: { name: true, phone: true } },
+        seller: { select: { name: true, phone: true } },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    // Create CSV Header
+    let csv = 'Auction ID,Title,Final Price,Winner Name,Winner Phone,Commission (৳),Date\n';
+
+    // Build Rows
+    for (const auction of auctions) {
+      const commission = auction.currentPrice * 0.1; // 10% standard commission
+      
+      const row = [
+        auction.id,
+        `"${auction.title.replace(/"/g, '""')}"`,
+        auction.currentPrice,
+        auction.winner?.name || 'Unknown',
+        auction.winner?.phone || 'N/A',
+        commission.toFixed(2),
+        auction.updatedAt.toISOString().split('T')[0],
+      ];
+      
+      csv += row.join(',') + '\n';
+    }
+
+    return { success: true, data: csv };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('CSV Export Error:', err);
+    return { success: false, error: 'Failed to generate CSV: ' + err.message };
+  }
+}

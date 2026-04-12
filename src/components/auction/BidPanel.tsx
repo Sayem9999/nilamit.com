@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { placeBid, executeBuyItNow } from "@/actions/bid";
+import confetti from "canvas-confetti";
 import { formatBDT } from "@/lib/format";
 import {
   TrendingUp,
@@ -94,6 +95,12 @@ export function BidPanel({
         // Sound Effect handled by setLatestPrice if we want it to triggers
         // or manually here for faster feedback
         playGavel();
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#6366f1', '#a855f7', '#ec4899']
+        });
 
         // Price will update via next poll or immediately here for better UX
         const newPrice = bidAmount;
@@ -128,6 +135,12 @@ export function BidPanel({
       setResult(res);
       if (res.success) {
         playGavel();
+        confetti({
+          particleCount: 200,
+          spread: 100,
+          origin: { y: 0.6 },
+          colors: ['#6366f1', '#a855f7', '#ec4899', '#22c55e']
+        });
         onBidPlaced?.();
       }
     });

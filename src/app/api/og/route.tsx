@@ -3,8 +3,12 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
+const fontURL = 'https://github.com/google/fonts/raw/main/ofl/notosansbengali/NotoSansBengali-Bold.ttf';
+
 export async function GET(req: NextRequest) {
   try {
+    const fontData = await fetch(new URL(fontURL)).then((res) => res.arrayBuffer());
+    
     const { searchParams } = new URL(req.url);
 
     // Params
@@ -151,6 +155,13 @@ export async function GET(req: NextRequest) {
       {
         width: 1200,
         height: 630,
+        fonts: [
+          {
+            name: 'Noto Sans Bengali',
+            data: fontData,
+            style: 'normal',
+          },
+        ],
       }
     );
   } catch (e: unknown) {

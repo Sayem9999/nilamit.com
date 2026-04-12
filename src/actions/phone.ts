@@ -63,7 +63,7 @@ export async function sendPhoneOTP(phone: string) {
     },
   });
 
-  console.log(`[sendPhoneOTP] Sending OTP to ${phone} via gateway '${process.env.SMS_PROVIDER || 'console'}'...`);
+
 
   // Send via SMS gateway
   const smsResult = await smsGateway.sendSMS(
@@ -87,7 +87,7 @@ export async function sendPhoneOTP(phone: string) {
         html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code is used to verify your phone number (${phone}).</p>`,
       });
       emailSent = true;
-      console.log(`[sendPhoneOTP] Fallback email sent to ${session.user.email}`);
+
     } catch (error) {
        console.error('[sendPhoneOTP] Resend fallback failed:', error instanceof Error ? error.message : error);
        if (error instanceof Error && error.message.includes('only send to')) {
@@ -209,7 +209,7 @@ export async function sendEmailOTP(email: string) {
     // Fallback for local dev without API key (only if explicitly allowed, but Constitution says NO)
     // We will log a warning that this is NOT production ready
     console.warn('[WARN] RESEND_API_KEY missing. Falling back to console log (NOT FOR PRODUCTION).');
-    console.log(`\n📧 [EMAIL OTP → ${email}] Code: ${otp}\n`);
+
     return { success: true }; // Allow login in dev, but warn
   }
 }

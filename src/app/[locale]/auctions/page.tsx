@@ -1,4 +1,6 @@
 import { getAuctions } from "@/actions/auction";
+export const dynamic = "force-dynamic";
+
 import AuctionCard from "@/components/auction/AuctionCard";
 import Link from "next/link";
 import { Search, SlidersHorizontal, MapPin } from "lucide-react";

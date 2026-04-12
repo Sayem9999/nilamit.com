@@ -4,13 +4,16 @@ import { useState, useEffect } from 'react';
 import { formatBDT } from '@/lib/format';
 import { TrendingUp, Gavel } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CountdownTimer } from './CountdownTimer';
+import { Clock } from 'lucide-react';
 
 interface StickyBidBarProps {
   currentPrice: number;
+  endTime: Date | string;
   targetId: string;
 }
 
-export function StickyBidBar({ currentPrice, targetId }: StickyBidBarProps) {
+export function StickyBidBar({ currentPrice, endTime, targetId }: StickyBidBarProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -51,11 +54,18 @@ export function StickyBidBar({ currentPrice, targetId }: StickyBidBarProps) {
         >
           <div className="bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] rounded-2xl p-4 flex items-center justify-between gap-4">
             <div className="flex flex-col">
-              <div className="flex items-center gap-1 text-[10px] font-bold text-primary-600 uppercase tracking-widest">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary-600 uppercase tracking-widest mb-0.5">
                 <TrendingUp className="w-3 h-3" /> Current Bid
               </div>
-              <div className="price text-xl text-gray-900 font-bold">
-                {formatBDT(currentPrice)}
+              <div className="flex items-center gap-2">
+                <div className="price text-xl text-gray-900 font-bold whitespace-nowrap">
+                  {formatBDT(currentPrice)}
+                </div>
+                <div className="h-4 w-[1px] bg-gray-200" />
+                <div className="flex items-center gap-1 text-xs text-gray-500 font-medium">
+                  <Clock className="w-3 h-3" />
+                  <CountdownTimer endTime={endTime} className="!text-[11px] tabular-nums" />
+                </div>
               </div>
             </div>
             
