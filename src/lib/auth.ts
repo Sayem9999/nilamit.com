@@ -107,7 +107,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        const u = session.user as any; // Cast to allow custom properties
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const u = session.user as any; 
         u.isPhoneVerified = token.isPhoneVerified;
         u.phone = token.phone;
         u.reputationScore = token.reputationScore;

@@ -21,9 +21,9 @@ export function SystemTab() {
         setStatus('error');
         setMessage(result.error || 'Failed to wipe data');
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       setStatus('error');
-      setMessage(e.message);
+      setMessage(e instanceof Error ? e.message : 'Unknown error');
     } finally {
         setIsPending(false);
         setIsConfirmOpen(false);

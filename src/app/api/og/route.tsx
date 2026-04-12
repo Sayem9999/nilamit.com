@@ -53,8 +53,10 @@ export async function GET(req: NextRequest) {
                   boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
                 }}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={image}
+                  alt="Auction Preview"
                   style={{
                     width: '100%',
                     height: '100%',
@@ -151,8 +153,8 @@ export async function GET(req: NextRequest) {
         height: 630,
       }
     );
-  } catch (e: any) {
-    console.log(`${e.message}`);
+  } catch (e: unknown) {
+    console.log(`${e instanceof Error ? e.message : 'Unknown error'}`);
     return new Response(`Failed to generate the image`, {
       status: 500,
     });

@@ -28,8 +28,9 @@ export async function adminWipeTestData() {
 
     revalidatePath('/');
     return { success: true, message: 'All auction data wiped successfully.' };
-  } catch (error: any) {
-    console.error('Wipe Error:', error);
-    return { success: false, error: 'Failed to wipe data: ' + error.message };
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Wipe Error:', err);
+    return { success: false, error: 'Failed to wipe data: ' + err.message };
   }
 }

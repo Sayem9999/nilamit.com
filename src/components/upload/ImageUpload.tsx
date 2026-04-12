@@ -42,7 +42,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
         const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
         const filePath = `auctions/${session.user.id}/${fileName}`;
 
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("auction-images")
           .upload(filePath, file);
 
@@ -59,9 +59,10 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
 
       onChange(newUrls);
       toast.success("Images uploaded successfully");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload Error:", error);
-      toast.error(`Upload failed: ${error.message}`);
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Upload failed: ${message}`);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

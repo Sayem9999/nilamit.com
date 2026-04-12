@@ -47,7 +47,7 @@ export function ReportModal({ auctionId }: ReportModalProps) {
       } else {
         setError(res.error || 'Failed to submit report');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);

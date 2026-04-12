@@ -46,8 +46,8 @@ export async function getSystemConfig() {
 export async function updateSystemConfig(data: {
   heroTitle?: string;
   heroSubtitle?: string;
-  heroImage?: string;
-  announcement?: string;
+  heroImage?: string | null;
+  announcement?: string | null;
   showAnnouncement?: boolean;
 }) {
   await requireAdmin();

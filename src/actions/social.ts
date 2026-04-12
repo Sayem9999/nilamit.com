@@ -32,9 +32,9 @@ export async function createAuctionCircle(name: string, description?: string) {
 
     revalidatePath('/social');
     return { success: true, circle };
-  } catch (error) {
-    console.error("Error creating circle:", error);
-    return { success: false, error: "Failed to create circle" };
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    return { success: false, error: err.message || 'Failed to create circle' };
   }
 }
 
@@ -62,8 +62,9 @@ export async function joinAuctionCircle(inviteCode: string) {
 
     revalidatePath('/social');
     return { success: true, circle };
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    const err = error as { code?: string };
+    if (err.code === 'P2002') {
       return { success: false, error: "You are already a member of this circle" };
     }
     return { success: false, error: "Failed to join circle" };

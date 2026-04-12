@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { createAuctionCircle, joinAuctionCircle } from "@/actions/social";
-import { Users, Plus, Key, ArrowRight, Loader2, Info } from "lucide-react";
+import { Users, Plus, Key, Loader2, Info } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface AuctionCircleListProps {
-  initialCircles: any[];
+  initialCircles: { id: string; name: string; inviteCode: string; description?: string | null; _count: { members: number; auctions: number } }[];
 }
 
 export default function AuctionCircleList({
   initialCircles,
 }: AuctionCircleListProps) {
-  const [circles, setCircles] = useState(initialCircles);
+  const [circles] = useState(initialCircles);
   const [isJoining, setIsJoining] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [inviteCode, setInviteCode] = useState("");

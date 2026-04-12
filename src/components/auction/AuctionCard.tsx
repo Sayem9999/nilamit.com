@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Shield, Clock, Users, Zap, MapPin, Star } from "lucide-react";
+import { Shield, Clock, Users, Zap, MapPin } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";

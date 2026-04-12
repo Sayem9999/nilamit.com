@@ -11,8 +11,24 @@ import Link from "next/link";
 import Image from "next/image";
 
 export function ModerationTab() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [reports, setReports] = useState<any[]>([]);
+  interface AdminReport {
+    id: string;
+    reason: string;
+    description: string | null;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+    auction: {
+      id: string;
+      title: string;
+      status: string;
+      images: string[];
+      seller: { name: string | null; email: string };
+    };
+    reporter: { name: string | null; email: string; image: string | null };
+  }
+
+  const [reports, setReports] = useState<AdminReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = useState<"PENDING" | "RESOLVED">("PENDING");

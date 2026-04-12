@@ -14,7 +14,7 @@ import { toast } from "react-hot-toast";
 
 export default function BulkUploadUI() {
   const [isUploading, setIsUploading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{ total: number; processed: number; errorCount: number } | null>(null);
   const [file, setFile] = useState<File | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,7 +50,7 @@ export default function BulkUploadUI() {
     setIsUploading(false);
 
     if (res.success) {
-      setResult(res);
+      setResult({ total: res.total || 0, processed: res.processed || 0, errorCount: res.errorCount || 0 });
       toast.success("Bulk upload processed!");
     } else {
       toast.error(res.error || "Upload failed");

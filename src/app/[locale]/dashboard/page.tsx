@@ -29,6 +29,7 @@ export default async function DashboardPage({
   let myAuctions: AuctionWithSeller[] = [];
   let watchlistAuctions: AuctionWithSeller[] = [];
   let activeBids: AuctionWithSeller[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let escrowTransactions: any[] = [];
 
   if (currentTab === "listings") {

@@ -10,8 +10,19 @@ import { Shield, ShieldOff, Users, CheckCircle, Search } from "lucide-react";
 import Image from "next/image";
 
 export function UsersTab() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [users, setUsers] = useState<any[]>([]);
+  interface AdminUser {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+    isVerifiedSeller: boolean;
+    isPhoneVerified: boolean;
+    reputationScore: number;
+    createdAt: Date;
+    _count: { bids: number };
+  }
+
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");

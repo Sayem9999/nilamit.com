@@ -19,7 +19,7 @@ export function useAuctionBids(auctionId: string) {
     const channelName = `presence-auction-${auctionId}`;
     const channel = pusherClient.subscribe(channelName);
 
-    channel.bind('pusher:subscription_succeeded', (members: any) => {
+    channel.bind('pusher:subscription_succeeded', (members: { count: number }) => {
       setViewers(members.count);
     });
 

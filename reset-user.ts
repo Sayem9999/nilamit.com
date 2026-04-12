@@ -16,8 +16,8 @@ async function main() {
       where: { email },
     });
     console.log(`✅ User deleted successfully: ${user.name} (${user.email})`);
-  } catch (error: any) {
-    if (error.code === 'P2025') {
+  } catch (error: unknown) {
+    if ((error as { code?: string }).code === 'P2025') {
         console.log(`⚠️ User not found: ${email}`);
     } else {
         console.error('❌ Error deleting user:', error);

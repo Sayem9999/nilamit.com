@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth';
-import type { AuctionFilters, CreateAuctionInput } from '@/types';
-import { closeAuctionIfEnded, closeAllEndedAuctions } from '@/lib/auction-logic';
+import { closeAllEndedAuctions } from '@/lib/auction-logic';
 
 export const dynamic = 'force-dynamic';
 

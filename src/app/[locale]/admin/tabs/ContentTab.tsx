@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { updateSystemConfig, toggleFeaturedAuction } from '@/actions/admin-content';
-import { Loader2, Plus, Trash2, Save, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Trash2, Save, Image as ImageIcon } from 'lucide-react';
 import { ImageUpload } from '@/components/upload/ImageUpload';
 import Image from 'next/image';
 
 interface ContentTabProps {
-  initialConfig: any;
-  featuredAuctions: any[];
+  initialConfig: { heroTitle: string; heroSubtitle: string; heroImage: string | null; announcement: string | null; showAnnouncement: boolean };
+  featuredAuctions: { id: string; title: string; currentPrice: number; images: string[] }[];
 }
 
 export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps) {
@@ -23,13 +23,13 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
       await updateSystemConfig({
         heroTitle: config.heroTitle,
         heroSubtitle: config.heroSubtitle,
-        heroImage: config.heroImage,
-        announcement: config.announcement,
+        heroImage: config.heroImage ?? undefined,
+        announcement: config.announcement ?? undefined,
         showAnnouncement: config.showAnnouncement,
       });
       alert('Content updated successfully!');
-    } catch (e: any) {
-      alert('Failed to update content: ' + e.message);
+    } catch (e: unknown) {
+      alert('Failed to update content: ' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
       setIsSaving(false);
     }
@@ -47,8 +47,8 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
                 setAuctions(prev => prev.filter(a => a.id !== id));
             }
         }
-    } catch (e: any) {
-        alert('Error: ' + e.message);
+    } catch (e: unknown) {
+        alert('Error: ' + (e instanceof Error ? e.message : 'Unknown error'));
     }
   };
 
@@ -130,7 +130,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
             {auctions.length === 0 ? (
                 <p className="text-sm text-gray-500">No auctions featured yet.</p>
             ) : (
-                auctions.map((auction: any) => (
+                auctions.map((auction) => (
                     <div key={auction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 relative rounded-md overflow-hidden bg-gray-200">

@@ -82,7 +82,7 @@ export async function suspendAuction(auctionId: string, reportId?: string) {
       // 1. Cancel the auction
       await tx.auction.update({
         where: { id: auctionId },
-        data: { status: 'CANCELLED' as any }, // Using CANCELLED as equivalent to SUSPENDED for now
+        data: { status: 'CANCELLED' as "CANCELLED" }, // Using CANCELLED as equivalent to SUSPENDED for now
       });
 
       // 2. If a specific report triggered this, mark it as RESOLVED

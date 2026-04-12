@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
-export async function registerUser(data: any) {
+export async function registerUser(data: { firstName: string; lastName: string; email: string; password: string }) {
   try {
     const { firstName, lastName, email, password } = data;
 
@@ -34,8 +34,9 @@ export async function registerUser(data: any) {
     });
 
     return { success: true };
-  } catch (error: any) {
-    console.error('Registration Error:', error);
-    return { success: false, error: 'Something went wrong. Please try again.' };
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : 'Something went wrong. Please try again.';
+    console.error('Registration Error:', e);
+    return { success: false, error: errorMessage };
   }
 }

@@ -63,8 +63,8 @@ export async function processBulkUpload(fileName: string, rows: BulkUploadRow[])
         }
       });
       processed++;
-    } catch (err: any) {
-      errors[i + 1] = err.message || "Failed to create auction";
+    } catch (error: unknown) {
+      errors[i + 1] = error instanceof Error ? error.message : "Failed to create auction";
     }
 
     // Progress update every 10 rows
@@ -82,6 +82,7 @@ export async function processBulkUpload(fileName: string, rows: BulkUploadRow[])
     data: {
       status: Object.keys(errors).length === 0 ? "COMPLETED" : "COMPLETED_WITH_ERRORS",
       processedRows: processed,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       errors: errors as any
     }
   });

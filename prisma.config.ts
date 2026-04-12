@@ -11,5 +11,6 @@ export default defineConfig({
   datasource: {
     url: process.env["DATABASE_URL"],
     directUrl: process.env["DIRECT_URL"],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any,
 });

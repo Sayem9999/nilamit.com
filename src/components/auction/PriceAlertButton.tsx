@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createAlert } from "@/actions/alerts";
+import { createAlert } from "@/actions/alert";
 import { Bell, Loader2 } from "lucide-react";
 import { AlertType } from "@prisma/client";
 import { toast } from "react-hot-toast";
@@ -21,11 +21,11 @@ export default function PriceAlertButton({
 
   const handleSetAlert = async () => {
     setIsLoading(true);
-    const result = await createAlert(
-      "PRICE_DROP" as AlertType,
+    const result = await createAlert({
+      type: "PRICE_DROP" as AlertType,
       auctionId,
-      threshold,
-    );
+      thresholdPrice: threshold,
+    });
     setIsLoading(false);
 
     if (result.success) {

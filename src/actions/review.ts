@@ -68,11 +68,12 @@ export async function submitReview({
     revalidatePath(`/auctions/${auctionId}`);
     
     return { success: true, review: result };
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    const err = error as { code?: string; message?: string };
+    if (err.code === 'P2002') {
       return { success: false, error: 'You have already reviewed this auction.' };
     }
-    return { success: false, error: error.message || 'Failed to submit review' };
+    return { success: false, error: err.message || 'Failed to submit review' };
   }
 }
 

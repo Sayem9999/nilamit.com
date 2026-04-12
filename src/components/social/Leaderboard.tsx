@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BadgeList } from "@/components/social/BadgeDisplay";
 import { Trophy, Flame, TrendingUp } from "lucide-react";
+import { BadgeType } from "@/lib/gamification-config";
 
 export async function getLeaderboardData() {
   const [topStreaks, topBuyers] = await Promise.all([
@@ -75,7 +76,7 @@ export default async function Leaderboard() {
                       {user.name || "Anonymous"}
                     </span>
                     <BadgeList
-                      badges={user.badges.map((b: any) => b.badgeId)}
+                      badges={user.badges.map((b) => (b as { badgeId: string }).badgeId as BadgeType)}
                       className="mt-0.5"
                     />
                   </div>
@@ -120,7 +121,7 @@ export default async function Leaderboard() {
                       {user.name || "Anonymous"}
                     </span>
                     <BadgeList
-                      badges={user.badges.map((b: any) => b.badgeId)}
+                      badges={user.badges.map((b) => (b as { badgeId: string }).badgeId as BadgeType)}
                       className="mt-0.5"
                     />
                   </div>

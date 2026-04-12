@@ -184,7 +184,11 @@ export default async function SearchPage({
                 {!query && (
                   <LoadMore
                     initialPage={1}
-                    filters={{ category: catFilter, sortBy: sortBy as any }}
+                    filters={{ 
+                      category: catFilter, 
+                      sortBy: sortBy === 'ending_soon' ? 'endTime' : 'currentPrice',
+                      sortOrder: sortBy === 'price_asc' ? 'asc' : 'desc'
+                    }}
                   />
                 )}
               </div>
