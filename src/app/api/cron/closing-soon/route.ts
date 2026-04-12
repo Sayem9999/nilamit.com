@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Resend } from 'resend';
 import { AuctionStatus } from '@prisma/client';
+import { pusherServer } from '@/lib/pusher-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,8 +33,12 @@ export async function GET(req: Request) {
       include: {
         watchlist: {
           include: {
-            user: { select: { email: true, name: true } },
+            user: { select: { id: true, email: true, name: true } },
           },
+        },
+        alerts: {
+          where: { type: 'ENDING_SOON', isActive: true },
+          select: { userId: true },
         },
       },
     });
@@ -52,6 +57,27 @@ export async function GET(req: Request) {
             html: auctionEndingSoonEmailHtml(auction.title, auction.currentPrice, auction.id, baseUrl),
           });
           sentCount++;
+
+          // Also push a real-time Pusher notification to this user
+          await pusherServer.trigger(`user-${entry.user.id}`, 'ending-soon', {
+            auctionId: auction.id,
+            auctionTitle: auction.title,
+            currentPrice: auction.currentPrice,
+            endTime: auction.endTime,
+          }).catch(console.error);
+        }
+      }
+
+      // Push ending-soon to users who set an explicit Alert (may not be on watchlist)
+      for (const alert of auction.alerts) {
+        const alreadyNotified = auction.watchlist.some(w => w.user.id === alert.userId);
+        if (!alreadyNotified) {
+          await pusherServer.trigger(`user-${alert.userId}`, 'ending-soon', {
+            auctionId: auction.id,
+            auctionTitle: auction.title,
+            currentPrice: auction.currentPrice,
+            endTime: auction.endTime,
+          }).catch(console.error);
         }
       }
     }

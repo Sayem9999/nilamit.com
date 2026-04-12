@@ -20,9 +20,10 @@ import { SystemConfig } from "@/types/home";
 interface HeroSectionProps {
   systemConfig?: SystemConfig;
   t: (key: string) => string;
+  totalUsers?: number;
 }
 
-export function HeroSection({ systemConfig, t }: HeroSectionProps) {
+export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -161,8 +162,10 @@ export function HeroSection({ systemConfig, t }: HeroSectionProps) {
                 ))}
               </div>
               <div className="text-sm font-medium">
-                <span className="text-gray-900 font-bold">2.4k+</span> Added
-                this week
+                <span className="text-gray-900 font-bold">
+                  {totalUsers ? `${(totalUsers / 1000).toFixed(1)}k+` : "2.4k+"}
+                </span>{" "}
+                Active members
               </div>
             </motion.div>
           </motion.div>

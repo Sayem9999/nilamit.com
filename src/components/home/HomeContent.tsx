@@ -3,7 +3,7 @@
 import { Variants } from "framer-motion";
 import { Megaphone, Star } from "lucide-react";
 import { AuctionWithSeller } from "@/types";
-import { SystemConfig } from "@/types/home"; // Added SystemConfig import
+import { SystemConfig } from "@/types/home";
 import { useTranslations } from "next-intl";
 import AuctionCard from "@/components/auction/AuctionCard";
 
@@ -14,13 +14,20 @@ import { TrendingSection } from "./components/TrendingSection";
 import { EndingSoonSection } from "./components/EndingSoonSection";
 import { CategoryGrid } from "./components/CategoryGrid";
 import { TrustFeatures } from "./components/TrustFeatures";
+import { StatsBar } from "./components/StatsBar";
 
 interface HomeContentProps {
   trendingAuctions?: AuctionWithSeller[];
   endingSoon?: AuctionWithSeller[];
   featuredAuctions?: AuctionWithSeller[];
   latestActivity?: LatestActivity[];
-  systemConfig?: SystemConfig; // Changed type from any to SystemConfig
+  systemConfig?: SystemConfig;
+  stats?: {
+    totalUsers: number;
+    totalBids: number;
+    totalAuctions: number;
+    verifiedSellers: number;
+  };
 }
 
 export function HomeContent({
@@ -29,6 +36,7 @@ export function HomeContent({
   featuredAuctions = [],
   latestActivity = [],
   systemConfig,
+  stats,
 }: HomeContentProps) {
   const t = useTranslations();
 
@@ -63,7 +71,17 @@ export function HomeContent({
       <LiveTicker initialActivity={latestActivity} />
 
       {/* Hero Section */}
-      <HeroSection systemConfig={systemConfig} t={t} />
+      <HeroSection systemConfig={systemConfig} t={t} totalUsers={stats?.totalUsers} />
+
+      {/* Live Stats Bar */}
+      {stats && (
+        <StatsBar
+          totalAuctions={stats.totalAuctions}
+          totalUsers={stats.totalUsers}
+          totalBids={stats.totalBids}
+          verifiedSellers={stats.verifiedSellers}
+        />
+      )}
 
       {/* Featured Auctions */}
       {featuredAuctions.length > 0 && (
