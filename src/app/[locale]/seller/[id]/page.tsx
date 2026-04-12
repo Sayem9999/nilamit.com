@@ -17,9 +17,12 @@ export default async function SellerProfilePage({ params }: Props) {
       id: true,
       name: true,
       image: true,
+      isVerifiedSeller: true,
       isPhoneVerified: true,
       reputationScore: true,
       createdAt: true,
+      winningStreak: true,
+      userLevel: true,
       _count: { select: { bids: true } },
     },
   });
@@ -34,6 +37,9 @@ export default async function SellerProfilePage({ params }: Props) {
           id: true,
           name: true,
           image: true,
+          isVerifiedSeller: true,
+          winningStreak: true,
+          userLevel: true,
           reputationScore: true,
         },
       },
@@ -82,7 +88,7 @@ export default async function SellerProfilePage({ params }: Props) {
               <h1 className="font-heading font-bold text-2xl text-gray-900">
                 {seller.name || "Anonymous"}
               </h1>
-              {(seller as unknown as { isVerifiedSeller?: boolean }).isVerifiedSeller && (
+              {seller.isVerifiedSeller && (
                 <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">
                   <Shield className="w-3 h-3" /> Verified
                 </span>

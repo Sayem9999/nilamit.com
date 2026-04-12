@@ -2,11 +2,7 @@ import type { Auction, Bid, User, AuctionStatus, OrderStatus } from '@prisma/cli
 export type { AuctionStatus, OrderStatus };
 
 export type AuctionWithSeller = Auction & {
-  seller: Pick<User, 'id' | 'name' | 'email' | 'image' | 'reputationScore' | 'isPhoneVerified'> & {
-    isVerifiedSeller?: boolean;
-    winningStreak?: number;
-    userLevel?: number;
-  };
+  seller: Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified' | 'winningStreak' | 'userLevel'>;
   _count?: { bids: number };
   location?: string | null;
   watchlist?: { userId: string }[];
