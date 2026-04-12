@@ -269,14 +269,14 @@ export default async function AuctionDetailPage({ params }: Props) {
               <div>
                 <p className="font-medium text-gray-900 flex items-center gap-1.5">
                   {auction.seller?.name || "Seller"}
-                  {auction.seller?.isVerifiedSeller && (
+                  {(auction.seller as unknown as { isVerifiedSeller?: boolean })?.isVerifiedSeller && (
                     <Shield className="w-4 h-4 text-blue-500 fill-blue-500/10" />
                   )}
                 </p>
                 <div className="flex flex-col gap-2 mt-2">
                   <UserBadge
-                    level={auction.seller?.userLevel || 1}
-                    streak={auction.seller?.winningStreak || 0}
+                    level={(auction.seller as unknown as { userLevel?: number })?.userLevel || 1}
+                    streak={(auction.seller as unknown as { winningStreak?: number })?.winningStreak || 0}
                     reputation={auction.seller?.reputationScore || 0}
                   />
                   {auction.seller?.isPhoneVerified && (
