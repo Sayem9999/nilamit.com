@@ -4,7 +4,14 @@ export const authConfig = {
   pages: {
     signIn: '/login',
   },
-  providers: [],
-  session: { strategy: 'jwt' },
-  callbacks: {},
+  session: { 
+    strategy: 'jwt',
+  },
+  callbacks: {
+    authorized({ auth, request: { nextUrl } }) {
+      const isLoggedIn = !!auth?.user;
+      return true; // Let the proxy handle redirection logic
+    },
+  },
+  providers: [], // Add providers in auth.ts
 } satisfies NextAuthConfig;

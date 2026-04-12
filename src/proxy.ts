@@ -1,6 +1,8 @@
 import createIntlMiddleware from 'next-intl/middleware';
-import { auth } from '@/lib/auth';
-import { NextRequest } from 'next/server';
+import NextAuth from 'next-auth';
+import { authConfig } from '@/lib/auth.config';
+
+const { auth } = NextAuth(authConfig);
 
 const intlMiddleware = createIntlMiddleware({
   locales: ['en', 'bn'],

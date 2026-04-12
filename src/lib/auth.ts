@@ -66,33 +66,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  session: { strategy: 'jwt' },
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
       }
       // Fetch phone verification status
       if (token.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { 
-            isPhoneVerified: true, 
-            phone: true, 
-            reputationScore: true, 
-            email: true, 
-            isVerifiedSeller: true,
-            userLevel: true,
-            winningStreak: true
-          },
-        });
-        if (dbUser) {
-          token.isPhoneVerified = dbUser.isPhoneVerified;
-          token.phone = dbUser.phone;
-          token.reputationScore = dbUser.reputationScore;
-          token.isVerifiedSeller = dbUser.isVerifiedSeller;
-          token.userLevel = dbUser.userLevel;
-          token.winningStreak = dbUser.winningStreak;
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { 
+              isPhoneVerified: true, 
+              phone: true, 
+              reputationScore: true, 
+              email: true, 
+              isVerifiedSeller: true,
+              userLevel: true,
+              winningStreak: true
+            },
+          });
+          if (dbUser) {
+            token.isPhoneVerified = dbUser.isPhoneVerified;
+            token.phone = dbUser.phone;
+            token.reputationScore = dbUser.reputationScore;
+            token.isVerifiedSeller = dbUser.isVerifiedSeller;
+            token.userLevel = dbUser.userLevel;
+            token.winningStreak = dbUser.winningStreak;
+          }
+        } catch (error) {
+          console.error('[Auth] JWT DB update failed (likely missing DB access):', error);
         }
       }
       
@@ -119,8 +123,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
-  },
-  pages: {
-    signIn: '/login',
   },
 });
