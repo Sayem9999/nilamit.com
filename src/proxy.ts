@@ -35,7 +35,7 @@ export async function proxy(req: NextRequest) {
     }
     
     return intlMiddleware(innerReq);
-  })(req, {});
+  })(req, { params: Promise.resolve({}) } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export const config = {
