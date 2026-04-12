@@ -134,26 +134,37 @@ export async function getAuctions(filters: AuctionFilters = {}) {
     orderBy[sortBy] = sortOrder;
   }
 
-  const [auctions, total] = await Promise.all([
-    prisma.auction.findMany({
-      where,
-      include: {
-        seller: { select: { id: true, name: true, email: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true, winningStreak: true, userLevel: true } },
-        _count: { select: { bids: true } },
-      },
-      orderBy: sortBy === 'bids' ? { bids: { _count: sortOrder } } : orderBy,
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.auction.count({ where }),
-  ]);
+  try {
+    const [auctions, total] = await Promise.all([
+      prisma.auction.findMany({
+        where,
+        include: {
+          seller: { select: { id: true, name: true, email: true, image: true, reputationScore: true, isPhoneVerified: true, isVerifiedSeller: true, winningStreak: true, userLevel: true } },
+          _count: { select: { bids: true } },
+        },
+        orderBy: sortBy === 'bids' ? { bids: { _count: sortOrder } } : orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.auction.count({ where }),
+    ]);
 
-  return {
-    auctions,
-    total,
-    pages: Math.ceil(total / limit),
-    page,
-  };
+    return {
+      auctions,
+      total,
+      pages: Math.ceil(total / limit),
+      page,
+    };
+  } catch (error) {
+    console.error('[Action] getAuctions failed:', error);
+    return {
+      auctions: [],
+      total: 0,
+      pages: 0,
+      page,
+      error: 'Database connection failed. Please check your environment variables.'
+    };
+  }
 }
 
 /**
@@ -177,30 +188,35 @@ export async function getSpecializedFeeds() {
   const now = new Date();
   const soon = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Next 24 hours
 
-  const [endingSoon, latestBids] = await Promise.all([
-    prisma.auction.findMany({
-      where: {
-        status: AuctionStatus.ACTIVE,
-        endTime: { gte: now, lte: soon },
-      },
-      include: {
-        seller: { select: { id: true, name: true, email: true, image: true, isVerifiedSeller: true, reputationScore: true, isPhoneVerified: true, winningStreak: true, userLevel: true } },
-        _count: { select: { bids: true } },
-      },
-      orderBy: { endTime: 'asc' },
-      take: 4,
-    }),
-    prisma.bid.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      include: {
-        bidder: { select: { name: true } },
-        auction: { select: { title: true, id: true } },
-      },
-    }),
-  ]);
+  try {
+    const [endingSoon, latestBids] = await Promise.all([
+      prisma.auction.findMany({
+        where: {
+          status: AuctionStatus.ACTIVE,
+          endTime: { gte: now, lte: soon },
+        },
+        include: {
+          seller: { select: { id: true, name: true, email: true, image: true, isVerifiedSeller: true, reputationScore: true, isPhoneVerified: true, winningStreak: true, userLevel: true } },
+          _count: { select: { bids: true } },
+        },
+        orderBy: { endTime: 'asc' },
+        take: 4,
+      }),
+      prisma.bid.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          bidder: { select: { name: true } },
+          auction: { select: { title: true, id: true } },
+        },
+      }),
+    ]);
 
-  return { endingSoon, latestBids };
+    return { endingSoon, latestBids };
+  } catch (error) {
+    console.error('[Action] getSpecializedFeeds failed:', error);
+    return { endingSoon: [], latestBids: [] };
+  }
 }
 
 /**

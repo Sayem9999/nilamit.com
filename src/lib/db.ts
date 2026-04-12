@@ -17,7 +17,10 @@ function createPrismaClient() {
     console.error('[DB] DATABASE_URL is missing! Returning dummy client.');
     // Return a client that will error on actual DB calls but won't crash on import
     // This allows the app to boot for frontend-only pages without a DB connection
-    const pool = new pg.Pool({ connectionString: 'postgresql://localhost:5432/nilamit_dev' });
+    const pool = new pg.Pool({ 
+      connectionString: 'postgresql://localhost:5432/nilamit_dev',
+      connectionTimeoutMillis: 1000,
+    });
     const adapter = new PrismaPg(pool);
     return new PrismaClient({
       adapter,

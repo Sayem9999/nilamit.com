@@ -20,23 +20,21 @@ function isProtectedPage(pathname: string): boolean {
   return protectedPatterns.some(p => path.startsWith(p));
 }
 
-export async function proxy(req: NextRequest) {
-  return auth(async (innerReq) => {
-    const isProtected = isProtectedPage(innerReq.nextUrl.pathname);
+export const proxy = auth((req) => {
+  const isProtected = isProtectedPage(req.nextUrl.pathname);
+  
+  if (isProtected && !req.auth) {
+    const localeMatch = req.nextUrl.pathname.match(/^\/(en|bn)/);
+    const locale = localeMatch ? localeMatch[1] : 'en';
     
-    if (isProtected && !innerReq.auth) {
-      const localeMatch = innerReq.nextUrl.pathname.match(/^\/(en|bn)/);
-      const locale = localeMatch ? localeMatch[1] : 'en';
-      
-      const loginUrl = new URL(`/${locale}/login`, innerReq.nextUrl);
-      loginUrl.searchParams.set('callbackUrl', innerReq.url);
-      
-      return Response.redirect(loginUrl);
-    }
+    const loginUrl = new URL(`/${locale}/login`, req.nextUrl);
+    loginUrl.searchParams.set('callbackUrl', req.url);
     
-    return intlMiddleware(innerReq);
-  })(req, { params: Promise.resolve({}) } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-}
+    return Response.redirect(loginUrl);
+  }
+  
+  return intlMiddleware(req);
+});
 
 export const config = {
   matcher: ['/((?!api|_next|.*\\..*).*)']
