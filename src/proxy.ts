@@ -18,7 +18,7 @@ function isProtectedPage(pathname: string): boolean {
   return protectedPatterns.some(p => path.startsWith(p));
 }
 
-export default auth((req) => {
+export const proxy = auth((req) => {
   const isProtected = isProtectedPage(req.nextUrl.pathname);
   
   if (isProtected && !req.auth) {
