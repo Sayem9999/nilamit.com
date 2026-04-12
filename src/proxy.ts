@@ -1,15 +1,11 @@
 import createIntlMiddleware from 'next-intl/middleware';
-import NextAuth from 'next-auth';
-import { authConfig } from '@/lib/auth.config';
-
+import { auth } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
 const intlMiddleware = createIntlMiddleware({
   locales: ['en', 'bn'],
   defaultLocale: 'en'
 });
-
-const { auth } = NextAuth(authConfig);
 
 // Pages that require authentication
 const protectedPatterns = ['/dashboard', '/profile', '/auctions/create', '/admin'];

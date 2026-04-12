@@ -9,7 +9,7 @@ import { authConfig } from '@/lib/auth.config';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
+  adapter: process.env.DATABASE_URL ? PrismaAdapter(prisma) : undefined,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID || 'dummy',
