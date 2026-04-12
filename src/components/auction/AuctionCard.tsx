@@ -95,8 +95,8 @@ export default function AuctionCard({
             </div>
             {auction.seller.reputationScore > 0 && (
               <UserBadge
-                level={auction.seller.userLevel}
-                streak={auction.seller.winningStreak}
+                level={auction.seller.userLevel ?? 1}
+                streak={auction.seller.winningStreak ?? 0}
                 reputation={auction.seller.reputationScore}
                 className="scale-90 origin-left"
               />
