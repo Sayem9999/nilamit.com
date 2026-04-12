@@ -20,7 +20,11 @@ function createPrismaClient() {
   }
   
   return new PrismaClient({
-    datasourceUrl: connectionString,
+    datasources: {
+      db: {
+        url: connectionString,
+      },
+    },
     log: ['error'], // Optimized: do not log queries, even in dev
   });
 }
