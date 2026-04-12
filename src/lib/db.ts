@@ -1,87 +1,89 @@
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
+
+/**
+ * Nilamit Database Client (v0.1.9)
+ * 
+ * ARCHITECTURE: Dynamic Isolation
+ * This file uses a Proxy and Dynamic Imports to satisfy two conflicting requirements:
+ * 1. FULL TYPE SAFETY: Code in Server Actions/Pages gets full Prisma autocomplete.
+ * 2. EDGE COMPATIBILITY: The Vercel Middleware (Proxy) can import this file WITHOUT
+ *    pulling the heavy Node.js Prisma engine into the Edge bundle.
+ */
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Fault-tolerant initialization: Catches engine errors and prevents 500 crashes
-function createPrismaClient() {
+// Lazy initialization wrapper with dynamic import
+async function getOrInitPrisma(): Promise<PrismaClient | undefined> {
+  if (globalForPrisma.prisma) return globalForPrisma.prisma;
+
   const connectionString = process.env.DATABASE_URL;
-  console.log('[DB] Attempting PrismaClient initialization. URL exists:', !!connectionString);
+  console.log('[DB] Dynamically initializing PrismaClient. URL exists:', !!connectionString);
   
   try {
-    return new PrismaClient({
+    // We only import the runtime client at the very moment it's needed in a Server environment.
+    const { PrismaClient: RuntimeClient } = await import('@prisma/client');
+    globalForPrisma.prisma = new RuntimeClient({
       log: ['error'],
     });
+    return globalForPrisma.prisma;
   } catch (error) {
-    console.error('[DB-FATAL] PrismaClient constructor failed. This usually means engine binary issues.', error);
-    // Return a dummy object that mimics Prisma so components don't crash
-    return null as unknown as PrismaClient;
+    console.error('[DB-FATAL] Dynamic PrismaClient initialization failed:', error);
+    return undefined;
   }
 }
 
-// Global persistence for dev/HMR
-const getInternalClient = () => {
-    if (!globalForPrisma.prisma) {
-        globalForPrisma.prisma = createPrismaClient();
-    }
-    return globalForPrisma.prisma;
-};
-
 /**
- * FAULT-TOLERANT PROXY
- * Ensures that if Prisma fails (engine crash, missing binaries), the app continues to serve
- * static pages and empty lists instead of showing a 500 error page.
+ * TYPE-SAFE ASYNC PROXY
+ * This object is exported as 'prisma' and is treated as a PrismaClient by the compiler.
  */
 export const prisma = new Proxy({} as PrismaClient, {
   get(target, prop, receiver) {
-    const client = getInternalClient();
-    
-    // If client failed to initialize or hits a fatal error
-    if (!client) {
-        console.warn(`[DB-SAFEGUARD] Blocked access to prisma.${String(prop)} because client is offline.`);
-        
-        // Return a dummy "find" function that returns empty results instead of crashing
-        if (typeof prop === 'string' && (prop.startsWith('find') || prop === 'count')) {
-            return async () => (prop === 'count' ? 0 : []);
-        }
-        
-        // Throw a controlled error that components can catch via try/catch in actions
+    // Utility properties that shouldn't trigger DB initialization
+    if (prop === '$$typeof' || prop === 'constructor' || prop === 'then' || typeof prop === 'symbol') {
         return undefined;
     }
 
-    try {
-        const value = Reflect.get(client, prop, receiver);
-        
-        // Wrap model methods (findMany, findUnique, etc) to catch runtime Prisma errors
-        if (typeof value === 'object' && value !== null && prop !== '$connect' && prop !== '$disconnect') {
-            return new Proxy(value, {
-                get(mTarget, mProp, mReceiver) {
-                    const method = Reflect.get(mTarget, mProp, mReceiver);
-                    if (typeof method === 'function') {
-                        return async (...args: unknown[]) => {
-                            try {
-                                return await method.apply(mTarget, args);
-                            } catch (e) {
-                                console.error(`[DB-RUNTIME-ERROR] prisma.${String(prop)}.${String(mProp)} failed:`, e);
-                                // Fallback empty states
-                                if (String(mProp).startsWith('findMany')) return [];
-                                if (String(mProp) === 'count') return 0;
-                                throw e; // Let the action's try/catch handle specialized errors
-                            }
-                        };
-                    }
-                    return method;
-                }
-            });
+    // Return a proxy that handles both direct calls ($connect) and model access (user.findMany)
+    return new Proxy(() => {}, {
+      // Handles direct function calls on prisma (e.g. prisma.$transaction)
+      async apply(mTarget, thisArg, args) {
+        const client = await getOrInitPrisma();
+        if (!client) return null;
+        const method = Reflect.get(client, prop);
+        if (typeof method === 'function') {
+            return method.apply(client, args);
         }
-        
-        return value;
-    } catch (e) {
-        console.error(`[DB-PROXY-FATAL] Failed to access prisma.${String(prop)}:`, e);
-        return undefined;
-    }
+        return method;
+      },
+      // Handles model access (e.g. prisma.user.findMany)
+      get(mTarget, mProp) {
+        return async (...args: unknown[]) => {
+          const client = await getOrInitPrisma();
+          if (!client) {
+              console.warn(`[DB-OFFLINE] prisma.${String(prop)}.${String(mProp)} blocked.`);
+              if (String(mProp).startsWith('findMany')) return [];
+              if (String(mProp) === 'count') return 0;
+              return null;
+          }
+          
+          try {
+            const model = Reflect.get(client, prop);
+            const method = Reflect.get(model, mProp);
+            if (typeof method === 'function') {
+                return await method.apply(model, args);
+            }
+            return method;
+          } catch (e) {
+            console.error(`[DB-RUNTIME-ERR] prisma.${String(prop)}.${String(mProp)} failed:`, e);
+            if (String(mProp).startsWith('findMany')) return [];
+            return null;
+          }
+        };
+      }
+    });
   }
 });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma as unknown as PrismaClient;
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
