@@ -43,6 +43,7 @@ export interface AuctionFilters {
   status?: AuctionStatus;
   category?: string;
   location?: string;
+  circleId?: string;
   search?: string;
   sortBy?: 'endTime' | 'currentPrice' | 'createdAt' | 'bids';
   sortOrder?: 'asc' | 'desc';

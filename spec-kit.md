@@ -81,6 +81,12 @@ type ActionResult<T = any> = {
 
 ---
 
+## 5. Compliance & Legal Standards
+- **Governance**: All features must adhere to the **[legalframework.md](file:///c:/nilamit.com/legalframework.md)**.
+- **Data Retention**: All transaction and communication logs must be retained for **6 years**, ensuring auditability under Bangladesh Digital Commerce Guidelines 2021.
+- **Redressal**: The Admin Panel must support a **72-hour SLA** for formal complaint resolution.
+- **Escrow Integrity**: The `EscrowTransaction` state machine must strictly follow the PENDING -> HELD -> RELEASED flow to protect user capital.
+
 ## 6. Regional & Social Filtering (Circles)
 
 ### 6.1 Area Logic (Geographic)

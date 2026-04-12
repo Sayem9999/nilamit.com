@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { simulateEscrowPayment } from "@/actions/escrow";
+import { payEscrowAdvance, confirmItemReceived } from "@/actions/escrow";
 import { raiseDispute } from "@/actions/dispute";
 import { ShieldCheck, Clock, CreditCard, AlertTriangle } from "lucide-react";
 import toast from "react-hot-toast";
@@ -30,16 +30,32 @@ export function EscrowActionCard({
   const router = useRouter();
   const formatMoney = (amount: number) => `৳ ${amount.toLocaleString()}`;
 
-  const handleSimulatePayment = async () => {
+  const handlePayAdvance = async () => {
     setLoading(true);
-    const result = await simulateEscrowPayment(transaction.id);
+    const result = await payEscrowAdvance(transaction.id);
     if (result.success) {
       toast.success(
-        "Escrow Payment simulated successfully! Funds are now securely held.",
+        "Advance (Success Fee) paid! Contact information is now unlocked.",
       );
       router.refresh();
     } else {
-      toast.error(result.error || "Failed to process mock payment.");
+      toast.error(result.error || "Failed to process advance payment.");
+    }
+    setLoading(false);
+  };
+
+  const handleConfirmReceived = async () => {
+    if (!window.confirm("Are you sure you have received the item in good condition? This will release the final funds.")) return;
+    
+    setLoading(true);
+    const result = await confirmItemReceived(transaction.id);
+    if (result.success) {
+      toast.success(
+        "Transaction completed! Reputation scores updated.",
+      );
+      router.refresh();
+    } else {
+      toast.error(result.error || "Failed to confirm receipt.");
     }
     setLoading(false);
   };
@@ -122,15 +138,14 @@ export function EscrowActionCard({
             {isPending && (
               <div className="space-y-3">
                 <p className="text-xs text-slate-500 hidden md:block">
-                  Secure this transaction by transferring funds to the Nilamit
-                  Escrow pool.
+                  Secure this transaction by paying the <b>Success Fee Advance</b>. This unlocks the seller&apos;s details.
                 </p>
                 <Button
-                  onClick={handleSimulatePayment}
+                  onClick={handlePayAdvance}
                   disabled={loading}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {loading ? "Processing..." : "Simulate BKash/Card Payment"}
+                  {loading ? "Processing..." : "Pay Advance (bKash/Card)"}
                 </Button>
               </div>
             )}
@@ -142,10 +157,19 @@ export function EscrowActionCard({
                     <ShieldCheck className="w-3.5 h-3.5" /> SECURELY HELD
                   </p>
                   <p className="text-[10px] opacity-80 leading-tight">
-                    Your funds are safe. Don&apos;t confirm receipt until you
-                    inspect the item.
+                    Information unlocked. Coordinate with the seller for COD delivery. Confirm only after inspection.
                   </p>
                 </div>
+                
+                <Button
+                  onClick={handleConfirmReceived}
+                  disabled={loading}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  {loading ? "Confirming..." : "Mark as Received (COD Done)"}
+                </Button>
+
                 <Button
                   onClick={handleRaiseDispute}
                   disabled={loading}

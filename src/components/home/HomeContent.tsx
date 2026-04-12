@@ -16,12 +16,15 @@ import { CategoryGrid } from "./components/CategoryGrid";
 import { TrustFeatures } from "./components/TrustFeatures";
 import { StatsBar } from "./components/StatsBar";
 
+import { AreaQuickLinks } from "./components/AreaQuickLinks";
+
 interface HomeContentProps {
   trendingAuctions?: AuctionWithSeller[];
   endingSoon?: AuctionWithSeller[];
   featuredAuctions?: AuctionWithSeller[];
   latestActivity?: LatestActivity[];
   systemConfig?: SystemConfig;
+  locale?: string;
   stats?: {
     totalUsers: number;
     totalBids: number;
@@ -36,6 +39,7 @@ export function HomeContent({
   featuredAuctions = [],
   latestActivity = [],
   systemConfig,
+  locale = "en",
   stats,
 }: HomeContentProps) {
   const t = useTranslations();
@@ -117,11 +121,16 @@ export function HomeContent({
         itemVariants={itemVariants}
       />
 
-      {/* Ending Soon Section */}
-      <EndingSoonSection endingSoon={endingSoon} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Ending Soon Section */}
+        <EndingSoonSection endingSoon={endingSoon} />
 
-      {/* Categories */}
-      <CategoryGrid />
+        {/* Categories */}
+        <CategoryGrid />
+        
+        {/* Area Hyper-localization */}
+        <AreaQuickLinks locale={locale} />
+      </div>
 
       {/* Trust & How It Works */}
       <TrustFeatures />

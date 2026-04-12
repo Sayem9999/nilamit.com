@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/db";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { Search, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import type { AuctionWithSeller } from "@/types";
@@ -8,65 +7,34 @@ export default async function SearchPage({
   searchParams,
   params,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; sort?: string; location?: string; circleId?: string }>;
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const { q, category, sort } = await searchParams;
+  const { q, category, sort, location, circleId } = await searchParams;
 
   const query = q || "";
   const catFilter = category || "All";
-  const sortBy = sort || "ending_soon";
+  const sortBy = sort || "endTime";
+  const locFilter = location || "";
+  const circFilter = circleId || "";
 
-  // Build Prisma where clause (Keyword fallback)
-  const whereClause: Record<string, unknown> = {
-    status: "ACTIVE",
+  // Refactor: Use the centralized getAuctions server action which handles Circle privacy
+  const { getAuctions } = await import("@/actions/auction");
+  const { getUserCircles } = await import("@/actions/social");
+  
+  const filters = {
+    search: query,
+    category: catFilter !== "All" ? catFilter : undefined,
+    location: locFilter || undefined,
+    circleId: circFilter || undefined,
+    sortBy: sortBy as string,
+    sortOrder: (sortBy === "price_asc" ? "asc" : "desc") as "asc" | "desc",
+    limit: 24,
   };
 
-  if (catFilter !== "All") {
-    whereClause.category = catFilter;
-  }
-
-  let auctions: (AuctionWithSeller & { semanticScore?: number })[] = [];
-
-  if (query) {
-    // Enterprise Strategy: Use Semantic Ranking for queries
-    const { getSmartSearchResults } = await import("@/actions/search");
-    auctions = await getSmartSearchResults(
-      query,
-      catFilter !== "All" ? catFilter : undefined,
-    );
-  } else {
-    // Build Prisma orderBy clause for general browsing
-    let orderByClause: Record<string, unknown> = { endTime: "asc" }; // ending soon default
-    if (sortBy === "price_asc") {
-      orderByClause = { currentPrice: "asc" };
-    } else if (sortBy === "price_desc") {
-      orderByClause = { currentPrice: "desc" };
-    }
-
-    auctions = await prisma.auction.findMany({
-      where: whereClause,
-      orderBy: orderByClause,
-      include: {
-        seller: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            reputationScore: true,
-            isPhoneVerified: true,
-            isVerifiedSeller: true,
-            winningStreak: true,
-            userLevel: true,
-          },
-        },
-        _count: { select: { bids: true } },
-      },
-      take: 24, // Initial load for performance
-    });
-  }
+  const { auctions, error } = await getAuctions(filters);
+  const userCircles = await getUserCircles();
 
   const categories = [
     "All",
@@ -78,6 +46,8 @@ export default async function SearchPage({
     "Antiques",
     "Other",
   ];
+
+  const { LOCATIONS } = await import("@/types");
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
@@ -92,13 +62,14 @@ export default async function SearchPage({
               Found {auctions.length} active{" "}
               {auctions.length === 1 ? "auction" : "auctions"}
             </p>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="w-full lg:w-64 flex-shrink-0 space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
               <div className="flex items-center gap-2 font-semibold text-gray-900 mb-4 pb-4 border-b border-gray-100">
                 <SlidersHorizontal className="w-5 h-5 text-primary-600" />
                 Filters
@@ -106,15 +77,15 @@ export default async function SearchPage({
 
               {/* Category Filter */}
               <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
                   Category
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {categories.map((cat) => (
                     <a
                       key={cat}
-                      href={`/${locale}/search?q=${query}&category=${cat}&sort=${sortBy}`}
-                      className={`block text-sm px-3 py-2 rounded-lg transition-colors ${
+                      href={`/${locale}/search?q=${query}&category=${cat}&sort=${sortBy}&location=${locFilter}&circleId=${circFilter}`}
+                      className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                         catFilter === cat
                           ? "bg-primary-50 text-primary-700 font-medium"
                           : "text-gray-600 hover:bg-gray-50"
@@ -126,16 +97,82 @@ export default async function SearchPage({
                 </div>
               </div>
 
+              {/* Location Filter */}
+              <div className="mb-6">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                  Location (Dhaka)
+                </h3>
+                <div className="space-y-1 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
+                  <a
+                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=&circleId=${circFilter}`}
+                    className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                      !locFilter
+                        ? "bg-primary-50 text-primary-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    All Areas
+                  </a>
+                  {LOCATIONS.map((loc) => (
+                    <a
+                      key={loc.id}
+                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${loc.id}&circleId=${circFilter}`}
+                      className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                        locFilter === loc.id
+                          ? "bg-primary-50 text-primary-700 font-medium"
+                          : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {loc.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Circles Filter */}
+              {userCircles.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                    Social Circles
+                  </h3>
+                  <div className="space-y-1">
+                    <a
+                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${locFilter}&circleId=`}
+                      className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                        !circFilter
+                          ? "bg-primary-50 text-primary-700 font-medium"
+                          : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      Global Feed
+                    </a>
+                    {userCircles.map((circle) => (
+                      <a
+                        key={circle.id}
+                        href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${locFilter}&circleId=${circle.id}`}
+                        className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                          circFilter === circle.id
+                            ? "bg-secondary-50 text-secondary-700 font-medium"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {circle.name}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Sort Filter */}
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <ArrowUpDown className="w-4 h-4" /> Sort By
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <a
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=ending_soon`}
-                    className={`block text-sm px-3 py-2 rounded-lg transition-colors ${
-                      sortBy === "ending_soon"
+                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=endTime&location=${locFilter}&circleId=${circFilter}`}
+                    className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                      sortBy === "endTime"
                         ? "bg-primary-50 text-primary-700 font-medium"
                         : "text-gray-600 hover:bg-gray-50"
                     }`}
@@ -143,8 +180,8 @@ export default async function SearchPage({
                     Ending Soon
                   </a>
                   <a
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_asc`}
-                    className={`block text-sm px-3 py-2 rounded-lg transition-colors ${
+                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_asc&location=${locFilter}&circleId=${circFilter}`}
+                    className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       sortBy === "price_asc"
                         ? "bg-primary-50 text-primary-700 font-medium"
                         : "text-gray-600 hover:bg-gray-50"
@@ -153,8 +190,8 @@ export default async function SearchPage({
                     Lowest Price
                   </a>
                   <a
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_desc`}
-                    className={`block text-sm px-3 py-2 rounded-lg transition-colors ${
+                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_desc&location=${locFilter}&circleId=${circFilter}`}
+                    className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       sortBy === "price_desc"
                         ? "bg-primary-50 text-primary-700 font-medium"
                         : "text-gray-600 hover:bg-gray-50"

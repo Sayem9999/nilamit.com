@@ -25,6 +25,10 @@ import { isWatched } from "@/actions/watchlist";
 import { ReportModal } from "@/components/auction/ReportModal";
 import { ShareButton } from "@/components/auction/ShareButton";
 import { BidHistory } from "@/components/auction/BidHistory";
+import UserBadge from "@/components/social/UserBadge";
+import { GatedContactInfo } from "@/components/ui/GatedContactInfo";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { DollarSign, Truck, Info } from "lucide-react";
 import PriceAlertButton from "@/components/auction/PriceAlertButton";
 import UserBadge from "@/components/social/UserBadge";
 import { Metadata } from "next";
@@ -273,6 +277,29 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <Shield className="w-4 h-4 text-blue-500 fill-blue-500/10" />
                   )}
                 </p>
+                
+                {/* Contact Gating Logic */}
+                {auction.status === AuctionStatus.SOLD && (session?.user?.id === auction.winnerId || session?.user?.id === auction.sellerId) && (
+                  <div className="mt-3 space-y-2">
+                    <GatedContactInfo 
+                      status={auction.escrowTransaction?.status}
+                      transactionId={auction.escrowTransaction?.id}
+                      label="Seller Phone"
+                      value={auction.seller?.phone || "N/A"}
+                      type="phone"
+                      isVerified={auction.seller?.isVerifiedSeller}
+                    />
+                    <GatedContactInfo 
+                      status={auction.escrowTransaction?.status}
+                      transactionId={auction.escrowTransaction?.id}
+                      label="Pickup Location"
+                      value={auction.location || "N/A"}
+                      type="address"
+                      isVerified={auction.seller?.isVerifiedSeller}
+                    />
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-2 mt-2">
                   <UserBadge
                     level={auction.seller?.userLevel || 1}
@@ -288,6 +315,55 @@ export default async function AuctionDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Financial Summary Card (Seller/Winner only) */}
+          {auction.status === AuctionStatus.SOLD && (session?.user?.id === auction.winnerId || session?.user?.id === auction.sellerId) && (
+            <Card className="border-primary-100 bg-primary-50/30 overflow-hidden">
+              <CardHeader className="bg-white/50 py-3 border-b border-primary-100">
+                <CardTitle className="text-sm flex items-center gap-2 text-primary-800">
+                  <DollarSign className="w-4 h-4" /> Financial Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Gross Sale Price</span>
+                  <span className="text-sm font-bold text-slate-900">{formatBDT(auction.currentPrice)}</span>
+                </div>
+                
+                <div className="flex justify-between items-center p-2 bg-white rounded border border-primary-50">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-bold text-primary-600 flex items-center gap-1">
+                      <Shield className="w-3 h-3" /> Success Fee
+                    </span>
+                    <span className="text-[9px] text-slate-400">Platform commission</span>
+                  </div>
+                  <span className="text-sm font-semibold text-primary-700">-{formatBDT(auction.commissionEarned || 0)}</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
+                      <Truck className="w-3 h-3" /> Delivery Charge
+                    </span>
+                    <span className="text-[9px] text-slate-400">Seller Protection</span>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-700">{formatBDT(auction.deliveryCharge || 0)}</span>
+                </div>
+
+                <div className="pt-2 border-t border-primary-100 flex justify-between items-center">
+                   <span className="text-sm font-bold text-slate-900">Total Advance</span>
+                   <span className="text-lg font-black text-blue-600">
+                     {formatBDT((auction.commissionEarned || 0) + (auction.deliveryCharge || 0))}
+                   </span>
+                </div>
+                
+                <div className="p-2 bg-blue-50 rounded text-[10px] text-blue-700 flex items-start gap-2">
+                  <Info className="w-3 h-3 mt-0.5" />
+                  <p>Pay this advance via platform to unlock contact info. Pay remaining <b>{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</b> via <b>COD (Cash on Delivery)</b>.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="flex justify-center border-t border-gray-50 pt-2">
             <ReportModal auctionId={id} />

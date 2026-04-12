@@ -86,7 +86,10 @@ export async function getAuction(id: string) {
         orderBy: { createdAt: 'desc' },
         take: 20,
       },
-      winner: { select: { id: true, name: true, image: true } },
+      winner: { select: { id: true, name: true, image: true, phone: true } },
+      escrowTransaction: {
+        include: { dispute: true }
+      },
       _count: { select: { bids: true } },
     },
   });
@@ -119,19 +122,77 @@ export async function getAuctions(filters: AuctionFilters = {}) {
   const where: Record<string, unknown> = {};
   if (status) where.status = status;
   if (category) where.category = category;
-  if (filters.location) where.location = filters.location;
+  
+  // ── Regional & Social Filtering (Circles/Areas) ──
+  if (filters.location) {
+    where.location = filters.location;
+  }
+
+  // Secure Circle Feed Implementation
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (filters.circleId) {
+    // If a specific circle is requested, verify membership
+    if (!userId) return { auctions: [], total: 0, pages: 0, page, error: 'Authentication required for circle auctions.' };
+    
+    const isMember = await prisma.circleMember.findUnique({
+      where: { userId_circleId: { userId, circleId: filters.circleId } }
+    });
+
+    if (!isMember) {
+      return { auctions: [], total: 0, pages: 0, page, error: 'You are not a member of this circle.' };
+    }
+    
+    where.circleId = filters.circleId;
+  } else {
+    // Global Feed Protection (Section 6.2 of Spec-Kit)
+    // Hide ALL circle auctions from the global feed unless the user is a member
+    if (userId) {
+      // Find all circles user belongs to
+      const myCircles = await prisma.circleMember.findMany({
+        where: { userId },
+        select: { circleId: true }
+      });
+      const circleIds = myCircles.map(c => c.circleId);
+
+      where.OR = [
+        { circleId: null }, // Public auctions
+        { circleId: { in: circleIds } } // Auctions in my circles
+      ];
+    } else {
+      // Unauthenticated users see only public auctions
+      where.circleId = null;
+    }
+  }
+
   if (search) {
-    where.OR = [
-      { title: { contains: search, mode: 'insensitive' } },
-      { description: { contains: search, mode: 'insensitive' } },
-    ];
+    const searchFilter = {
+      OR: [
+        { title: { contains: search, mode: 'insensitive' as const } },
+        { description: { contains: search, mode: 'insensitive' as const } },
+      ],
+    };
+    
+    // Combine search with circle/area logic
+    if (where.OR) {
+      // Nested OR for existing circle logic
+      const originalOR = where.OR;
+      where.AND = [
+        { OR: originalOR },
+        searchFilter
+      ];
+      delete where.OR;
+    } else {
+      Object.assign(where, searchFilter);
+    }
   }
 
   const orderBy: Record<string, string> = {};
   if (sortBy === 'bids') {
     // Sort by bid count handled separately
   } else {
-    orderBy[sortBy] = sortOrder;
+    orderBy[sortBy as string] = sortOrder;
   }
 
   try {

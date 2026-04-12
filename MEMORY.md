@@ -1,23 +1,23 @@
-# 🧠 Nilamit Core Memory (Living Document)
+# 🧠 Nilamit Core Memory (KAIROS Index)
 
 ## Project Vision
 Nilamit is a specialized auction marketplace for the Bangladeshi market, prioritizing localized trust, mobile efficiency, and accessible social commerce.
 
-## Architecture
-- **Framework**: Next.js 15 (App Router)
-- **State Management**: Server Actions + Real-time Polling (transitioning to WebSockets).
-- **Persistence**: Prisma 7 + PostgreSQL (Supabase).
-- **Locking Mechanism**: Row-level locking for atomic bid increments.
+## Knowledge Directory
+The project's long-term memory is decentralized in the [memory/](file:///c:/nilamit.com/memory/) directory.
 
-## Core Rules for Agents
-1. **Bengali-First (bn)**: Use high-contrast Bengali text for user-facing technical labels.
-2. **Atomic Bidding**: All price updates must happen within a transaction using `SELECT FOR UPDATE`.
-3. **Trust Hooks**: Phone number is the anchor; Reputation Score is the engine.
-4. **Environment**: Primary development is local Windows; Production is deployed via Tailscale Funnel.
+| Node | Pointer | Description |
+| :--- | :--- | :--- |
+| **Architecture** | [architecture.md](file:///c:/nilamit.com/memory/architecture.md) | System design, data models, and stack. |
+| **Decisions** | [decisions.md](file:///c:/nilamit.com/memory/decisions.md) | Milestones and project-shaping choices. |
+| **Rules** | [rules.md](file:///c:/nilamit.com/memory/rules.md) | Non-negotiable agent operational rules. |
+| **Lessons** | [lessons.md](file:///c:/nilamit.com/memory/lessons.md) | Anti-patterns and distilled insights. |
+| **Protocol** | [dream_protocol.md](file:///c:/nilamit.com/memory/dream_protocol.md) | autoDream consolidation logic. |
 
-## Maintenance Logs
-- **v1.5**: Pushed comprehensive enhancements for Social Circles and Admin dashboards.
-- **D3 Pattern**: Always initialize SVG elements before zooming hooks to prevent `ReferenceError`.
+## Session Context
+- **Law of the Land**: [CONSTITUTION.md](file:///c:/nilamit.com/CONSTITUTION.md)
+- **Current Backlog**: [plan.md](file:///c:/nilamit.com/plan.md)
+- **Active Task**: [task.md](file:///c:/nilamit.com/task.md)
 
-## Roadmap Reference
-See [plan.md](file:///c:/nilamit.com/plan.md) for future feature tracking.
+---
+*This file serves as the KAIROS "Index" node. It should ideally remain under 200 lines to preserve context window efficiency.*

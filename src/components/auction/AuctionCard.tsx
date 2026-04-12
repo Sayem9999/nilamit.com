@@ -102,12 +102,21 @@ export default function AuctionCard({
               />
             )}
             {auction.location && (
-              <div className="hidden sm:flex items-center gap-1 text-[11px] text-gray-400 ml-auto">
+              <div className="flex items-center gap-1 text-[11px] text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full font-medium ml-auto">
                 <MapPin className="w-3 h-3" />
                 <span className="capitalize">{auction.location}</span>
               </div>
             )}
           </div>
+
+          {(auction as { circleId?: string }).circleId && (
+            <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-secondary-50 border border-secondary-100/50 rounded-xl">
+              <Users className="w-3.5 h-3.5 text-secondary-600" />
+              <span className="text-[10px] font-bold text-secondary-700 uppercase tracking-wider">
+                Circle Member Only
+              </span>
+            </div>
+          )}
 
           {/* Price & Bid Count */}
           <div className="mt-4 flex flex-col gap-0.5">
@@ -131,6 +140,24 @@ export default function AuctionCard({
               )}
             </div>
           </div>
+
+          {/* Service Fee & Net Earnings (Seller Only View) */}
+          {session?.user?.id === auction.sellerId && auction.status === "SOLD" && auction.commissionEarned && (
+            <div className="mt-4 p-4 bg-primary-50/50 rounded-2xl border border-primary-100/50 space-y-2">
+              <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <span>Final Price</span>
+                <span className="text-gray-900">{formatBDT(auction.currentPrice)}</span>
+              </div>
+              <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <span>Success Fee ({((auction.commissionEarned / auction.currentPrice) * 100).toFixed(1)}%)</span>
+                <span className="text-red-500">- {formatBDT(auction.commissionEarned)}</span>
+              </div>
+              <div className="pt-2 border-t border-primary-100 flex justify-between items-center mt-2">
+                <span className="text-xs font-black text-primary-900 uppercase">Net To You</span>
+                <span className="text-lg font-black text-primary-700">{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</span>
+              </div>
+            </div>
+          )}
 
           {/* Footer Meta */}
           <div className="mt-4 pt-4 border-t border-gray-100/60 flex items-center justify-between">

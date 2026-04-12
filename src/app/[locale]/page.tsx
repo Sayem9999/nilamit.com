@@ -38,6 +38,7 @@ export default async function HomePage({
         latestActivity={latestBids}
         featuredAuctions={featuredAuctions}
         stats={{ totalUsers, totalBids, totalAuctions, verifiedSellers }}
+        locale={locale}
       />
       <ForYouFeed />
     </>

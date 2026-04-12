@@ -3,6 +3,26 @@ import { Resend } from 'resend';
 import { AuctionStatus, OrderStatus } from '@prisma/client';
 
 /**
+ * Calculates the dynamic success fee (commission) based on final price.
+ * Tiers (Approved v1.5):
+ * - <= ৳10,000: 2.5% + ৳20
+ * - ৳10,001 - ৳150,000: 1.5% + ৳20
+ * - > ৳150,000: 1% + ৳20
+ */
+export function calculateSuccessFee(finalPrice: number): number {
+  const flatFee = 20;
+  let rate = 0.025; // Default <= 10k
+
+  if (finalPrice > 150000) {
+    rate = 0.01; // > 150k
+  } else if (finalPrice > 10000) {
+    rate = 0.015; // 10k - 150k
+  }
+
+  return (finalPrice * rate) + flatFee;
+}
+
+/**
  * Closes a single auction if it has ended.
  * Returns true if the auction was processed (sold/expired).
  */
@@ -15,7 +35,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
         take: 1,
         include: { bidder: { select: { id: true, email: true, name: true } } },
       },
-      seller: { select: { email: true, name: true } },
+      seller: { select: { email: true, name: true, isVerifiedSeller: true } },
     },
   });
 
@@ -38,6 +58,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
             take: 1,
             include: { bidder: { select: { id: true, email: true, name: true } } },
           },
+          seller: { select: { id: true, isVerifiedSeller: true } },
         }
       });
 
@@ -49,7 +70,8 @@ export async function closeAuctionIfEnded(auctionId: string) {
         const meetsReserve = !currentAuction.reservePrice || highestBid.amount >= currentAuction.reservePrice;
 
         if (meetsReserve) {
-          const commissionEarned = highestBid.amount * (currentAuction.commissionRate || 0.05);
+          // Dynamic Success Fee Calculation
+          const commissionEarned = calculateSuccessFee(highestBid.amount);
 
           await tx.auction.update({
             where: { id: currentAuction.id },
@@ -61,13 +83,18 @@ export async function closeAuctionIfEnded(auctionId: string) {
             },
           });
 
-          // Handle Escrow creation (Phase 10)
+          // Handle Escrow creation with Trust-Tiered Advance Logic
+          // Verified Sellers get instant revelation (status: HELD)
+          // New Sellers require Success Fee + Delivery Charge Advance (status: PENDING)
+          const isVerified = currentAuction.seller?.isVerifiedSeller ?? false;
+          const advanceAmount = isVerified ? highestBid.amount : (commissionEarned + (currentAuction.deliveryCharge || 0));
+
           await tx.escrowTransaction.create({
             data: {
               auctionId: currentAuction.id,
               buyerId: highestBid.bidder.id,
-              amount: highestBid.amount,
-              status: 'PENDING',
+              amount: advanceAmount,
+              status: isVerified ? 'HELD' : 'PENDING',
             }
           });
 
@@ -77,7 +104,15 @@ export async function closeAuctionIfEnded(auctionId: string) {
               from: 'congrats@nilamit.com',
               to: highestBid.bidder.email,
               subject: `Congratulations! You won: ${currentAuction.title}`,
-              html: `<p>You won ${currentAuction.title} for ৳${highestBid.amount.toLocaleString()}!</p>`,
+              html: `
+                <h3>You won ${currentAuction.title}!</h3>
+                <p>Final Price: ৳${highestBid.amount.toLocaleString()}</p>
+                ${isVerified 
+                  ? `<p>Seller is <b>Verified</b>. Contact information has been released in your dashboard.</p>` 
+                  : `<p>Please pay the <b>Advance of ৳${advanceAmount.toLocaleString()}</b> (Success Fee + Delivery) to unlock the seller's contact information.</p>`
+                }
+                <p>Visit your <a href="${process.env.NEXTAUTH_URL}/dashboard?tab=escrow">Dashboard</a> to proceed.</p>
+              `,
             });
           }
         } else {
