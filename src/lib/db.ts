@@ -8,20 +8,21 @@ function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
   console.log('[DB] Initializing PrismaClient. DATABASE_URL present:', !!connectionString);
   
-  if (!connectionString && process.env.NODE_ENV === 'production') {
-    console.warn('[DB] WARNING: DATABASE_URL is missing during build phase. Falling back to dummy client.');
-    // In production build, we still want a client instance so the build succeeds
-    return new PrismaClient({
-      log: ['error', 'warn'],
-    });
-  }
-  
-  // Standard initialization: Prisma will automatically use process.env.DATABASE_URL
+  // Standard initialization without the driver adapter
+  // This uses the more stable Prisma Library Engine
   return new PrismaClient({
-    log: ['error'], 
+    log: ['error'],
+    ...(connectionString ? {
+      datasources: {
+        db: {
+          url: connectionString
+        }
+      }
+    } : {})
   });
 }
 
+// Ensure the export doesn't crash during build-time collection
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
