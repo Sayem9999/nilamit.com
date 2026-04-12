@@ -2,6 +2,8 @@ import createIntlMiddleware from 'next-intl/middleware';
 import NextAuth from 'next-auth';
 import { authConfig } from '@/lib/auth.config';
 
+import { NextRequest } from 'next/server';
+
 const intlMiddleware = createIntlMiddleware({
   locales: ['en', 'bn'],
   defaultLocale: 'en'
@@ -18,21 +20,24 @@ function isProtectedPage(pathname: string): boolean {
   return protectedPatterns.some(p => path.startsWith(p));
 }
 
-export const proxy = auth((req) => {
-  const isProtected = isProtectedPage(req.nextUrl.pathname);
-  
-  if (isProtected && !req.auth) {
-    const localeMatch = req.nextUrl.pathname.match(/^\/(en|bn)/);
-    const locale = localeMatch ? localeMatch[1] : 'en';
+export async function proxy(req: NextRequest) {
+  // @ts-expect-error - NextAuth v5 wrapping for Proxy convention
+  return auth(async (innerReq) => {
+    const isProtected = isProtectedPage(innerReq.nextUrl.pathname);
     
-    const loginUrl = new URL(`/${locale}/login`, req.nextUrl);
-    loginUrl.searchParams.set('callbackUrl', req.url);
+    if (isProtected && !innerReq.auth) {
+      const localeMatch = innerReq.nextUrl.pathname.match(/^\/(en|bn)/);
+      const locale = localeMatch ? localeMatch[1] : 'en';
+      
+      const loginUrl = new URL(`/${locale}/login`, innerReq.nextUrl);
+      loginUrl.searchParams.set('callbackUrl', innerReq.url);
+      
+      return Response.redirect(loginUrl);
+    }
     
-    return Response.redirect(loginUrl);
-  }
-  
-  return intlMiddleware(req);
-});
+    return intlMiddleware(innerReq);
+  })(req, {});
+}
 
 export const config = {
   matcher: ['/((?!api|_next|.*\\..*).*)']
