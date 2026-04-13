@@ -55,7 +55,11 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
   try {
     const dispute = await prisma.dispute.findUnique({
       where: { id: disputeId },
-      include: { transaction: true },
+      include: { 
+        transaction: {
+          include: { auction: true }
+        } 
+      },
     });
 
     if (!dispute) return { success: false, error: 'Dispute not found' };
