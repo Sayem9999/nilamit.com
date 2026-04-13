@@ -17,12 +17,13 @@ export default async function SearchPage({
   const catFilter = category || "All";
   const sortBy = sort || "endTime";
   const locFilter = location || "";
+  const sortByValue = sortBy === "price_asc" || sortBy === "price_desc" ? "currentPrice" : sortBy;
 
   const filters = {
     search: query,
     category: catFilter !== "All" ? catFilter : undefined,
     location: locFilter || undefined,
-    sortBy: sortBy as string,
+    sortBy: sortByValue as "endTime" | "currentPrice" | "createdAt" | "bids",
     sortOrder: (sortBy === "price_asc" ? "asc" : "desc") as "asc" | "desc",
     limit: 24,
   };
