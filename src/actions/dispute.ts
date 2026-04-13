@@ -70,7 +70,6 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
         where: { id: transactionId },
         data: { 
           status: finalEscrowStatus as EscrowStatus,
-          resolvedAt: new Date(),
         },
       });
       
