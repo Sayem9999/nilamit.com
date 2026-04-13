@@ -11,30 +11,24 @@ export default async function SearchPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const { q, category, sort, location, circleId } = await searchParams;
+  const { q, category, sort, location } = await searchParams;
 
   const query = q || "";
   const catFilter = category || "All";
   const sortBy = sort || "endTime";
   const locFilter = location || "";
-  const circFilter = circleId || "";
 
-  // Refactor: Use the centralized getAuctions server action which handles Circle privacy
-  const { getAuctions } = await import("@/actions/auction");
-  const { getUserCircles } = await import("@/actions/social");
-  
   const filters = {
     search: query,
     category: catFilter !== "All" ? catFilter : undefined,
     location: locFilter || undefined,
-    circleId: circFilter || undefined,
     sortBy: sortBy as string,
     sortOrder: (sortBy === "price_asc" ? "asc" : "desc") as "asc" | "desc",
     limit: 24,
   };
 
+  const { getAuctions } = await import("@/actions/auction");
   const { auctions, error } = await getAuctions(filters);
-  const userCircles = await getUserCircles();
 
   const categories = [
     "All",
@@ -84,7 +78,7 @@ export default async function SearchPage({
                   {categories.map((cat) => (
                     <a
                       key={cat}
-                      href={`/${locale}/search?q=${query}&category=${cat}&sort=${sortBy}&location=${locFilter}&circleId=${circFilter}`}
+                      href={`/${locale}/search?q=${query}&category=${cat}&sort=${sortBy}&location=${locFilter}`}
                       className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                         catFilter === cat
                           ? "bg-primary-50 text-primary-700 font-medium"
@@ -104,7 +98,7 @@ export default async function SearchPage({
                 </h3>
                 <div className="space-y-1 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
                   <a
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=&circleId=${circFilter}`}
+                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       !locFilter
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -116,7 +110,7 @@ export default async function SearchPage({
                   {LOCATIONS.map((loc) => (
                     <a
                       key={loc.id}
-                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${loc.id}&circleId=${circFilter}`}
+                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${loc.id}`}
                       className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                         locFilter === loc.id
                           ? "bg-primary-50 text-primary-700 font-medium"
@@ -129,39 +123,6 @@ export default async function SearchPage({
                 </div>
               </div>
 
-              {/* Circles Filter */}
-              {userCircles.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
-                    Social Circles
-                  </h3>
-                  <div className="space-y-1">
-                    <a
-                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${locFilter}&circleId=`}
-                      className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
-                        !circFilter
-                          ? "bg-primary-50 text-primary-700 font-medium"
-                          : "text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      Global Feed
-                    </a>
-                    {userCircles.map((circle) => (
-                      <a
-                        key={circle.id}
-                        href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${locFilter}&circleId=${circle.id}`}
-                        className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
-                          circFilter === circle.id
-                            ? "bg-secondary-50 text-secondary-700 font-medium"
-                            : "text-gray-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        {circle.name}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Sort Filter */}
               <div>
@@ -170,7 +131,7 @@ export default async function SearchPage({
                 </h3>
                 <div className="space-y-1">
                   <a
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=endTime&location=${locFilter}&circleId=${circFilter}`}
+                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=endTime&location=${locFilter}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       sortBy === "endTime"
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -180,7 +141,7 @@ export default async function SearchPage({
                     Ending Soon
                   </a>
                   <a
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_asc&location=${locFilter}&circleId=${circFilter}`}
+                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_asc&location=${locFilter}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       sortBy === "price_asc"
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -190,7 +151,7 @@ export default async function SearchPage({
                     Lowest Price
                   </a>
                   <a
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_desc&location=${locFilter}&circleId=${circFilter}`}
+                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_desc&location=${locFilter}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       sortBy === "price_desc"
                         ? "bg-primary-50 text-primary-700 font-medium"
