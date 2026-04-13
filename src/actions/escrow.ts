@@ -20,7 +20,7 @@ export async function payEscrowAdvance(transactionId: string) {
       where: { id: transactionId },
       include: { 
         auction: { select: { title: true, sellerId: true } },
-        buyer: { select: { name: true } }
+        buyer: { select: { name: true, bkashNumber: true, nagadNumber: true } }
       }
     });
 
@@ -32,6 +32,15 @@ export async function payEscrowAdvance(transactionId: string) {
       return { success: false, error: 'Advance has already been paid' };
     }
 
+    // NEW: MFS Linkage Enforcement
+    if (!tx.buyer.bkashNumber && !tx.buyer.nagadNumber) {
+      return { 
+        success: false, 
+        error: 'MFS_LINKAGE_REQUIRED', 
+        message: 'Please link your bKash or Nagad account in settings to pay the advance.' 
+      };
+    }
+
     await prisma.escrowTransaction.update({
       where: { id: transactionId },
       data: {
@@ -41,7 +50,7 @@ export async function payEscrowAdvance(transactionId: string) {
     });
 
     // Initialize Direct Chat Conversation
-    const conversation = await prisma.conversation.upsert({
+    await prisma.conversation.upsert({
       where: { auctionId: tx.auctionId },
       create: {
         auctionId: tx.auctionId,

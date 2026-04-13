@@ -53,17 +53,17 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
     return { success: false, error: ERROR_CODES.NOT_FOUND };
   }
 
+  // Member Gate (Level 1): Standard Bidding requires Phone Verification
   if (!user.isPhoneVerified) {
     return { success: false, error: ERROR_CODES.PHONE_NOT_VERIFIED };
   }
 
-  // Phase 2: High-stakes Bid Deposit Check
-  if (amount >= 10000) {
-    // If not a verified seller/user AND no deposit held, block the bid
+  // Elite Auction Check: Bid Deposit required for items >= ৳100,000
+  if (amount >= 100000) {
     if (!user.isVerifiedSeller && (!user.bidDeposits || user.bidDeposits.length === 0)) {
       return { 
         success: false, 
-        error: ERROR_CODES.DEPOSIT_REQUIRED,
+        error: "BID_DEPOSIT_REQUIRED_FOR_ELITE_AUCTION", // ৳100k+ requires ৳250 advance hold
       };
     }
   }
@@ -81,8 +81,9 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         status: string;
         sellerId: string;
         startTime: Date;
+        wasExtended: boolean;
       }>>`
-        SELECT id, title, "currentPrice", "minBidIncrement", "endTime", status, "sellerId", "startTime"
+        SELECT id, title, "currentPrice", "minBidIncrement", "endTime", status, "sellerId", "startTime", "wasExtended"
         FROM "Auction"
         WHERE id = ${auctionId}
         FOR UPDATE
@@ -126,14 +127,16 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         },
       });
 
-      // Anti-sniping: Soft Close logic
+      // Anti-sniping: Soft Close logic (ONE-TIME ONLY)
       const timeUntilEnd = auction.endTime.getTime() - now.getTime();
       let newEndTime = auction.endTime;
       let antiSnipeTriggered = false;
+      let setWasExtended = auction.wasExtended;
 
-      if (timeUntilEnd <= SOFT_CLOSE_WINDOW_MS) {
+      if (!auction.wasExtended && timeUntilEnd <= SOFT_CLOSE_WINDOW_MS) {
         newEndTime = new Date(auction.endTime.getTime() + SOFT_CLOSE_EXTENSION_MS);
         antiSnipeTriggered = true;
+        setWasExtended = true;
       }
 
       // Update auction: new price + potentially extended end time
@@ -142,6 +145,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         data: {
           currentPrice: amount,
           endTime: newEndTime,
+          wasExtended: setWasExtended,
         },
       });
 

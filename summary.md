@@ -10,14 +10,13 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 ## 🏗 Key Features
 
 ### 1. Real-time Auction Engine
-- **Soft-Close (Anti-Snipe)**: Automatically extends auction time if a bid is placed in the final minutes, ensuring fair play.
-- **Proactive Alerts**: Real-time Pusher notifications for outbid status and custom target-price hits.
-- **Live Bidding**: Instant, presence-monitored price updates for active participants.
+- **One-Time Soft-Close**: Automatically extends auction time *once* by 2 minutes if a bid is placed in the final window, ensuring fair play without indefinite loops.
+- **Multimodal Onboarding**: Unauthenticated browsing with signup options via **Email, Google, or Phone (OTP)**.
 
 ### 2. Trust & Coordination Hub
-- **Escrow Shield**: Trust-tiered escrow. Advance payment required for unverified sellers to ensure logistics security.
-- **Coordination Chat**: Secure, PII-shielded communication channel unlocked only after a successful escrow hold.
-- **Reputation Layer**: Multi-dimensional user levels, verified badges, and winning streaks built through transaction transparency.
+- **MFS-Linked Escrow**: Mandatory **bKash/Nagad** linkage for paying advance fees.
+- **Win-First Privacy**: Seller contact information is only released to the **Winning Bidder** after the auction concludes.
+- **Coordination Engine**: Purpose-built for the **Cash on Delivery (COD)** culture. Nilamit handles the trust and success calculations, while users coordinate their own logistics.
 
 ### 3. Finance & Monetization
 - **Success Fee Engine**: Automated, tiered platform fees (1% - 2.5%) calculated on successful sale.
@@ -29,7 +28,7 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 - **Framework**: Next.js 15 (App Router).
 - **Database**: PostgreSQL via Supabase with **Prisma 6**.
 - **Real-time**: Pusher (WebSockets) for instant bid updates and alerts.
-- **Localization**: Bengali-First experience powered by `next-intl`.
+- **Localization**: English-First experience with Bengali support via `next-intl`.
 - **UI/UX**: Tailwind CSS 4, shadcn/ui, and Framer Motion for a premium, mobile-responsive aesthetic.
 
 ---

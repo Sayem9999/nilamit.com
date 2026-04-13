@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { formatBDT } from "@/lib/format";
 
+import { useSession } from "next-auth/react";
+
 interface EscrowTransaction {
   id: string;
   status: string;
@@ -28,11 +30,20 @@ export function EscrowActionCard({
 }: {
   transaction: EscrowTransaction;
 }) {
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const t = useTranslations("Escrow");
 
+  const user = session?.user as { id: string; bkashNumber?: string; nagadNumber?: string };
+  const hasMFS = !!(user?.bkashNumber || user?.nagadNumber);
+
   const handlePayAdvance = async () => {
+    if (!hasMFS) {
+      toast.error("অনুগ্রহ করে প্রোফাইল থেকে বিকাশ বা নগদ অ্যাকাউন্ট লিঙ্ক করুন।");
+      router.push("/profile");
+      return;
+    }
     setLoading(true);
     const result = await payEscrowAdvance(transaction.id);
     if (result.success) {
@@ -139,15 +150,21 @@ export function EscrowActionCard({
           <div className="md:w-64 flex-shrink-0">
             {isPending && (
               <div className="space-y-3">
+                {!hasMFS && (
+                   <div className="p-2 bg-amber-50 border border-amber-100 rounded text-[10px] text-amber-700 bn">
+                     <AlertTriangle className="w-3 h-3 inline mr-1" />
+                     পেমেন্ট করতে প্রথমে বিকাশ বা নগদ লিঙ্ক করুন।
+                   </div>
+                )}
                 <p className="text-xs text-slate-500 hidden md:block bn leading-relaxed">
                   {t("gatedInfoNote")}
                 </p>
                 <Button
                   onClick={handlePayAdvance}
                   disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white bn py-5"
+                  className={`w-full bn py-5 ${!hasMFS ? "bg-amber-600 hover:bg-amber-700" : "bg-blue-600 hover:bg-blue-700"} text-white`}
                 >
-                  {loading ? t("processing") : t("payAdvance")}
+                  {loading ? t("processing") : (!hasMFS ? "Link MFS to Pay" : t("payAdvance"))}
                 </Button>
               </div>
             )}

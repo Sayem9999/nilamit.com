@@ -23,6 +23,8 @@ model User {
   isVerifiedSeller Boolean @default(false)
   reputationScore Int      @default(0)
   googleId        String?  @unique
+  bkashNumber     String?  @unique // MFS Linkage (Phase 11)
+  nagadNumber     String?  @unique // MFS Linkage (Phase 11)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -114,6 +116,7 @@ model Auction {
   endTime         DateTime
   status          AuctionStatus @default(DRAFT)
   isFeatured      Boolean       @default(false)
+  wasExtended     Boolean       @default(false) // One-time soft-close limit
   commissionRate  Float         @default(0.05) // 5% default commission
   commissionEarned Float?       // Calculated on SOLD
   deliveryCharge  Float         @default(60)   // Seller's cost protection ( Dhaka Default )

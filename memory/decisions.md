@@ -22,6 +22,7 @@
     - Auction reporting system implemented.
 
 ## Policy Choices
-- **PSSA 2024 Compliance**: Platform must be Bengali-first and accessible.
+- **PSSA 2024 Compliance**: Platform provides English-First experience with professional Bengali support to ensure transparency.
+- **English-First Pivot (Apr 13)**: Core design and technical terminology shifted to English to align with global standards.
 - **Trust-Based Escrow**: Success fees and delivery charges are held from buyers if the seller isn't Verified.
 - **Anti-Sniping (Soft Close)**: 2-minute auto-extension on late bids.

@@ -30,11 +30,11 @@
 - Anti-sniping (Soft Close): 2-minute extension on last-moment bids — this is **non-negotiable**
 - **Trust Shield**: Coordination chat is strictly gated by Escrow (Advance payment for logistics).
 
-### 4. Bengali-First Experience
+### 4. English-First Experience
 
-- All user-facing strings MUST provide high-quality Bangla (বাংলা) localization.
-- Technical jargon is forbidden; use common market-language terminology.
-- Currency is always BDT (৳) — never USD.
+- The primary language for all system interactions, technical terms, and legal documentation is **English**.
+- **Bengali (বাংলা)** remains a secondary, localized support option for accessibility, but the core design follows global standard English UX patterns.
+- Currency remains BDT (৳) for local market relevance.
 - Date/time displays respect `Asia/Dhaka` (UTC+6).
 
 ### 5. No Dark Patterns

@@ -13,7 +13,7 @@
 | **ORM**       | Prisma 6                                   |
 | **Real-time** | Pusher (WebSocket Interaction)             |
 | **Auth**      | Auth.js v5 (Google + Credentials)          |
-| **i18n**      | next-intl (Bengali & English)              |
+| **i18n**      | next-intl (English & Bengali Support)      |
 | **Styling**   | Tailwind CSS 4 + shadcn/ui                 |
 | **SMS**       | Pluggable (GreenWeb / BulksmsBD / Console) |
 

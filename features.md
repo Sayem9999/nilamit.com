@@ -2,29 +2,26 @@
 
 Nilamit is a high-performance, real-time C2C auction marketplace designed for trust, speed, and visual excellence.
 
-## 1. Core Auction Engine
-- **Real-time Bidding**: Powered by Pusher for sub-second updates across all participants.
-- **Serializable Transactions**: High-concurrency Postgres locking prevents race conditions and ensures "Double-Bid" protection.
-- **Anti-Snipe (Soft Close)**: Auctions ending within 2 minutes are automatically extended by 2 minutes when a new bid is placed, ensuring a fair "Hammer Price."
-- **Asset Management**: Integrated with UploadThing for high-resolution gallery uploads.
+## 1. Real-time Auction Engine
+- **One-Time Soft-Close**: Automatically extends auction time *once* by 2 minutes if a bid is placed in the final window, ensuring fair price discovery.
+- **Proactive Alerts**: Pusher notifications for outbid status and custom target-price hits.
+- **Multimodal Onboarding**: Unauthenticated browsing with signup options via **Email, Google, or Phone (OTP)**.
 
 ## 2. Social Proof & Persuasion (Trust 2.0)
-- **Verified Seller Badge**: Admin-vetted sellers receive a blue shield badge on cards and profiles.
-- **User Progression (Levels)**: Dynamic experience levels based on platform activity.
-- **Winning Streaks**: Visible fire icons for users who have won multiple auctions recently.
-- **Live Activity Ticker**: A global "Pulse" showcasings real-time bid activity across the marketplace.
+- **Verified Sellers**: Manual admin vetting process to grant trusted status and elite badges.
+- **Win-First Privacy**: Seller contact details are strictly hidden until an auction is won.
+- **MFS-Linked Coordination**: Mandatory **bKash/Nagad** account linkage for all escrow advance payments.
+- **Elite Bid Deposits**: Mandatory **৳250 deposit** for auctions **>= ৳100,000**.
 
-## 3. Trust & Safety Layer
-- **Reputation Scores**: Algorithmically calculated scores based on reviews and transaction history.
-- **Phone Verification Loop**: Compulsory verification for high-intent actions (creating auctions/large bids).
-- **Bid Deposits**: (Optional) Held deposits for high-stakes items to prevent bad-faith bidding.
-- **User Reporting**: Community-driven moderation for suspicious listings.
+## 3. Trust & Coordination Layer
+- **Coordination Hub (COD Optimized)**: Purpose-built for the Bangladesh **Cash on Delivery (COD)** market. Nilamit handles the escrow 'hold' and reputation, while users handle their own logistics.
+- **Success Fee Engine**: Automated, tiered platform fees (1% - 2.5%) for successful sales.
+- **Multimodal Onboarding**: Unauthenticated browsing with signup options via **Email, Google, or Phone (OTP)**.
+- **Category Feeds**: "For You" and "Ending Soon" feeds tailored to user interests.
 
 ## 4. Discovery & Personalization
 - **Smart Search**: Hybrid keyword + semantic ranking for relevant results.
 - **Personalized Watchlists**: Real-time tracking of desired items.
-- **Category Feeds**: "For You" and "Ending Soon" feeds tailored to user interests.
-- **Smart Hub**: Centralized "Notification Hub" for outbid alerts and auction updates.
 
 ## 5. Logistics & Coordination Hub
 - **Transaction-Gated Chat**: Secure, real-time coordination channels unlocked only after an advance payment is held.

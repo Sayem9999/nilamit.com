@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { updateProfile } from "@/actions/user";
+import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
 import {
   User,
@@ -14,6 +14,7 @@ import {
   Save,
   Star,
   MessageSquare,
+  Wallet,
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
@@ -29,6 +30,10 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [msg, setMsg] = useState("");
+  
+  // MFS State
+  const [bkash, setBkash] = useState("");
+  const [nagad, setNagad] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -48,7 +53,15 @@ export default function ProfilePage() {
     return null;
   }
 
-  const user = session.user as unknown as Record<string, unknown>;
+  const user = session.user as { 
+    id: string; 
+    isPhoneVerified: boolean; 
+    reputationScore: number; 
+    phone?: string; 
+    email?: string;
+    bkashNumber?: string;
+    nagadNumber?: string;
+  };
   const isPhoneVerified = user?.isPhoneVerified as boolean;
 
   const handleSaveName = () => {
@@ -56,6 +69,19 @@ export default function ProfilePage() {
       await updateProfile({ name });
       await update();
       setEditing(false);
+    });
+  };
+
+  const handleLinkMFS = (type: 'bkash' | 'nagad', number: string) => {
+    setMsg("");
+    startTransition(async () => {
+      const res = await linkMFSAccount(type, number);
+      if (res.success) {
+        setMsg(`${type.toUpperCase()} linked successfully!`);
+        await update();
+      } else {
+        setMsg(res.error || `Failed to link ${type}.`);
+      }
     });
   };
 
@@ -85,7 +111,7 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="font-heading font-bold text-2xl text-gray-900 mb-6">
-        Profile
+        Profile Settings
       </h1>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
@@ -184,98 +210,155 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* MFS Linkage Section */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
+        <h2 className="font-heading font-semibold text-lg text-gray-900 mb-2 flex items-center gap-2">
+          <Wallet className="w-5 h-5 text-primary-600" /> Payment Methods (Escrow)
+        </h2>
+        <p className="text-xs text-gray-500 mb-6">
+          Link your bKash or Nagad account to pay advance fees and coordinate deliveries.
+        </p>
+
+        <div className="space-y-6">
+          {/* bKash */}
+          <div>
+             <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">bKash Account</span>
+                {user?.bkashNumber ? (
+                  <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold">LINKED</span>
+                ) : (
+                  <span className="text-[10px] bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full font-bold">NOT LINKED</span>
+                )}
+             </div>
+             {user?.bkashNumber ? (
+               <div className="p-3 bg-gray-50 rounded-xl text-sm font-mono border border-gray-100 flex items-center justify-between">
+                 <span>{user.bkashNumber}</span>
+                 <CheckCircle className="w-4 h-4 text-green-500" />
+               </div>
+             ) : (
+               <div className="flex gap-2">
+                 <input
+                   placeholder="01XXXXXXXXX"
+                   value={bkash}
+                   onChange={(e) => setBkash(e.target.value)}
+                   className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500"
+                 />
+                 <button
+                   onClick={() => handleLinkMFS('bkash', bkash)}
+                   disabled={isPending || bkash.length < 11}
+                   className="bg-[#E2125D] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 disabled:bg-gray-200 transition"
+                 >
+                   Link
+                 </button>
+               </div>
+             )}
+          </div>
+
+          {/* Nagad */}
+          <div>
+             <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Nagad Account</span>
+                {user?.nagadNumber ? (
+                  <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold">LINKED</span>
+                ) : (
+                  <span className="text-[10px] bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full font-bold">NOT LINKED</span>
+                )}
+             </div>
+             {user?.nagadNumber ? (
+               <div className="p-3 bg-gray-50 rounded-xl text-sm font-mono border border-gray-100 flex items-center justify-between">
+                 <span>{user.nagadNumber}</span>
+                 <CheckCircle className="w-4 h-4 text-green-500" />
+               </div>
+             ) : (
+               <div className="flex gap-2">
+                 <input
+                   placeholder="01XXXXXXXXX"
+                   value={nagad}
+                   onChange={(e) => setNagad(e.target.value)}
+                   className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500"
+                 />
+                 <button
+                   onClick={() => handleLinkMFS('nagad', nagad)}
+                   disabled={isPending || nagad.length < 11}
+                   className="bg-[#F69320] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 disabled:bg-gray-200 transition"
+                 >
+                   Link
+                 </button>
+               </div>
+             )}
+          </div>
+        </div>
+
+        {msg && (
+          <p
+            className={`mt-4 text-sm px-3 py-2 rounded-lg ${msg.includes("linked") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}
+          >
+            {msg}
+          </p>
+        )}
+      </div>
+
       {/* Reviews Section */}
-      <div className="mb-8">
+      <div className="mb-8 border-t border-gray-100 pt-8">
         <h2 className="font-heading font-bold text-xl text-gray-900 mb-4 flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-primary-600" /> Received
-          Reviews
+          <MessageSquare className="w-5 h-5 text-primary-600" /> Community Feedback
         </h2>
         <ReviewList userId={session.user?.id || ""} />
       </div>
 
-      {/* Phone Verification */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
-          <Phone className="w-5 h-5 text-primary-600" /> Phone Verification
+      {/* Phone Verification (Mandatory for Members) */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8">
+        <h2 className="font-heading font-semibold text-lg text-gray-900 mb-2 flex items-center gap-2">
+          <Phone className="w-5 h-5 text-primary-600" /> Member Verification (OTP)
         </h2>
+        <p className="text-xs text-gray-500 mb-6">Identity verification is required to unlock bidding and listing capabilities.</p>
 
         {isPhoneVerified ? (
-          <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-3 rounded-xl text-sm">
+          <div className="flex items-center gap-2 text-green-700 text-xs">
             <CheckCircle className="w-4 h-4" />
             <span>
-              Phone verified: <strong>{user?.phone as string}</strong>
+              Verified: <strong>{user?.phone as string}</strong>
             </span>
           </div>
         ) : phoneStep === "idle" ? (
-          <div>
-            <div className="bg-amber-50 border border-amber-100 text-amber-700 px-4 py-3 rounded-xl text-sm mb-4 flex items-start gap-2">
-              <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>
-                Verify your Bangladesh phone number (+880) to bid or sell on
-                nilamit.com
-              </span>
-            </div>
-            <button
-              onClick={() => setPhoneStep("input")}
-              className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm"
-            >
-              Verify Phone Number
-            </button>
-          </div>
+          <button
+            onClick={() => setPhoneStep("input")}
+            className="w-full bg-primary-600 text-white px-4 py-3 rounded-xl text-sm font-bold hover:bg-primary-700 transition"
+          >
+            Start Phone Verification
+          </button>
         ) : phoneStep === "input" ? (
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
-              Bangladesh Phone Number
-            </label>
-            <input
+          <div className="flex flex-col gap-3">
+             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+8801XXXXXXXXX"
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm mb-3 focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500"
             />
             <button
-              onClick={handleSendOTP}
-              disabled={isPending || phone.length < 14}
-              className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold px-5 py-2.5 rounded-xl text-sm"
+               onClick={handleSendOTP}
+               disabled={isPending || phone.length < 11}
+               className="bg-primary-600 text-white px-4 py-3 rounded-xl text-sm font-bold disabled:bg-gray-200 transition"
             >
-              {isPending ? "Sending..." : "Send OTP"}
+              Send OTP Code
             </button>
-            {process.env.NODE_ENV === "development" && (
-              <p className="text-[10px] text-gray-400 mt-2">
-                Dev Mode: Check server console for OTP code.
-              </p>
-            )}
           </div>
         ) : (
-          <div>
-            <p className="text-sm text-gray-500 mb-3">
-              Enter the 6-digit code sent to <strong>{phone}</strong>
-            </p>
-            <input
+          <div className="flex flex-col gap-3">
+             <input
               value={otp}
-              onChange={(e) =>
-                setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-              placeholder="000000"
-              maxLength={6}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono mb-3 focus:ring-2 focus:ring-primary-500 outline-none"
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="Enter 6-digit OTP"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500"
             />
             <button
-              onClick={handleVerifyOTP}
-              disabled={isPending || otp.length !== 6}
-              className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold px-5 py-2.5 rounded-xl text-sm w-full"
+               onClick={handleVerifyOTP}
+               disabled={isPending || otp.length < 6}
+               className="bg-green-600 text-white px-4 py-3 rounded-xl text-sm font-bold disabled:bg-gray-200 transition"
             >
-              {isPending ? "Verifying..." : "Verify OTP"}
+              Verify & Unlock Account
             </button>
           </div>
-        )}
-
-        {msg && (
-          <p
-            className={`mt-3 text-sm px-3 py-2 rounded-lg ${msg.includes("verified") || msg.includes("sent") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}
-          >
-            {msg}
-          </p>
         )}
       </div>
     </div>

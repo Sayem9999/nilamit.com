@@ -11,28 +11,27 @@ To handle 100+ users bidding at the exact same millisecond:
 
 ### Anti-Sniping (Soft Close)
 - **Window**: 2 minutes.
-- **Logic**: If a bid is placed within the last 2 minutes of an auction, the `endTime` is automatically extended by another 2 minutes. This prevents "sniping" bots from stealing items at the last second and encourages healthy price discovery.
+- **Logic**: If a bid is placed within the last 2 minutes of an auction, the `endTime` is automatically extended by another 2 minutes. 
+- **Limit**: To prevent indefinite bidding loops, this extension happens **exactly once per auction**.
 
 ## 2. Trust & Reputation System
-### Phone-First Identity
-- **Anchor**: Mobile numbers (+880) are the primary trust anchor.
-- **Verification**: OTP-based verification is required before any bidding or listing activity.
+### Tiered Gated Identity
+Nilamit balances speed and safety through a 3-tier gating hierarchy:
+1. **Level 0 (Visitor)**: Authentication is **not required** for exploring the platform or viewing listings.
+2. **Level 1 (Member)**: Requires authentication (Email, Google, or Phone) **PLUS mandatory Phone Verification (OTP)**. Allows **Bidding and Listing** on standard auctions.
+3. **Level 2 (Trusted)**: Requires **MFS Linkage (bKash/Nagad)**. Mandatory for high-stakes coordination: Paying Escrow Advances or bidding on "Elite" items (৳100,000+).
 
-### Reputation Scores
-- **Calculation**: Derived from successful payments, positive reviews, and auction participation frequency.
-- **Impact**: High reputation users may bypass bid deposit requirements.
+### Win-First Privacy
+- **Contact Release**: A seller's phone number and contact details are **NEVER** released to a potential buyer during the active auction phase, regardless of the seller's verified status.
+- **Unlock**: Contact information is only visible to the **Winning Bidder** after the auction has successfully closed as SOLD.
 
-## 3. Financial & Commission Logic
-### Success Fee Tiers (v1.5)
-To maintain a "Free to List" model, Nilamit automatically calculates a platform fee upon successful closure:
-- **Silver Tier** (<= ৳10,000): 2.5% + ৳20 flat fee.
-- **Gold Tier** (৳10,001 - ৳150,000): 1.5% + ৳20 flat fee.
-- **Platinum Tier** (> ৳150,000): 1% + ৳20 flat fee.
-
-### Escrow Shield Workflow
-Funds are managed based on the seller's trust level:
-1. **Verified Sellers**: Advance payment is NOT required from the buyer for logistics coordination. The full payment is expected upon completion.
-2. **Standard Sellers**: Coordination chat is gated. The buyer must pay an **Advance** (Commission + Delivery Fee) which is held by the platform. Once held, coordination is unlocked.
+## 3. Financial & Coordination Logic
+### Coordination Engine (COD Optimized)
+Nilamit provides the **Trust Layer** for Bangladesh's Cash on Delivery (COD) economy:
+1. **MFS Linkage**: To participate in escrow (paying the Advance), users must link a verified **bKash** or **Nagad** account.
+2. **The Hold**: The platform holds an **Advance** (Success Fee + Delivery Fee) for unverified sellers via linked MFS.
+2. **The Coordination**: Once the advance is held, a private channel is opened for the buyer and seller to coordinate their own delivery (RedX, Pathao, or manual handoff).
+3. **The Finalization**: "Release Escrow" indicates that the COD transaction was successful, triggering reputation gains and finalizing the platform fee.
 
 ## 4. Real-time Synchronization & Alerts
 - **Bidding**: Pusher presence channels broadcast live bids to all viewers.

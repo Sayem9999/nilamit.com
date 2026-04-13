@@ -58,6 +58,7 @@ export function BidPanel({
     antiSnipeTriggered?: boolean;
   } | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showMFSModal, setShowMFSModal] = useState(false);
 
   const { newBids, currentEndTime, viewers } = useAuctionBids(auctionId);
 
@@ -110,6 +111,11 @@ export function BidPanel({
       }
       if (res.error === "PHONE_NOT_VERIFIED") {
         setShowPhoneModal(true);
+      }
+      
+      // Elite Auction Check: Trigger MFS Modal if linkage is missing for 100k+ bids
+      if (res.error === "MFS_LINKAGE_REQUIRED" || res.error === "BID_DEPOSIT_REQUIRED_FOR_ELITE_AUCTION") {
+        setShowMFSModal(true);
       }
     });
   };
@@ -339,6 +345,10 @@ export function BidPanel({
       {showPhoneModal && (
         <PhoneVerificationPrompt onClose={() => setShowPhoneModal(false)} />
       )}
+
+      {showMFSModal && (
+        <MFSLinkagePrompt onClose={() => setShowMFSModal(false)} />
+      )}
     </div>
   );
 }
@@ -365,6 +375,35 @@ function PhoneVerificationPrompt({ onClose }: { onClose: () => void }) {
             className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700"
           >
             {t("verifyNowBtn")}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MFSLinkagePrompt({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("BidPanel");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl">
+        <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">
+          {t("mfsLinkRequired")}
+        </h3>
+        <p className="text-sm text-gray-500 mb-4">{t("mfsLinkDesc")}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
+          >
+            {t("laterBtn")}
+          </button>
+          <Link
+            href="/profile"
+            className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700"
+          >
+            {t("linkMFSNowBtn")}
           </Link>
         </div>
       </div>
