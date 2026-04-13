@@ -22,11 +22,17 @@ async function getOrInitPrisma(): Promise<PrismaClient | undefined> {
   console.log('[DB] Dynamically initializing PrismaClient. URL exists:', !!connectionString);
   
   try {
-    // We only import the runtime client at the very moment it's needed in a Server environment.
-    const { PrismaClient: RuntimeClient } = await import('@prisma/client');
-    globalForPrisma.prisma = new RuntimeClient({
-      log: ['error'],
-    });
+    // We only import the runtime client and adapters at the very moment they're needed.
+    const [{ PrismaClient: RuntimeClient }, { Pool }, { PrismaPg }] = await Promise.all([
+      import('@prisma/client'),
+      import('pg'),
+      import('@prisma/adapter-pg')
+    ]);
+
+    const pool = new Pool({ connectionString });
+    const adapter = new PrismaPg(pool);
+
+    globalForPrisma.prisma = new RuntimeClient({ adapter });
     return globalForPrisma.prisma;
   } catch (error) {
     console.error('[DB-FATAL] Dynamic PrismaClient initialization failed:', error);
@@ -86,4 +92,5 @@ export const prisma = new Proxy({} as PrismaClient, {
   }
 });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// In development, the proxy is already exported and handles its own lifecycle.
+// Lazy initialization in getOrInitPrisma manages the singleton.
