@@ -7,7 +7,7 @@ import { CountdownTimer } from "@/components/auction/CountdownTimer";
 import BidPanelWrapper from "@/components/auction/BidPanelWrapper";
 import { StickyBidBar } from "@/components/auction/StickyBidBar";
 import { ImageGallery } from "@/components/auction/ImageGallery";
-import { PriceAlertButton } from "@/components/auction/PriceAlertButton";
+import PriceAlertButton from "@/components/auction/PriceAlertButton";
 import Image from "next/image";
 import {
   Clock,
