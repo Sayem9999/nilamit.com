@@ -25,7 +25,9 @@ function createPrismaClient() {
   try {
     const pool = new Pool({ 
       connectionString,
-      ssl: { rejectUnauthorized: false }, // Critical for Supabase/Vercel
+      ssl: process.env.NODE_ENV === 'production' 
+        ? { rejectUnauthorized: false } 
+        : false, // development usually doesn't need SSL or uses local certs
       max: 10,
       connectionTimeoutMillis: 5000,
     });
