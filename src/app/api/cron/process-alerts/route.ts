@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { pusherServer } from '@/lib/pusher-server';
 
 export const dynamic = 'force-dynamic';
 
