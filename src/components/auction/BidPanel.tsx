@@ -20,6 +20,7 @@ import { useSound } from "@/hooks/useSound";
 import { Volume2, VolumeX } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { VerificationGuard } from "../auth/VerificationGuard";
 
 interface BidPanelProps {
   auctionId: string;
@@ -226,20 +227,22 @@ export function BidPanel({
           {/* Buy It Now option */}
           {buyItNowPrice && (
             <div className="mb-4">
-              <button
-                onClick={handleBuyItNow}
-                disabled={isPending}
-                className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center gap-0.5 overflow-hidden relative"
-              >
-                <div className="flex items-center gap-2 relative z-10 text-sm">
-                  <span>BUY IT NOW</span>
-                  <span className="w-1.5 h-1.5 bg-accent-400 rounded-full animate-ping" />
-                </div>
-                <div className="price text-lg relative z-10">
-                  {formatBDT(buyItNowPrice)}
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              </button>
+              <VerificationGuard>
+                <button
+                  onClick={handleBuyItNow}
+                  disabled={isPending}
+                  className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center gap-0.5 overflow-hidden relative"
+                >
+                  <div className="flex items-center gap-2 relative z-10 text-sm">
+                    <span>BUY IT NOW</span>
+                    <span className="w-1.5 h-1.5 bg-accent-400 rounded-full animate-ping" />
+                  </div>
+                  <div className="price text-lg relative z-10">
+                    {formatBDT(buyItNowPrice)}
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                </button>
+              </VerificationGuard>
               <div className="flex items-center justify-center gap-4 mt-2">
                 <div className="h-px bg-gray-100 flex-1" />
                 <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
@@ -286,19 +289,21 @@ export function BidPanel({
           </div>
 
           {/* Submit */}
-          <button
-            onClick={handleBid}
-            disabled={isPending || bidAmount < minBid}
-            className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
-          >
-            {isPending ? (
-              <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
-            ) : (
-              <>
-                {t("bidBtnPrefix")} {formatBDT(bidAmount)}
-              </>
-            )}
-          </button>
+          <VerificationGuard>
+            <button
+              onClick={handleBid}
+              disabled={isPending || bidAmount < minBid}
+              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+            >
+              {isPending ? (
+                <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
+              ) : (
+                <>
+                  {t("bidBtnPrefix")} {formatBDT(bidAmount)}
+                </>
+              )}
+            </button>
+          </VerificationGuard>
 
           {/* Result */}
           {result && (

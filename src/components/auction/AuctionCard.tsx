@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Shield, Clock, Users, Zap, MapPin } from "lucide-react";
+import { Shield, Clock, Users, Zap, MapPin, AlertTriangle, ShieldCheck } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -89,8 +89,10 @@ export default function AuctionCard({
               <span className="text-xs font-semibold text-gray-600 truncate">
                 {auction.seller.name || t("seller")}
               </span>
-              {auction.seller.isVerifiedSeller && (
-                <Shield className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10 flex-shrink-0" />
+              {(auction.seller as any).isPhoneVerified || (auction.seller as any).emailVerified ? (
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10 flex-shrink-0" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
               )}
             </div>
             {auction.seller.reputationScore > 0 && (

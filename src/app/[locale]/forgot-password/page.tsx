@@ -1,0 +1,258 @@
+"use client";
+
+import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Gavel, Loader2, ArrowRight, Smartphone, Mail, CheckCircle, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+
+export default function ForgotPasswordPage() {
+  const [step, setStep] = useState<"identifier" | "otp" | "reset">("identifier");
+  const [method, setMethod] = useState<"phone" | "email">("phone");
+  const [identifier, setIdentifier] = useState("");
+  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  
+  const router = useRouter();
+  const t = useTranslations("Auth");
+
+  const handleRequestOTP = () => {
+    if (!identifier) return;
+    setError("");
+    startTransition(async () => {
+      let result;
+      if (method === "phone") {
+        const { requestStandaloneOTP } = await import("@/actions/phone");
+        result = await requestStandaloneOTP(identifier);
+      } else {
+        // Mock email OTP for now
+        // In a real app, this should be a server action like requestEmailOTP(identifier)
+        result = { success: true }; 
+      }
+
+      if (result.success) {
+        setStep("otp");
+        setResendTimer(60);
+      } else {
+        setError(result.error || "Failed to send code.");
+      }
+    });
+  };
+
+  const handleVerifyOTP = () => {
+    if (otp.length < 4) return;
+    setStep("reset");
+  };
+
+  const handleResetPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    startTransition(async () => {
+      const { resetPasswordWithOTP } = await import("@/actions/auth");
+      const result = await resetPasswordWithOTP({
+        phone: method === "phone" ? identifier : undefined,
+        email: method === "email" ? identifier : undefined,
+        otp,
+        password,
+      });
+
+      if (result.success) {
+        setSuccess(true);
+      } else {
+        setError(result.error || "Reset failed.");
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
+
+  if (success) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white p-10 rounded-3xl border border-blue-100 shadow-2xl text-center animate-in zoom-in-95 duration-300">
+          <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ShieldCheck className="w-10 h-10 text-blue-500" />
+          </div>
+          <h2 className="text-3xl font-heading font-bold text-gray-900 mb-2">Password Reset!</h2>
+          <p className="text-gray-500 mb-8">Your password has been updated. You can now log in with your new password.</p>
+          <Link href="/login" className="block w-full bg-primary-600 text-white font-bold py-4 rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-100 transition-all">
+            Back to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-sm">
+              <Gavel className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-heading font-bold text-xl text-gray-900">
+              nilam<span className="text-primary-600">it</span>
+            </span>
+          </Link>
+          <h1 className="font-heading font-bold text-2xl text-gray-900">Reset Password</h1>
+          <p className="text-sm text-gray-500 mt-1">Regain access to your account</p>
+        </div>
+
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+          <div className="h-1.5 w-full bg-gray-50 flex">
+            <div className={`h-full bg-primary-600 transition-all duration-500 ${step === 'identifier' ? 'w-1/3' : step === 'otp' ? 'w-2/3' : 'w-full'}`} />
+          </div>
+
+          <div className="p-8">
+            {step === "identifier" && (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="flex bg-gray-50/50 p-1 mb-6 rounded-2xl border border-gray-100">
+                  <button onClick={() => setMethod("phone")} className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all ${method === "phone" ? "bg-white text-primary-600 shadow-sm border border-gray-100" : "text-gray-500"}`}>
+                    <Smartphone className="w-3.5 h-3.5" /> Phone
+                  </button>
+                  <button onClick={() => setMethod("email")} className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-xl transition-all ${method === "email" ? "bg-white text-primary-600 shadow-sm border border-gray-100" : "text-gray-500"}`}>
+                    <Mail className="w-3.5 h-3.5" /> Email
+                  </button>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">Account Search</h3>
+                  <p className="text-sm text-gray-500">Enter your {method} to receive a password reset code.</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="relative">
+                    {method === "phone" ? <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /> : <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />}
+                    <input
+                      type={method === "phone" ? "tel" : "email"}
+                      placeholder={method === "phone" ? "+8801XXXXXXXXX" : "email@example.com"}
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-12 pr-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500 focus:bg-white outline-none transition-all"
+                    />
+                  </div>
+                  <button
+                    onClick={handleRequestOTP}
+                    disabled={isPending || !identifier}
+                    className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-200 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary-100 transition-all flex items-center justify-center gap-2"
+                  >
+                    {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Send Reset Code <ArrowRight className="w-4 h-4" /></>}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === "otp" && (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="mb-6 text-center">
+                  <div className="w-12 h-12 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-6 h-6 text-primary-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">Verify Code</h3>
+                  <p className="text-sm text-gray-500">Sent to <span className="font-bold text-gray-900">{identifier}</span></p>
+                </div>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    maxLength={4}
+                    placeholder="0000"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-5 text-4xl font-bold tracking-[1em] text-center focus:ring-2 focus:ring-primary-500 focus:bg-white outline-none transition-all"
+                  />
+                  <button
+                    onClick={handleVerifyOTP}
+                    disabled={otp.length !== 4}
+                    className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-200 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary-100 transition-all"
+                  >
+                    Verify Code
+                  </button>
+                  <div className="text-center">
+                    {resendTimer > 0 ? (
+                      <p className="text-xs text-gray-400">Resend in {resendTimer}s</p>
+                    ) : (
+                      <button onClick={handleRequestOTP} className="text-xs font-bold text-primary-600 hover:underline">
+                        Resend Code
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === "reset" && (
+              <form onSubmit={handleResetPassword} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">New Password</h3>
+                  <p className="text-sm text-gray-500">Create a secure password you'll remember.</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Password</label>
+                    <input
+                      required
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">Confirm Password</label>
+                    <input
+                      required
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <p className="text-xs font-semibold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100 text-center">
+                    {error}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary-100 transition-all flex items-center justify-center gap-2"
+                >
+                  {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Reset Password"}
+                </button>
+              </form>
+            )}
+
+            <div className="mt-8 text-center pt-6 border-t border-gray-50">
+              <Link href="/login" className="text-sm text-gray-500 hover:text-gray-900 font-bold decoration-2 underline-offset-4">
+                Back to Login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { UploadButton } from "@/lib/uploadthing";
 import { cn } from '@/lib/utils';
+import { VerificationGuard } from '../auth/VerificationGuard';
 
 interface Message {
   id: string;
@@ -194,60 +195,62 @@ export default function ChatInterface({
 
       {/* Footer / Input */}
       <div className="p-4 border-t border-gray-100 bg-white">
-        <form onSubmit={handleSend} className="flex items-center gap-2 bg-gray-50 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all">
-          <div className="relative">
-            <UploadButton
-              endpoint="chatAttachment"
-              onBeforeUploadBegin={(files) => {
-                setIsUploading(true);
-                return files;
-              }}
-              onClientUploadComplete={(res) => {
-                setIsUploading(false);
-                if (res?.[0]) {
-                  handleSend(undefined, res[0].url);
-                }
-              }}
-              onUploadError={(error: Error) => {
-                setIsUploading(false);
-                alert(`Upload failed: ${error.message}`);
-              }}
-              content={{
-                button({ ready, isUploading }) {
-                   return <Camera className={cn("w-5 h-5", isUploading ? "animate-pulse text-gray-400" : "text-gray-500")} />;
-                },
-                allowedContent({ ready, fileTypes, isUploading }) {
-                   return null;
-                }
-              }}
-              appearance={{
-                button: "bg-transparent border-none p-2 hover:bg-white rounded-xl transition-colors cursor-pointer w-auto h-auto min-w-0 flex items-center justify-center",
-                allowedContent: "hidden"
-              }}
+        <VerificationGuard>
+          <form onSubmit={handleSend} className="flex items-center gap-2 bg-gray-50 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all">
+            <div className="relative">
+              <UploadButton
+                endpoint="chatAttachment"
+                onBeforeUploadBegin={(files) => {
+                  setIsUploading(true);
+                  return files;
+                }}
+                onClientUploadComplete={(res) => {
+                  setIsUploading(false);
+                  if (res?.[0]) {
+                    handleSend(undefined, res[0].url);
+                  }
+                }}
+                onUploadError={(error: Error) => {
+                  setIsUploading(false);
+                  alert(`Upload failed: ${error.message}`);
+                }}
+                content={{
+                  button({ ready, isUploading }) {
+                     return <Camera className={cn("w-5 h-5", isUploading ? "animate-pulse text-gray-400" : "text-gray-500")} />;
+                  },
+                  allowedContent({ ready, fileTypes, isUploading }) {
+                     return null;
+                  }
+                }}
+                appearance={{
+                  button: "bg-transparent border-none p-2 hover:bg-white rounded-xl transition-colors cursor-pointer w-auto h-auto min-w-0 flex items-center justify-center",
+                  allowedContent: "hidden"
+                }}
+              />
+            </div>
+            
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 bg-transparent border-none text-sm focus:ring-0 placeholder:text-gray-400 font-medium"
+              disabled={isSending || isUploading}
             />
-          </div>
-          
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 bg-transparent border-none text-sm focus:ring-0 placeholder:text-gray-400 font-medium"
-            disabled={isSending || isUploading}
-          />
 
-          <button
-            type="submit"
-            disabled={(!inputMessage.trim() && !isUploading) || isSending}
-            className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-50 disabled:scale-95 transition-all shadow-lg shadow-gray-200"
-          >
-            {isSending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={(!inputMessage.trim() && !isUploading) || isSending}
+              className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center text-white hover:bg-gray-800 disabled:opacity-50 disabled:scale-95 transition-all shadow-lg shadow-gray-200"
+            >
+              {isSending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </button>
+          </form>
+        </VerificationGuard>
       </div>
     </div>
   );

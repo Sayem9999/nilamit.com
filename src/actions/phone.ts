@@ -20,7 +20,7 @@ function generateOTP(): string {
 }
 
 /**
- * Send OTP to a Bangladesh phone number (+880)
+ * Send OTP to a Bangladesh phone number (+880) - Requires active session
  */
 export async function sendPhoneOTP(phone: string) {
   const session = await auth();
@@ -41,13 +41,36 @@ export async function sendPhoneOTP(phone: string) {
     return { success: false, error: 'This phone number is already verified by another account.' };
   }
 
-  // Rate limiting: max 5 OTPs per hour per user
+  return await internalSendOTP(phone, session.user.id, session.user.email || undefined);
+}
+
+/**
+ * Request OTP for standalone Signup/Login (No session required)
+ */
+export async function requestStandaloneOTP(phone: string) {
+  // Validate BD phone format
+  if (!/^\+880\d{10}$/.test(phone)) {
+    return { success: false, error: 'Invalid Bangladesh phone number. Use +880XXXXXXXXXX format.' };
+  }
+
+  // For Registration: We allow sending OTP to any number (we'll check uniqueness during creation)
+  // For Login: We allow sending OTP to existing numbers 
+  
+  return await internalSendOTP(phone);
+}
+
+/**
+ * Internal logic to generate, store, and send OTP
+ */
+async function internalSendOTP(phone: string, userId?: string, email?: string) {
+  // Rate limiting: max 5 OTPs per hour per phone
   const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
   const recentCount = await prisma.phoneVerification.count({
-    where: { userId: session.user.id, createdAt: { gt: oneHourAgo } },
+    where: { phone, createdAt: { gt: oneHourAgo } },
   });
+  
   if (recentCount >= MAX_OTP_PER_HOUR) {
-    return { success: false, error: 'Too many OTP requests. Please try again in an hour.' };
+    return { success: false, error: 'Too many OTP requests for this number. Please try again in an hour.' };
   }
 
   const otp = generateOTP();
@@ -56,55 +79,47 @@ export async function sendPhoneOTP(phone: string) {
   // Store hashed OTP
   await prisma.phoneVerification.create({
     data: {
-      userId: session.user.id,
+      userId, // Can be null for standalone
       phone,
       otp: hashedOTP,
       expiresAt: new Date(Date.now() + OTP_EXPIRY_MS),
     },
   });
 
-
-
   // Send via SMS gateway
   const smsResult = await smsGateway.sendSMS(
     phone,
-    `Your nilamit.com verification code is: ${otp}. Valid for 5 minutes. Do not share this code.`
+    `Your nilamit.com verification code is: ${otp}. Valid for 5 minutes.`
   );
 
-  // Fallback: Send via Email (Resend) if SMS fails or is in dev mode
+  // Fallback: Send via Email (Resend) if SMS fails and email provided
   const resendApiKey = process.env.RESEND_API_KEY;
   let emailSent = false;
 
-  if (resendApiKey && session.user.email) {
+  if (resendApiKey && email) {
     try {
-      const { Resend } = await import('resend');
-      const resend = new Resend(resendApiKey); // Use the key from env
-      
+      const resend = new Resend(resendApiKey);
       await resend.emails.send({
-        from: 'onboarding@resend.dev', // Default testing domain
-        to: session.user.email,
+        from: 'onboarding@resend.dev',
+        to: email,
         subject: 'Your Verification Code',
-        html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code is used to verify your phone number (${phone}).</p>`,
+        html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code is used to verify ${phone}.</p>`,
       });
       emailSent = true;
-
     } catch (error) {
-       console.error('[sendPhoneOTP] Resend fallback failed:', error instanceof Error ? error.message : error);
-       if (error instanceof Error && error.message.includes('only send to')) {
-         console.warn('⚠️ RESEND TEST MODE: You can only send emails to your own verified address. Verify a domain to send to others.');
-       }
+       console.error('[internalSendOTP] Resend fallback failed:', error);
     }
   }
 
   if (!smsResult.success && !emailSent) {
-    return { success: false, error: 'Failed to send OTP via SMS or Email.' };
+    return { success: false, error: 'Failed to send OTP via SMS. Please try again later.' };
   }
 
-  return { success: true, message: emailSent ? 'OTP sent to your email.' : 'OTP sent to your phone.' };
+  return { success: true, message: 'OTP sent successfully.' };
 }
 
 /**
- * Verify OTP and mark user's phone as verified
+ * Verify OTP and mark user's phone as verified (Requires session)
  */
 export async function verifyPhoneOTP(phone: string, otp: string) {
   const session = await auth();
@@ -112,14 +127,36 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
     return { success: false, error: 'You must be logged in.' };
   }
 
+  const result = await internalVerifyOTP(phone, otp, session.user.id);
+  if (!result.success) return result;
+
+  // Update user verified status
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { phone, isPhoneVerified: true },
+  });
+
+  return { success: true };
+}
+
+/**
+ * Verify OTP (Standalone)
+ */
+export async function verifyStandaloneOTP(phone: string, otp: string) {
+  return await internalVerifyOTP(phone, otp);
+}
+
+/**
+ * Internal logic to check OTP validity
+ */
+async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
   const hashedOTP = hashOTP(otp);
 
-  // Find matching verification
   const verification = await prisma.phoneVerification.findFirst({
     where: {
-      userId: session.user.id,
       phone,
       otp: hashedOTP,
+      ...(userId && { userId }),
       expiresAt: { gt: new Date() },
       verified: false,
       attempts: { lt: MAX_ATTEMPTS },
@@ -130,7 +167,7 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
   if (!verification) {
     // Increment attempt counter on most recent verification
     const latest = await prisma.phoneVerification.findFirst({
-      where: { userId: session.user.id, phone, verified: false },
+      where: { phone, verified: false },
       orderBy: { createdAt: 'desc' },
     });
     if (latest) {
@@ -142,17 +179,11 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
     return { success: false, error: 'Invalid or expired OTP.' };
   }
 
-  // Mark OTP as used and update user
-  await prisma.$transaction([
-    prisma.phoneVerification.update({
-      where: { id: verification.id },
-      data: { verified: true },
-    }),
-    prisma.user.update({
-      where: { id: session.user.id },
-      data: { phone, isPhoneVerified: true },
-    }),
-  ]);
+  // Mark OTP as used
+  await prisma.phoneVerification.update({
+    where: { id: verification.id },
+    data: { verified: true },
+  });
 
   return { success: true };
 }

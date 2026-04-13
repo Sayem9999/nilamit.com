@@ -61,12 +61,67 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             isVerifiedSeller: user.isVerifiedSeller,
             reputationScore: user.reputationScore,
             isPhoneVerified: user.isPhoneVerified,
+            emailVerified: user.emailVerified,
             userLevel: user.userLevel,
             winningStreak: user.winningStreak
           };
         } catch (error) {
           console.error('[Auth-FATAL] Database connection failed during authorize:', error);
-          // Return null to NextAuth to trigger the UI error, but we've logged the actual reason.
+          return null;
+        }
+      },
+    }),
+    Credentials({
+      id: 'phone',
+      name: 'Phone',
+      credentials: {
+        phone: { label: 'Phone', type: 'text' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.phone || !credentials?.password) {
+            console.warn('[Auth-Phone] Rejected: Missing phone or password');
+            return null;
+        }
+
+        const phone = credentials.phone as string;
+        const password = credentials.password as string;
+
+        try {
+          const user = await prisma.user.findUnique({ where: { phone } });
+          
+          if (!user) {
+              console.warn(`[Auth-Phone] Rejected: User not found for phone ${phone}`);
+              return null; 
+          }
+
+          if (!user.password) {
+               console.warn(`[Auth-Phone] Rejected: User ${phone} has no password`);
+               return null;
+          }
+
+          const isValid = await bcrypt.compare(password, user.password);
+
+          if (!isValid) {
+              console.warn(`[Auth-Phone] Rejected: Password mismatch for ${phone}`);
+              return null;
+          }
+
+          console.log(`[Auth-Phone] Accepted: Successful login for ${phone}`);
+          return { 
+            id: user.id, 
+            email: user.email, 
+            name: user.name, 
+            image: user.image,
+            isVerifiedSeller: user.isVerifiedSeller,
+            reputationScore: user.reputationScore,
+            isPhoneVerified: user.isPhoneVerified,
+            emailVerified: user.emailVerified,
+            userLevel: user.userLevel,
+            winningStreak: user.winningStreak
+          };
+        } catch (error) {
+          console.error('[Auth-Phone-FATAL] Login failed:', error);
           return null;
         }
       },
@@ -85,6 +140,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             where: { id: token.id as string },
             select: { 
               isPhoneVerified: true, 
+              emailVerified: true,
               phone: true, 
               reputationScore: true, 
               email: true, 
@@ -95,6 +151,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
           if (dbUser) {
             token.isPhoneVerified = dbUser.isPhoneVerified;
+            token.emailVerified = dbUser.emailVerified;
             token.phone = dbUser.phone;
             token.reputationScore = dbUser.reputationScore;
             token.isVerifiedSeller = dbUser.isVerifiedSeller;
@@ -120,6 +177,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const u = session.user as any; 
         u.isPhoneVerified = token.isPhoneVerified;
+        u.emailVerified = token.emailVerified;
         u.phone = token.phone;
         u.reputationScore = token.reputationScore;
         u.isVerifiedSeller = token.isVerifiedSeller;

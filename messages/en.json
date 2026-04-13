@@ -9,7 +9,10 @@
     "signout": "Sign Out",
     "dashboard": "Dashboard",
     "profile": "Profile",
-    "settings": "Settings"
+    "settings": "Settings",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "verifyNow": "Verify Now"
   },
   "Auth": {
     "loginTitle": "Welcome back",
@@ -94,6 +97,12 @@
     "verifyPhoneDesc": "To ensure trust in our marketplace, please verify your Bangladesh phone number (+880) before bidding.",
     "laterBtn": "Later",
     "linkMFSNowBtn": "Link MFS Now",
-    "verifyNowBtn": "Verify Now"
+    "verifyNowBtn": "Verify Now",
+    "verificationCenter": "Verification Center",
+    "accountStatus": "Account Status",
+    "trustLevel": "Trust Level",
+    "verifiedIdentity": "Verified Identity",
+    "unverifiedIdentity": "Action Required: Verify Account",
+    "verifyDesc": "Verification is required to unlock bidding, listing, and chatting."
   }
 }

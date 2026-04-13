@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
 import {
@@ -15,6 +16,10 @@ import {
   Star,
   MessageSquare,
   Wallet,
+  Mail,
+  Smartphone,
+  AlertTriangle,
+  BadgeCheck,
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
@@ -23,6 +28,7 @@ import Image from "next/image";
 export default function ProfilePage() {
   const { data: session, update, status } = useSession();
   const router = useRouter();
+  const t_bid = useTranslations("BidPanel");
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
@@ -91,8 +97,10 @@ export default function ProfilePage() {
       const res = await sendPhoneOTP(phone);
       if (res.success) {
         setPhoneStep("otp");
-        setMsg(res.message || "OTP sent! Check your phone or email.");
-      } else setMsg(res.error || "Failed to send OTP.");
+        setMsg((res as any).message || "OTP sent! Check your phone or email.");
+      } else {
+        setMsg((res as any).error || "Failed to send OTP.");
+      }
     });
   };
 
@@ -111,8 +119,57 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="font-heading font-bold text-2xl text-gray-900 mb-6">
-        Profile Settings
+        {t_bid("verificationCenter")}
       </h1>
+
+      {/* Verification Status Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className={`p-4 rounded-3xl border transition-all ${user?.isPhoneVerified ? 'bg-blue-50/50 border-blue-100' : 'bg-amber-50/50 border-amber-100'}`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="p-2 bg-white rounded-xl shadow-sm">
+              <Smartphone className={`w-5 h-5 ${user?.isPhoneVerified ? 'text-blue-600' : 'text-amber-600'}`} />
+            </div>
+            {user?.isPhoneVerified ? (
+              <BadgeCheck className="w-5 h-5 text-blue-600" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+            )}
+          </div>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Phone Status</p>
+          <p className={`text-sm font-bold ${user?.isPhoneVerified ? 'text-blue-900' : 'text-amber-900'}`}>
+            {user?.isPhoneVerified ? 'Verified' : 'Action Required'}
+          </p>
+          {user?.phone && <p className="text-xs text-gray-500 font-mono mt-1">{user.phone}</p>}
+        </div>
+
+        <div className={`p-4 rounded-3xl border transition-all ${(session.user as any).emailVerified ? 'bg-blue-50/50 border-blue-100' : 'bg-gray-50/50 border-gray-100'}`}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="p-2 bg-white rounded-xl shadow-sm">
+              <Mail className={`w-5 h-5 ${(session.user as any).emailVerified ? 'text-blue-600' : 'text-gray-400'}`} />
+            </div>
+            {(session.user as any).emailVerified ? (
+              <BadgeCheck className="w-5 h-5 text-blue-600" />
+            ) : (
+              <div className="w-5 h-5 bg-gray-200 rounded-full" />
+            )}
+          </div>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Email Status</p>
+          <p className={`text-sm font-bold ${(session.user as any).emailVerified ? 'text-blue-900' : 'text-gray-900'}`}>
+            {(session.user as any).emailVerified ? 'Verified' : 'Linked'}
+          </p>
+          <p className="text-xs text-gray-500 font-mono mt-1">{session.user?.email}</p>
+        </div>
+      </div>
+
+      {!user?.isPhoneVerified && (
+        <div className="bg-amber-600 text-white p-4 rounded-3xl mb-8 flex items-start gap-3 shadow-lg shadow-amber-100 animate-in fade-in slide-in-from-top-4 duration-500">
+           <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+           <div>
+             <p className="text-sm font-black uppercase tracking-wider mb-1">Verification Required</p>
+             <p className="text-xs text-amber-50 font-medium">Verify your phone number to unlock bidding, listing, and messaging features.</p>
+           </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
         <div className="flex items-center gap-4 mb-6">

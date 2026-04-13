@@ -11,8 +11,10 @@ import {
   Check,
   AlertCircle,
   MapPin,
+  Smartphone,
 } from "lucide-react";
 import { ImageUpload } from "@/components/upload/ImageUpload";
+import { VerificationGuard } from "@/components/auth/VerificationGuard";
 
 type Step = "details" | "pricing" | "schedule" | "review";
 
@@ -409,17 +411,19 @@ export default function CreateAuctionPage() {
           </button>
 
           {step === "review" ? (
-            <button
-              onClick={handleSubmit}
-              disabled={isPending}
-              className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold px-6 py-2.5 rounded-xl transition-all flex items-center gap-2"
-            >
-              {isPending ? (
-                <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
-              ) : (
-                "Publish Auction"
-              )}
-            </button>
+            <VerificationGuard>
+              <button
+                onClick={handleSubmit}
+                disabled={isPending}
+                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold px-6 py-2.5 rounded-xl transition-all flex items-center gap-2"
+              >
+                {isPending ? (
+                  <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                ) : (
+                  "Publish Auction"
+                )}
+              </button>
+            </VerificationGuard>
           ) : (
             <button
               onClick={() => setStep(steps[stepIndex + 1])}

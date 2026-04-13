@@ -20,6 +20,8 @@ import {
   Bell,
   BellOff,
   Search,
+  ShieldCheck,
+  AlertTriangle,
 } from "lucide-react";
 import { requestNotificationPermission } from "@/lib/notifications";
 import { useSettings } from "@/context/SettingsContext";
@@ -205,16 +207,28 @@ export function Navbar() {
                         <User className="w-4 h-4 text-primary-600" />
                       </div>
                     )}
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                       {session.user?.name?.split(" ")[0]}
+                      {(session.user as any).isPhoneVerified || (session.user as any).emailVerified ? (
+                        <ShieldCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10" />
+                      ) : (
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                      )}
                     </span>
                   </button>
                   <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                     <Link
                       href="/profile"
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                     >
-                      <User className="w-4 h-4" /> {t("profile")}
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4" /> {t("profile")}
+                      </div>
+                      {(session.user as any).isPhoneVerified || (session.user as any).emailVerified ? (
+                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase">Verified</span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md uppercase">Unverified</span>
+                      )}
                     </Link>
                     <button
                       onClick={() => signOut()}
