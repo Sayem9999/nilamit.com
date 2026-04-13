@@ -25,44 +25,50 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-            console.log('[Auth] Missing credentials');
+            console.warn('[Auth] Rejected: Missing email or password');
             return null;
         }
 
         const email = credentials.email as string;
         const password = credentials.password as string;
 
-        const user = await prisma.user.findUnique({ where: { email } });
-        
-        if (!user) {
-            console.log(`[Auth] User not found for email: ${email}`);
-            return null; 
+        try {
+          const user = await prisma.user.findUnique({ where: { email } });
+          
+          if (!user) {
+              console.warn(`[Auth] Rejected: User not found for email ${email}`);
+              return null; 
+          }
+
+          if (!user.password) {
+               console.warn(`[Auth] Rejected: User ${email} has no password (OAuth account)`);
+               return null;
+          }
+
+          const isValid = await bcrypt.compare(password, user.password);
+
+          if (!isValid) {
+              console.warn(`[Auth] Rejected: Password mismatch for ${email}`);
+              return null;
+          }
+
+          console.log(`[Auth] Accepted: Successful login for ${email}`);
+          return { 
+            id: user.id, 
+            email: user.email, 
+            name: user.name, 
+            image: user.image,
+            isVerifiedSeller: user.isVerifiedSeller,
+            reputationScore: user.reputationScore,
+            isPhoneVerified: user.isPhoneVerified,
+            userLevel: user.userLevel,
+            winningStreak: user.winningStreak
+          };
+        } catch (error) {
+          console.error('[Auth-FATAL] Database connection failed during authorize:', error);
+          // Return null to NextAuth to trigger the UI error, but we've logged the actual reason.
+          return null;
         }
-
-        if (!user.password) {
-             console.log(`[Auth] User found but HAS NO PASSWORD set: ${email} (Legacy account or Google sign-in)`);
-             return null;
-        }
-
-        const isValid = await bcrypt.compare(password, user.password);
-
-        if (!isValid) {
-            console.log(`[Auth] Password mismatch for user: ${email}`);
-            return null;
-        }
-
-        console.log(`[Auth] Login successful for: ${email}`);
-        return { 
-          id: user.id, 
-          email: user.email, 
-          name: user.name, 
-          image: user.image,
-          isVerifiedSeller: user.isVerifiedSeller,
-          reputationScore: user.reputationScore,
-          isPhoneVerified: user.isPhoneVerified,
-          userLevel: user.userLevel,
-          winningStreak: user.winningStreak
-        };
       },
     }),
   ],
