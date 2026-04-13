@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { filterPII } from '@/lib/pii-filter';
 
 /**
  * Submit a review for an auction
@@ -38,7 +39,7 @@ export async function submitReview({
           fromId,
           toId,
           rating,
-          comment,
+          comment: filterPII(comment),
         }
       });
 

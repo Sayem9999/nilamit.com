@@ -7,6 +7,7 @@ import type { PlaceBidResult } from '@/types';
 import { pusherServer } from '@/lib/pusher-server';
 import { ERROR_CODES, SOFT_CLOSE_WINDOW_MS, SOFT_CLOSE_EXTENSION_MS } from '@/lib/constants';
 import { checkAndAwardBadges } from './gamification';
+import { processAuctionSale } from '@/lib/auction-logic';
 
 const PlaceBidSchema = z.object({
   auctionId: z.string().cuid(),
@@ -144,6 +145,32 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         },
       });
 
+      // Phase 7: Real-time Proactive Alerts (eBay Standard)
+      // Identify all users set for alerts on this auction
+      const alertsToTrigger = await tx.alert.findMany({
+        where: {
+          auctionId,
+          isActive: true,
+          OR: [
+            { type: 'OUTBID' },
+            { type: 'TARGET_REACHED', thresholdPrice: { lte: amount } }
+          ],
+          userId: { not: userId } // Self-notify exclusion
+        }
+      });
+
+      // Deactivate TARGET_REACHED alerts once hit (One-time trigger)
+      const targetAlertIds = alertsToTrigger
+        .filter(a => a.type === 'TARGET_REACHED')
+        .map(a => a.id);
+
+      if (targetAlertIds.length > 0) {
+        await tx.alert.updateMany({
+          where: { id: { in: targetAlertIds } },
+          data: { isActive: false }
+        });
+      }
+
       return { 
         bid, 
         newEndTime, 
@@ -152,7 +179,8 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         prevBidderId: prevBid?.bidderId,
         auctionTitle: auction.title,
         timeUntilEnd: timeUntilEnd,
-        auctionStartTime: auction.startTime
+        auctionStartTime: auction.startTime,
+        triggeredAlerts: alertsToTrigger
       };
     }, {
       isolationLevel: 'Serializable',
@@ -163,6 +191,19 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
       sendOutbidEmail(result.prevBidder.email, result.auctionTitle, amount, auctionId).catch(console.error);
     }
     
+    // Proactive Alerts Trigger
+    if (result.triggeredAlerts && result.triggeredAlerts.length > 0) {
+      await Promise.all(result.triggeredAlerts.map(alert => 
+        pusherServer.trigger(`user-${alert.userId}`, 'price-alert', {
+          auctionId,
+          auctionTitle: result.auctionTitle,
+          amount,
+          type: alert.type,
+          threshold: alert.thresholdPrice
+        })
+      )).catch(console.error);
+    }
+
     if (result.prevBidderId && result.prevBidderId !== session.user.id) {
       await pusherServer.trigger(`user-${result.prevBidderId}`, 'outbid-alert', {
         auctionId,
@@ -234,6 +275,8 @@ export async function executeBuyItNow(auctionId: string): Promise<PlaceBidResult
           sellerId: true,
           endTime: true,
           startTime: true,
+          deliveryCharge: true,
+          seller: { select: { id: true, isVerifiedSeller: true } }
         },
       });
 
@@ -260,25 +303,18 @@ export async function executeBuyItNow(auctionId: string): Promise<PlaceBidResult
         },
       });
 
-      // Close auction
-      await tx.auction.update({
-        where: { id: auctionId },
-        data: {
-          status: 'SOLD',
-          winnerId: userId,
-          currentPrice: binAmount,
+      // Centralized Sale Processing
+      await processAuctionSale(
+        tx,
+        auction,
+        auction.seller,
+        { 
+          id: userId, 
+          email: session.user.email || null, 
+          name: session.user.name || null 
         },
-      });
-
-      // Create Escrow
-      await tx.escrowTransaction.create({
-        data: {
-          auctionId,
-          buyerId: userId,
-          amount: binAmount,
-          status: 'PENDING',
-        },
-      });
+        binAmount
+      );
 
       return { 
         bid, 

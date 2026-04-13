@@ -23,18 +23,19 @@
 - Users should be able to **browse** freely; verification gates only at **action points** (bid, sell)
 - A verified phone number creates accountability in a culture where phone numbers are persistent identities
 
-### 3. Data Integrity Over Speed
+### 3. Data Integrity & Trust Shield
 
 - Every bid MUST go through a serializable database transaction
 - `SELECT FOR UPDATE` row locking on the auction row prevents race conditions
 - Anti-sniping (Soft Close): 2-minute extension on last-moment bids — this is **non-negotiable**
-- We accept a 100ms latency penalty for correctness
+- **Trust Shield**: Coordination chat is strictly gated by Escrow (Advance payment for logistics).
 
-### 4. Bengali-Ready
+### 4. Bengali-First Experience
 
-- All user-facing strings must support Bangla (বাংলা) localization in future
-- Currency is always BDT (৳) — never USD
-- Date/time displays respect `Asia/Dhaka` (UTC+6)
+- All user-facing strings MUST provide high-quality Bangla (বাংলা) localization.
+- Technical jargon is forbidden; use common market-language terminology.
+- Currency is always BDT (৳) — never USD.
+- Date/time displays respect `Asia/Dhaka` (UTC+6).
 
 ### 5. No Dark Patterns
 

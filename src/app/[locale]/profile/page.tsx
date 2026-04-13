@@ -16,6 +16,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
+import TrustBadge from "@/components/social/TrustBadge";
 import Image from "next/image";
 
 export default function ProfilePage() {
@@ -146,23 +147,40 @@ export default function ProfilePage() {
         </div>
 
         {/* Reputation Card */}
-        <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl p-5 mb-4 text-white shadow-lg shadow-primary-200">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-[10px] font-black uppercase tracking-widest opacity-80">
-              Reputation Score
-            </label>
-            <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
+        <div className="bg-white border border-gray-100 rounded-3xl p-6 mb-6 shadow-sm overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-4">
+             <Star className="w-8 h-8 text-primary-500/10 fill-primary-500/5 rotate-12" />
           </div>
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-black">
-              {(user?.reputationScore as number) || 0}
-            </span>
-            <span className="text-xs font-bold opacity-80 mb-1">Points</span>
+          <div className="flex flex-col gap-4 relative z-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                  Global Trader Rank
+                </p>
+                <TrustBadge 
+                  score={(user?.reputationScore as number) || 0} 
+                  size="lg"
+                />
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                  Trust Points
+                </p>
+                <p className="text-2xl font-black text-gray-900 leading-none">
+                  {(user?.reputationScore as number) || 0}
+                </p>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-50 flex items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+               <span className="flex items-center gap-1">
+                 <Shield className="w-3 h-3 text-blue-500" /> Bayesian Certified
+               </span>
+               <span className="flex items-center gap-1">
+                 <CheckCircle className="w-3 h-3 text-emerald-500" /> Active Trader
+               </span>
+            </div>
           </div>
-          <p className="text-[10px] mt-2 opacity-70 font-medium italic">
-            Score is calculated based on transaction volume and positive
-            reviews.
-          </p>
         </div>
       </div>
 

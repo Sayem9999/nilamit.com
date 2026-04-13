@@ -6,23 +6,20 @@
 - [x] Basic auction listing and bidding flow.
 - [x] Image upload via Uploadthing.
 
-## Phase 2: Trust & Moderation (Current) — ACTIVE 🚀
+## Phase 2: Trust & Coordination (Current) — COMPLETED ✅
 - [x] Admin dashboards for Moderation and System health.
-- [x] Auction reporting and dispute resolution system.
-- [x] Robust auction locking logic to prevent bid collision.
-- [ ] **Next Up**: Reputation Scores for buyers and sellers.
+- [x] Reputation Scores, User Levels, and Elite Leaderboards.
+- [x] Real-time Price Alerts (Outbid & Target Reached).
+- [x] Transaction-Gated Coordination Chat with PII Shielding.
+- [x] Tiered Success Fee Engine (v1.5).
 
-## Phase 3: Social & Hyper-Local (Q2 2026)
-- [ ] **Auction Circles**: Private/Local auction rooms.
-- [ ] **Leaderboards**: Top sellers and most active bidders by region.
-- [ ] **Direct Chat**: Secure negotiation channel once an auction is won.
+## Phase 3: Financial & Scaling (Q2 2026) — ACTIVE 🚀
+- [ ] **Escrow Shield 2.0**: Direct bKash/Nagad integration for automated advance holds.
+- [ ] **SMS-Gateway Hardening**: Integration with premium local providers for 99.9% OTP delivery.
+- [x] **Global Marketplace Optimization**: Removed hyper-local circles to maximize auction visibility.
 
-## Phase 4: Financial & Fintech (Q3 2026)
-- [ ] **Escrow 1.0**: bKash/Nagad integration for deposit-based bidding.
-- [ ] **Commission Automation**: Smart deduction of platform fees.
-- [ ] **EMI Options**: High-value product financing logic.
-
-## Phase 5: AI & Ecosystem (Q4 2026)
+## Phase 4: AI & Ecosystem (Q3-Q4 2026)
 - [ ] **Auto-Moderator**: AI-driven fake listing detection.
 - [ ] **Smart Pricing**: Suggestions for sellers based on historical auction data.
 - [ ] **Voice Commerce**: Bangla voice-to-listing for non-literate sellers.
+- [ ] **Professional Logistics**: One-click booking with local courier partners.

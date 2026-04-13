@@ -1,13 +1,15 @@
-import { getUserCircles, getUserReputation } from "@/actions/social";
-import AuctionCircleList from "@/components/social/AuctionCircleList";
+import { getUserReputation, getUserConversations } from "@/actions/social";
+import ChatList from "@/components/social/ChatList";
 import UserBadge from "@/components/social/UserBadge";
 import Image from "next/image";
+import { auth } from "@/lib/auth";
 import { User, Trophy, ShieldCheck } from "lucide-react";
 
 export default async function SocialDashboardPage() {
-  const [circles, reputation] = await Promise.all([
-    getUserCircles(),
+  const session = await auth();
+  const [reputation, conversations] = await Promise.all([
     getUserReputation(),
+    getUserConversations()
   ]);
 
   if (!reputation) return <div>Please login.</div>;
@@ -39,7 +41,7 @@ export default async function SocialDashboardPage() {
                 {reputation.name}
               </h1>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
-                Expert Collector
+                Active Trader
               </p>
 
               <div className="flex flex-col gap-3 items-center">
@@ -50,20 +52,12 @@ export default async function SocialDashboardPage() {
                 />
               </div>
 
-              <div className="mt-10 grid grid-cols-2 gap-4">
+              <div className="mt-10 grid grid-cols-1 gap-4">
                 <div className="p-4 bg-gray-50 rounded-3xl">
                   <p className="text-xs text-gray-400 font-bold uppercase mb-1">
-                    Wins
+                    Win Streak
                   </p>
-                  <p className="text-xl font-bold text-gray-900">12</p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-3xl">
-                  <p className="text-xs text-gray-400 font-bold uppercase mb-1">
-                    Circles
-                  </p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {circles.length}
-                  </p>
+                  <p className="text-xl font-bold text-gray-900">{reputation.winningStreak}</p>
                 </div>
               </div>
 
@@ -73,9 +67,12 @@ export default async function SocialDashboardPage() {
             </div>
           </div>
 
-          {/* Right: Circle Management */}
+          {/* Right: Coordination Hub */}
           <div className="flex-1">
-            <AuctionCircleList initialCircles={circles} />
+            <ChatList 
+              conversations={conversations} 
+              currentUserId={session?.user?.id || ""} 
+            />
           </div>
         </div>
       </div>

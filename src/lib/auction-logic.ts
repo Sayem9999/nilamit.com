@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db';
 import { Resend } from 'resend';
-import { AuctionStatus, OrderStatus } from '@prisma/client';
+import { PrismaClient, AuctionStatus, OrderStatus } from '@prisma/client';
+
+type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
 
 /**
  * Calculates the dynamic success fee (commission) based on final price.
@@ -23,6 +25,77 @@ export function calculateSuccessFee(finalPrice: number): number {
 }
 
 /**
+ * processAuctionSale — Centralized logic for finalizing a sale.
+ * Used by both auto-close cron and Buy It Now actions.
+ */
+export async function processAuctionSale(
+  tx: TransactionClient, 
+  auction: { id: string, title: string, deliveryCharge: number, reservePrice?: number | null },
+  seller: { id: string, isVerifiedSeller: boolean },
+  winner: { id: string, email: string | null, name: string | null },
+  finalPrice: number
+) {
+  const meetsReserve = !auction.reservePrice || finalPrice >= auction.reservePrice;
+
+  if (meetsReserve) {
+    // 1. Dynamic Success Fee Calculation
+    const commissionEarned = calculateSuccessFee(finalPrice);
+
+    // 2. Update Auction to SOLD
+    await tx.auction.update({
+      where: { id: auction.id },
+      data: {
+        status: AuctionStatus.SOLD,
+        winnerId: winner.id,
+        commissionEarned,
+        deliveryStatus: OrderStatus.PENDING,
+        currentPrice: finalPrice, // Ensure final price is set correctly (esp for BIN)
+      },
+    });
+
+    // 3. Handle Escrow creation with Trust-Tiered Advance Logic
+    const isVerified = seller.isVerifiedSeller;
+    const advanceAmount = isVerified ? finalPrice : (commissionEarned + (auction.deliveryCharge || 0));
+
+    await tx.escrowTransaction.create({
+      data: {
+        auctionId: auction.id,
+        buyerId: winner.id,
+        amount: advanceAmount,
+        status: isVerified ? 'HELD' : 'PENDING',
+      }
+    });
+
+    // 4. Notify Winner
+    const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+    if (resend && winner.email) {
+      await resend.emails.send({
+        from: 'congrats@nilamit.com',
+        to: winner.email,
+        subject: `Congratulations! You won: ${auction.title}`,
+        html: `
+          <h3>You won ${auction.title}!</h3>
+          <p>Final Price: ৳${finalPrice.toLocaleString()}</p>
+          ${isVerified 
+            ? `<p>Seller is <b>Verified</b>. Contact information has been released in your dashboard.</p>` 
+            : `<p>Please pay the <b>Advance of ৳${advanceAmount.toLocaleString()}</b> (Success Fee + Delivery) to unlock the seller's contact information.</p>`
+          }
+          <p>Visit your <a href="${process.env.NEXTAUTH_URL}/dashboard?tab=escrow">Dashboard</a> to proceed.</p>
+        `,
+      });
+    }
+    return true;
+  } else {
+    // Reserve not met
+    await tx.auction.update({
+      where: { id: auction.id },
+      data: { status: AuctionStatus.EXPIRED },
+    });
+    return false;
+  }
+}
+
+/**
  * Closes a single auction if it has ended.
  * Returns true if the auction was processed (sold/expired).
  */
@@ -35,7 +108,7 @@ export async function closeAuctionIfEnded(auctionId: string) {
         take: 1,
         include: { bidder: { select: { id: true, email: true, name: true } } },
       },
-      seller: { select: { email: true, name: true, isVerifiedSeller: true } },
+      seller: { select: { id: true, email: true, name: true, isVerifiedSeller: true } },
     },
   });
 
@@ -43,9 +116,6 @@ export async function closeAuctionIfEnded(auctionId: string) {
 
   const now = new Date();
   if (auction.endTime > now) return false;
-
-  // Process closure
-  const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -67,61 +137,13 @@ export async function closeAuctionIfEnded(auctionId: string) {
       const highestBid = currentAuction.bids[0];
 
       if (highestBid) {
-        const meetsReserve = !currentAuction.reservePrice || highestBid.amount >= currentAuction.reservePrice;
-
-        if (meetsReserve) {
-          // Dynamic Success Fee Calculation
-          const commissionEarned = calculateSuccessFee(highestBid.amount);
-
-          await tx.auction.update({
-            where: { id: currentAuction.id },
-            data: {
-              status: AuctionStatus.SOLD,
-              winnerId: highestBid.bidder.id,
-              commissionEarned,
-              deliveryStatus: OrderStatus.PENDING,
-            },
-          });
-
-          // Handle Escrow creation with Trust-Tiered Advance Logic
-          // Verified Sellers get instant revelation (status: HELD)
-          // New Sellers require Success Fee + Delivery Charge Advance (status: PENDING)
-          const isVerified = currentAuction.seller?.isVerifiedSeller ?? false;
-          const advanceAmount = isVerified ? highestBid.amount : (commissionEarned + (currentAuction.deliveryCharge || 0));
-
-          await tx.escrowTransaction.create({
-            data: {
-              auctionId: currentAuction.id,
-              buyerId: highestBid.bidder.id,
-              amount: advanceAmount,
-              status: isVerified ? 'HELD' : 'PENDING',
-            }
-          });
-
-          // Notify Winner
-          if (resend && highestBid.bidder.email) {
-            await resend.emails.send({
-              from: 'congrats@nilamit.com',
-              to: highestBid.bidder.email,
-              subject: `Congratulations! You won: ${currentAuction.title}`,
-              html: `
-                <h3>You won ${currentAuction.title}!</h3>
-                <p>Final Price: ৳${highestBid.amount.toLocaleString()}</p>
-                ${isVerified 
-                  ? `<p>Seller is <b>Verified</b>. Contact information has been released in your dashboard.</p>` 
-                  : `<p>Please pay the <b>Advance of ৳${advanceAmount.toLocaleString()}</b> (Success Fee + Delivery) to unlock the seller's contact information.</p>`
-                }
-                <p>Visit your <a href="${process.env.NEXTAUTH_URL}/dashboard?tab=escrow">Dashboard</a> to proceed.</p>
-              `,
-            });
-          }
-        } else {
-          // Reserve not met
-          await tx.auction.update({
-            where: { id: currentAuction.id },
-            data: { status: AuctionStatus.EXPIRED },
-          });
-        }
+        await processAuctionSale(
+          tx,
+          currentAuction,
+          currentAuction.seller,
+          highestBid.bidder,
+          highestBid.amount
+        );
       } else {
         await tx.auction.update({
           where: { id: currentAuction.id },

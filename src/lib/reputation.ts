@@ -16,54 +16,79 @@ import { AuctionStatus } from '@prisma/client';
 export async function recalculateUserReputation(userId: string) {
   const [
     soldAuctions,
-    cancelledAuctions,
+    cancelledWithBids,
     completedPurchases,
-    reviews
+    reviews,
+    globalStats
   ] = await Promise.all([
-    // Auctions sold by user
-    prisma.auction.count({ where: { sellerId: userId, status: AuctionStatus.SOLD } }),
-    // Auctions cancelled by user (with bids)
+    // Auctions sold by user (RELEASED = successful COD)
+    prisma.escrowTransaction.count({ where: { auction: { sellerId: userId }, status: 'RELEASED' } }),
+    // Auctions cancelled by user (with bids) - sabotage penalty
     prisma.auction.count({ 
       where: { 
         sellerId: userId, 
-        status: AuctionStatus.CANCELLED,
+        status: 'CANCELLED',
         bids: { some: {} } 
       } 
     }),
-    // User won and "processed" (assuming logic handles RECEIVED status)
-    prisma.auction.count({ where: { winnerId: userId, status: AuctionStatus.SOLD } }), 
-    // Aggregate reviews
+    // User won and verified receipt
+    prisma.escrowTransaction.count({ where: { buyerId: userId, status: 'RELEASED' } }), 
+    // Aggregate reviews for this user
     prisma.review.aggregate({
       where: { toId: userId },
       _avg: { rating: true },
       _count: true
+    }),
+    // Global mean rating for Bayesian calculation
+    prisma.review.aggregate({
+      _avg: { rating: true }
     })
   ]);
 
   /**
-   * BASE SCORE CALCULATION
-   * Start at 100.
-   * +10 for every successful sale.
-   * +5 for every successful purchase.
-   * -50 for every cancelled auction with bids (sabotage penalty).
-   * Review Multiplier: average rating / 5
+   * 1. POINT-BASED TRUST (VOLUME)
+   * Sales have higher weight than purchases.
    */
-  
-  let baseScore = 100;
-  baseScore += (soldAuctions * 10);
-  baseScore += (completedPurchases * 5);
-  baseScore -= (cancelledAuctions * 50);
+  let points = 100; // Base score
+  points += (soldAuctions * 10);
+  points += (completedPurchases * 5);
+  points -= (cancelledWithBids * 50);
 
-  const avgRating = reviews._avg.rating || 5;
-  const reviewWeight = Math.max(0.2, avgRating / 5); // Minimum 20% of base score if bad reviews
+  /**
+   * 2. BAYESIAN RATING (QUALITY)
+   * Formula: (v / (v + m)) * R + (m / (v + m)) * C
+   * v = count of reviews
+   * m = minimum reviews for confidence (e.g., 5)
+   * R = user average
+   * C = global average
+   */
+  const v = reviews._count || 0;
+  const m = 5; 
+  const R = reviews._avg.rating || 5;
+  const C = globalStats._avg.rating || 4.5;
 
-  const finalScore = Math.round(baseScore * reviewWeight);
+  const bayesianRating = (v / (v + m)) * R + (m / (v + m)) * C;
+
+  /**
+   * 3. FINAL REPUTATION SCORE
+   * Combined volume and quality. 
+   * A "5" rating means 100% of points. A "4" means 80%.
+   */
+  const qualityMultiplier = bayesianRating / 5;
+  const finalScore = Math.round(points * qualityMultiplier);
 
   // Update user profile
   await prisma.user.update({
     where: { id: userId },
-    data: { reputationScore: Math.max(0, finalScore) } // Never below 0
+    data: { 
+      reputationScore: Math.max(0, finalScore),
+      // Future: winningStreak update could go here
+    }
   });
 
-  return finalScore;
+  return {
+    score: Math.max(0, finalScore),
+    bayesianRating,
+    points
+  };
 }

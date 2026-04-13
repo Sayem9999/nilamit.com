@@ -86,6 +86,51 @@ export function NotificationProvider({
       },
     );
 
+    // ── Price Alert (Targets & Follows) ────────────────
+    channel.bind(
+      "price-alert",
+      (data: {
+        auctionTitle: string;
+        amount: number;
+        auctionId: string;
+        type: string;
+        threshold?: number;
+      }) => {
+        const isTarget = data.type === "TARGET_REACHED";
+        const title = isTarget ? "🎯 Target Price Reached!" : "🚨 Outbid Alert!";
+        const body = isTarget 
+          ? `"${data.auctionTitle}" has reached ৳${data.amount.toLocaleString()}, meeting your target of ৳${data.threshold?.toLocaleString()}.`
+          : `New bid of ৳${data.amount.toLocaleString()} on "${data.auctionTitle}". Click to counter!`;
+
+        showNotification(title, { body });
+
+        toast.custom(
+          (t) => (
+            <div
+              className={`${
+                t.visible ? "animate-enter" : "animate-leave"
+              } max-w-sm w-full bg-white shadow-2xl rounded-2xl pointer-events-auto border-2 ${isTarget ? 'border-primary-500' : 'border-red-500'} flex items-start gap-3 p-5`}
+            >
+              <div className="text-2xl leading-none">{isTarget ? "🎯" : "🚨"}</div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-bold ${isTarget ? 'text-primary-600' : 'text-red-600'}`}>
+                  {isTarget ? "Target Hit!" : "Outbid!"}
+                </p>
+                <p className="text-xs text-gray-700 mt-1 font-medium leading-relaxed">{body}</p>
+                <a
+                  href={`/auctions/${data.auctionId}`}
+                  className={`mt-3 inline-block px-4 py-2 rounded-xl text-xs font-bold text-white transition-all ${isTarget ? 'bg-primary-600 hover:bg-primary-700' : 'bg-red-600 hover:bg-red-700'}`}
+                >
+                  Go to Auction →
+                </a>
+              </div>
+            </div>
+          ),
+          { duration: 10000 }
+        );
+      },
+    );
+
     return () => {
       pusherClient.unsubscribe(personalChannel);
     };

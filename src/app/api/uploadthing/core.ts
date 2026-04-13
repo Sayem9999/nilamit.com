@@ -15,6 +15,11 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata }) => {
       return { uploadedBy: metadata.userId };
     }),
+  chatAttachment: f({ image: { maxFileSize: "2MB", maxFileCount: 1 } })
+    .middleware(async () => await handleAuth())
+    .onUploadComplete(async ({ metadata }) => {
+      return { uploadedBy: metadata.userId };
+    }),
 } satisfies FileRouter;
  
 export type OurFileRouter = typeof ourFileRouter;

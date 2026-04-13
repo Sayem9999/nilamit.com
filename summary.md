@@ -11,33 +11,26 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 
 ### 1. Real-time Auction Engine
 - **Soft-Close (Anti-Snipe)**: Automatically extends auction time if a bid is placed in the final minutes, ensuring fair play.
-- **Micro-Increments**: Supports standardized bid increments based on item value.
-- **Smart Alerts**: Real-time Pusher notifications for outbid status and auctions ending soon.
+- **Proactive Alerts**: Real-time Pusher notifications for outbid status and custom target-price hits.
+- **Live Bidding**: Instant, presence-monitored price updates for active participants.
 
-### 2. Trust & Safety Ecosystem (Hardened)
-- **Verified Sellers**: Manual admin vetting process to grant trusted status.
-- **Bid Deposits**: Mandatory deposits for high-stakes items to prevent "ghost bidding."
-- **Reputation Layer**: Multi-dimensional user levels and winning streaks based on transaction history.
+### 2. Trust & Coordination Hub
+- **Escrow Shield**: Trust-tiered escrow. Advance payment required for unverified sellers to ensure logistics security.
+- **Coordination Chat**: Secure, PII-shielded communication channel unlocked only after a successful escrow hold.
+- **Reputation Layer**: Multi-dimensional user levels, verified badges, and winning streaks built through transaction transparency.
 
-### 3. Regional & Social Marketplaces
-- **Areas**: Hyper-local filtering for Dhaka neighborhoods (Mirpur, Banani, etc.) to simplify logistics.
-- **Circles**: Private "Social Circles" that allow users to buy and sell exclusively within known communities (Alumni, Coworkers) for maximum trust.
-
----
-
-## ⚖️ Legal & Compliance
-- **Compliance**: Fully aligned with the **Bangladesh Digital Commerce Operational Guidelines, 2021**.
-- **Governance**: Automated 72-hour dispute resolution SLA and 6-year immutable data retention.
-- **Escrow**: Regulated HELD -> RELEASED funds flow for secure transactions.
+### 3. Finance & Monetization
+- **Success Fee Engine**: Automated, tiered platform fees (1% - 2.5%) calculated on successful sale.
+- **Escrow Settlements**: Regulated PENDING -> HELD -> RELEASED funds flow for secure C2C trade.
 
 ---
 
 ## 💻 Technology Stack
-- **Framework**: Next.js 16 (App Router + Turbopack).
-- **Database**: PostgreSQL via Supabase with **Prisma 7**.
+- **Framework**: Next.js 15 (App Router).
+- **Database**: PostgreSQL via Supabase with **Prisma 6**.
 - **Real-time**: Pusher (WebSockets) for instant bid updates and alerts.
-- **AI/Search**: Semantic Ranking and automated category recommendations.
-- **UI/UX**: Framer Motion transitions, Glassmorphism, and HSL-based design system.
+- **Localization**: Bengali-First experience powered by `next-intl`.
+- **UI/UX**: Tailwind CSS 4, shadcn/ui, and Framer Motion for a premium, mobile-responsive aesthetic.
 
 ---
 

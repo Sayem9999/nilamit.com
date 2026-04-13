@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { DisputeStatus, EscrowStatus } from '@prisma/client';
+import { recalculateUserReputation } from '@/lib/reputation';
 
 export async function raiseDispute(transactionId: string, reason: string) {
   const session = await auth();
@@ -64,19 +65,32 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
     const finalEscrowStatus = ruling === 'SELLER' ? 'RELEASED' : 'REFUNDED';
     const finalDisputeStatus = ruling === 'SELLER' ? DisputeStatus.RESOLVED_SELLER : DisputeStatus.RESOLVED_BUYER;
 
-    await prisma.$transaction([
-      prisma.escrowTransaction.update({
+    const res = await prisma.$transaction(async (tx) => {
+      await tx.escrowTransaction.update({
         where: { id: transactionId },
-        data: { status: finalEscrowStatus as EscrowStatus },
-      }),
-      prisma.dispute.update({
+        data: { 
+          status: finalEscrowStatus as EscrowStatus,
+          resolvedAt: new Date(),
+        },
+      });
+      
+      await tx.dispute.update({
         where: { id: disputeId },
         data: {
           status: finalDisputeStatus,
           resolution,
         },
-      }),
-    ]);
+      });
+
+      // Recalculate trust for both parties
+      const buyerId = dispute.transaction.buyerId;
+      const sellerId = dispute.transaction.auction.sellerId;
+      
+      await recalculateUserReputation(buyerId);
+      await recalculateUserReputation(sellerId);
+
+      return true;
+    });
 
     revalidatePath('/admin/disputes');
     revalidatePath('/dashboard/escrow');
@@ -84,6 +98,33 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
   } catch (error) {
     console.error('Failed to resolve dispute:', error);
     return { success: false, error: 'Failed to resolve dispute' };
+  }
+}
+
+/**
+ * Manual Admin Override: Refund Escrow
+ * Used for cancellations or system errors where funds must be returned to buyer.
+ */
+export async function adminRefundEscrow(transactionId: string, reason: string) {
+  const session = await auth();
+  if (!session?.user?.isAdmin) return { success: false, error: 'Unauthorized' };
+
+  try {
+    await prisma.escrowTransaction.update({
+      where: { id: transactionId },
+      data: { 
+        status: 'REFUNDED' as EscrowStatus,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Log the override if a system log exists
+    console.log(`[Admin] Transaction ${transactionId} refunded. Reason: ${reason}`);
+
+    revalidatePath('/admin/escrow');
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Failed to refund escrow.' };
   }
 }
 

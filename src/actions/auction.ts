@@ -7,6 +7,7 @@ import type { AuctionFilters, CreateAuctionInput } from '@/types';
 import { closeAuctionIfEnded } from '@/lib/auction-logic';
 import { AuctionStatus } from '@prisma/client';
 import { ERROR_CODES } from '@/lib/constants';
+import { filterPII } from '@/lib/pii-filter';
 
 const CreateAuctionSchema = z.object({
   title: z.string().min(3).max(100),
@@ -48,10 +49,14 @@ export async function createAuction(input: CreateAuctionInput) {
   }
 
   try {
+    const filteredTitle = filterPII(input.title);
+    const filteredDescription = filterPII(input.description);
+    const piiDetected = filteredTitle !== input.title || filteredDescription !== input.description;
+
     const auction = await prisma.auction.create({
       data: {
-        title: input.title,
-        description: input.description,
+        title: filteredTitle,
+        description: filteredDescription,
         images: input.images,
         category: input.category,
         startingPrice: input.startingPrice,
@@ -66,6 +71,13 @@ export async function createAuction(input: CreateAuctionInput) {
         status: AuctionStatus.ACTIVE,
       },
     });
+
+    if (piiDetected) {
+      const { pusherServer, PUSHER_EVENTS } = await import('@/lib/pusher-server');
+      await pusherServer.trigger(`private-user-${session.user.id}`, PUSHER_EVENTS.PII_VIOLATION, {
+        message: "Your listing content was automatically sanitized to follow privacy rules. Contact info is only revealed after a successful deal.",
+      });
+    }
 
     return { success: true, auction };
   } catch (error) {
@@ -116,76 +128,16 @@ export async function getAuctions(filters: AuctionFilters = {}) {
     limit = 12,
   } = filters;
 
-  // Proactive check: On browse, we rely on the scheduled cron job
-  // to keep the "Active" list fresh, avoiding per-request latency.
-
-  const where: Record<string, unknown> = {};
+  const where: Record<string, any> = {};
   if (status) where.status = status;
   if (category) where.category = category;
-  
-  // ── Regional & Social Filtering (Circles/Areas) ──
-  if (filters.location) {
-    where.location = filters.location;
-  }
-
-  // Secure Circle Feed Implementation
-  const session = await auth();
-  const userId = session?.user?.id;
-
-  if (filters.circleId) {
-    // If a specific circle is requested, verify membership
-    if (!userId) return { auctions: [], total: 0, pages: 0, page, error: 'Authentication required for circle auctions.' };
-    
-    const isMember = await prisma.circleMember.findUnique({
-      where: { userId_circleId: { userId, circleId: filters.circleId } }
-    });
-
-    if (!isMember) {
-      return { auctions: [], total: 0, pages: 0, page, error: 'You are not a member of this circle.' };
-    }
-    
-    where.circleId = filters.circleId;
-  } else {
-    // Global Feed Protection (Section 6.2 of Spec-Kit)
-    // Hide ALL circle auctions from the global feed unless the user is a member
-    if (userId) {
-      // Find all circles user belongs to
-      const myCircles = await prisma.circleMember.findMany({
-        where: { userId },
-        select: { circleId: true }
-      });
-      const circleIds = myCircles.map(c => c.circleId);
-
-      where.OR = [
-        { circleId: null }, // Public auctions
-        { circleId: { in: circleIds } } // Auctions in my circles
-      ];
-    } else {
-      // Unauthenticated users see only public auctions
-      where.circleId = null;
-    }
-  }
+  if (filters.location) where.location = filters.location;
 
   if (search) {
-    const searchFilter = {
-      OR: [
-        { title: { contains: search, mode: 'insensitive' as const } },
-        { description: { contains: search, mode: 'insensitive' as const } },
-      ],
-    };
-    
-    // Combine search with circle/area logic
-    if (where.OR) {
-      // Nested OR for existing circle logic
-      const originalOR = where.OR;
-      where.AND = [
-        { OR: originalOR },
-        searchFilter
-      ];
-      delete where.OR;
-    } else {
-      Object.assign(where, searchFilter);
-    }
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' as const } },
+      { description: { contains: search, mode: 'insensitive' as const } },
+    ];
   }
 
   const orderBy: Record<string, string> = {};

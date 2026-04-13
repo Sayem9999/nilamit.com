@@ -7,18 +7,21 @@
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
 ## Version History
-- **v1.5 (Current)**:
-    - Comprehensive hardening of Social Circles.
+- **v1.6 (Current)**:
+    - **Global Trust Pivot**: Decommissioned Auction Circles to focus on universal liquidity.
+    - **Real-time Engine**: Price Alerts (Targets/Outbid) and Presence Bidding.
+    - **Escrow Shield**: Transaction-gated coordination chat + Trust-tiered advance payments.
+    - **Monetization v1.5**: Tiered success fees (1% - 2.5% + ৳20).
+- **v1.5**:
+    - Comprehensive hardening of the bidding transaction engine.
     - Admin dashboard enhancements (Moderation, System, Users).
 - **v1.3**:
     - Finalized Admin Tab functionality.
 - **v1.2**:
     - Bulk image upload via Uploadthing.
     - Auction reporting system implemented.
-- **v1.1**:
-    - SMS trust anchors.
-    - Initial transactional bidding engine.
 
 ## Policy Choices
-- **PSSA 2024 Compliance**: Platform must be Bengali-first to ensure transparency for non-technical users.
-- **Escrow-Style Settlements**: 10% platform fee deducted upon successful auction close.
+- **PSSA 2024 Compliance**: Platform must be Bengali-first and accessible.
+- **Trust-Based Escrow**: Success fees and delivery charges are held from buyers if the seller isn't Verified.
+- **Anti-Sniping (Soft Close)**: 2-minute auto-extension on late bids.

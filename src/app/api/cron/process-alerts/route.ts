@@ -13,27 +13,38 @@ export async function GET(req: Request) {
   try {
     let processedCount = 0;
 
-    // Process PRICE_DROP alerts
-    const activePriceAlerts = await prisma.alert.findMany({
+    // Process TARGET_REACHED and PRICE_DROP alerts
+    const activeAlerts = await prisma.alert.findMany({
       where: {
-        type: 'PRICE_DROP',
         isActive: true,
-        thresholdPrice: { not: null },
+        type: { in: ['TARGET_REACHED', 'PRICE_DROP'] },
         auctionId: { not: null }
       },
       include: {
         auction: { select: { currentPrice: true, title: true } },
-        user: { select: { email: true, name: true } }
+        user: { select: { email: true, name: true, id: true } }
       }
     });
 
-    for (const alert of activePriceAlerts) {
+    for (const alert of activeAlerts) {
       if (alert.auction && alert.thresholdPrice !== null) {
-        if (alert.auction.currentPrice <= alert.thresholdPrice) {
-          // Condition met: Current price is at or below the threshold
-          console.log(`[ALERT TRIGGERED] User ${alert.user.email}: Price for '${alert.auction.title}' dropped to ৳${alert.auction.currentPrice}`);
+        const isTargetReached = alert.type === 'TARGET_REACHED' && alert.auction.currentPrice >= alert.thresholdPrice;
+        const isPriceDropped = alert.type === 'PRICE_DROP' && alert.auction.currentPrice <= alert.thresholdPrice;
+
+        if (isTargetReached || isPriceDropped) {
+          // Condition met
+          console.log(`[ALERT TRIGGERED] User ${alert.user.id}: ${alert.type} for '${alert.auction.title}'`);
           
-          // Disable alert so it doesn't trigger again
+          // Trigger Pusher
+          await pusherServer.trigger(`user-${alert.user.id}`, 'price-alert', {
+            auctionId: alert.auctionId,
+            auctionTitle: alert.auction.title,
+            amount: alert.auction.currentPrice,
+            type: alert.type,
+            threshold: alert.thresholdPrice
+          }).catch(console.error);
+
+          // Disable alert so it doesn't trigger again (One-time trigger)
           await prisma.alert.update({
             where: { id: alert.id },
             data: { isActive: false }
@@ -45,6 +56,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({ 
+      success: true,
       message: `Processed ${processedCount} alerts successfully.`,
       processedCount
     });

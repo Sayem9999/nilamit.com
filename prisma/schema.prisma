@@ -51,8 +51,6 @@ model User {
   // Elevation 8: Social Proof
   winningStreak     Int      @default(0)
   userLevel         Int      @default(1)
-  circlesOwned      AuctionCircle[] @relation("CircleOwner")
-  circleMemberships CircleMember[]
   badges            UserBadge[]
 
   // Sandbox Escrow (Phase 10)
@@ -143,12 +141,9 @@ model Auction {
   // Elevation 7
   alerts          Alert[]
 
-  // Elevation 8: Social
-  circleId        String?
-  circle          AuctionCircle? @relation(fields: [circleId], references: [id])
-  
   // Sandbox Escrow (Phase 10)
   escrowTransaction EscrowTransaction?
+  conversation      Conversation?
 
   @@index([status, endTime])
   @@index([category])
@@ -319,6 +314,7 @@ enum AlertType {
   ENDING_SOON
   OUTBID
   NEW_AUCTION_IN_CATEGORY
+  TARGET_REACHED
 }
 
 // ─── Bulk Operations (Elevation 7) ──────────────────
@@ -351,37 +347,6 @@ model SystemConfig {
   showAnnouncement Boolean @default(false)
   
   updatedAt      DateTime @updatedAt
-}
-
-// ─── Auction Circles (Elevation 8) ──────────────────
-model AuctionCircle {
-  id          String   @id @default(cuid())
-  name        String
-  description String?  @db.Text
-  inviteCode  String   @unique
-  
-  ownerId     String
-  owner       User     @relation("CircleOwner", fields: [ownerId], references: [id])
-  
-  members     CircleMember[]
-  auctions    Auction[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model CircleMember {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  circleId    String
-  circle      AuctionCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
-  
-  joinedAt    DateTime @default(now())
-
-  @@unique([userId, circleId])
-  @@index([userId])
-  @@index([circleId])
 }
 
 // ─── Gamification (Phase 10) ────────────────────────
@@ -445,5 +410,43 @@ enum EscrowStatus {
   REFUNDED
   DISPUTED
   FEE_REFUNDED
+}
+
+// ─── Direct Chat (Phase 3) ──────────────────────────
+model Conversation {
+  id              String   @id @default(cuid())
+  
+  auctionId       String   @unique
+  auction         Auction  @relation(fields: [auctionId], references: [id])
+  
+  buyerId         String
+  sellerId        String
+  
+  messages        Message[]
+  
+  lastMessageAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  senderId        String
+  content         String   @db.Text
+  imageUrl        String?  // Optional image attachment (Phase 3.1)
+  
+  isSystemMessage Boolean  @default(false)
+  isRead          Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+
+  @@index([conversationId])
 }
 

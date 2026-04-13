@@ -5,73 +5,6 @@ import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
 /**
- * Creates a new private auction circle
- */
-export async function createAuctionCircle(name: string, description?: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-  // Generate a unique 6-character invite code
-  const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-
-  try {
-  
-    const circle = await prisma.auctionCircle.create({
-      data: {
-        name,
-        description,
-        inviteCode,
-        ownerId: session.user.id,
-        members: {
-          create: {
-            userId: session.user.id
-          }
-        }
-      }
-    });
-
-    revalidatePath('/social');
-    return { success: true, circle };
-  } catch (error: unknown) {
-    const err = error as { message?: string };
-    return { success: false, error: err.message || 'Failed to create circle' };
-  }
-}
-
-/**
- * Joins an existing circle via invite code
- */
-export async function joinAuctionCircle(inviteCode: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
-
-  try {
-  
-    const circle = await prisma.auctionCircle.findUnique({
-      where: { inviteCode }
-    });
-
-    if (!circle) return { success: false, error: "Invalid invite code" };
-
-    await prisma.circleMember.create({
-      data: {
-        userId: session.user.id,
-        circleId: circle.id
-      }
-    });
-
-    revalidatePath('/social');
-    return { success: true, circle };
-  } catch (error: unknown) {
-    const err = error as { code?: string };
-    if (err.code === 'P2002') {
-      return { success: false, error: "You are already a member of this circle" };
-    }
-    return { success: false, error: "Failed to join circle" };
-  }
-}
-
-/**
  * Gets user's reputation and streaks
  */
 export async function getUserReputation(userId?: string) {
@@ -95,24 +28,33 @@ export async function getUserReputation(userId?: string) {
 }
 
 /**
- * Gets circles user belongs to
+ * Gets all active conversations for the user
  */
-export async function getUserCircles() {
+export async function getUserConversations() {
   const session = await auth();
   if (!session?.user?.id) return [];
-  
 
-  return prisma.auctionCircle.findMany({
+  return prisma.conversation.findMany({
     where: {
       OR: [
-        { ownerId: session.user.id },
-        { members: { some: { userId: session.user.id } } }
+        { buyerId: session.user.id },
+        { sellerId: session.user.id }
       ]
     },
     include: {
-      _count: {
-        select: { members: true, auctions: true }
+      auction: {
+        select: {
+          title: true,
+          images: true,
+          seller: { select: { name: true, image: true } },
+          winner: { select: { name: true, image: true } }
+        }
+      },
+      messages: {
+        orderBy: { createdAt: 'desc' },
+        take: 1
       }
-    }
+    },
+    orderBy: { lastMessageAt: 'desc' }
   });
 }

@@ -26,12 +26,21 @@ Nilamit is a high-performance, real-time C2C auction marketplace designed for tr
 - **Category Feeds**: "For You" and "Ending Soon" feeds tailored to user interests.
 - **Smart Hub**: Centralized "Notification Hub" for outbid alerts and auction updates.
 
-## 5. Admin Command Center
-- **Dynamic Content Control**: Real-time updates to Hero titles, subtitles, and global announcements.
-- **Featured Management**: Single-click toggles to promote high-value auctions to the homepage.
-- **User Moderation**: Direct dashboard for granting/revoking Verified Seller status.
-- **Health Metrics**: Real-time monitoring of total users, bids, and revenue streams.
+## 5. Logistics & Coordination Hub
+- **Transaction-Gated Chat**: Secure, real-time coordination channels unlocked only after an advance payment is held.
+- **PII Shielding**: Automatic real-time filtering of phone numbers and sensitive contact details to prevent leakages.
+- **Media Support**: Support for image attachments in chat for document/logistics verification.
 
-## 6. Real-time Alerts
-- **Outbid Alerts**: In-app toast + Browser notification fires the moment a user is outbid.
-- **Ending Soon Alerts**: Proactive notifications pushed 30-60 minutes before a watched item closes.
+## 6. Financial & Escrow Layer
+- **Escrow Shield**: Trust-tiered escrow. Verified sellers get instant holds; unverified sellers require a confirmed advance (Commission + Delivery) before coordination unlocks.
+- **Success Fee Engine**: Automated, tiered commission logic (2.5%, 1.5%, 1%) integrated into the auction closing loop.
+
+## 7. Real-time Proactive Alerts
+- **Price Target Alerts**: One-time notifications triggered exactly when a custom user-defined threshold is met.
+- **Outbid Follows**: Proactive signals for non-bidders or watchers who wish to track auction heat in real-time.
+- **Desktop notifications**: High-visibility toasts with integrated navigation for immediate response.
+
+## 8. Admin Command Center
+- **Dynamic Content Control**: Real-time updates to global announcements.
+- **User Moderation**: Direct dashboard for granting/revoking Verified Seller status and auditing reputations.
+- **Health Metrics**: Real-time monitoring of total users, bids, and revenue streams.

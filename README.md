@@ -11,8 +11,10 @@
 | **Framework** | Next.js 15+ (App Router, Server Actions)   |
 | **Database**  | PostgreSQL via Supabase                    |
 | **ORM**       | Prisma 6                                   |
-| **Auth**      | Auth.js v5 (Google + Email OTP)            |
-| **Styling**   | Tailwind CSS 4                             |
+| **Real-time** | Pusher (WebSocket Interaction)             |
+| **Auth**      | Auth.js v5 (Google + Credentials)          |
+| **i18n**      | next-intl (Bengali & English)              |
+| **Styling**   | Tailwind CSS 4 + shadcn/ui                 |
 | **SMS**       | Pluggable (GreenWeb / BulksmsBD / Console) |
 
 ## Quick Start
@@ -38,17 +40,16 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```
 src/
-├── actions/          # Server Actions (bid, auction, phone, user, admin)
+├── actions/          # Server Actions (bid, auction, escrow, chat)
 ├── app/
-│   ├── admin/        # Admin panel (email-gated)
-│   ├── auctions/     # Listing, detail, create
-│   ├── dashboard/    # User dashboard
-│   ├── login/        # Auth (Google + Email OTP)
-│   └── profile/      # Phone verification
+│   ├── [locale]/     # Internationalized routes (bn/en)
+│   │   ├── admin/    # Admin panel
+│   │   ├── auctions/ # Listing, detail, create
+│   │   └── dashboard/# User persona dashboards
 ├── components/
-│   ├── auction/      # AuctionCard, BidPanel, CountdownTimer
-│   └── layout/       # Navbar, Footer
-├── lib/              # Auth, DB, SMS gateway, formatters
+│   ├── auction/      # BidPanel, Countdown, Alerts
+│   └── social/       # Chat, Escrow Cards, Leaderboards
+├── lib/              # Logic, DB, Pusher, PII-Filter
 └── types/            # Shared TypeScript types
 ```
 

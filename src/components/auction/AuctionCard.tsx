@@ -10,7 +10,7 @@ import type { AuctionWithSeller } from "@/types";
 import { useSession } from "next-auth/react";
 import { useSettings } from "@/context/SettingsContext";
 import { useTranslations } from "next-intl";
-import UserBadge from "../social/UserBadge";
+import TrustBadge from "../social/TrustBadge";
 
 export default function AuctionCard({
   auction,
@@ -94,11 +94,10 @@ export default function AuctionCard({
               )}
             </div>
             {auction.seller.reputationScore > 0 && (
-              <UserBadge
-                level={auction.seller.userLevel ?? 1}
-                streak={auction.seller.winningStreak ?? 0}
-                reputation={auction.seller.reputationScore}
-                className="scale-90 origin-left"
+              <TrustBadge 
+                score={auction.seller.reputationScore} 
+                size="sm"
+                className="scale-95 origin-left"
               />
             )}
             {auction.location && (

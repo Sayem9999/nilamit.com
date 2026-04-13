@@ -13,8 +13,14 @@ export async function POST(req: Request) {
     const socketId = data.get('socket_id') as string;
     const channel = data.get('channel_name') as string;
 
-    if (!socketId || !channel) {
-      return new NextResponse('Missing parameters', { status: 400 });
+    // ── Channel Authorization Logic ──────────────────
+    
+    // Private User Channels: Must match session ID
+    if (channel.startsWith('private-user-')) {
+      const userId = channel.replace('private-user-', '');
+      if (session?.user?.id !== userId) {
+        return new NextResponse('Unauthorized Channel Access', { status: 403 });
+      }
     }
 
     // Determine the user details for presence channel

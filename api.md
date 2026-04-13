@@ -26,7 +26,18 @@ Nilamit utilizes Next.js **Server Actions** as the primary interaction layer, co
 ### `alert.ts`
 | Action | Description |
 |---|---|
-| `createAlert(data)` | Configures OUTBID or ENDING_SOON alerts for a user. |
+| `createAlert(data)` | Configures OUTBID, ENDING_SOON, or TARGET_REACHED alerts. |
+
+### `escrow.ts`
+| Action | Description |
+|---|---|
+| `getEscrowDetails(id)` | Fetches payment and status info for an escrow deal. |
+| `releaseEscrow(id)` | Buyer action to finalize fund release to seller. |
+
+### `chat.ts`
+| Action | Description |
+|---|---|
+| `sendMessage(input)` | Authenticated messaging. Includes PII shielding and image support. Unlocked by escrow status. |
 
 ---
 
@@ -47,7 +58,8 @@ Nilamit utilizes Next.js **Server Actions** as the primary interaction layer, co
 ### `user-{userId}` (Private)
 | Event | Payload | Description |
 |---|---|---|
-| `outbid-alert` | `auctionTitle`, `amount` | Fired when the user is no longer the high bidder. |
+| `outbid-alert` | `auctionId`, `amount` | User was the high bidder and just got surpassed. |
+| `price-alert` | `type`, `amount`, `threshold` | Target Price reached or outbid-follow signal fired. |
 | `ending-soon` | `auctionId`, `auctionTitle` | Fired ~30 mins before a watched item closes. |
 
 ### `presence-auction-{auctionId}` (Public/Presence)

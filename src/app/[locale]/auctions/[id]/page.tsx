@@ -27,10 +27,8 @@ import { ShareButton } from "@/components/auction/ShareButton";
 import { BidHistory } from "@/components/auction/BidHistory";
 import UserBadge from "@/components/social/UserBadge";
 import { GatedContactInfo } from "@/components/ui/GatedContactInfo";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { DollarSign, Truck, Info } from "lucide-react";
-import PriceAlertButton from "@/components/auction/PriceAlertButton";
-import UserBadge from "@/components/social/UserBadge";
+import { getAuctionChat } from "@/actions/chat";
+import ChatInterface from "@/components/social/ChatInterface";
 import { Metadata } from "next";
 import Script from "next/script";
 import { AuctionStatus } from "@prisma/client";
@@ -75,9 +73,10 @@ export default async function AuctionDetailPage({ params }: Props) {
   const auction = await getAuction(id);
   if (!auction) return <div>Auction not found</div>;
 
-  const [bids, watched] = await Promise.all([
+  const [bids, watched, chat] = await Promise.all([
     getAuctionBids(id),
     isWatched(id),
+    getAuctionChat(id)
   ]);
 
   const jsonLd = {
@@ -297,6 +296,27 @@ export default async function AuctionDetailPage({ params }: Props) {
                       type="address"
                       isVerified={auction.seller?.isVerifiedSeller}
                     />
+
+                    {/* Coordination Chat */}
+                    {chat && (
+                      <div className="mt-6">
+                        <ChatInterface 
+                          auctionId={id}
+                          conversationId={chat.id}
+                          initialMessages={chat.messages}
+                          recipientName={
+                            session?.user?.id === chat.buyerId 
+                              ? chat.auction.seller.name || 'Seller'
+                              : chat.auction.winner?.name || 'Buyer'
+                          }
+                          recipientImage={
+                            session?.user?.id === chat.buyerId 
+                              ? chat.auction.seller.image
+                              : chat.auction.winner?.image
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
