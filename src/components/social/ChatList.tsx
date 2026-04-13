@@ -16,7 +16,7 @@ interface ConversationWithMeta {
     title: string;
     images: string[];
     seller: { name: string | null; image: string | null };
-    winner: { name: string | null; image: string | null };
+    winner: { name: string | null; image: string | null } | null;
   };
   messages: {
     id: string;
