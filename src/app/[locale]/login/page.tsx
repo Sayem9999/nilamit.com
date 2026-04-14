@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Gavel, Mail, ArrowRight, Smartphone } from "lucide-react";
 import Link from "next/link";
+import { normalizePhone } from "@/lib/utils";
 
 import { useTranslations } from "next-intl";
 
@@ -24,8 +25,9 @@ export default function LoginPage() {
     setError("");
 
     startTransition(async () => {
+      const normalizedPhone = loginMethod === "phone" ? normalizePhone(phone) : "";
       const result = await signIn(loginMethod === "email" ? "credentials" : "phone", {
-        ...(loginMethod === "email" ? { email } : { phone }),
+        ...(loginMethod === "email" ? { email } : { phone: normalizedPhone }),
         password,
         redirect: false,
       });

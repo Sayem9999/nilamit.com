@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { registerUser } from "@/actions/auth";
-import { useRouter } from "next/navigation";
-import { Gavel, Loader2, ArrowRight, Smartphone, CheckCircle } from "lucide-react";
+import { Gavel, Loader2, ArrowRight, Smartphone, CheckCircle, Mail } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 export default function RegisterPage() {
+  const [signupMethod, setSignupMethod] = useState<"phone" | "email">("phone");
   const [step, setStep] = useState<"phone" | "otp" | "details">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -21,7 +20,6 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-  const router = useRouter();
   const t = useTranslations("Auth");
 
   // Actions
@@ -56,19 +54,36 @@ export default function RegisterPage() {
     }
 
     startTransition(async () => {
-      const { signupWithPhone } = await import("@/actions/auth");
-      const result = await signupWithPhone({
-        name: formData.name,
-        phone,
-        otp,
-        password: formData.password,
-        email: formData.email,
-      });
+      if (signupMethod === "phone") {
+        const { signupWithPhone } = await import("@/actions/auth");
+        const result = await signupWithPhone({
+          name: formData.name,
+          phone,
+          otp,
+          password: formData.password,
+          email: formData.email,
+        });
 
-      if (result.success) {
-        setSuccess(true);
+        if (result.success) {
+          setSuccess(true);
+        } else {
+          setError(result.error || t("registrationFailed"));
+        }
       } else {
-        setError(result.error || t("registrationFailed"));
+        // Email Signup Path
+        const { registerUser } = await import("@/actions/auth");
+        const result = await registerUser({
+          firstName: formData.name.split(' ')[0], // Simple split for name
+          lastName: formData.name.split(' ').slice(1).join(' ') || '.',
+          email: formData.email,
+          password: formData.password
+        });
+
+        if (result.success) {
+          setSuccess(true);
+        } else {
+          setError(result.error || t("registrationFailed"));
+        }
       }
     });
   };
@@ -120,21 +135,124 @@ export default function RegisterPage() {
           <h1 className="font-heading font-bold text-2xl text-gray-900">
             {t("createAccount")}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Join Bangladesh's premium marketplace</p>
+          <p className="text-sm text-gray-500 mt-1">Join Bangladesh&apos;s premium marketplace</p>
         </div>
 
         <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
           {/* Progress Bar */}
           <div className="h-1.5 w-full bg-gray-50 flex">
-            <div className={`h-full bg-primary-600 transition-all duration-500 ${step === 'phone' ? 'w-1/3' : step === 'otp' ? 'w-2/3' : 'w-full'}`} />
+            <div className={`h-full bg-primary-600 transition-all duration-500 ${
+              signupMethod === 'email' ? 'w-full' : (step === 'phone' ? 'w-1/3' : step === 'otp' ? 'w-2/3' : 'w-full')
+            }`} />
           </div>
 
           <div className="p-8">
+            {/* Signup Method Tabs */}
             {step === "phone" && (
+              <div className="flex bg-gray-50/50 p-1 mb-8 rounded-2xl border border-gray-100">
+                <button
+                  onClick={() => setSignupMethod("phone")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                    signupMethod === "phone"
+                      ? "bg-white text-primary-600 shadow-sm border border-gray-100"
+                      : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  <Smartphone className="w-4 h-4" />
+                  ফোন (Phone)
+                </button>
+                <button
+                  onClick={() => setSignupMethod("email")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                    signupMethod === "email"
+                      ? "bg-white text-primary-600 shadow-sm border border-gray-100"
+                      : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  <Mail className="w-4 h-4" />
+                  ইমেইল (Email)
+                </button>
+              </div>
+            )}
+
+            {signupMethod === "email" && step === "phone" ? (
+               <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">ইমেইল দিয়ে সাইনআপ (Email Signup)</h3>
+                  <p className="text-sm text-gray-500">Nilamit এ আপনার অ্যাকাউন্ট তৈরি করুন।</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">পূর্ণ নাম (Full Name)</label>
+                    <input
+                      required
+                      type="text"
+                      placeholder="e.g. Sayem Ahmed"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">ইমেইল (Email Address)</label>
+                    <input
+                      required
+                      type="email"
+                      placeholder="email@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">পাসওয়ার্ড (Password)</label>
+                    <input
+                      required
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">পাসওয়ার্ড নিশ্চিত করুন</label>
+                    <input
+                      required
+                      type="password"
+                      placeholder="••••••••"
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <p className="text-xs font-semibold text-red-500 bg-red-50 p-3 rounded-xl border border-red-100 text-center">
+                    {error}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary-100 transition-all flex items-center justify-center gap-2"
+                >
+                  {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "সাইনআপ করুন (Signup)"}
+                </button>
+              </form>
+            ) : (
+              <>
+                {step === "phone" && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="mb-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-1">Enter Phone Number</h3>
-                  <p className="text-sm text-gray-500">We'll send you a 4-digit code to verify your phone.</p>
+                  <p className="text-sm text-gray-500">We&apos;ll send you a 4-digit code to verify your phone.</p>
                 </div>
                 <div className="space-y-4">
                   <div className="relative">
@@ -194,6 +312,8 @@ export default function RegisterPage() {
                   </div>
                 </div>
               </div>
+            )}
+            </>
             )}
 
             {step === "details" && (

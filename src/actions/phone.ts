@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { normalizePhone } from '@/lib/utils';
 import { smsGateway } from '@/lib/sms-gateway';
 import { Resend } from 'resend';
 import crypto from 'crypto';
@@ -28,35 +29,39 @@ export async function sendPhoneOTP(phone: string) {
     return { success: false, error: 'You must be logged in.' };
   }
 
-  // Validate BD phone format
-  if (!/^\+880\d{10}$/.test(phone)) {
-    return { success: false, error: 'Invalid Bangladesh phone number. Use +880XXXXXXXXXX format.' };
+  const normalizedPhone = normalizePhone(phone);
+
+  // Validate BD phone format (+880 followed by 10 digits starting with 1)
+  if (!/^\+8801\d{9}$/.test(normalizedPhone)) {
+    return { success: false, error: 'Invalid Bangladesh phone number. Use +880XXXXXXXXXX or local 11-digit format.' };
   }
 
   // Check if phone already used by another verified user
   const existingUser = await prisma.user.findFirst({
-    where: { phone, isPhoneVerified: true, id: { not: session.user.id } },
+    where: { phone: normalizedPhone, isPhoneVerified: true, id: { not: session.user.id } },
   });
   if (existingUser) {
     return { success: false, error: 'This phone number is already verified by another account.' };
   }
 
-  return await internalSendOTP(phone, session.user.id, session.user.email || undefined);
+  return await internalSendOTP(normalizedPhone, session.user.id, session.user.email || undefined);
 }
 
 /**
  * Request OTP for standalone Signup/Login (No session required)
  */
 export async function requestStandaloneOTP(phone: string) {
+  const normalizedPhone = normalizePhone(phone);
+
   // Validate BD phone format
-  if (!/^\+880\d{10}$/.test(phone)) {
-    return { success: false, error: 'Invalid Bangladesh phone number. Use +880XXXXXXXXXX format.' };
+  if (!/^\+8801\d{9}$/.test(normalizedPhone)) {
+    return { success: false, error: 'Invalid Bangladesh phone number. Use +880XXXXXXXXXX or local 11-digit format.' };
   }
 
   // For Registration: We allow sending OTP to any number (we'll check uniqueness during creation)
   // For Login: We allow sending OTP to existing numbers 
   
-  return await internalSendOTP(phone);
+  return await internalSendOTP(normalizedPhone);
 }
 
 /**
@@ -143,7 +148,8 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
  * Verify OTP (Standalone)
  */
 export async function verifyStandaloneOTP(phone: string, otp: string) {
-  return await internalVerifyOTP(phone, otp);
+  const normalizedPhone = normalizePhone(phone);
+  return await internalVerifyOTP(normalizedPhone, otp);
 }
 
 /**

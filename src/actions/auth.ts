@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { verifyStandaloneOTP } from './phone';
+import { normalizePhone } from '@/lib/utils';
 
 export async function registerUser(data: { firstName: string; lastName: string; email: string; password: string }) {
   try {
@@ -55,12 +56,14 @@ export async function signupWithPhone(data: {
   try {
     const { name, phone, otp, password, email } = data;
 
+    const normalizedPhone = normalizePhone(phone);
+
     // 1. Verify OTP
-    const otpVerify = await verifyStandaloneOTP(phone, otp);
+    const otpVerify = await verifyStandaloneOTP(normalizedPhone, otp);
     if (!otpVerify.success) return otpVerify;
 
     // 2. Check phone/email exists
-    const existingPhone = await prisma.user.findUnique({ where: { phone } });
+    const existingPhone = await prisma.user.findUnique({ where: { phone: normalizedPhone } });
     if (existingPhone) return { success: false, error: 'Phone number already registered.' };
 
     if (email) {
@@ -75,7 +78,7 @@ export async function signupWithPhone(data: {
     await prisma.user.create({
       data: {
         name,
-        phone,
+        phone: normalizedPhone,
         password: hashedPassword,
         email: email || `user-${Date.now()}@nilamit.placeholder`, // Placeholder if no email
         isPhoneVerified: true,
