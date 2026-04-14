@@ -31,7 +31,15 @@ export default async function DashboardPage({
     redirect(`/${locale}/login?callbackUrl=/${locale}/dashboard`);
   }
 
-  const systemConfig = await getSystemConfig();
+  const systemConfig = await getSystemConfig() || {
+    heroTitle: 'Buy & Sell in Real-time Auctions',
+    heroSubtitle: "Bangladesh's most trusted C2C marketplace.",
+    heroImage: null,
+    announcement: null,
+    showAnnouncement: false,
+    treasuryBkash: "017XXXXXXXX",
+    treasuryNagad: "018XXXXXXXX",
+  };
 
   const { tab } = await searchParams;
   const currentTab = tab || "watchlist";

@@ -17,7 +17,7 @@ async function requireAdmin() {
 function isDatabaseUnavailable(error: unknown) {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === 'P1001'
+    (error.code === 'P1001' || error.code === 'P2021' || error.code === 'P2022')
   );
 }
 
