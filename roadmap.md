@@ -6,12 +6,12 @@
 - [x] Basic auction listing and bidding flow.
 - [x] Image upload via Uploadthing.
 
-## Phase 2: Trust & Coordination (Current) — COMPLETED ✅
-- [x] Admin dashboards for Moderation and System health.
-- [x] Reputation Scores, User Levels, and Elite Leaderboards.
-- [x] Real-time Price Alerts (Outbid & Target Reached).
-- [x] Transaction-Gated Coordination Chat with PII Shielding.
-- [x] Tiered Success Fee Engine (v1.5).
+## Phase 2: Trust & Coordination (v1.7.0) — COMPLETED ✅
+- [x] **StarMap Constellation**: Real-time social trust visualization (D3.js).
+- [x] **Escrow Coordination Hub**: Transaction-gated logistics and PII-shielded chat.
+- [x] **Dispute Resolution Engine**: Admin-facing conflict management and atomic fund resolution.
+- [x] **Reputation Engine**: Global leaderboard and trust-tier stratification.
+- [x] **Monetization v1.5**: Tiered success fee engine integration.
 
 ## Phase 3: Financial & Scaling (Q2 2026) — ACTIVE 🚀
 - [ ] **Escrow Shield 2.0**: Direct bKash/Nagad integration for automated advance holds.

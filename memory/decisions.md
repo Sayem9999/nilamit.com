@@ -7,13 +7,14 @@
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
 ## Version History
-- **v1.6 (Current)**:
-    - **Identity Verification Hardening**: Introduced `VerificationGuard` and multi-step standalone phone verification.
+- **v1.7.0 (Platform Hardening)**:
+    - **Trust Constellation (StarMap)**: Integrated D3.js social fabric visualization with reputation-scaled link physics.
+    - **Escrow Coordination Hub**: Locked post-auction logistics layer gated by `HELD` escrow state.
+    - **Neutral Dispute Center**: Administrative interface for conflict resolution with atomic transaction support.
+    - **UI Polish**: Simplified Navbar by removing legacy toggles; elevated "Dedicated Language Switcher."
+- **v1.6 (Identity Hardening)**:
     - **Hybrid Identification**: Shifted from phone-only to hybrid identity (Phone/Email) as trust anchors.
-    - **Global Trust Pivot**: Decommissioned Auction Circles to focus on universal liquidity.
-    - **Real-time Engine**: Price Alerts (Targets/Outbid) and Presence Bidding.
-    - **Escrow Shield**: Transaction-gated coordination chat + Trust-tiered advance payments.
-    - **Monetization v1.5**: Tiered success fees (1% - 2.5% + ৳20).
+    - **Verification Shield**: Introduced `VerificationGuard` and multi-step standalone phone verification.
 - **v1.5**:
     - Comprehensive hardening of the bidding transaction engine.
     - Admin dashboard enhancements (Moderation, System, Users).

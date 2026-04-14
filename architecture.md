@@ -8,10 +8,12 @@ Nilamit is built on a **Stateless, Layered Architecture** using the Next.js 15 A
 
 ```mermaid
 graph TD
+graph TD
     User((User)) -->|Browser| FE[Frontend Layer: Next.js 15]
     FE -->|Server Actions| BL[Business Logic Layer: Server Actions]
-    BL -->|Row Locking| DB[(Data Layer: PostgreSQL/Prisma)]
-    BL -->|Real-time| PS[Real-time Bus: Pusher]
+    BL -->|Reputation/Gating| TC[Trust & Coordination Engine]
+    TC -->|Row Locking| DB[(Data Layer: PostgreSQL/Prisma)]
+    TC -->|Real-time| PS[Real-time Bus: Pusher]
     BL -->|Infrastructure| INF[Infra Stack]
     
     subgraph INF
@@ -62,6 +64,17 @@ graph TD
 - **NextAuth.js v5**: Handles Google OAuth and Email/Password credentials.
 - **Trust-Tier System**: JWT augmentation with Reputation Score, User Level, and Winning Streak.
 - **Persona Routing**: Dynamic dashboards adapted for `BUYER`, `SELLER`, and `ADMIN`.
+
+---
+
+## ⚙️ Layer 2.5: Trust & Coordination Engine (v1.7)
+- **StarMap Visualization**: Decoupled D3.js engine mapping `User` relationship graph via link physics and reputation nodes.
+- **Escrow Coordination Hub**: State-aware logistics layer. Coordination interfaces are dynamically injected only when `EscrowHistory` status matches `HELD`.
+- **Conflict Resolution Engine**: Admin-gate with atomic resolution logic (`resolveAdminDispute`) to ensure cross-system consistency during manual overrides.
+
+## 🗄️ Layer 3: Data (Prisma & PostgreSQL)
+- **Calculated Credibility**: High-stakes trades increase the `reputationScore`.
+- **Social Proof**: Badge system (`UserBadge` model) and winning streaks incentivized by the "Elite Leaderboards".
 
 ---
 

@@ -54,15 +54,12 @@ src/
 └── types/            # Shared TypeScript types
 ```
 
-## Key Features
-
-- **Hybrid Auth**: Secure login via Google or +880 Phone OTP with standalone password reset
-- **Activity Gate**: Strict `VerificationGuard` blocking bidding/selling/chatting until identity is verified
-- **Anti-Sniping (Soft Close)**: Bids in the last 2 minutes extend the auction by 2 minutes
-- **Concurrency Safety**: Row locking prevents bid race conditions
-- **Verification Center**: User-facing hub for identity and MFS (bKash/Nagad) linkage
-- **Admin Recovery**: specialized tools for moderators to resolve account issues
-- **Reputation System**: Score-based trust built through successful transactions
+## 💎 Key Features (**v1.7.0: Trust & Coordination**)
+- **StarMap Constellation**: Interactive D3.js visualization of the marketplace "Social Fabric," mapping trust through link physics (Sale vs Interest).
+- **Escrow Coordination Hub**: A transaction-gated logistics layer with real-time chat and PII shielding, unlocked only after an advance is held.
+- **Admin Dispute Resolution**: Centralized conflict management with atomic database transactions for fund release and reputation adjustment.
+- **One-Time Soft-Close**: Automatically extends auctions by 2 minutes on late bids to ensure fair price discovery.
+- **Elite Leaderboards**: Reputation-based stratification for verified buyers and sellers.
 
 ## Environment Variables
 

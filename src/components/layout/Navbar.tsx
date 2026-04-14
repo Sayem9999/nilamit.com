@@ -13,12 +13,6 @@ import {
   Plus,
   LayoutDashboard,
   Globe,
-  Zap,
-  ZapOff,
-  Volume2,
-  VolumeX,
-  Bell,
-  BellOff,
   Search,
   ShieldCheck,
   AlertTriangle,
@@ -34,28 +28,8 @@ export function Navbar() {
   const t = useTranslations("Navigation");
   const router = useRouter();
   const pathname = usePathname();
-  const {
-    lightweightMode,
-    toggleLightweightMode,
-    soundEffectsEnabled,
-    toggleSoundEffects,
-  } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(
-    typeof window !== "undefined" && "Notification" in window
-      ? Notification.permission === "granted"
-      : false,
-  );
 
-  const handleToggleNotifications = async () => {
-    const granted = await requestNotificationPermission();
-    setNotificationsEnabled(granted);
-    if (granted) {
-      alert(
-        "Notifications enabled! You will now see alerts for important updates.",
-      );
-    }
-  };
 
   const toggleLanguage = () => {
     const newLocale = locale === "en" ? "bn" : "en";
@@ -98,71 +72,18 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-primary-600 hover:bg-white transition-all glass px-3 py-1.5 rounded-lg shadow-sm"
+              className="flex items-center gap-2 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-100 hover:bg-white hover:border-primary-200 transition-all px-4 py-2 rounded-xl shadow-sm"
               title={
-                locale === "en" ? "Switch to Bangla" : "English এ পরিবর্তন করুন"
+                locale === "en" ? "বাংলা" : "English"
               }
             >
-              <Globe className="w-4 h-4" />
-              {locale === "en" ? "বাংলা" : "English"}
+              <Globe className="w-4 h-4 text-primary-500" />
+              <span>{locale === "en" ? "বাংলা" : "English"}</span>
             </button>
 
-            <button
-              onClick={toggleLightweightMode}
-              className={`flex items-center gap-1.5 text-sm font-semibold transition-all px-3 py-1.5 rounded-lg shadow-sm ${
-                lightweightMode
-                  ? "bg-amber-50 text-amber-700 border border-amber-100"
-                  : "glass text-gray-600 hover:text-primary-600 hover:bg-white"
-              }`}
-              title={
-                lightweightMode
-                  ? "Standard Mode (Show Images)"
-                  : "Lightweight Mode (Save Data)"
-              }
-            >
-              {lightweightMode ? (
-                <ZapOff className="w-4 h-4" />
-              ) : (
-                <Zap className="w-4 h-4" />
-              )}
-              {lightweightMode ? "Standard" : "Lite"}
-            </button>
 
-            <button
-              onClick={toggleSoundEffects}
-              className={`flex items-center gap-1.5 text-sm font-semibold transition-all px-2.5 py-1.5 rounded-lg shadow-sm ${
-                !soundEffectsEnabled
-                  ? "bg-red-50 text-red-700 border border-red-100"
-                  : "glass text-gray-600 hover:text-primary-600 hover:bg-white"
-              }`}
-              title={soundEffectsEnabled ? "Mute Sounds" : "Unmute Sounds"}
-            >
-              {soundEffectsEnabled ? (
-                <Volume2 className="w-4 h-4" />
-              ) : (
-                <VolumeX className="w-4 h-4" />
-              )}
-            </button>
 
-            <button
-              onClick={handleToggleNotifications}
-              className={`flex items-center gap-1.5 text-sm font-semibold transition-all px-2.5 py-1.5 rounded-lg shadow-sm ${
-                notificationsEnabled
-                  ? "bg-blue-50 text-blue-700 border border-blue-100"
-                  : "glass text-gray-600 hover:text-primary-600 hover:bg-white"
-              }`}
-              title={
-                notificationsEnabled
-                  ? "Notifications Enabled"
-                  : "Enable Browser Notifications"
-              }
-            >
-              {notificationsEnabled ? (
-                <Bell className="w-4 h-4" />
-              ) : (
-                <BellOff className="w-4 h-4" />
-              )}
-            </button>
+
 
             <Link
               href="/auctions"
@@ -209,7 +130,7 @@ export function Navbar() {
                     )}
                     <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                       {session.user?.name?.split(" ")[0]}
-                      {(session.user as any).isPhoneVerified || (session.user as any).emailVerified ? (
+                      {(session?.user as { isPhoneVerified?: boolean; emailVerified?: boolean })?.isPhoneVerified || (session?.user as { isPhoneVerified?: boolean; emailVerified?: boolean })?.emailVerified ? (
                         <ShieldCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10" />
                       ) : (
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
@@ -224,7 +145,7 @@ export function Navbar() {
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" /> {t("profile")}
                       </div>
-                      {(session.user as any).isPhoneVerified || (session.user as any).emailVerified ? (
+                      {(session?.user as { isPhoneVerified?: boolean; emailVerified?: boolean })?.isPhoneVerified || (session?.user as { isPhoneVerified?: boolean; emailVerified?: boolean })?.emailVerified ? (
                         <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase">Verified</span>
                       ) : (
                         <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md uppercase">Unverified</span>
@@ -286,51 +207,7 @@ export function Navbar() {
                 <Globe className="w-4 h-4" />
                 {locale === "en" ? "বাংলা" : "English"}
               </button>
-              <button
-                onClick={toggleLightweightMode}
-                className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-xl border transition-colors ${
-                  lightweightMode
-                    ? "bg-amber-50 text-amber-700 border-amber-100"
-                    : "bg-gray-50 text-gray-700 border-transparent"
-                }`}
-              >
-                {lightweightMode ? (
-                  <ZapOff className="w-4 h-4" />
-                ) : (
-                  <Zap className="w-4 h-4" />
-                )}
-                {lightweightMode ? "Standard" : "Lite"}
-              </button>
-              <button
-                onClick={toggleSoundEffects}
-                className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-xl border transition-colors ${
-                  !soundEffectsEnabled
-                    ? "bg-red-50 text-red-700 border-red-100"
-                    : "bg-gray-50 text-gray-700 border-transparent"
-                }`}
-              >
-                {soundEffectsEnabled ? (
-                  <Volume2 className="w-4 h-4" />
-                ) : (
-                  <VolumeX className="w-4 h-4" />
-                )}
-                {soundEffectsEnabled ? "Sounds" : "Muted"}
-              </button>
-              <button
-                onClick={handleToggleNotifications}
-                className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-xl border transition-colors ${
-                  notificationsEnabled
-                    ? "bg-blue-50 text-blue-700 border-blue-100"
-                    : "bg-gray-50 text-gray-700 border-transparent"
-                }`}
-              >
-                {notificationsEnabled ? (
-                  <Bell className="w-4 h-4" />
-                ) : (
-                  <BellOff className="w-4 h-4" />
-                )}
-                {notificationsEnabled ? "Alerts" : "Silent"}
-              </button>
+
             </div>
             <div className="border-t border-gray-50 mt-2 pt-2">
               <Link
