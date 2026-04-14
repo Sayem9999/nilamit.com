@@ -13,8 +13,7 @@ import { SellerPerformance } from "@/components/seller/SellerPerformance";
 import { 
   BarChart3, 
   ChevronRight, 
-  Trophy, 
-  Target 
+  Trophy
 } from "lucide-react";
 
 export default async function DashboardPage({
@@ -40,7 +39,6 @@ export default async function DashboardPage({
   const userId = session.user.id;
 
   // Fetch relevant data based on tab
-  let myAuctions: AuctionWithSeller[] = [];
   let watchlistAuctions: AuctionWithSeller[] = [];
   let activeBids: AuctionWithSeller[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,7 +61,7 @@ export default async function DashboardPage({
         watchlist: { where: { userId } },
       },
     });
-    myAuctions = rawAuctions as unknown as AuctionWithSeller[];
+    watchlistAuctions = rawAuctions as unknown as AuctionWithSeller[];
   } else if (currentTab === "watchlist") {
     const watchlists = await prisma.watchlist.findMany({
       where: { userId },
@@ -147,7 +145,6 @@ export default async function DashboardPage({
       },
       orderBy: { lastMessageAt: 'desc' }
     });
-    // @ts-expect-error: Reusing slot for conversations to avoid extra component logic
     escrowTransactions = conversations; // Reusing the slot for simplicity in rendering
   } else if (currentTab === "performance") {
     // Derived stats for the performance tab
@@ -159,10 +156,9 @@ export default async function DashboardPage({
     const stats = {
       totalSales: sellerAuctions.filter(a => a.status === 'SOLD').length,
       revenue: sellerAuctions.reduce((acc, curr) => acc + (Number(curr.currentPrice) || 0), 0),
-      reputation: session.user.reputationScore || 0,
+      reputation: (session.user as { reputationScore?: number })?.reputationScore || 0,
       successRate: sellerAuctions.length > 0 ? Math.round((sellerAuctions.filter(a => a.status === 'SOLD').length / sellerAuctions.length) * 100) : 100
     };
-    // @ts-expect-error: Reusing slot for performance stats object
     escrowTransactions = [stats]; // Borrowing the slot
   }
 
@@ -271,12 +267,12 @@ export default async function DashboardPage({
                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Nilamit Score</span>
                     </div>
                     <div className="text-2xl font-heading font-bold mb-1">
-                      {session.user.reputationScore || 0}
+                      {(session.user as { reputationScore?: number })?.reputationScore || 0}
                       <span className="text-xs text-indigo-300 ml-1">RP</span>
                     </div>
                     <p className="text-[10px] text-indigo-300 mb-4 font-bold uppercase">{t("trustPointsTitle")}</p>
                     <Link 
-                      href="/leaderboard"
+                      href={`/${locale}/leaderboard`}
                       className="flex items-center justify-between w-full py-2 px-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase transition-all"
                     >
                       {t("viewLeaderboard")}

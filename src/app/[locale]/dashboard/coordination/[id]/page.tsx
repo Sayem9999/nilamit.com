@@ -111,18 +111,15 @@ export default async function CoordinationPage({
               </div>
               
               <EscrowActionCard 
-                transaction={conversation.auction.escrowTransaction as {
-                  id: string;
-                  amount: number;
-                  status: string;
-                  buyerId: string;
-                  sellerId: string;
-                  auctionId: string;
-                  createdAt: Date;
-                  updatedAt: Date;
-                  providerRef: string | null;
-                  confirmedAt: Date | null;
-                }} 
+                transaction={{
+                  ...(conversation.auction.escrowTransaction as object),
+                  auction: {
+                    title: conversation.auction.title,
+                    seller: { name: conversation.auction.seller.name },
+                    endTime: conversation.auction.endTime
+                  }
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any} 
                 treasuryNumbers={{
                   bkash: systemConfig.treasuryBkash,
                   nagad: systemConfig.treasuryNagad

@@ -17,11 +17,8 @@ import {
   ShieldCheck,
   AlertTriangle,
   Trophy,
-  Network,
   ChevronDown,
 } from "lucide-react";
-import { requestNotificationPermission } from "@/lib/notifications";
-import { useSettings } from "@/context/SettingsContext";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -97,8 +94,8 @@ export function Navbar() {
 
             {/* Explore Dropdown */}
             <div className="relative group">
-              <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">
-                Explore <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
+              <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors uppercase tracking-tight">
+                {t("explore")} <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
               </button>
               <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                 <div className="w-56 bg-white border border-gray-100 rounded-2xl shadow-xl p-1.5 overflow-hidden">
@@ -110,20 +107,8 @@ export function Navbar() {
                       <Trophy className="w-4 h-4 text-amber-500" />
                     </div>
                     <div>
-                      <div className="font-bold">Leaderboard</div>
-                      <div className="text-[10px] text-gray-400">Top Trusted Traders</div>
-                    </div>
-                  </Link>
-                  <Link
-                    href="/starmap"
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-                      <Network className="w-4 h-4 text-indigo-500" />
-                    </div>
-                    <div>
-                      <div className="font-bold">Trust Map</div>
-                      <div className="text-[10px] text-gray-400">Marketplace Fabric</div>
+                      <div className="font-bold">{t("leaderboard")}</div>
+                      <div className="text-[10px] text-gray-400">{t("leaderboardDesc")}</div>
                     </div>
                   </Link>
                 </div>

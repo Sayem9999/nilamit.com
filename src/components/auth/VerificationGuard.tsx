@@ -22,7 +22,6 @@ export function VerificationGuard({ children, fallback }: VerificationGuardProps
   const t = useTranslations("Auth");
 
   // Check verification status
-  // @ts-expect-error - session.user extension might not be typed yet in all places
   const isVerified = session?.user?.isPhoneVerified || !!session?.user?.emailVerified;
 
   const handleClick = (e: React.MouseEvent) => {
@@ -65,10 +64,10 @@ export function VerificationGuard({ children, fallback }: VerificationGuardProps
             {/* Content */}
             <div className="p-8 text-center shadow-none">
               <h2 className="text-2xl font-heading font-bold text-gray-900 mb-2 shadow-none">
-                Verification Required
+                {t("verificationRequired")}
               </h2>
               <p className="text-gray-500 mb-8 shadow-none">
-                To keep Nilamit safe, you need to verify your account before you can place bids or create auctions.
+                {t("verificationDesc")}
               </p>
 
               <div className="space-y-4 mb-8 shadow-none">
@@ -77,8 +76,8 @@ export function VerificationGuard({ children, fallback }: VerificationGuardProps
                     {session?.user?.isPhoneVerified ? <CheckCircle className="w-6 h-6 shadow-none" /> : <Smartphone className="w-6 h-6 shadow-none" />}
                   </div>
                   <div className="flex-1 shadow-none">
-                    <p className="font-semibold text-gray-900 text-sm shadow-none">Phone Verification</p>
-                    <p className="text-xs text-gray-500 shadow-none">{session?.user?.isPhoneVerified ? 'Verified' : 'Recommended for fast bidding'}</p>
+                    <p className="font-semibold text-gray-900 text-sm shadow-none">{t("phoneVerification")}</p>
+                    <p className="text-xs text-gray-500 shadow-none">{session?.user?.isPhoneVerified ? t("verified") : t("phoneRecommended")}</p>
                   </div>
                 </div>
 
@@ -87,8 +86,8 @@ export function VerificationGuard({ children, fallback }: VerificationGuardProps
                     {session?.user?.emailVerified ? <CheckCircle className="w-6 h-6 shadow-none" /> : <Mail className="w-6 h-6 shadow-none" />}
                   </div>
                   <div className="flex-1 shadow-none">
-                    <p className="font-semibold text-gray-900 text-sm shadow-none">Email Verification</p>
-                    <p className="text-xs text-gray-500 shadow-none">{session?.user?.emailVerified ? 'Verified' : 'Required for official invoices'}</p>
+                    <p className="font-semibold text-gray-900 text-sm shadow-none">{t("emailVerification")}</p>
+                    <p className="text-xs text-gray-500 shadow-none">{session?.user?.emailVerified ? t("verified") : t("emailRequired")}</p>
                   </div>
                 </div>
               </div>
@@ -99,13 +98,13 @@ export function VerificationGuard({ children, fallback }: VerificationGuardProps
                   onClick={() => setShowModal(false)}
                   className="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl font-bold shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-2"
                 >
-                  Verify Now
+                  {t("verifyNow")}
                 </Link>
                 <button
                   onClick={() => setShowModal(false)}
                   className="w-full py-3 text-gray-400 font-medium text-sm hover:text-gray-600 transition-colors shadow-none"
                 >
-                  Maybe later
+                  {t("maybeLater")}
                 </button>
               </div>
             </div>

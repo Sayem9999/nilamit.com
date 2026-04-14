@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import { Gavel, Phone, Mail, MapPin } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
 
 export function Footer() {
+  const t = useTranslations("Footer");
+  const locale = useLocale();
+
   return (
     <footer className="bg-primary-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -17,35 +21,34 @@ export function Footer() {
               </span>
             </div>
             <p className="text-sm text-primary-200 leading-relaxed">
-              Bangladesh&apos;s trusted C2C auction marketplace. Buy and sell with confidence through transparent, real-time bidding.
+              {t("brandDesc")}
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-heading font-semibold text-sm mb-4">Marketplace</h4>
+            <h4 className="font-heading font-semibold text-sm mb-4">{t("marketplace")}</h4>
             <ul className="space-y-2">
-              <li><Link href="/auctions" className="text-sm text-primary-300 hover:text-white transition-colors">Browse Auctions</Link></li>
-              <li><Link href="/auctions/create" className="text-sm text-primary-300 hover:text-white transition-colors">Sell an Item</Link></li>
-              <li><Link href="/leaderboard" className="text-sm text-primary-300 hover:text-white transition-colors">Global Leaderboard</Link></li>
-              <li><Link href="/starmap" className="text-sm text-primary-300 hover:text-white transition-colors">Trust Starmap</Link></li>
+              <li><Link href={`/${locale}/auctions`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("browse")}</Link></li>
+              <li><Link href={`/${locale}/auctions/create`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("sell")}</Link></li>
+              <li><Link href={`/${locale}/leaderboard`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("leaderboard")}</Link></li>
             </ul>
           </div>
 
           {/* Support */}
           <div>
-            <h4 className="font-heading font-semibold text-sm mb-4">Support</h4>
+            <h4 className="font-heading font-semibold text-sm mb-4">{t("support")}</h4>
             <ul className="space-y-2">
-              <li><Link href="/how-it-works" className="text-sm text-primary-300 hover:text-white transition-colors">How It Works</Link></li>
-              <li><Link href="/safety" className="text-sm text-primary-300 hover:text-white transition-colors">Safety Tips</Link></li>
-              <li><Link href="/faq" className="text-sm text-primary-300 hover:text-white transition-colors">FAQ</Link></li>
-              <li><Link href="/contact" className="text-sm text-primary-300 hover:text-white transition-colors">Contact Us</Link></li>
+              <li><Link href={`/${locale}/how-it-works`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("howItWorks")}</Link></li>
+              <li><Link href={`/${locale}/safety`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("safety")}</Link></li>
+              <li><Link href={`/${locale}/faq`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("faq")}</Link></li>
+              <li><Link href={`/${locale}/contact`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("contact")}</Link></li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="font-heading font-semibold text-sm mb-4">Contact</h4>
+            <h4 className="font-heading font-semibold text-sm mb-4">{t("contactTitle")}</h4>
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-sm text-primary-300">
                 <MapPin className="w-4 h-4 flex-shrink-0" /> Dhaka, Bangladesh
@@ -62,11 +65,11 @@ export function Footer() {
 
         <div className="border-t border-white/10 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-xs text-primary-400">
-            © {new Date().getFullYear()} nilamit.com — All rights reserved.
+            © {new Date().getFullYear()} nilamit.com — {t("allRights")}
           </p>
           <div className="flex gap-4">
-            <Link href="/privacy" className="text-xs text-primary-400 hover:text-white transition-colors">Privacy</Link>
-            <Link href="/terms" className="text-xs text-primary-400 hover:text-white transition-colors">Terms</Link>
+            <Link href={`/${locale}/privacy`} className="text-xs text-primary-400 hover:text-white transition-colors">{t("privacy")}</Link>
+            <Link href={`/${locale}/terms`} className="text-xs text-primary-400 hover:text-white transition-colors">{t("terms")}</Link>
           </div>
         </div>
       </div>
