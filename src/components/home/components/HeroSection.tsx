@@ -16,14 +16,15 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SystemConfig } from "@/types/home";
+import { useTranslations } from "next-intl";
 
 interface HeroSectionProps {
   systemConfig?: SystemConfig;
-  t: (key: string) => string;
   totalUsers?: number;
 }
 
-export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
+export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
+  const t = useTranslations("Home");
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 

@@ -4,7 +4,6 @@ import { Variants } from "framer-motion";
 import { Megaphone, Star } from "lucide-react";
 import { AuctionWithSeller } from "@/types";
 import { SystemConfig } from "@/types/home";
-import { useTranslations } from "next-intl";
 import AuctionCard from "@/components/auction/AuctionCard";
 
 // Sub-components
@@ -42,7 +41,6 @@ export function HomeContent({
   locale = "en",
   stats,
 }: HomeContentProps) {
-  const t = useTranslations();
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -75,7 +73,7 @@ export function HomeContent({
       <LiveTicker initialActivity={latestActivity} />
 
       {/* Hero Section */}
-      <HeroSection systemConfig={systemConfig} t={t} totalUsers={stats?.totalUsers} />
+      <HeroSection systemConfig={systemConfig} totalUsers={stats?.totalUsers} />
 
       {/* Live Stats Bar */}
       {stats && (
