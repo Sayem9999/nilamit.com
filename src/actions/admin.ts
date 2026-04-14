@@ -124,3 +124,71 @@ export async function adminCancelAuction(auctionId: string) {
   await requireAdmin();
   return prisma.auction.update({ where: { id: auctionId }, data: { status: AuctionStatus.CANCELLED } });
 }
+
+/** Admin: get all disputes */
+export async function getAdminDisputes() {
+  await requireAdmin();
+  return prisma.escrowTransaction.findMany({
+    where: { status: 'DISPUTED' },
+    include: {
+      auction: { 
+        select: { 
+          title: true, 
+          id: true,
+          seller: { select: { name: true, phone: true } }
+        } 
+      },
+      buyer: { select: { name: true, phone: true } },
+      dispute: true
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+}
+
+/** Admin: resolve a dispute */
+export async function resolveAdminDispute(transactionId: string, resolution: 'RELEASE' | 'REFUND') {
+  await requireAdmin();
+  
+  const tx = await prisma.escrowTransaction.findUnique({
+    where: { id: transactionId },
+    include: { auction: { select: { id: true, sellerId: true } } }
+  });
+
+  if (!tx) throw new Error('Transaction not found');
+
+  if (resolution === 'RELEASE') {
+    // Release funds to seller
+    return prisma.$transaction([
+      prisma.escrowTransaction.update({
+        where: { id: transactionId },
+        data: { status: 'RELEASED' }
+      }),
+      prisma.auction.update({
+        where: { id: tx.auctionId },
+        data: { deliveryStatus: 'DELIVERED' }
+      }),
+      // Penalize buyer reputation slightly for false dispute? Or just settle.
+      // Boost seller reputation
+      prisma.user.update({
+        where: { id: tx.auction.sellerId },
+        data: { reputationScore: { increment: 5 } }
+      })
+    ]);
+  } else {
+    // Refund funds to buyer
+    return prisma.$transaction([
+      prisma.escrowTransaction.update({
+        where: { id: transactionId },
+        data: { status: 'REFUNDED' }
+      }),
+      prisma.user.update({
+        where: { id: tx.buyerId },
+        data: { reputationScore: { increment: 2 } } // Minor boost for honesty if scam prevented
+      }),
+      prisma.user.update({
+        where: { id: tx.auction.sellerId },
+        data: { reputationScore: { decrement: 10 } } // Significant penalty for dispute loss
+      })
+    ]);
+  }
+}

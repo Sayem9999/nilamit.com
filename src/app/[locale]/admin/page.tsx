@@ -7,6 +7,7 @@ import { ContentTab } from "./tabs/ContentTab";
 import { ModerationTab } from "./tabs/ModerationTab";
 import { UsersTab } from "./tabs/UsersTab";
 import { MetricsTab } from "./tabs/MetricsTab";
+import { DisputesTab } from "./tabs/DisputesTab";
 import { Users, Package, TrendingUp, DollarSign } from "lucide-react";
 
 function OverviewTab({
@@ -156,6 +157,7 @@ export default async function AdminPage() {
       system={<SystemTab />}
       users={<UsersTab />}
       metrics={<MetricsTab />}
+      disputes={<DisputesTab />}
     />
   );
 }

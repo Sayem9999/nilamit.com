@@ -5,10 +5,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { payEscrowAdvance, confirmItemReceived } from "@/actions/escrow";
 import { raiseDispute } from "@/actions/dispute";
-import { ShieldCheck, Clock, CreditCard, AlertTriangle } from "lucide-react";
+import { ShieldCheck, Clock, CreditCard, AlertTriangle, MessageSquare } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { formatBDT } from "@/lib/format";
 
 import { useSession } from "next-auth/react";
@@ -34,6 +34,7 @@ export function EscrowActionCard({
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const t = useTranslations("Escrow");
+  const locale = useLocale();
 
   const user = session?.user as { id: string; bkashNumber?: string; nagadNumber?: string };
   const hasMFS = !!(user?.bkashNumber || user?.nagadNumber);
@@ -198,6 +199,15 @@ export function EscrowActionCard({
                   >
                     <AlertTriangle className="w-4 h-4" />
                     {t("raiseDispute")}
+                  </Button>
+
+                  <Button
+                    onClick={() => router.push(`/${locale}/dashboard?tab=coordination`)}
+                    variant="secondary"
+                    className="w-full flex items-center justify-center gap-2 bn border border-purple-100 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    যোগাযোগ এবং ডেলিভারি (Chat)
                   </Button>
                 </div>
               </div>

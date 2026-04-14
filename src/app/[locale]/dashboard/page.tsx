@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import AuctionCard from "@/components/auction/AuctionCard";
-import { Package, Heart, RefreshCw, LogOut, CheckCircle } from "lucide-react";
+import { Package, Heart, RefreshCw, LogOut, CheckCircle, MessageSquare } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import type { AuctionWithSeller } from "@/types";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 
@@ -110,6 +111,31 @@ export default async function DashboardPage({
       },
       orderBy: { createdAt: "desc" },
     });
+  } else if (currentTab === "coordination") {
+    // Phase 11: Coordination Hub (Post-Advance Chat)
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        OR: [{ buyerId: userId }, { sellerId: userId }],
+        auction: { escrowTransaction: { status: { in: ['HELD', 'DISPUTED'] } } }
+      },
+      include: {
+        auction: {
+          select: {
+            title: true,
+            images: true,
+            id: true,
+            escrowTransaction: { select: { status: true, id: true } }
+          }
+        },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
+      },
+      orderBy: { lastMessageAt: 'desc' }
+    });
+    // @ts-ignore
+    escrowTransactions = conversations; // Reusing the slot for simplicity in rendering
   }
 
   return (
@@ -166,6 +192,17 @@ export default async function DashboardPage({
               >
                 <Package className="w-4 h-4" />
                 My Listings
+              </Link>
+              <Link
+                href={`/${locale}/dashboard?tab=coordination`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
+                  currentTab === "coordination"
+                    ? "bg-purple-50 text-purple-600"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                Coordination Hub
               </Link>
 
               <div className="pt-4 mt-4 border-t border-gray-100">
@@ -246,30 +283,61 @@ export default async function DashboardPage({
               </div>
             )}
 
-            {currentTab === "listings" && (
-              <div>
-                <div className="flex items-center justify-between mb-6">
+            {currentTab === "coordination" && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-heading font-semibold text-gray-900">
-                    My Listings ({myAuctions.length})
+                    Active Coordination ({escrowTransactions.length})
                   </h2>
-                  <Link
-                    href={`/${locale}/auctions/create`}
-                    className="px-4 py-2 bg-primary-600 text-white font-medium text-sm rounded-lg hover:bg-primary-700 transition"
-                  >
-                    + New Listing
-                  </Link>
                 </div>
-                {myAuctions.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {myAuctions.map((auction) => (
-                      <AuctionCard key={auction.id} auction={auction} />
+                {escrowTransactions.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4">
+                    {escrowTransactions.map((conv) => (
+                      <Link 
+                        key={conv.id} 
+                        href={`/${locale}/dashboard/coordination/${conv.id}`}
+                        className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-4"
+                      >
+                         <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+                            {conv.auction.images?.[0] ? (
+                              <Image 
+                                src={conv.auction.images[0]} 
+                                alt={conv.auction.title} 
+                                width={64} 
+                                height={64} 
+                                className="w-full h-full object-cover" 
+                              />
+                            ) : (
+                             <div className="w-full h-full flex items-center justify-center text-gray-400">
+                               <Package className="w-6 h-6" />
+                             </div>
+                           )}
+                         </div>
+                         <div className="flex-1">
+                           <div className="flex items-center justify-between">
+                              <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{conv.auction.title}</h3>
+                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                                conv.auction.escrowTransaction?.status === 'DISPUTED' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                              }`}>
+                                {conv.auction.escrowTransaction?.status}
+                              </span>
+                           </div>
+                           <p className="text-sm text-gray-500 line-clamp-1 mt-1 font-medium italic">
+                             {conv.messages?.[0]?.content || "No messages yet."}
+                           </p>
+                           <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
+                             Shared logistics & delivery coordination
+                           </p>
+                         </div>
+                         <MessageSquare className="w-5 h-5 text-gray-300 group-hover:text-primary-400 transition-colors" />
+                      </Link>
                     ))}
                   </div>
                 ) : (
                   <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
-                    <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">
-                      You haven&apos;t sold any items yet.
+                      No active coordinations. Pay the advance for won items to start logistics.
                     </p>
                   </div>
                 )}
