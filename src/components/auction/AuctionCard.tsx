@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Clock, Users, Zap, MapPin, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Clock, Users, Zap, MapPin, AlertTriangle, ShieldCheck, Package } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -20,7 +20,8 @@ export default function AuctionCard({
   const { data: session } = useSession();
   const { lightweightMode } = useSettings();
   const t = useTranslations("Auction");
-  const mainImage = auction.images[0] || "/placeholder.png";
+  const tCat = useTranslations("Categories");
+  const tLoc = useTranslations("Locations");
   const bidCount = auction._count?.bids ?? 0;
 
   const isWatchlisted =
@@ -29,9 +30,9 @@ export default function AuctionCard({
     ) ?? false;
 
   return (
-    <Link href={`/auctions/${auction.id}`} className="group">
-      <div className="bg-white rounded-3xl border border-gray-100/50 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden group-hover:-translate-y-2">
-        {/* Image */}
+    <Link href={`/auctions/${auction.id}`} className="group block">
+      <div className="bg-white rounded-[2rem] border border-gray-100/60 shadow- premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden group-hover:-translate-y-2 flex flex-col h-full">
+        {/* Image Area */}
         <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
           {lightweightMode ? (
             <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center gap-2 p-4 text-center">
@@ -42,32 +43,30 @@ export default function AuctionCard({
             </div>
           ) : (
             <div className="relative w-full h-full">
-              <Image
-                src={mainImage}
-                alt={auction.title}
-                fill
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
-              />
+              {auction.images?.[0] ? (
+                <Image
+                  src={auction.images[0]}
+                  alt={auction.title}
+                  fill
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                  <Package className="w-8 h-8 text-gray-200" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </div>
           )}
-          {/* Status badge */}
-          <div className="absolute top-4 left-4 z-10">
-            <span
-              className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider glass shadow-sm ${
-                auction.status === "ACTIVE" ? "text-green-700" : "text-gray-600"
-              }`}
-            >
-              {auction.status === "ACTIVE" ? t("live") : auction.status}
+
+          {/* Badges */}
+          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+            <span className="glass px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-primary-700 border border-primary-100/50 shadow-sm flex items-center gap-1.5 backdrop-blur-md">
+              {tCat(auction.category || 'other')}
             </span>
           </div>
-          {/* Category */}
-          <div className="absolute bottom-4 left-4 z-10">
-            <span className="glass backdrop-blur-md text-primary-700 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
-              {auction.category}
-            </span>
-          </div>
+
           {/* Watchlist Button */}
           <div className="absolute top-4 right-4 z-10">
             <WatchlistButton
@@ -76,10 +75,20 @@ export default function AuctionCard({
               hoverOnly
             />
           </div>
+
+          {/* Location & Quick Meta */}
+          <div className="absolute bottom-4 inset-x-4 flex items-center justify-between gap-2 z-10">
+            <div className="glass px-2.5 py-1.5 rounded-xl text-[11px] flex items-center gap-2 backdrop-blur-md border border-white/20 shadow-lg">
+              <div className="flex items-center gap-1.5 text-gray-500 font-bold">
+                <MapPin className="w-3 h-3 text-primary-500" />
+                {auction.location ? tLoc(auction.location) : tLoc("mirpur")}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="p-5">
+        <div className="p-5 flex flex-col flex-1">
           <h3 className="font-heading font-bold text-gray-900 text-base sm:text-lg line-clamp-1 group-hover:text-primary-600 transition-colors duration-300">
             {auction.title}
           </h3>
@@ -102,23 +111,10 @@ export default function AuctionCard({
                 className="scale-95 origin-left"
               />
             )}
-            {auction.location && (
-              <div className="flex items-center gap-1 text-[11px] text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full font-medium ml-auto">
-                <MapPin className="w-3 h-3" />
-                <span className="capitalize">{auction.location}</span>
-              </div>
-            )}
           </div>
 
-            <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-secondary-50 border border-secondary-100/50 rounded-xl">
-              <Users className="w-3.5 h-3.5 text-secondary-600" />
-              <span className="text-[10px] font-bold text-secondary-700 uppercase tracking-wider">
-                {t("circleMemberOnly")}
-              </span>
-            </div>
-
           {/* Price & Bid Count */}
-          <div className="mt-4 flex flex-col gap-0.5">
+          <div className="mt-4 pt-4 border-t border-gray-100/60 flex flex-col gap-0.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
                 {t("currentPrice")}
@@ -128,8 +124,8 @@ export default function AuctionCard({
                 {bidCount} {t("bids")}
               </span>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="price text-2xl text-gray-900">
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="price text-2xl text-gray-900 font-bold">
                 {formatBDT(auction.currentPrice)}
               </span>
               {auction.currentPrice > auction.startingPrice && (
@@ -140,9 +136,9 @@ export default function AuctionCard({
             </div>
           </div>
 
-          {/* Service Fee & Net Earnings (Seller Only View) */}
+          {/* Seller Protection View */}
           {session?.user?.id === auction.sellerId && auction.status === "SOLD" && auction.commissionEarned && (
-            <div className="mt-4 p-4 bg-primary-50/50 rounded-2xl border border-primary-100/50 space-y-2">
+            <div className="mt-4 p-4 bg-primary-50/30 rounded-2xl border border-primary-100/50 space-y-2">
               <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 <span>{t("finalPrice")}</span>
                 <span className="text-gray-900">{formatBDT(auction.currentPrice)}</span>
@@ -158,8 +154,8 @@ export default function AuctionCard({
             </div>
           )}
 
-          {/* Footer Meta */}
-          <div className="mt-4 pt-4 border-t border-gray-100/60 flex items-center justify-between">
+          {/* Footer Timer */}
+          <div className="mt-auto pt-4 flex items-center justify-between">
             <div className="flex items-center gap-2 text-gray-500 bg-gray-50 py-1.5 px-3 rounded-xl border border-gray-100/50 w-full justify-center group-hover:bg-primary-50 group-hover:border-primary-100/50 transition-colors duration-300">
               <Clock className="w-4 h-4 text-gray-400 group-hover:text-primary-500" />
               <CountdownTimer

@@ -11,7 +11,6 @@ import {
   Check,
   AlertCircle,
   MapPin,
-  Smartphone,
 } from "lucide-react";
 import { ImageUpload } from "@/components/upload/ImageUpload";
 import { VerificationGuard } from "@/components/auth/VerificationGuard";
@@ -23,6 +22,8 @@ export default function CreateAuctionPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const t = useTranslations("Auction");
+  const tCat = useTranslations("Categories");
+  const tLoc = useTranslations("Locations");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [step, setStep] = useState<Step>("details");
@@ -156,7 +157,7 @@ export default function CreateAuctionPage() {
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat.slug} value={cat.slug}>
-                    {cat.icon} {cat.label}
+                    {cat.icon} {tCat(cat.slug)}
                   </option>
                 ))}
               </select>
@@ -174,7 +175,7 @@ export default function CreateAuctionPage() {
                 >
                   {LOCATIONS.map((loc) => (
                     <option key={loc.id} value={loc.id}>
-                      {loc.label}
+                      {tLoc(loc.id)}
                     </option>
                   ))}
                 </select>
@@ -232,8 +233,7 @@ export default function CreateAuctionPage() {
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm price focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
               <p className="text-xs text-gray-400 mt-1">
-                Each new bid must be at least this much higher than the current
-                price.
+                {t("minIncrementDesc") || "Each new bid must be at least this much higher than the current price."}
               </p>
             </div>
 
@@ -261,7 +261,7 @@ export default function CreateAuctionPage() {
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                   />
                   <p className="text-[10px] text-gray-400 mt-1">
-                    Item won&apos;t sell unless bidding reaches this amount.
+                    {t("reservePriceDesc") || "Item won't sell unless bidding reaches this amount."}
                   </p>
                 </div>
                 <div>
@@ -283,7 +283,7 @@ export default function CreateAuctionPage() {
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                   />
                   <p className="text-[10px] text-gray-400 mt-1">
-                    Allow buyers to skip bidding and buy instantly.
+                    {t("buyNowPriceDesc") || "Allow buyers to skip bidding and buy instantly."}
                   </p>
                 </div>
               </div>
@@ -338,12 +338,12 @@ export default function CreateAuctionPage() {
               </div>
               <div>
                 <strong className="text-gray-700">{t("itemCat")}:</strong>{" "}
-                <span className="text-gray-600">{form.category}</span>
+                <span className="text-gray-600">{tCat(form.category)}</span>
               </div>
               <div>
                 <strong className="text-gray-700">{t("itemLoc")}:</strong>{" "}
                 <span className="text-gray-600 uppercase font-semibold">
-                  {form.location}
+                  {tLoc(form.location)}
                 </span>
               </div>
               <div>
@@ -375,7 +375,7 @@ export default function CreateAuctionPage() {
                 </span>
               </div>
               <div>
-                <strong className="text-gray-700">সময়সীমা:</strong>{" "}
+                <strong className="text-gray-700">{t("timerLabel")}:</strong>{" "}
                 <span className="text-gray-600">
                   {form.startTime} → {form.endTime}
                 </span>

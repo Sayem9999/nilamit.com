@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
+import { useTranslations } from "next-intl";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { AuctionWithSeller } from "@/types";
 
@@ -10,6 +11,7 @@ interface EndingSoonSectionProps {
 }
 
 export function EndingSoonSection({ endingSoon }: EndingSoonSectionProps) {
+  const t = useTranslations("Home");
   if (endingSoon.length === 0) return null;
 
   return (
@@ -26,10 +28,10 @@ export function EndingSoonSection({ endingSoon }: EndingSoonSectionProps) {
           </div>
           <div>
             <h2 className="font-heading font-black text-3xl sm:text-4xl text-gray-900 tracking-tight">
-              <span className="text-red-600">Ending</span> Soon
+              {t("endingSoon")}
             </h2>
             <p className="mt-1 text-gray-500 font-medium">
-              Grab them before they&apos;re gone!
+              {t("endingSoonDesc")}
             </p>
           </div>
         </motion.div>

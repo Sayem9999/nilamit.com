@@ -3,8 +3,12 @@
 import { MapPin } from "lucide-react";
 import Link from "next/link";
 import { LOCATIONS } from "@/types";
+import { useTranslations } from "next-intl";
 
 export function AreaQuickLinks({ locale }: { locale: string }) {
+  const t = useTranslations("Home");
+  const tLoc = useTranslations("Locations");
+
   // Take top 6 locations for the quick grid
   const quickLocs = LOCATIONS.slice(0, 6);
 
@@ -13,17 +17,17 @@ export function AreaQuickLinks({ locale }: { locale: string }) {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-2xl font-heading font-bold text-gray-900">
-            Browse by Area
+            {t("browseByArea")}
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            Find items near you for easier inspection and pickup.
+            {t("browseByAreaDesc")}
           </p>
         </div>
         <Link 
           href={`/${locale}/search`}
           className="text-primary-600 font-semibold text-sm hover:underline"
         >
-          View all locations
+          {t("viewAllLocations")}
         </Link>
       </div>
 
@@ -38,10 +42,10 @@ export function AreaQuickLinks({ locale }: { locale: string }) {
               <MapPin className="w-6 h-6" />
             </div>
             <span className="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">
-              {loc.label}
+              {tLoc(loc.id)}
             </span>
             <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
-              Dhaka
+              {t("dhaka")}
             </span>
           </Link>
         ))}

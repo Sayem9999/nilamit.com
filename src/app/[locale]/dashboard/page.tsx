@@ -119,6 +119,7 @@ export default async function DashboardPage({
             seller: { select: { name: true, image: true } },
           },
         },
+        dispute: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -135,7 +136,13 @@ export default async function DashboardPage({
             title: true,
             images: true,
             id: true,
-            escrowTransaction: { select: { status: true, id: true } }
+            escrowTransaction: { 
+              select: { 
+                status: true, 
+                id: true,
+                dispute: true 
+              } 
+            }
           }
         },
         messages: {
@@ -156,7 +163,7 @@ export default async function DashboardPage({
     const stats = {
       totalSales: sellerAuctions.filter(a => a.status === 'SOLD').length,
       revenue: sellerAuctions.reduce((acc, curr) => acc + (Number(curr.currentPrice) || 0), 0),
-      reputation: (session.user as { reputationScore?: number })?.reputationScore || 0,
+      reputation: typeof session.user.reputationScore === 'number' ? session.user.reputationScore : 0,
       successRate: sellerAuctions.length > 0 ? Math.round((sellerAuctions.filter(a => a.status === 'SOLD').length / sellerAuctions.length) * 100) : 100
     };
     escrowTransactions = [stats]; // Borrowing the slot

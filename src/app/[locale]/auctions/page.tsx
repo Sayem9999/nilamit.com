@@ -3,9 +3,10 @@ export const dynamic = "force-dynamic";
 
 import AuctionCard from "@/components/auction/AuctionCard";
 import Link from "next/link";
-import { Search, SlidersHorizontal, MapPin } from "lucide-react";
+import { Search as SearchIcon, SlidersHorizontal, MapPin } from "lucide-react";
 import { CATEGORIES, LOCATIONS } from "@/types";
 import type { AuctionStatus } from "@/types";
+import { getTranslations } from "next-intl/server";
 
 interface Props {
   searchParams: Promise<{
@@ -16,12 +17,17 @@ interface Props {
     page?: string;
     status?: string;
     location?: string;
+    locale?: string;
   }>;
 }
 
 export default async function AuctionsPage({ searchParams }: Props) {
   const params = await searchParams;
   const page = parseInt(params.page || "1");
+  const t = await getTranslations("Search");
+  const tCat = await getTranslations("Categories");
+  const tLoc = await getTranslations("Locations");
+
   const { auctions, total, pages } = await getAuctions({
     category: params.category,
     search: params.search,
@@ -42,14 +48,13 @@ export default async function AuctionsPage({ searchParams }: Props) {
         <div>
           <h1 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">
             {params.category
-              ? CATEGORIES.find((c) => c.slug === params.category)?.label ||
-                "Auctions"
+              ? tCat(params.category)
               : params.search
-                ? `Results for "${params.search}"`
-                : "Live Auctions"}
+                ? t("resultsFor", { query: params.search })
+                : t("title")}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {total} auction{total !== 1 ? "s" : ""} found
+            {t("found", { count: total })}
           </p>
         </div>
       </div>
@@ -60,12 +65,12 @@ export default async function AuctionsPage({ searchParams }: Props) {
           {/* Search */}
           <form className="mb-6">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 name="search"
                 defaultValue={params.search}
-                placeholder="Search auctions..."
+                placeholder={t("searchPlaceholder") || "Search auctions..."}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
@@ -74,7 +79,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
           {/* Categories */}
           <div className="mb-6">
             <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4" /> Categories
+              <SlidersHorizontal className="w-4 h-4" /> {t("category")}
             </h3>
             <div className="space-y-1">
               <Link
@@ -85,7 +90,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                All Categories
+                {t("allCategories")}
               </Link>
               {CATEGORIES.map((cat) => (
                 <Link
@@ -97,7 +102,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  {cat.icon} {cat.label}
+                  {cat.icon} {tCat(cat.slug)}
                 </Link>
               ))}
             </div>
@@ -106,29 +111,29 @@ export default async function AuctionsPage({ searchParams }: Props) {
           {/* Sort */}
           <div>
             <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3">
-              Sort By
+              {t("sortBy")}
             </h3>
             <div className="space-y-1">
               {[
-                { value: "endTime", label: "Ending Soon" },
-                { value: "currentPrice", label: "Price" },
-                { value: "createdAt", label: "Newest" },
-                { value: "bids", label: "Most Bids" },
-              ].map((sort) => (
+                { value: "endTime", label: t("endingSoon") },
+                { value: "currentPrice", label: t("lowestPrice") },
+                { value: "createdAt", label: t("newest") },
+                { value: "bids", label: t("mostBids") },
+              ].map((sortOption) => (
                 <Link
-                  key={sort.value}
+                  key={sortOption.value}
                   href={`/auctions?${new URLSearchParams({
                     ...(params.category ? { category: params.category } : {}),
                     ...(params.search ? { search: params.search } : {}),
-                    sortBy: sort.value,
+                    sortBy: sortOption.value,
                   }).toString()}`}
                   className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                    params.sortBy === sort.value
+                    params.sortBy === sortOption.value
                       ? "bg-primary-50 text-primary-700 font-medium"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  {sort.label}
+                  {sortOption.label}
                 </Link>
               ))}
             </div>
@@ -137,7 +142,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
           {/* Location */}
           <div className="mt-6">
             <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> Location
+              <MapPin className="w-4 h-4" /> {t("location")}
             </h3>
             <div className="space-y-1">
               <Link
@@ -152,7 +157,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                All Bangladesh
+                {t("allBangladesh")}
               </Link>
               {LOCATIONS.map((loc) => (
                 <Link
@@ -169,7 +174,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  {loc.label}
+                  {tLoc(loc.id)}
                 </Link>
               ))}
             </div>
@@ -179,13 +184,13 @@ export default async function AuctionsPage({ searchParams }: Props) {
         {/* Auction Grid */}
         <div className="flex-1">
           {auctions.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-4xl mb-4">🔍</p>
+            <div className="bg-white p-12 text-center rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center">
+              <SearchIcon className="w-12 h-12 text-gray-300 mb-4" />
               <h3 className="font-heading font-semibold text-gray-900 mb-1">
-                No auctions found
+                {t("noResults")}
               </h3>
               <p className="text-sm text-gray-500">
-                Try adjusting your search or filters
+                {t("noResultsDesc")}
               </p>
             </div>
           ) : (

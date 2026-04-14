@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Gavel, Users, TrendingUp, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface StatsBarProps {
   totalAuctions: number;
@@ -11,32 +12,33 @@ interface StatsBarProps {
 }
 
 export function StatsBar({ totalAuctions, totalUsers, totalBids, verifiedSellers }: StatsBarProps) {
+  const t = useTranslations("Home");
   const stats = [
     {
       icon: Gavel,
       value: totalAuctions.toLocaleString(),
-      label: "Live Auctions",
+      label: t("liveAuctions"),
       color: "text-primary-600",
       bg: "bg-primary-50",
     },
     {
       icon: Users,
       value: totalUsers.toLocaleString() + "+",
-      label: "Active Members",
+      label: t("activeMembers"),
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
       icon: TrendingUp,
       value: totalBids.toLocaleString(),
-      label: "Bids Placed",
+      label: t("bidsPlaced"),
       color: "text-green-600",
       bg: "bg-green-50",
     },
     {
       icon: ShieldCheck,
       value: verifiedSellers.toLocaleString(),
-      label: "Verified Sellers",
+      label: t("verifiedSellers"),
       color: "text-amber-600",
       bg: "bg-amber-50",
     },

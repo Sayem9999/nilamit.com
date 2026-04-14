@@ -113,7 +113,7 @@ export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
                 <Search className="w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search watches, cameras, electronics..."
+                  placeholder={t("searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-full bg-transparent focus:outline-none text-gray-900 font-medium placeholder:text-gray-400"
@@ -123,7 +123,7 @@ export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
                 type="submit"
                 className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2"
               >
-                Search
+                {t("searchBtn")}
               </button>
             </motion.form>
 
@@ -132,13 +132,13 @@ export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
               className="mt-8 flex flex-wrap gap-4 text-[13px] font-bold"
             >
               <div className="flex items-center gap-1.5 text-gray-500 glass px-3 py-1.5 rounded-lg border border-gray-100/50 shadow-sm">
-                <MapPin className="w-4 h-4 text-primary-500" /> Area Filters
+                <MapPin className="w-4 h-4 text-primary-500" /> {t("areaFilters")}
               </div>
               <div className="flex items-center gap-1.5 text-gray-500 glass px-3 py-1.5 rounded-lg border border-gray-100/50 shadow-sm">
-                <Bell className="w-4 h-4 text-orange-500" /> Real-time Alerts
+                <Bell className="w-4 h-4 text-orange-500" /> {t("realTimeAlerts")}
               </div>
               <div className="flex items-center gap-1.5 text-gray-500 glass px-3 py-1.5 rounded-lg border border-gray-100/50 shadow-sm">
-                <Zap className="w-4 h-4 text-yellow-500" /> Anti-Snipe
+                <Zap className="w-4 h-4 text-yellow-500" /> {t("antiSnipe")}
               </div>
             </motion.div>
 
@@ -165,7 +165,7 @@ export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
                 <span className="text-gray-900 font-bold">
                   {totalUsers ? `${(totalUsers / 1000).toFixed(1)}k+` : "2.4k+"}
                 </span>{" "}
-                Active members
+                {t("activeMembers")}
               </div>
             </motion.div>
           </motion.div>
@@ -185,15 +185,15 @@ export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900 leading-none">
-                      Live Bidding
+                      {t("liveBidding")}
                     </h4>
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                      Ending in 02:45:12
+                      {t("endingIn")} 02:45:12
                     </span>
                   </div>
                 </div>
                 <div className="glass text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter animate-pulse shadow-sm">
-                  Hot Deal
+                  {t("hotDeal")}
                 </div>
               </div>
 
@@ -217,19 +217,19 @@ export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500 font-medium">Current Bid</span>
+                  <span className="text-gray-500 font-medium">{t("currentPrice")}</span>
                   <span className="font-bold text-primary-600 text-xl tracking-tight">
                     ৳ 45,800
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs pb-4 border-b border-gray-100/60">
-                  <span className="text-gray-400">Total Bidders</span>
+                  <span className="text-gray-400">{t("totalBidders")}</span>
                   <span className="font-bold text-gray-700 flex items-center gap-1">
-                    <Users className="w-3 h-3 text-primary-500" /> 24 People
+                    <Users className="w-3 h-3 text-primary-500" /> 24 {t("people")}
                   </span>
                 </div>
                 <button className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-all shadow-lg hover:shadow-black/20">
-                  Place Your Bid
+                  {t("placeYourBid")}
                 </button>
               </div>
             </div>
@@ -247,7 +247,7 @@ export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
                 <Gavel className="w-5 h-5 text-primary-600" />
               </div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
-                New Bid
+                {t("newBid")}
               </div>
               <div className="font-bold text-gray-900 leading-none">
                 + ৳ 1,000
@@ -290,10 +290,10 @@ export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
                 </div>
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    Status
+                    {t("sellerStatus")}
                   </div>
                   <div className="text-xs font-bold text-gray-900">
-                    Verified Seller
+                    {t("verifiedSeller")}
                   </div>
                 </div>
               </div>
@@ -309,7 +309,7 @@ export function HeroSection({ systemConfig, t, totalUsers }: HeroSectionProps) {
                   <MapPin className="w-4 h-4 text-primary-600" />
                 </div>
                 <div className="text-xs font-bold text-gray-900">
-                  Area Filters Active
+                  {t("areaFilters")}
                 </div>
               </div>
             </motion.div>

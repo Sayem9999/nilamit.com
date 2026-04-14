@@ -5,6 +5,7 @@ import { TrendingUp, ArrowRight, Zap } from "lucide-react";
 import Link from "next/link";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { AuctionWithSeller } from "@/types";
+import { useTranslations } from "next-intl";
 
 interface TrendingSectionProps {
   trendingAuctions: AuctionWithSeller[];
@@ -17,6 +18,7 @@ export function TrendingSection({
   containerVariants,
   itemVariants,
 }: TrendingSectionProps) {
+  const t = useTranslations("Home");
   return (
     <section className="pb-24 pt-12 bg-white relative">
       <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-gray-50 to-transparent pointer-events-none" />
@@ -29,17 +31,17 @@ export function TrendingSection({
         >
           <div>
             <div className="inline-flex items-center gap-2 text-primary-600 bg-primary-50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
-              <TrendingUp className="w-4 h-4" /> Trending Now
+              <TrendingUp className="w-4 h-4" /> {t("trendingTag")}
             </div>
             <h2 className="font-heading font-black text-4xl sm:text-5xl text-gray-900 tracking-tight">
-              Most <span className="text-primary-600">Popular</span> Bids
+              {t("trendingTitle")}
             </h2>
           </div>
           <Link
             href="/auctions?sortBy=bids&sortOrder=desc"
             className="group flex items-center gap-2 bg-gray-50 hover:bg-primary-50 text-gray-900 hover:text-primary-700 px-6 py-3 rounded-2xl font-bold transition-all border border-gray-100"
           >
-            View More{" "}
+            {t("viewMore")}{" "}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </motion.div>
@@ -50,7 +52,7 @@ export function TrendingSection({
               <Zap className="w-8 h-8 text-gray-300" />
             </div>
             <p className="text-gray-500 font-medium">
-              Bidding is just heating up! No auctions are trending yet.
+              {t("noTrending")}
             </p>
           </div>
         ) : (
