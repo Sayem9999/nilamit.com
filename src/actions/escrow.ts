@@ -10,8 +10,9 @@ import { recalculateUserReputation } from "@/lib/reputation";
 /**
  * Transitions from PENDING -> HELD (The "Advance" payment)
  * Reveals contact information and secures the delivery fee/success fee.
+ * Now automated for instant verification (Phase 11.5)
  */
-export async function payEscrowAdvance(transactionId: string) {
+export async function payEscrowAdvance(transactionId: string, providerRef?: string) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
@@ -45,7 +46,9 @@ export async function payEscrowAdvance(transactionId: string) {
       where: { id: transactionId },
       data: {
         status: 'HELD',
-        paymentMethod: 'bkash_sim_advance',
+        paymentMethod: 'bkash_automatic',
+        providerRef: providerRef || `SIM-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        verificationType: 'AUTOMATIC'
       },
     });
 

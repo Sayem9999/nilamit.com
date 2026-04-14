@@ -1,7 +1,6 @@
 'use server';
 
 import { prisma } from '@/lib/db';
-import { AuctionStatus } from '@prisma/client';
 
 /**
  * Reputation Algorithm (Trust 2.0)

@@ -28,6 +28,8 @@ export async function getSystemConfig() {
     heroImage: null,
     announcement: null,
     showAnnouncement: false,
+    treasuryBkash: "017XXXXXXXX",
+    treasuryNagad: "018XXXXXXXX",
   };
 
   try {
@@ -49,6 +51,8 @@ export async function updateSystemConfig(data: {
   heroImage?: string | null;
   announcement?: string | null;
   showAnnouncement?: boolean;
+  treasuryBkash?: string | null;
+  treasuryNagad?: string | null;
 }) {
   await requireAdmin();
 

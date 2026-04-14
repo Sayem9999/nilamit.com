@@ -131,7 +131,7 @@ export default function ChatInterface({
           </div>
           <div>
             <h3 className="text-sm font-bold text-gray-900">{recipientName}</h3>
-            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">Online</p>
+            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">{t("online")}</p>
           </div>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function ChatInterface({
       {/* Messages Feed */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/30">
         <AnimatePresence initial={false}>
-          {messages.map((msg, i) => {
+          {messages.map((msg) => {
             const isMe = msg.senderId === session?.user?.id;
             const isSystem = msg.isSystemMessage || msg.senderId === 'system';
 
@@ -212,13 +212,13 @@ export default function ChatInterface({
                 }}
                 onUploadError={(error: Error) => {
                   setIsUploading(false);
-                  alert(`Upload failed: ${error.message}`);
+                  alert(`${t("uploadFailed")} ${error.message}`);
                 }}
                 content={{
-                  button({ ready, isUploading }) {
+                  button({ isUploading }) {
                      return <Camera className={cn("w-5 h-5", isUploading ? "animate-pulse text-gray-400" : "text-gray-500")} />;
                   },
-                  allowedContent({ ready, fileTypes, isUploading }) {
+                  allowedContent() {
                      return null;
                   }
                 }}
@@ -233,7 +233,7 @@ export default function ChatInterface({
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type a message..."
+              placeholder={t("typeMessage")}
               className="flex-1 bg-transparent border-none text-sm focus:ring-0 placeholder:text-gray-400 font-medium"
               disabled={isSending || isUploading}
             />

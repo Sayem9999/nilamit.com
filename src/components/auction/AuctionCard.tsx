@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Shield, Clock, Users, Zap, MapPin, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Clock, Users, Zap, MapPin, AlertTriangle, ShieldCheck } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -89,7 +89,7 @@ export default function AuctionCard({
               <span className="text-xs font-semibold text-gray-600 truncate">
                 {auction.seller.name || t("seller")}
               </span>
-              {(auction.seller as any).isPhoneVerified || (auction.seller as any).emailVerified ? (
+              {(auction.seller as { isPhoneVerified?: boolean; emailVerified?: Date | null }).isPhoneVerified || (auction.seller as { isPhoneVerified?: boolean; emailVerified?: Date | null }).emailVerified ? (
                 <ShieldCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10 flex-shrink-0" />
               ) : (
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
@@ -110,14 +110,12 @@ export default function AuctionCard({
             )}
           </div>
 
-          {(auction as { circleId?: string }).circleId && (
             <div className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-secondary-50 border border-secondary-100/50 rounded-xl">
               <Users className="w-3.5 h-3.5 text-secondary-600" />
               <span className="text-[10px] font-bold text-secondary-700 uppercase tracking-wider">
-                Circle Member Only
+                {t("circleMemberOnly")}
               </span>
             </div>
-          )}
 
           {/* Price & Bid Count */}
           <div className="mt-4 flex flex-col gap-0.5">
@@ -146,15 +144,15 @@ export default function AuctionCard({
           {session?.user?.id === auction.sellerId && auction.status === "SOLD" && auction.commissionEarned && (
             <div className="mt-4 p-4 bg-primary-50/50 rounded-2xl border border-primary-100/50 space-y-2">
               <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                <span>Final Price</span>
+                <span>{t("finalPrice")}</span>
                 <span className="text-gray-900">{formatBDT(auction.currentPrice)}</span>
               </div>
               <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                <span>Success Fee ({((auction.commissionEarned / auction.currentPrice) * 100).toFixed(1)}%)</span>
+                <span>{t("successFee")} ({((auction.commissionEarned / auction.currentPrice) * 100).toFixed(1)}%)</span>
                 <span className="text-red-500">- {formatBDT(auction.commissionEarned)}</span>
               </div>
               <div className="pt-2 border-t border-primary-100 flex justify-between items-center mt-2">
-                <span className="text-xs font-black text-primary-900 uppercase">Net To You</span>
+                <span className="text-xs font-black text-primary-900 uppercase">{t("netToYou")}</span>
                 <span className="text-lg font-black text-primary-700">{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</span>
               </div>
             </div>

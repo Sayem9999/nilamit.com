@@ -22,7 +22,7 @@ export function VerificationGuard({ children, fallback }: VerificationGuardProps
   const t = useTranslations("Auth");
 
   // Check verification status
-  // @ts-ignore - session.user extension might not be typed yet in all places
+  // @ts-expect-error - session.user extension might not be typed yet in all places
   const isVerified = session?.user?.isPhoneVerified || !!session?.user?.emailVerified;
 
   const handleClick = (e: React.MouseEvent) => {

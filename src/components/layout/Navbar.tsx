@@ -16,6 +16,9 @@ import {
   Search,
   ShieldCheck,
   AlertTriangle,
+  Trophy,
+  Network,
+  ChevronDown,
 } from "lucide-react";
 import { requestNotificationPermission } from "@/lib/notifications";
 import { useSettings } from "@/context/SettingsContext";
@@ -62,7 +65,7 @@ export function Navbar() {
               <input
                 type="search"
                 name="q"
-                placeholder="Search auctions..."
+                placeholder={t("searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 bg-gray-50/50 border border-gray-200/60 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm font-medium"
               />
             </form>
@@ -91,12 +94,47 @@ export function Navbar() {
             >
               {t("browse")}
             </Link>
+
+            {/* Explore Dropdown */}
+            <div className="relative group">
+              <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">
+                Explore <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
+              </button>
+              <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                <div className="w-56 bg-white border border-gray-100 rounded-2xl shadow-xl p-1.5 overflow-hidden">
+                  <Link
+                    href="/leaderboard"
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                      <Trophy className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <div>
+                      <div className="font-bold">Leaderboard</div>
+                      <div className="text-[10px] text-gray-400">Top Trusted Traders</div>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/starmap"
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-xl transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                      <Network className="w-4 h-4 text-indigo-500" />
+                    </div>
+                    <div>
+                      <div className="font-bold">Trust Map</div>
+                      <div className="text-[10px] text-gray-400">Marketplace Fabric</div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
             {(session?.user as { isAdmin?: boolean })?.isAdmin && (
               <Link
                 href="/admin"
                 className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
               >
-                <Gavel className="w-4 h-4" /> Admin
+                <Gavel className="w-4 h-4" /> {t("admin")}
               </Link>
             )}
             {session ? (
@@ -146,9 +184,9 @@ export function Navbar() {
                         <User className="w-4 h-4" /> {t("profile")}
                       </div>
                       {(session?.user as { isPhoneVerified?: boolean; emailVerified?: boolean })?.isPhoneVerified || (session?.user as { isPhoneVerified?: boolean; emailVerified?: boolean })?.emailVerified ? (
-                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase">Verified</span>
+                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase">{t("verified")}</span>
                       ) : (
-                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md uppercase">Unverified</span>
+                        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md uppercase">{t("unverified")}</span>
                       )}
                     </Link>
                     <button

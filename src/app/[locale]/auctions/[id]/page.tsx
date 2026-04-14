@@ -37,6 +37,7 @@ import ChatInterface from "@/components/social/ChatInterface";
 import { Metadata } from "next";
 import Script from "next/script";
 import { AuctionStatus } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -76,6 +77,7 @@ export default async function AuctionDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await auth();
   const auction = await getAuction(id);
+  const t = await getTranslations("Auction");
   if (!auction) return <div>Auction not found</div>;
 
   const [bids, watched, chat] = await Promise.all([
@@ -134,7 +136,7 @@ export default async function AuctionDetailPage({ params }: Props) {
               )}
               {auction.status === AuctionStatus.ACTIVE && (
                 <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold animate-pulse">
-                  <TrendingUp className="w-3.5 h-3.5" /> LIVE
+                  <TrendingUp className="w-3.5 h-3.5" /> {t("live")}
                 </div>
               )}
             </div>
@@ -161,11 +163,11 @@ export default async function AuctionDetailPage({ params }: Props) {
               </div>
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
-                {auction._count?.bids || 0} bids
+                {auction._count?.bids || 0} {t("bids")}
               </div>
               <div className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
-                Listed {formatRelativeTime(auction.createdAt)}
+                {t("listed")} {formatRelativeTime(auction.createdAt)}
               </div>
             </div>
           </div>
@@ -173,7 +175,7 @@ export default async function AuctionDetailPage({ params }: Props) {
           {/* Description */}
           <div className="mb-8">
             <h2 className="font-heading font-semibold text-lg text-gray-900 mb-3">
-              Description
+              {t("description")}
             </h2>
             <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
               {auction.description}
@@ -227,13 +229,13 @@ export default async function AuctionDetailPage({ params }: Props) {
           {/* Price Card */}
           <div className="bg-gradient-to-br from-primary-50 to-white border border-primary-100 rounded-2xl p-6">
             <p className="text-xs font-medium text-primary-600 mb-1">
-              Current Bid
+              {t("currentPrice")}
             </p>
             <p className="price text-3xl text-primary-700 mb-2">
               {formatBDT(auction.currentPrice)}
             </p>
             <p className="text-xs text-gray-400">
-              Started at {formatBDT(auction.startingPrice)}
+              {t("startingPrice")} {formatBDT(auction.startingPrice)}
             </p>
             <div className="mt-4 pt-4 border-t border-primary-100/50">
               <PriceAlertButton
@@ -258,7 +260,7 @@ export default async function AuctionDetailPage({ params }: Props) {
           {/* Seller Info */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6">
             <h3 className="font-heading font-semibold text-sm text-gray-700 mb-4">
-              Seller
+              {t("seller")}
             </h3>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
@@ -288,7 +290,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <GatedContactInfo 
                       status={auction.escrowTransaction?.status}
                       transactionId={auction.escrowTransaction?.id}
-                      label="Seller Phone"
+                      label={t("sellerPhone")}
                       value={auction.seller?.phone || "N/A"}
                       type="phone"
                       isVerified={auction.seller?.isVerifiedSeller}
@@ -296,7 +298,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <GatedContactInfo 
                       status={auction.escrowTransaction?.status}
                       transactionId={auction.escrowTransaction?.id}
-                      label="Pickup Location"
+                      label={t("pickupLocation")}
                       value={auction.location || "N/A"}
                       type="address"
                       isVerified={auction.seller?.isVerifiedSeller}
@@ -333,7 +335,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                   />
                   {auction.seller?.isPhoneVerified && (
                     <span className="flex items-center gap-1 text-green-600 text-[10px] font-bold uppercase tracking-tight">
-                      <CheckCircle className="w-3 h-3" /> Verified Phone
+                      <CheckCircle className="w-3 h-3" /> {t("verifiedPhone")}
                     </span>
                   )}
                 </div>
@@ -346,21 +348,21 @@ export default async function AuctionDetailPage({ params }: Props) {
             <Card className="border-primary-100 bg-primary-50/30 overflow-hidden">
               <CardHeader className="bg-white/50 py-3 border-b border-primary-100">
                 <CardTitle className="text-sm flex items-center gap-2 text-primary-800">
-                  <DollarSign className="w-4 h-4" /> Financial Summary
+                  <DollarSign className="w-4 h-4" /> {t("financialSummary")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-500">Gross Sale Price</span>
+                  <span className="text-xs text-slate-500">{t("grossSale")}</span>
                   <span className="text-sm font-bold text-slate-900">{formatBDT(auction.currentPrice)}</span>
                 </div>
                 
                 <div className="flex justify-between items-center p-2 bg-white rounded border border-primary-50">
                   <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-bold text-primary-600 flex items-center gap-1">
-                      <Shield className="w-3 h-3" /> Success Fee
+                      <Shield className="w-3 h-3" /> {t("successFee")}
                     </span>
-                    <span className="text-[9px] text-slate-400">Platform commission</span>
+                    <span className="text-[9px] text-slate-400">{t("platformCommission")}</span>
                   </div>
                   <span className="text-sm font-semibold text-primary-700">-{formatBDT(auction.commissionEarned || 0)}</span>
                 </div>
@@ -368,7 +370,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
-                      <Truck className="w-3 h-3" /> Delivery Charge
+                      <Truck className="w-3 h-3" /> {t("deliveryCharge")}
                     </span>
                     <span className="text-[9px] text-slate-400">Seller Protection</span>
                   </div>
@@ -376,7 +378,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                 </div>
 
                 <div className="pt-2 border-t border-primary-100 flex justify-between items-center">
-                   <span className="text-sm font-bold text-slate-900">Total Advance</span>
+                   <span className="text-sm font-bold text-slate-900">{t("totalAdvance")}</span>
                    <span className="text-lg font-black text-blue-600">
                      {formatBDT((auction.commissionEarned || 0) + (auction.deliveryCharge || 0))}
                    </span>
@@ -384,7 +386,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                 
                 <div className="p-2 bg-blue-50 rounded text-[10px] text-blue-700 flex items-start gap-2">
                   <Info className="w-3 h-3 mt-0.5" />
-                  <p>Pay this advance via platform to unlock contact info. Pay remaining <b>{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</b> via <b>COD (Cash on Delivery)</b>.</p>
+                  <p>{t("advanceUnlockNote", { amount: formatBDT(auction.currentPrice - (auction.commissionEarned || 0)) })}</p>
                 </div>
               </CardContent>
             </Card>

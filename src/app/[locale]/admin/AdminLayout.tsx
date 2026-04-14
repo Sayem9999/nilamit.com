@@ -10,6 +10,7 @@ import {
   Menu,
   Users,
   Scale,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ type Tab =
   | "content"
   | "system"
   | "users"
+  | "treasury"
   | "disputes";
 
 interface AdminLayoutProps {
@@ -29,6 +31,7 @@ interface AdminLayoutProps {
   content?: React.ReactNode;
   system: React.ReactNode;
   users?: React.ReactNode;
+  treasury?: React.ReactNode;
   disputes?: React.ReactNode;
 }
 
@@ -39,6 +42,7 @@ export function AdminLayout({
   content,
   system,
   users,
+  treasury,
   disputes,
 }: AdminLayoutProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -50,6 +54,7 @@ export function AdminLayout({
     { id: "users", label: "Users", icon: Users },
     { id: "metrics", label: "Metrics", icon: Banknote },
     { id: "content", label: "Content", icon: PenTool },
+    { id: "treasury", label: "Treasury", icon: ShieldCheck },
     { id: "disputes", label: "Disputes", icon: Scale },
     { id: "system", label: "System", icon: Trash2, danger: true },
   ];
@@ -124,6 +129,7 @@ export function AdminLayout({
           {activeTab === "content" &&
             (content || <Placeholder tab="Content" />)}
           {activeTab === "users" && (users || <Placeholder tab="Users" />)}
+          {activeTab === "treasury" && (treasury || <Placeholder tab="Treasury" />)}
           {activeTab === "disputes" && (disputes || <Placeholder tab="Disputes" />)}
           {activeTab === "system" && system}
         </div>

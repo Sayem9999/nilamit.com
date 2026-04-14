@@ -21,7 +21,7 @@ async function simulate() {
     // Here I'll replicate the math logic for verification.
     
     // Points
-    let points = 100 + (u.sales * 10) + (u.purchases * 5) - (u.cancellations * 50);
+    const points = 100 + (u.sales * 10) + (u.purchases * 5) - (u.cancellations * 50);
     
     // Bayesian
     const v = u.reviews;

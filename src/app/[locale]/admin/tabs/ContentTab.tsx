@@ -7,7 +7,15 @@ import { ImageUpload } from '@/components/upload/ImageUpload';
 import Image from 'next/image';
 
 interface ContentTabProps {
-  initialConfig: { heroTitle: string; heroSubtitle: string; heroImage: string | null; announcement: string | null; showAnnouncement: boolean };
+  initialConfig: { 
+    heroTitle: string; 
+    heroSubtitle: string; 
+    heroImage: string | null; 
+    announcement: string | null; 
+    showAnnouncement: boolean;
+    treasuryBkash: string | null;
+    treasuryNagad: string | null;
+  };
   featuredAuctions: { id: string; title: string; currentPrice: number; images: string[] }[];
 }
 
@@ -26,6 +34,8 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
         heroImage: config.heroImage ?? undefined,
         announcement: config.announcement ?? undefined,
         showAnnouncement: config.showAnnouncement,
+        treasuryBkash: config.treasuryBkash,
+        treasuryNagad: config.treasuryNagad,
       });
       alert('Content updated successfully!');
     } catch (e: unknown) {
@@ -97,6 +107,47 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
             >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Changes
+            </button>
+        </div>
+      </div>
+
+      {/* 1.5 Treasury Configuration */}
+      <div className="bg-white rounded-xl border border-emerald-100 p-6 shadow-sm">
+        <h3 className="font-heading font-semibold text-lg text-emerald-900 mb-4 flex items-center gap-2">
+            <Save className="w-5 h-5 text-emerald-600" />
+            Official Treasury Accounts
+        </h3>
+        <p className="text-sm text-gray-500 mb-6">These numbers will be displayed in the Automated Checkout Gateway.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+            <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">bKash Merchant/Personal</label>
+                <input 
+                    type="text" 
+                    value={config.treasuryBkash || ''} 
+                    onChange={e => setConfig({ ...config, treasuryBkash: e.target.value })}
+                    placeholder="017XXXXXXXX"
+                    className="w-full mt-1 px-4 py-2 border border-gray-100 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
+                />
+            </div>
+            <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Nagad Merchant/Personal</label>
+                <input 
+                    type="text" 
+                    value={config.treasuryNagad || ''} 
+                    onChange={e => setConfig({ ...config, treasuryNagad: e.target.value })}
+                    placeholder="018XXXXXXXX"
+                    className="w-full mt-1 px-4 py-2 border border-gray-100 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
+                />
+            </div>
+        </div>
+        <div className="mt-6">
+            <button 
+                onClick={handleSaveConfig}
+                disabled={isSaving}
+                className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-emerald-700 flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+            >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Sync Treasury
             </button>
         </div>
       </div>

@@ -8,8 +8,7 @@ export const authConfig = {
     strategy: 'jwt',
   },
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
+    authorized() {
       return true; // Let the proxy handle redirection logic
     },
   },

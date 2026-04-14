@@ -192,3 +192,22 @@ export async function resolveAdminDispute(transactionId: string, resolution: 'RE
     ]);
   }
 }
+
+/** Admin: get treasury audit log */
+export async function getTreasuryAudit() {
+  await requireAdmin();
+  return prisma.escrowTransaction.findMany({
+    where: { 
+      OR: [
+        { verificationType: 'AUTOMATIC' },
+        { providerRef: { not: null } }
+      ]
+    },
+    include: {
+      auction: { select: { title: true, id: true } },
+      buyer: { select: { name: true, email: true } }
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 50
+  });
+}

@@ -25,8 +25,8 @@ export function DisputesTab() {
     setLoading(true);
     try {
       const res = await getAdminDisputes();
-      setDisputes(res as any);
-    } catch (error) {
+      setDisputes(res as DisputeTransaction[]);
+    } catch {
       toast.error("Failed to load disputes");
     } finally {
       setLoading(false);
@@ -46,8 +46,8 @@ export function DisputesTab() {
         await resolveAdminDispute(id, resolution);
         toast.success(`Dispute resolved: ${actionLabel}`);
         setDisputes(prev => prev.filter(d => d.id !== id));
-      } catch (error: any) {
-        toast.error(error.message || "Failed to resolve dispute");
+      } catch (error) {
+        toast.error((error as Error).message || "Failed to resolve dispute");
       }
     });
   };

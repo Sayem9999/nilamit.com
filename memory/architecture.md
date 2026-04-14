@@ -11,8 +11,14 @@ Nilamit is a real-time, transaction-safe auction platform optimized for the Bang
 - **Auth**: NextAuth v5 (Hybrid) — Supports Phone OTP, Email/Password, and Google OAuth.
 - **Verification**: Dedicated `VerificationGuard` component gating database mutations.
 
-## Core Engine: Bidding
+## Core Engine: Bidding & Treasury
 The bidding engine relies on **Row-Level Locking**. Every bid increment uses a Prisma transaction with a `SELECT FOR UPDATE` clause to prevent race conditions during high-volume auction closes.
+
+### Automated Treasury Model (v1.8.0)
+The platform manages an automated escrow flow:
+1. **Merchant Routing**: Official platform accounts (bKash/Nagad) are synchronized from the Admin Hub.
+2. **Instant Verification**: Transactions move from `PENDING` to `HELD` automatically upon valid provider reference submission.
+3. **Logistics Authorization**: Successful escrow holding triggers Pusher events to instantly unlock the **Coordination Hub** for both parties.
 
 ## Topology (Mermaid)
 ```mermaid
@@ -35,6 +41,8 @@ graph TD
 - **Auction**: The primary unit of commerce. Features "Soft Close" anti-sniping logic.
 - **Bid**: Historical log of all price increments.
 - **Circle**: A social/geographic grouping mechanism for localized auctions.
+- **EscrowTrans**: Atomic transaction record linking an Auction, Payment Reference, and Coordination Hub status.
+- **SystemConfig**: Centralized repository for platform treasury accounts and operational thresholds.
 
 ## Social Mapping
 The **StarMap** component (built with `d3-force`) visualizes trust relationships and proximity between nodes in the bidding network.

@@ -15,12 +15,14 @@ import {
 } from "lucide-react";
 import { ImageUpload } from "@/components/upload/ImageUpload";
 import { VerificationGuard } from "@/components/auth/VerificationGuard";
+import { useTranslations } from "next-intl";
 
 type Step = "details" | "pricing" | "schedule" | "review";
 
 export default function CreateAuctionPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const t = useTranslations("Auction");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [step, setStep] = useState<Step>("details");
@@ -86,9 +88,9 @@ export default function CreateAuctionPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="font-heading font-bold text-2xl text-gray-900 mb-2">
-        Create Auction
+        {t("createTitle")}
       </h1>
-      <p className="text-sm text-gray-500 mb-8">List your item for bidding</p>
+      <p className="text-sm text-gray-500 mb-8">{t("createSubtitle")}</p>
 
       {/* Step Indicator */}
       <div className="flex items-center gap-2 mb-8">
@@ -117,11 +119,11 @@ export default function CreateAuctionPage() {
         {step === "details" && (
           <div className="space-y-4">
             <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
-              Item Details
+              {t("details")}
             </h2>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Title
+                {t("itemTitle")}
               </label>
               <input
                 type="text"
@@ -133,7 +135,7 @@ export default function CreateAuctionPage() {
             </div>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Description
+                {t("itemDesc")}
               </label>
               <textarea
                 value={form.description}
@@ -145,7 +147,7 @@ export default function CreateAuctionPage() {
             </div>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Category
+                {t("itemCat")}
               </label>
               <select
                 value={form.category}
@@ -161,7 +163,7 @@ export default function CreateAuctionPage() {
             </div>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Location
+                {t("itemLoc")}
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -180,7 +182,7 @@ export default function CreateAuctionPage() {
             </div>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Images
+                {t("itemImages")}
               </label>
               <ImageUpload
                 value={form.images}
@@ -200,11 +202,11 @@ export default function CreateAuctionPage() {
         {step === "pricing" && (
           <div className="space-y-4">
             <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
-              Pricing
+              {t("pricing")}
             </h2>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Starting Price (৳)
+                {t("startPrice")}
               </label>
               <input
                 type="number"
@@ -218,7 +220,7 @@ export default function CreateAuctionPage() {
             </div>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Minimum Bid Increment (৳)
+                {t("minIncrement")}
               </label>
               <input
                 type="number"
@@ -242,7 +244,7 @@ export default function CreateAuctionPage() {
               <div className="space-y-4">
                 <div>
                   <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">
-                    Reserve Price (৳)
+                    {t("reservePrice")}
                   </label>
                   <input
                     type="number"
@@ -264,7 +266,7 @@ export default function CreateAuctionPage() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">
-                    Buy It Now Price (৳)
+                    {t("buyNowPrice")}
                   </label>
                   <input
                     type="number"
@@ -293,11 +295,11 @@ export default function CreateAuctionPage() {
         {step === "schedule" && (
           <div className="space-y-4">
             <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
-              Schedule
+              {t("schedule")}
             </h2>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                Start Time
+                {t("startTime")}
               </label>
               <input
                 type="datetime-local"
@@ -308,7 +310,7 @@ export default function CreateAuctionPage() {
             </div>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
-                End Time
+                {t("endTime")}
               </label>
               <input
                 type="datetime-local"
@@ -317,8 +319,7 @@ export default function CreateAuctionPage() {
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
               <p className="text-xs text-gray-400 mt-1">
-                Anti-sniping: If a bid comes in the last 2 minutes, the auction
-                extends automatically.
+                {t("antiSnipeNote")}
               </p>
             </div>
           </div>
@@ -328,32 +329,32 @@ export default function CreateAuctionPage() {
         {step === "review" && (
           <div className="space-y-4">
             <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
-              Review & Publish
+              {t("reviewTitle")}
             </h2>
             <div className="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
               <div>
-                <strong className="text-gray-700">Title:</strong>{" "}
+                <strong className="text-gray-700">{t("itemTitle")}:</strong>{" "}
                 <span className="text-gray-600">{form.title}</span>
               </div>
               <div>
-                <strong className="text-gray-700">Category:</strong>{" "}
+                <strong className="text-gray-700">{t("itemCat")}:</strong>{" "}
                 <span className="text-gray-600">{form.category}</span>
               </div>
               <div>
-                <strong className="text-gray-700">Location:</strong>{" "}
+                <strong className="text-gray-700">{t("itemLoc")}:</strong>{" "}
                 <span className="text-gray-600 uppercase font-semibold">
                   {form.location}
                 </span>
               </div>
               <div>
-                <strong className="text-gray-700">Starting Price:</strong>{" "}
+                <strong className="text-gray-700">{t("startPrice")}:</strong>{" "}
                 <span className="price text-primary-700">
                   ৳{form.startingPrice}
                 </span>
               </div>
               {form.reservePrice && (
                 <div>
-                  <strong className="text-gray-700">Reserve Price:</strong>{" "}
+                  <strong className="text-gray-700">{t("reservePrice")}:</strong>{" "}
                   <span className="price text-gray-600">
                     ৳{form.reservePrice}
                   </span>
@@ -361,34 +362,33 @@ export default function CreateAuctionPage() {
               )}
               {form.buyItNowPrice && (
                 <div>
-                  <strong className="text-gray-700">Buy It Now:</strong>{" "}
+                  <strong className="text-gray-700">{t("buyNowPrice")}:</strong>{" "}
                   <span className="price text-accent-600">
                     ৳{form.buyItNowPrice}
                   </span>
                 </div>
               )}
               <div>
-                <strong className="text-gray-700">Min Increment:</strong>{" "}
+                <strong className="text-gray-700">{t("minIncrement")}:</strong>{" "}
                 <span className="price text-gray-600">
                   ৳{form.minBidIncrement}
                 </span>
               </div>
               <div>
-                <strong className="text-gray-700">Duration:</strong>{" "}
+                <strong className="text-gray-700">সময়সীমা:</strong>{" "}
                 <span className="text-gray-600">
                   {form.startTime} → {form.endTime}
                 </span>
               </div>
               <div>
-                <strong className="text-gray-700">Images:</strong>{" "}
+                <strong className="text-gray-700">{t("itemImages")}:</strong>{" "}
                 <span className="text-gray-600">
                   {form.images.filter(Boolean).length} uploaded
                 </span>
               </div>
             </div>
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700">
-              By publishing, your auction goes live immediately. You cannot
-              cancel once bids are placed.
+              {t("publishNote")}
             </div>
           </div>
         )}
@@ -407,7 +407,7 @@ export default function CreateAuctionPage() {
             disabled={stepIndex === 0}
             className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-30"
           >
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4" /> {t("backBtn")}
           </button>
 
           {step === "review" ? (
@@ -420,7 +420,7 @@ export default function CreateAuctionPage() {
                 {isPending ? (
                   <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
                 ) : (
-                  "Publish Auction"
+                  t("publishBtn")
                 )}
               </button>
             </VerificationGuard>
@@ -429,7 +429,7 @@ export default function CreateAuctionPage() {
               onClick={() => setStep(steps[stepIndex + 1])}
               className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all flex items-center gap-1"
             >
-              Next <ArrowRight className="w-4 h-4" />
+              {t("nextBtn")} <ArrowRight className="w-4 h-4" />
             </button>
           )}
         </div>

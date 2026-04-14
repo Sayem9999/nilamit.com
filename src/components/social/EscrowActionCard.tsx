@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { formatBDT } from "@/lib/format";
+import { MockPaymentGateway } from "@/components/payment/MockPaymentGateway";
 
 import { useSession } from "next-auth/react";
 
@@ -27,11 +28,15 @@ interface EscrowTransaction {
 
 export function EscrowActionCard({
   transaction,
+  treasuryNumbers,
 }: {
   transaction: EscrowTransaction;
+  treasuryNumbers: { bkash: string | null; nagad: string | null };
 }) {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [paymentProvider, setPaymentProvider] = useState<'bkash' | 'nagad'>('bkash');
   const router = useRouter();
   const t = useTranslations("Escrow");
   const locale = useLocale();
@@ -41,35 +46,47 @@ export function EscrowActionCard({
 
   const handlePayAdvance = async () => {
     if (!hasMFS) {
-      toast.error("অনুগ্রহ করে প্রোফাইল থেকে বিকাশ বা নগদ অ্যাকাউন্ট লিঙ্ক করুন।");
-      router.push("/profile");
+      toast.error(t("linkMFSProfile"));
+      router.push(`/${locale}/profile`);
       return;
     }
+    
+    // Choose provider based on what they have linked
+    if (user.bkashNumber) setPaymentProvider('bkash');
+    else if (user.nagadNumber) setPaymentProvider('nagad');
+    
+    setIsPaymentOpen(true);
+  };
+
+  const handlePaymentSuccess = async (providerRef: string) => {
+    setIsPaymentOpen(false);
     setLoading(true);
-    const result = await payEscrowAdvance(transaction.id);
-    if (result.success) {
-      toast.success(
-        "অ্যাডভান্স পেমেন্ট সফল হয়েছে! এখন বিক্রেতার তথ্য দেখতে পাবেন।",
-      );
-      router.refresh();
-    } else {
-      toast.error(result.error || "পেমেন্ট প্রসেস করতে ব্যর্থ হয়েছে।");
+    
+    try {
+      const result = await payEscrowAdvance(transaction.id, providerRef);
+      if (result.success) {
+        toast.success(t("advanceSuccess"));
+        router.refresh();
+      } else {
+        toast.error(result.error || t("paymentFailed"));
+      }
+    } catch {
+      toast.error(t("paymentFailed"));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleConfirmReceived = async () => {
-    if (!window.confirm("Are you sure you have received the item in good condition? This will release the final funds.")) return;
+    if (!window.confirm(t("confirmReceivedPrompt"))) return;
     
     setLoading(true);
     const result = await confirmItemReceived(transaction.id);
     if (result.success) {
-      toast.success(
-        "লেনদেন সফলভাবে সম্পন্ন হয়েছে!",
-      );
+      toast.success(t("orderComplete"));
       router.refresh();
     } else {
-      toast.error(result.error || "কনফার্ম করতে সমস্যা হয়েছে।");
+      toast.error(result.error || t("confirmFailed"));
     }
     setLoading(false);
   };
@@ -81,16 +98,16 @@ export function EscrowActionCard({
   const isRefunded = transaction.status === "REFUNDED";
 
   const handleRaiseDispute = async () => {
-    const reason = window.prompt("Please enter the reason for your dispute:");
+    const reason = window.prompt(t("disputePrompt"));
     if (!reason) return;
 
     setLoading(true);
     const result = await raiseDispute(transaction.id, reason);
     if (result.success) {
-      toast.success("অভিযোগ জমা হয়েছে। মডারেটর রিভিউ না করা পর্যন্ত পেমেন্ট স্থগিত থাকবে।");
+      toast.success(t("disputeSubmitted"));
       router.refresh();
     } else {
-      toast.error(result.error || "অভিযোগ জমা দিতে ব্যর্থ হয়েছে।");
+      toast.error(result.error || t("disputeFailed"));
     }
     setLoading(false);
   };
@@ -128,7 +145,7 @@ export function EscrowActionCard({
               {transaction.auction.title}
             </h4>
             <p className="text-sm text-slate-500 dark:text-slate-400 bn">
-              বিক্রেতা: {transaction.auction.seller.name || "অজ্ঞাত"}
+              {t("sellerLabel")}: {transaction.auction.seller.name || "N/A"}
             </p>
 
             <div className="mt-4 flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
@@ -141,8 +158,8 @@ export function EscrowActionCard({
               <div className="flex items-center gap-1.5">
                 <Clock className="w-4 h-4" />
                 <span className="bn">
-                  নিলাম জেতার তারিখ:{" "}
-                  {new Date(transaction.auction.endTime).toLocaleDateString("bn-BD")}
+                  {t("wonDate")}:{" "}
+                  {new Date(transaction.auction.endTime).toLocaleDateString(locale === 'bn' ? "bn-BD" : "en-US")}
                 </span>
               </div>
             </div>
@@ -151,12 +168,12 @@ export function EscrowActionCard({
           <div className="md:w-64 flex-shrink-0">
             {isPending && (
               <div className="space-y-3">
-                {!hasMFS && (
-                   <div className="p-2 bg-amber-50 border border-amber-100 rounded text-[10px] text-amber-700 bn">
-                     <AlertTriangle className="w-3 h-3 inline mr-1" />
-                     পেমেন্ট করতে প্রথমে বিকাশ বা নগদ লিঙ্ক করুন।
-                   </div>
-                )}
+                 {!hasMFS && (
+                    <div className="p-2 bg-amber-50 border border-amber-100 rounded text-[10px] text-amber-700 bn">
+                      <AlertTriangle className="w-3 h-3 inline mr-1" />
+                      {t("linkMFSToPay")}
+                    </div>
+                 )}
                 <p className="text-xs text-slate-500 hidden md:block bn leading-relaxed">
                   {t("gatedInfoNote")}
                 </p>
@@ -165,7 +182,7 @@ export function EscrowActionCard({
                   disabled={loading}
                   className={`w-full bn py-5 ${!hasMFS ? "bg-amber-600 hover:bg-amber-700" : "bg-blue-600 hover:bg-blue-700"} text-white`}
                 >
-                  {loading ? t("processing") : (!hasMFS ? "Link MFS to Pay" : t("payAdvance"))}
+                   {loading ? t("processing") : (!hasMFS ? t("linkMFSBtn") : t("payAdvance"))}
                 </Button>
               </div>
             )}
@@ -173,8 +190,8 @@ export function EscrowActionCard({
             {isHeld && (
               <div className="space-y-3">
                 <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-blue-800 mb-3">
-                  <p className="text-xs font-bold flex items-center gap-1.5 mb-1 bn uppercase">
-                    <ShieldCheck className="w-3.5 h-3.5" /> পেমেন্ট সুরক্ষিত
+                   <p className="text-xs font-bold flex items-center gap-1.5 mb-1 bn uppercase">
+                    <ShieldCheck className="w-3.5 h-3.5" /> {t("paymentSecured")}
                   </p>
                   <p className="text-[11px] opacity-90 leading-snug bn">
                     {t("holdNote")}
@@ -207,7 +224,7 @@ export function EscrowActionCard({
                     className="w-full flex items-center justify-center gap-2 bn border border-purple-100 bg-purple-50 text-purple-700 hover:bg-purple-100"
                   >
                     <MessageSquare className="w-4 h-4" />
-                    যোগাযোগ এবং ডেলিভারি (Chat)
+                    {t("chatCoordination")}
                   </Button>
                 </div>
               </div>
@@ -234,8 +251,8 @@ export function EscrowActionCard({
                 <p className="text-sm font-bold mb-1 flex items-center gap-1.5 bn">
                   <ShieldCheck className="w-4 h-4" /> {t("fundsReleased")}
                 </p>
-                <p className="text-xs bn leading-relaxed">
-                  লেনদেনটি সফলভাবে সম্পন্ন হয়েছে। বিক্রেতা তার পেমেন্ট পেয়েছেন।
+                 <p className="text-xs bn leading-relaxed">
+                  {t("orderSuccessNote")}
                 </p>
               </div>
             )}
@@ -245,14 +262,23 @@ export function EscrowActionCard({
                 <p className="text-sm font-bold mb-1 flex items-center gap-1.5 bn">
                   {t("refunded")}
                 </p>
-                <p className="text-xs bn leading-relaxed">
-                  বিরোধের মীমাংসা আপনার পক্ষে হয়েছে এবং পেমেন্ট ফেরত দেওয়া হয়েছে।
+                 <p className="text-xs bn leading-relaxed">
+                  {t("refundSuccessNote")}
                 </p>
               </div>
             )}
           </div>
         </div>
       </CardContent>
+
+      <MockPaymentGateway
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        onSuccess={handlePaymentSuccess}
+        amount={transaction.amount > 100000 ? 250 : 0} // Logic for advance (Current threshold check)
+        provider={paymentProvider}
+        merchantNumber={paymentProvider === 'bkash' ? treasuryNumbers.bkash : treasuryNumbers.nagad}
+      />
     </Card>
   );
 }

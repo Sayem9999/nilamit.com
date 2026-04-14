@@ -27,8 +27,8 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link href="/auctions" className="text-sm text-primary-300 hover:text-white transition-colors">Browse Auctions</Link></li>
               <li><Link href="/auctions/create" className="text-sm text-primary-300 hover:text-white transition-colors">Sell an Item</Link></li>
-              <li><Link href="/auctions?category=mobile-phones" className="text-sm text-primary-300 hover:text-white transition-colors">Mobile Phones</Link></li>
-              <li><Link href="/auctions?category=electronics" className="text-sm text-primary-300 hover:text-white transition-colors">Electronics</Link></li>
+              <li><Link href="/leaderboard" className="text-sm text-primary-300 hover:text-white transition-colors">Global Leaderboard</Link></li>
+              <li><Link href="/starmap" className="text-sm text-primary-300 hover:text-white transition-colors">Trust Starmap</Link></li>
             </ul>
           </div>
 

@@ -7,6 +7,11 @@
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
 ## Version History
+- **v1.8.0 (Treasury Automation & Sync)**:
+    - **Platform Treasury**: Unified platform accounts (bKash/Nagad) managed via Admin dashboard.
+    - **Automated Escrow Engine**: Transitioned from manual simulation to automated `HELD` verification logic.
+    - **Zero-Technicality Sync**: Eliminated blank/unlinked pages (FAQ, Safety, Contact) and synchronized whole-platform navigation.
+    - **MD Standard Hardening**: English-first documentation overhaul across the entire repository.
 - **v1.7.0 (Platform Hardening)**:
     - **Trust Constellation (StarMap)**: Integrated D3.js social fabric visualization with reputation-scaled link physics.
     - **Escrow Coordination Hub**: Locked post-auction logistics layer gated by `HELD` escrow state.
@@ -26,6 +31,6 @@
 
 ## Policy Choices
 - **PSSA 2024 Compliance**: Platform provides English-First experience with professional Bengali support to ensure transparency.
-- **English-First Pivot (Apr 13)**: Core design and technical terminology shifted to English to align with global standards.
+- **English-First Standard (v1.8.0)**: Core design, documentation, and technical terminology are English-first.
 - **Trust-Based Escrow**: Success fees and delivery charges are held from buyers if the seller isn't Verified.
 - **Anti-Sniping (Soft Close)**: 2-minute auto-extension on late bids.

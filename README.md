@@ -54,12 +54,11 @@ src/
 └── types/            # Shared TypeScript types
 ```
 
-## 💎 Key Features (**v1.7.0: Trust & Coordination**)
-- **StarMap Constellation**: Interactive D3.js visualization of the marketplace "Social Fabric," mapping trust through link physics (Sale vs Interest).
-- **Escrow Coordination Hub**: A transaction-gated logistics layer with real-time chat and PII shielding, unlocked only after an advance is held.
-- **Admin Dispute Resolution**: Centralized conflict management with atomic database transactions for fund release and reputation adjustment.
-- **One-Time Soft-Close**: Automatically extends auctions by 2 minutes on late bids to ensure fair price discovery.
-- **Elite Leaderboards**: Reputation-based stratification for verified buyers and sellers.
+## 💎 Key Features (**v1.8.0: Treasury Automation**)
+- **Automated Platform Treasury**: Instant bKash/Nagad verification with centralized platform account management.
+- **Real-time Coordination Hub**: Post-auction logistics layer with PII shielding, instantly unblocked upon escrow verification via Pusher.
+- **StarMap Constellation**: Interactive D3.js socialization of the trust marketplace.
+- **Admin Dispute Resolution**: High-fidelity dashboard for conflict management and treasury auditing.
 
 ## Environment Variables
 

@@ -7,6 +7,15 @@ import Link from "next/link";
 import Image from "next/image";
 import type { AuctionWithSeller } from "@/types";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
+import { getTranslations } from "next-intl/server";
+import { getSystemConfig } from "@/actions/admin-content";
+import { SellerPerformance } from "@/components/seller/SellerPerformance";
+import { 
+  BarChart3, 
+  ChevronRight, 
+  Trophy, 
+  Target 
+} from "lucide-react";
 
 export default async function DashboardPage({
   params,
@@ -17,9 +26,13 @@ export default async function DashboardPage({
 }) {
   const { locale } = await params;
   const session = await auth();
+  const t = await getTranslations("Dashboard");
+
   if (!session?.user) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/dashboard`);
   }
+
+  const systemConfig = await getSystemConfig();
 
   const { tab } = await searchParams;
   const currentTab = tab || "watchlist";
@@ -134,16 +147,39 @@ export default async function DashboardPage({
       },
       orderBy: { lastMessageAt: 'desc' }
     });
-    // @ts-ignore
+    // @ts-expect-error: Reusing slot for conversations to avoid extra component logic
     escrowTransactions = conversations; // Reusing the slot for simplicity in rendering
+  } else if (currentTab === "performance") {
+    // Derived stats for the performance tab
+    const sellerAuctions = await prisma.auction.findMany({
+      where: { sellerId: userId },
+      select: { status: true, currentPrice: true }
+    });
+    
+    const stats = {
+      totalSales: sellerAuctions.filter(a => a.status === 'SOLD').length,
+      revenue: sellerAuctions.reduce((acc, curr) => acc + (Number(curr.currentPrice) || 0), 0),
+      reputation: session.user.reputationScore || 0,
+      successRate: sellerAuctions.length > 0 ? Math.round((sellerAuctions.filter(a => a.status === 'SOLD').length / sellerAuctions.length) * 100) : 100
+    };
+    // @ts-expect-error: Reusing slot for performance stats object
+    escrowTransactions = [stats]; // Borrowing the slot
   }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-heading font-bold text-gray-900 mb-8">
-          My Dashboard
+          {t("title")}
         </h1>
+
+        {/* System Announcement Sync */}
+        {systemConfig.showAnnouncement && systemConfig.announcement && (
+          <div className="mb-8 p-4 bg-primary-50 border border-primary-100 rounded-2xl flex items-center gap-3 text-primary-900 animate-in fade-in slide-in-from-top-4 duration-500">
+            <CheckCircle className="w-5 h-5 text-primary-600" />
+            <p className="font-semibold text-sm">{systemConfig.announcement}</p>
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar */}
@@ -158,7 +194,7 @@ export default async function DashboardPage({
                 }`}
               >
                 <Heart className="w-4 h-4" />
-                Watchlist
+                {t("watchlist")}
               </Link>
               <Link
                 href={`/${locale}/dashboard?tab=bids`}
@@ -169,7 +205,7 @@ export default async function DashboardPage({
                 }`}
               >
                 <RefreshCw className="w-4 h-4" />
-                Active Bids
+                {t("activeBids")}
               </Link>
               <Link
                 href={`/${locale}/dashboard?tab=escrow`}
@@ -180,7 +216,7 @@ export default async function DashboardPage({
                 }`}
               >
                 <CheckCircle className="w-4 h-4" />
-                Won / Escrow
+                {t("wonEscrow")}
               </Link>
               <Link
                 href={`/${locale}/dashboard?tab=listings`}
@@ -191,7 +227,7 @@ export default async function DashboardPage({
                 }`}
               >
                 <Package className="w-4 h-4" />
-                My Listings
+                {t("myListings")}
               </Link>
               <Link
                 href={`/${locale}/dashboard?tab=coordination`}
@@ -202,7 +238,18 @@ export default async function DashboardPage({
                 }`}
               >
                 <MessageSquare className="w-4 h-4" />
-                Coordination Hub
+                {t("coordinationHub")}
+              </Link>
+              <Link
+                href={`/${locale}/dashboard?tab=performance`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
+                  currentTab === "performance"
+                    ? "bg-amber-50 text-amber-600"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <BarChart3 className="w-4 h-4" />
+                {t("sellerPerformance")}
               </Link>
 
               <div className="pt-4 mt-4 border-t border-gray-100">
@@ -211,8 +258,31 @@ export default async function DashboardPage({
                   className="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm text-gray-600 hover:bg-gray-50"
                 >
                   <LogOut className="w-4 h-4" />
-                  Profile Settings
+                  {t("profileSettings")}
                 </Link>
+              </div>
+
+              {/* Trust Fabric Sidebar Card */}
+              <div className="mt-6 p-6 rounded-[2rem] bg-indigo-900 text-white shadow-xl relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-[60px] group-hover:bg-indigo-500/40 transition-all" />
+                 <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                       <Trophy className="w-6 h-6 text-amber-400" />
+                       <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Nilamit Score</span>
+                    </div>
+                    <div className="text-2xl font-heading font-bold mb-1">
+                      {session.user.reputationScore || 0}
+                      <span className="text-xs text-indigo-300 ml-1">RP</span>
+                    </div>
+                    <p className="text-[10px] text-indigo-300 mb-4 font-bold uppercase">{t("trustPointsTitle")}</p>
+                    <Link 
+                      href="/leaderboard"
+                      className="flex items-center justify-between w-full py-2 px-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase transition-all"
+                    >
+                      {t("viewLeaderboard")}
+                      <ChevronRight className="w-3 h-3" />
+                    </Link>
+                 </div>
               </div>
             </div>
           </div>
@@ -222,7 +292,7 @@ export default async function DashboardPage({
             {currentTab === "watchlist" && (
               <div>
                 <h2 className="text-xl font-heading font-semibold text-gray-900 mb-6">
-                  Saved Auctions ({watchlistAuctions.length})
+                  {t("savedAuctions")} ({watchlistAuctions.length})
                 </h2>
                 {watchlistAuctions.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -233,7 +303,7 @@ export default async function DashboardPage({
                 ) : (
                   <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
                     <Heart className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Your watchlist is empty.</p>
+                    <p className="text-gray-500">{t("emptyWatchlist")}</p>
                   </div>
                 )}
               </div>
@@ -242,7 +312,7 @@ export default async function DashboardPage({
             {currentTab === "bids" && (
               <div>
                 <h2 className="text-xl font-heading font-semibold text-gray-900 mb-6">
-                  Auctions You Are Winning or Tracking ({activeBids.length})
+                  {t("activeWinning")} ({activeBids.length})
                 </h2>
                 {activeBids.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -254,7 +324,7 @@ export default async function DashboardPage({
                   <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
                     <RefreshCw className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">
-                      You haven&apos;t placed any active bids recently.
+                      {t("noActiveBids")}
                     </p>
                   </div>
                 )}
@@ -264,19 +334,26 @@ export default async function DashboardPage({
             {currentTab === "escrow" && (
               <div>
                 <h2 className="text-xl font-heading font-semibold text-gray-900 mb-6">
-                  Won Auctions & Escrow Payments ({escrowTransactions.length})
+                  {t("wonAndEscrow")} ({escrowTransactions.length})
                 </h2>
                 {escrowTransactions.length > 0 ? (
                   <div className="space-y-4">
                     {escrowTransactions.map((tx) => (
-                      <EscrowActionCard key={tx.id} transaction={tx} />
+                      <EscrowActionCard 
+                        key={tx.id} 
+                        transaction={tx} 
+                        treasuryNumbers={{
+                          bkash: systemConfig.treasuryBkash,
+                          nagad: systemConfig.treasuryNagad
+                        }}
+                      />
                     ))}
                   </div>
                 ) : (
                   <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
                     <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">
-                      You haven&apos;t won any auctions yet.
+                      {t("noWonItems")}
                     </p>
                   </div>
                 )}
@@ -287,7 +364,7 @@ export default async function DashboardPage({
               <div className="space-y-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-heading font-semibold text-gray-900">
-                    Active Coordination ({escrowTransactions.length})
+                    {t("activeCoordination")} ({escrowTransactions.length})
                   </h2>
                 </div>
                 {escrowTransactions.length > 0 ? (
@@ -325,9 +402,9 @@ export default async function DashboardPage({
                            <p className="text-sm text-gray-500 line-clamp-1 mt-1 font-medium italic">
                              {conv.messages?.[0]?.content || "No messages yet."}
                            </p>
-                           <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
-                             Shared logistics & delivery coordination
-                           </p>
+                            <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
+                              {t("sharedLogistics")}
+                            </p>
                          </div>
                          <MessageSquare className="w-5 h-5 text-gray-300 group-hover:text-primary-400 transition-colors" />
                       </Link>
@@ -337,11 +414,15 @@ export default async function DashboardPage({
                   <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
                     <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">
-                      No active coordinations. Pay the advance for won items to start logistics.
+                      {t("noCoordination")}
                     </p>
                   </div>
                 )}
               </div>
+            )}
+
+            {currentTab === "performance" && (
+              <SellerPerformance stats={escrowTransactions[0]} />
             )}
           </div>
         </div>

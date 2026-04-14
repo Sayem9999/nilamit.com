@@ -18,9 +18,6 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-  
-  const router = useRouter();
-  const t = useTranslations("Auth");
 
   const handleRequestOTP = () => {
     if (!identifier) return;
@@ -200,7 +197,7 @@ export default function ForgotPasswordPage() {
               <form onSubmit={handleResetPassword} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="mb-4">
                   <h3 className="text-lg font-bold text-gray-900 mb-1">New Password</h3>
-                  <p className="text-sm text-gray-500">Create a secure password you'll remember.</p>
+                  <p className="text-sm text-gray-500">Create a secure password you&apos;ll remember.</p>
                 </div>
                 
                 <div className="space-y-4">

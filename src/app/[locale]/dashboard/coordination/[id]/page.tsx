@@ -5,6 +5,8 @@ import ChatInterface from "@/components/social/ChatInterface";
 import { ChevronLeft, ShieldCheck, Info } from "lucide-react";
 import Link from "next/link";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
+import { getTranslations } from "next-intl/server";
+import { getSystemConfig } from "@/actions/admin-content";
 
 export default async function CoordinationPage({
   params,
@@ -13,10 +15,13 @@ export default async function CoordinationPage({
 }) {
   const { id, locale } = await params;
   const session = await auth();
+  const t = await getTranslations("Escrow");
 
   if (!session?.user) {
     redirect(`/${locale}/login`);
   }
+
+  const systemConfig = await getSystemConfig();
 
   const userId = session.user.id;
 
@@ -69,9 +74,9 @@ export default async function CoordinationPage({
           </Link>
           <div>
             <h1 className="text-2xl font-heading font-bold text-gray-900">
-              Coordination Hub
+              {t("coordinationTitle")}
             </h1>
-            <p className="text-sm text-gray-500">Logistics & Delivery Support</p>
+            <p className="text-sm text-gray-500">{t("logisticsSupport")}</p>
           </div>
         </div>
 
@@ -92,7 +97,7 @@ export default async function CoordinationPage({
             <div className="mt-4 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3 text-amber-800">
               <Info className="w-5 h-5 flex-shrink-0" />
               <div className="text-xs leading-relaxed">
-                <span className="font-bold">Security Note:</span> Please keep all payment discussions and delivery proof within this chat. This helps our team resolve disputes quickly if they arise. <b>Avoid external apps for coordination.</b>
+                <span className="font-bold">{t("securityNote")}</span> {t("securityDesc")}
               </div>
             </div>
           </div>
@@ -102,21 +107,38 @@ export default async function CoordinationPage({
             <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
               <div className="flex items-center gap-2 mb-4 text-emerald-600">
                 <ShieldCheck className="w-5 h-5" />
-                <h3 className="font-bold text-sm uppercase tracking-wider">Escrow Shield Active</h3>
+                <h3 className="font-bold text-sm uppercase tracking-wider">{t("shieldActive")}</h3>
               </div>
               
-              <EscrowActionCard transaction={conversation.auction.escrowTransaction as any} />
+              <EscrowActionCard 
+                transaction={conversation.auction.escrowTransaction as {
+                  id: string;
+                  amount: number;
+                  status: string;
+                  buyerId: string;
+                  sellerId: string;
+                  auctionId: string;
+                  createdAt: Date;
+                  updatedAt: Date;
+                  providerRef: string | null;
+                  confirmedAt: Date | null;
+                }} 
+                treasuryNumbers={{
+                  bkash: systemConfig.treasuryBkash,
+                  nagad: systemConfig.treasuryNagad
+                }}
+              />
             </div>
 
             <div className="bg-primary-900 text-white p-6 rounded-[32px] shadow-xl overflow-hidden relative">
                <div className="relative z-10">
-                 <h4 className="font-bold text-lg mb-2">Need Help?</h4>
-                 <p className="text-sm opacity-80 mb-4">If the item doesn&apos;t match the description or shipment is delayed by more than 72 hours, you can raise a dispute.</p>
+                 <h4 className="font-bold text-lg mb-2">{t("needHelp")}</h4>
+                 <p className="text-sm opacity-80 mb-4">{t("helpDesc")}</p>
                  <Link 
                    href={`/${locale}/support`}
                    className="inline-block px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition"
                  >
-                   Platform Guidelines
+                   {t("guidelines")}
                  </Link>
                </div>
                <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary-500 rounded-full blur-3xl opacity-20" />

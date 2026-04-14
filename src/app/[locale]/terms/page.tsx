@@ -1,28 +1,40 @@
-export default function TermsPage() {
+import { getTranslations } from "next-intl/server";
+
+export default async function TermsPage() {
+  const t = await getTranslations("Terms");
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-16">
-      <h1 className="font-heading font-bold text-3xl text-gray-900 mb-8">Terms of Service</h1>
-      
-      <div className="prose prose-blue max-w-none space-y-6 text-gray-600">
-        <section>
-          <h2 className="text-xl font-bold text-gray-900">1. Acceptance of Terms</h2>
-          <p>By accessing nilamit.com, you agree to be bound by these terms. We provide a platform for auctions in Bangladesh.</p>
-        </section>
+    <div className="min-h-screen bg-gray-50/50 pt-24 pb-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-heading font-bold text-gray-900 mb-4">
+            {t("title")}
+          </h1>
+          <p className="text-gray-600">
+            {t("subtitle")}
+          </p>
+        </div>
 
-        <section>
-          <h2 className="text-xl font-bold text-gray-900">2. Bidding Rules</h2>
-          <p>Every bid placed is a legally binding contract to purchase. You cannot cancel a bid once placed. Failure to complete a purchase as a winning bidder will result in account suspension.</p>
-        </section>
+        <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100 space-y-10">
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{t("s1Title")}</h2>
+            <p className="text-gray-600 leading-relaxed">{t("s1Desc")}</p>
+          </section>
 
-        <section>
-          <h2 className="text-xl font-bold text-gray-900">3. Selling Rules</h2>
-          <p>Sellers must provide accurate descriptions and images. You are responsible for the items you list. nilamit.com is not responsible for the physical condition of items.</p>
-        </section>
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{t("s2Title")}</h2>
+            <p className="text-gray-600 leading-relaxed text-rose-600 font-medium">{t("s2Desc")}</p>
+          </section>
 
-        <section>
-          <h2 className="text-xl font-bold text-gray-900">4. Verification</h2>
-          <p>Phone verification (+880) is mandatory for all active participants. This ensures a transparent and accountable marketplace for all Bangladeshis.</p>
-        </section>
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{t("s3Title")}</h2>
+            <p className="text-gray-600 leading-relaxed">{t("s3Desc")}</p>
+          </section>
+          
+          <div className="pt-6 border-t border-gray-50 text-sm text-gray-400">
+             Compliance Standard: v1.8.0 / PSSA 2024
+          </div>
+        </div>
       </div>
     </div>
   );
