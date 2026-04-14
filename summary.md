@@ -14,6 +14,7 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 - **Multimodal Onboarding**: Unauthenticated browsing with signup options via **Email, Google, or Phone (OTP)**.
 
 ### 2. Trust & Coordination Hub
+- **Activity Gate**: Strict identity verification required before high-value interactions (Bidding, Selling, Chatting).
 - **MFS-Linked Escrow**: Mandatory **bKash/Nagad** linkage for paying advance fees.
 - **Win-First Privacy**: Seller contact information is only released to the **Winning Bidder** after the auction concludes.
 - **Coordination Engine**: Purpose-built for the **Cash on Delivery (COD)** culture. Nilamit handles the trust and success calculations, while users coordinate their own logistics.
@@ -26,7 +27,7 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 
 ## 💻 Technology Stack
 - **Framework**: Next.js 15 (App Router).
-- **Database**: PostgreSQL via Supabase with **Prisma 6**.
+- **Database**: PostgreSQL via Supabase with **Prisma 7**.
 - **Real-time**: Pusher (WebSockets) for instant bid updates and alerts.
 - **Localization**: English-First experience with Bengali support via `next-intl`.
 - **UI/UX**: Tailwind CSS 4, shadcn/ui, and Framer Motion for a premium, mobile-responsive aesthetic.

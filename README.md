@@ -10,9 +10,10 @@
 | ------------- | ------------------------------------------ |
 | **Framework** | Next.js 15+ (App Router, Server Actions)   |
 | **Database**  | PostgreSQL via Supabase                    |
-| **ORM**       | Prisma 6                                   |
+| **ORM**       | Prisma 7                                   |
 | **Real-time** | Pusher (WebSocket Interaction)             |
-| **Auth**      | Auth.js v5 (Google + Credentials)          |
+| **Auth**      | Auth.js v5 (Hybrid Phone/Email/Google)     |
+| **Verification** | SMS OTP + Multi-Step Verification Gate    |
 | **i18n**      | next-intl (English & Bengali Support)      |
 | **Styling**   | Tailwind CSS 4 + shadcn/ui                 |
 | **SMS**       | Pluggable (GreenWeb / BulksmsBD / Console) |
@@ -55,10 +56,12 @@ src/
 
 ## Key Features
 
+- **Hybrid Auth**: Secure login via Google or +880 Phone OTP with standalone password reset
+- **Activity Gate**: Strict `VerificationGuard` blocking bidding/selling/chatting until identity is verified
 - **Anti-Sniping (Soft Close)**: Bids in the last 2 minutes extend the auction by 2 minutes
-- **Concurrency Safety**: PostgreSQL `SELECT FOR UPDATE` row locking prevents bid race conditions
-- **Phone Trust Anchor**: +880 phone verification required before bidding/selling
-- **Admin Panel**: User management, auction moderation, platform stats
+- **Concurrency Safety**: Row locking prevents bid race conditions
+- **Verification Center**: User-facing hub for identity and MFS (bKash/Nagad) linkage
+- **Admin Recovery**: specialized tools for moderators to resolve account issues
 - **Reputation System**: Score-based trust built through successful transactions
 
 ## Environment Variables

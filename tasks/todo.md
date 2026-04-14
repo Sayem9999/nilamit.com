@@ -1,4 +1,11 @@
-# Project Tasks (Elevation 4)
+# Project Tasks (v1.6 Hardened)
+
+## 0. Identity & Verification Hardening (High Priority)
+- [x] Refactor Auth.js for Hybrid Credentials (Phone + Email).
+- [x] Implement Multi-Step Standalone OTP verification flow.
+- [x] Create `VerificationGuard` (Activity Gate) for Bidding/Selling/Chatting.
+- [x] Update User Profile with dedicated Verification Center.
+- [x] Extend NextAuth types for verification status persistence.
 
 ## 1. Advanced Search & Filtering
 

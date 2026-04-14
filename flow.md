@@ -5,23 +5,32 @@ This document visualizes the mission-critical workflows of the Nilamit platform,
 ---
 
 ## 🔐 1. Authentication & Identity Flow
-*How users enter the platform and how their persona is established.*
+*How users enter the platform and how their identity is verified.*
 
 ```mermaid
 sequenceDiagram
     actor User
     participant FE as Frontend (AuthForm)
+    participant SA as Server Actions (sendOTP/verify)
     participant AC as Auth.js (NextAuth)
     participant DB as PostgreSQL (Prisma)
     
-    User->>FE: Enter Credentials / Google Sign-in
+    User->>FE: Enter Identity (Phone/Email)
+    FE->>SA: requestOTP(phone/email)
+    SA->>User: SMS/Email OTP Dispatch
+    User->>FE: Enter OTP
+    FE->>SA: verifyOTP(code)
+    SA-->>FE: Verified -> Proceed to Profile
     FE->>AC: execute signIn()
-    AC->>DB: Validate User / Create Record
-    DB-->>AC: User Record Found
-    AC->>DB: Augment JWT (reputation, phone_verify, level)
+    AC->>DB: Validate / Create Record
+    DB-->>AC: User Record Created/Found
+    AC->>DB: Augment JWT (reputation, verify_status)
     AC-->>FE: JWT Session Created
-    FE->>User: Redirect to Locale-Dashboard
+    FE->>User: Redirect to Locale-Dashboard (Gated)
 ```
+
+> [!NOTE]
+> All high-value actions (Bidding, Selling) check the session's `verify_status` via the `VerificationGuard` before execution.
 
 ---
 

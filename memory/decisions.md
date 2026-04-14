@@ -8,6 +8,8 @@
 
 ## Version History
 - **v1.6 (Current)**:
+    - **Identity Verification Hardening**: Introduced `VerificationGuard` and multi-step standalone phone verification.
+    - **Hybrid Identification**: Shifted from phone-only to hybrid identity (Phone/Email) as trust anchors.
     - **Global Trust Pivot**: Decommissioned Auction Circles to focus on universal liquidity.
     - **Real-time Engine**: Price Alerts (Targets/Outbid) and Presence Bidding.
     - **Escrow Shield**: Transaction-gated coordination chat + Trust-tiered advance payments.

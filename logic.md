@@ -15,11 +15,12 @@ To handle 100+ users bidding at the exact same millisecond:
 - **Limit**: To prevent indefinite bidding loops, this extension happens **exactly once per auction**.
 
 ## 2. Trust & Reputation System
-### Tiered Gated Identity
-Nilamit balances speed and safety through a 3-tier gating hierarchy:
+### Tiered Gated Identity (Activity Gate)
+Nilamit balances speed and safety through a 3-tier gating hierarchy enforced by the `VerificationGuard`:
 1. **Level 0 (Visitor)**: Authentication is **not required** for exploring the platform or viewing listings.
-2. **Level 1 (Member)**: Requires authentication (Email, Google, or Phone) **PLUS mandatory Phone Verification (OTP)**. Allows **Bidding and Listing** on standard auctions.
-3. **Level 2 (Trusted)**: Requires **MFS Linkage (bKash/Nagad)**. Mandatory for high-stakes coordination: Paying Escrow Advances or bidding on "Elite" items (৳100,000+).
+2. **Level 1 (Authenticated)**: Authentication via Email, Google, or Phone. Allows access to basic profile settings and navigation.
+3. **Level 2 (Verified)**: Requires active **OTP Verification (Phone or Email)**. This is the **Active Participation Gate**: It allows **Bidding, Listing, and Coordination Chat**. Unverified users are blocked with an "Identity Required" modal.
+4. **Level 3 (Trusted)**: Requires **MFS Linkage (bKash/Nagad)**. Mandatory for paying Escrow Advances or bidding on "Elite" items (৳100,000+).
 
 ### Win-First Privacy
 - **Contact Release**: A seller's phone number and contact details are **NEVER** released to a potential buyer during the active auction phase, regardless of the seller's verified status.
