@@ -73,10 +73,12 @@ export async function createAuction(input: CreateAuctionInput) {
     });
 
     if (piiDetected) {
-      const { pusherServer, PUSHER_EVENTS } = await import('@/lib/pusher-server');
-      await pusherServer.trigger(`private-user-${session.user.id}`, PUSHER_EVENTS.PII_VIOLATION, {
-        message: "Your listing content was automatically sanitized to follow privacy rules. Contact info is only revealed after a successful deal.",
-      });
+      const { rtdbPush } = await import('@/lib/firebase-admin');
+      const { RTDB_PATHS, FIREBASE_EVENTS } = await import('@/lib/firebase-events');
+      await rtdbPush(RTDB_PATHS.userNotifications(session.user.id), {
+        event:   FIREBASE_EVENTS.PII_VIOLATION,
+        message: 'Your listing content was automatically sanitized to follow privacy rules. Contact info is only revealed after a successful deal.',
+      }).catch(console.error);
     }
 
     return { success: true, auction };

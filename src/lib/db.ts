@@ -23,13 +23,15 @@ function createPrismaClient() {
   }
 
   try {
-    const pool = new Pool({ 
+    const pool = new Pool({
       connectionString,
-      ssl: process.env.NODE_ENV === 'production' 
-        ? { rejectUnauthorized: false } 
+      ssl: process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false }
         : false, // development usually doesn't need SSL or uses local certs
-      max: 10,
+      max: 30,                     // Handle 500+ concurrent bids (was 10)
+      idleTimeoutMillis: 30000,    // Close idle connections after 30s
       connectionTimeoutMillis: 5000,
+      allowExitOnIdle: false,      // Keep pool alive between requests
     });
 
     const adapter = new PrismaPg(pool);

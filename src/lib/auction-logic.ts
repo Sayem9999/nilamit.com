@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { Resend } from 'resend';
+import { sendEmail } from '@/lib/firebase-email';
 import { PrismaClient, AuctionStatus, OrderStatus } from '@prisma/client';
 
 type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
@@ -66,23 +66,22 @@ export async function processAuctionSale(
       }
     });
 
-    // 4. Notify Winner
-    const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-    if (resend && winner.email) {
-      await resend.emails.send({
-        from: 'congrats@nilamit.com',
+    // 4. Notify Winner via Firebase email queue (non-fatal)
+    if (winner.email) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? 'https://nilamit.app';
+      sendEmail({
         to: winner.email,
         subject: `Congratulations! You won: ${auction.title}`,
         html: `
           <h3>You won ${auction.title}!</h3>
           <p>Final Price: ৳${finalPrice.toLocaleString()}</p>
-          ${isVerified 
-            ? `<p>Seller is <b>Verified</b>. Contact information has been released in your dashboard.</p>` 
-            : `<p>Please pay the <b>Advance of ৳${advanceAmount.toLocaleString()}</b> (Success Fee + Delivery) to unlock the seller's contact information.</p>`
+          ${isVerified
+            ? `<p>Seller is <b>Verified</b>. Contact information has been released in your dashboard.</p>`
+            : `<p>Please pay the <b>Advance of ৳${advanceAmount.toLocaleString()}</b> (Success Fee + Delivery) to unlock the seller&apos;s contact information.</p>`
           }
-          <p>Visit your <a href="${process.env.NEXTAUTH_URL}/dashboard?tab=escrow">Dashboard</a> to proceed.</p>
+          <p>Visit your <a href="${baseUrl}/dashboard?tab=escrow">Dashboard</a> to proceed.</p>
         `,
-      });
+      }).catch(err => console.error('[auction-logic] Winner email failed:', err));
     }
     return true;
   } else {

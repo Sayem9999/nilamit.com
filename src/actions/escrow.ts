@@ -3,7 +3,8 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { pusherServer, PUSHER_EVENTS } from '@/lib/pusher-server';
+import { rtdbPush } from '@/lib/firebase-admin';
+import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { EscrowStatus } from "@prisma/client";
 import { recalculateUserReputation } from "@/lib/reputation";
 
@@ -70,12 +71,13 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       update: {} // Already exists
     });
 
-    // Notify Seller real-time
-    await pusherServer.trigger(`private-user-${tx.auction.sellerId}`, PUSHER_EVENTS.ADVANCE_PAID, {
-      auctionId: tx.auctionId,
+    // Notify seller in real-time
+    await rtdbPush(RTDB_PATHS.userNotifications(tx.auction.sellerId), {
+      event:        FIREBASE_EVENTS.ADVANCE_PAID,
+      auctionId:    tx.auctionId,
       auctionTitle: tx.auction.title,
-      buyerName: tx.buyer.name || 'A buyer',
-      message: `Advance received! Delivery information for "${tx.auction.title}" is now unlocked.`
+      buyerName:    tx.buyer.name ?? 'A buyer',
+      message:      `Advance received! Delivery information for "${tx.auction.title}" is now unlocked.`,
     });
 
     revalidatePath('/dashboard');
@@ -120,13 +122,15 @@ export async function confirmItemReceived(transactionId: string) {
       await recalculateUserReputation(transaction.buyerId);
 
       // 3. Notify real-time trust updates
-      await pusherServer.trigger(`private-user-${transaction.auction.sellerId}`, PUSHER_EVENTS.TRUST_UPDATE, {
-        message: "Reputation improved! Successful sale confirmed.",
-        newStatus: "RELEASED"
+      await rtdbPush(RTDB_PATHS.userNotifications(transaction.auction.sellerId), {
+        event:    FIREBASE_EVENTS.TRUST_UPDATE,
+        message:  'Reputation improved! Successful sale confirmed.',
+        newStatus: 'RELEASED',
       });
-      await pusherServer.trigger(`private-user-${transaction.buyerId}`, PUSHER_EVENTS.TRUST_UPDATE, {
-        message: "Reputation improved! Successful purchase confirmed.",
-        newStatus: "RELEASED"
+      await rtdbPush(RTDB_PATHS.userNotifications(transaction.buyerId), {
+        event:    FIREBASE_EVENTS.TRUST_UPDATE,
+        message:  'Reputation improved! Successful purchase confirmed.',
+        newStatus: 'RELEASED',
       });
 
       return updated;

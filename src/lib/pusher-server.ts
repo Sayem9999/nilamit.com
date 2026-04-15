@@ -1,19 +1,18 @@
-import Pusher from 'pusher';
+/**
+ * @deprecated — Pusher has been replaced by Firebase Realtime Database.
+ * Use rtdbPush / rtdbSet from @/lib/firebase-admin for server-side events.
+ * This stub prevents build errors from any remaining stale imports.
+ */
 
-export const pusherServer = new Pusher({
-  appId: process.env.PUSHER_APP_ID!,
-  key: process.env.PUSHER_KEY!,
-  secret: process.env.PUSHER_SECRET!,
-  cluster: process.env.PUSHER_CLUSTER!,
-  useTLS: true,
-});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const pusherServer: any = null;
 
 export const PUSHER_EVENTS = {
-  NEW_BID: 'new-bid',
-  AUCTION_CLOSED: 'auction-closed',
-  TRUST_UPDATE: 'trust-update',
-  ADVANCE_PAID: 'advance-paid',
-  PII_VIOLATION: 'pii-violation',
-  CHAT_NOTIFICATION: 'chat-notification',
-  NEW_MESSAGE: 'new-message',
+  NEW_BID:           'new_bid',
+  AUCTION_CLOSED:    'auction_closed',
+  TRUST_UPDATE:      'trust_update',
+  ADVANCE_PAID:      'advance_paid',
+  PII_VIOLATION:     'pii_violation',
+  CHAT_NOTIFICATION: 'chat_notification',
+  NEW_MESSAGE:       'new_message',
 } as const;

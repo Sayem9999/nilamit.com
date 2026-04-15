@@ -4,10 +4,28 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import type { PlaceBidResult } from '@/types';
-import { pusherServer } from '@/lib/pusher-server';
+import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
+import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { sendOutbidEmail as firebaseSendOutbidEmail } from '@/lib/firebase-email';
 import { ERROR_CODES, SOFT_CLOSE_WINDOW_MS, SOFT_CLOSE_EXTENSION_MS } from '@/lib/constants';
 import { checkAndAwardBadges } from './gamification';
 import { processAuctionSale } from '@/lib/auction-logic';
+import { log } from '@/lib/logger';
+
+// ─── Strict type for the raw SELECT FOR UPDATE result ───────────
+// Matches the column names in the query on line ~86.
+// Using an explicit interface (not `any`) ensures compile-time safety.
+interface AuctionLock {
+  id:              string;
+  title:           string;
+  currentPrice:    number;
+  minBidIncrement: number;
+  endTime:         Date;
+  status:          string;
+  sellerId:        string;
+  startTime:       Date;
+  wasExtended:     boolean;
+}
 
 const PlaceBidSchema = z.object({
   auctionId: z.string().cuid(),
@@ -72,17 +90,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
     // SERIALIZABLE transaction with row-level locking
     const result = await prisma.$transaction(async (tx) => {
       // Lock the auction row — prevents concurrent bid race conditions
-      const [auction] = await tx.$queryRaw<Array<{
-        id: string;
-        title: string;
-        currentPrice: number;
-        minBidIncrement: number;
-        endTime: Date;
-        status: string;
-        sellerId: string;
-        startTime: Date;
-        wasExtended: boolean;
-      }>>`
+      const [auction] = await tx.$queryRaw<AuctionLock[]>`
         SELECT id, title, "currentPrice", "minBidIncrement", "endTime", status, "sellerId", "startTime", "wasExtended"
         FROM "Auction"
         WHERE id = ${auctionId}
@@ -190,43 +198,55 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
       isolationLevel: 'Serializable',
     });
 
-    // Send Outbid Notification (Async & Real-time)
+    // Send Outbid Notification (Async — queued via Firebase email extension)
     if (result.prevBidder?.email && result.prevBidder.email !== session.user.email) {
-      sendOutbidEmail(result.prevBidder.email, result.auctionTitle, amount, auctionId).catch(console.error);
+      firebaseSendOutbidEmail(result.prevBidder.email, result.auctionTitle, amount, auctionId).catch(console.error);
     }
-    
-    // Proactive Alerts Trigger
+
+    // Proactive Alerts — push to each user's notification inbox
     if (result.triggeredAlerts && result.triggeredAlerts.length > 0) {
-      await Promise.all(result.triggeredAlerts.map(alert => 
-        pusherServer.trigger(`user-${alert.userId}`, 'price-alert', {
+      await Promise.all(result.triggeredAlerts.map(alert =>
+        rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
+          event: FIREBASE_EVENTS.PRICE_ALERT,
           auctionId,
           auctionTitle: result.auctionTitle,
           amount,
           type: alert.type,
-          threshold: alert.thresholdPrice
+          threshold: alert.thresholdPrice,
         })
       )).catch(console.error);
     }
 
+    // Outbid notification for previous high bidder
     if (result.prevBidderId && result.prevBidderId !== session.user.id) {
-      await pusherServer.trigger(`user-${result.prevBidderId}`, 'outbid-alert', {
+      rtdbPush(RTDB_PATHS.userNotifications(result.prevBidderId), {
+        event: FIREBASE_EVENTS.OUTBID_ALERT,
         auctionId,
         auctionTitle: result.auctionTitle,
         amount,
-        newBidderName: session.user.name || undefined
+        newBidderName: session.user.name ?? null,
       }).catch(console.error);
     }
 
-    // Phase 4: Push Real-time Updates to Presence Channel
-    await pusherServer.trigger(`presence-auction-${auctionId}`, 'new-bid', {
+    // Real-time bid update for auction viewers (overwrites current state)
+    rtdbSet(RTDB_PATHS.auctionBid(auctionId), {
+      event:      FIREBASE_EVENTS.NEW_BID,
       amount,
-      endTime: result.newEndTime,
-      bidderName: session.user.name || 'Someone',
+      endTime:    result.newEndTime.toISOString(),
+      bidderName: session.user.name ?? 'Someone',
     }).catch(console.error);
 
-    // Global Ticker Update
-    await pusherServer.trigger('global-ticker', 'new-activity', {
-      bidder: session.user.name || 'Someone',
+    // Append to auction activity feed
+    rtdbPush(RTDB_PATHS.auctionActivity(auctionId), {
+      event:      FIREBASE_EVENTS.NEW_BID,
+      amount,
+      bidderName: session.user.name ?? 'Someone',
+    }).catch(console.error);
+
+    // Global Ticker
+    rtdbPush(RTDB_PATHS.globalActivity(), {
+      event:        'new_activity',
+      bidder:       session.user.name ?? 'Someone',
       auctionTitle: result.auctionTitle,
       amount,
       auctionId,
@@ -249,6 +269,12 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to place bid.';
+    // Only log truly unexpected errors (not known business-logic errors)
+    const knownErrors = Object.values(ERROR_CODES) as string[];
+    const isKnown     = knownErrors.some(code => message.startsWith(code));
+    if (!isKnown) {
+      log.error('placeBid unexpected failure', error, { userId: 'unknown', auctionId, amount });
+    }
     return { success: false, error: message };
   }
 }
@@ -328,17 +354,19 @@ export async function executeBuyItNow(auctionId: string): Promise<PlaceBidResult
     });
 
     // Real-time Updates
-    await pusherServer.trigger(`presence-auction-${auctionId}`, 'auction-sold', {
-      winnerName: session.user.name || 'Someone',
-      price: result.binAmount,
+    rtdbSet(RTDB_PATHS.auctionBid(auctionId), {
+      event:      FIREBASE_EVENTS.AUCTION_SOLD,
+      winnerName: session.user.name ?? 'Someone',
+      price:      result.binAmount,
     }).catch(console.error);
 
-    await pusherServer.trigger('global-ticker', 'new-activity', {
-      bidder: session.user.name || 'Someone',
+    rtdbPush(RTDB_PATHS.globalActivity(), {
+      event:        'new_activity',
+      bidder:       session.user.name ?? 'Someone',
       auctionTitle: result.auctionTitle,
-      amount: result.binAmount,
+      amount:       result.binAmount,
       auctionId,
-      type: 'BIN'
+      type: 'BIN',
     }).catch(console.error);
 
     return {
@@ -351,22 +379,7 @@ export async function executeBuyItNow(auctionId: string): Promise<PlaceBidResult
   }
 }
 
-async function sendOutbidEmail(email: string, title: string, currentPrice: number, auctionId: string) {
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (!resendApiKey) return;
-
-  const { Resend } = await import('resend');
-  const { outbidEmailHtml } = await import('@/lib/emails');
-  const resend = new Resend(resendApiKey);
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://nilamit.com';
-
-  await resend.emails.send({
-    from: 'notifications@nilamit.com',
-    to: email,
-    subject: `You've been outbid on: ${title}`,
-    html: outbidEmailHtml(title, currentPrice, auctionId, baseUrl),
-  });
-}
+// sendOutbidEmail is now imported from @/lib/firebase-email as firebaseSendOutbidEmail
 
 /**
  * Get bids for an auction, ordered by most recent first

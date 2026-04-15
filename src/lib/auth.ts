@@ -7,15 +7,31 @@ import bcrypt from 'bcryptjs';
 
 import { authConfig } from '@/lib/auth.config';
 
+// Guard: Skip Google provider entirely if credentials are missing
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const googleProviderEnabled = Boolean(googleClientId && googleClientSecret);
+
+if (!googleProviderEnabled && process.env.NODE_ENV === 'production') {
+  console.error('[Auth-WARN] GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET missing — Google OAuth disabled.');
+}
+
+// How often to refresh user data from the database (1 hour in ms)
+const TOKEN_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: process.env.DATABASE_URL ? PrismaAdapter(prisma) : undefined,
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || 'dummy',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy',
-      allowDangerousEmailAccountLinking: true,
-    }),
+    ...(googleProviderEnabled
+      ? [
+          Google({
+            clientId: googleClientId!,
+            clientSecret: googleClientSecret!,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
     Credentials({
       id: 'credentials',
       name: 'Credentials',
@@ -129,46 +145,67 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // 1. First login: populate token from the freshly-authenticated user object
       if (user) {
         token.id = user.id;
+        // Seed initial values so we avoid an immediate DB hit
+        token.isPhoneVerified   = (user as Record<string, unknown>).isPhoneVerified ?? false;
+        token.emailVerified     = (user as Record<string, unknown>).emailVerified ?? null;
+        token.phone             = (user as Record<string, unknown>).phone ?? null;
+        token.reputationScore   = (user as Record<string, unknown>).reputationScore ?? 0;
+        token.isVerifiedSeller  = (user as Record<string, unknown>).isVerifiedSeller ?? false;
+        token.userLevel         = (user as Record<string, unknown>).userLevel ?? 1;
+        token.winningStreak     = (user as Record<string, unknown>).winningStreak ?? 0;
+        token.lastDbRefresh     = Date.now();
       }
-      // Fetch phone verification status
-      if (token.id) {
+
+      // 2. Decide whether to refresh from DB:
+      //    - on explicit `update()` call (e.g., after phone verification)
+      //    - once per TOKEN_REFRESH_INTERVAL_MS (avoid per-request DB queries)
+      const needsRefresh =
+        trigger === 'update' ||
+        !token.lastDbRefresh ||
+        Date.now() - (token.lastDbRefresh as number) > TOKEN_REFRESH_INTERVAL_MS;
+
+      if (token.id && needsRefresh) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id as string },
-            select: { 
-              isPhoneVerified: true, 
-              emailVerified: true,
-              phone: true, 
-              reputationScore: true, 
-              email: true, 
+            select: {
+              isPhoneVerified: true,
+              emailVerified:   true,
+              phone:           true,
+              reputationScore: true,
               isVerifiedSeller: true,
-              userLevel: true,
-              winningStreak: true
+              userLevel:       true,
+              winningStreak:   true,
             },
           });
+
           if (dbUser) {
-            token.isPhoneVerified = dbUser.isPhoneVerified;
-            token.emailVerified = dbUser.emailVerified;
-            token.phone = dbUser.phone;
-            token.reputationScore = dbUser.reputationScore;
+            token.isPhoneVerified  = dbUser.isPhoneVerified;
+            token.emailVerified    = dbUser.emailVerified;
+            token.phone            = dbUser.phone;
+            token.reputationScore  = dbUser.reputationScore;
             token.isVerifiedSeller = dbUser.isVerifiedSeller;
-            token.userLevel = dbUser.userLevel;
-            token.winningStreak = dbUser.winningStreak;
+            token.userLevel        = dbUser.userLevel;
+            token.winningStreak    = dbUser.winningStreak;
+            token.lastDbRefresh    = Date.now();
           }
         } catch (error) {
-          console.error('[Auth] JWT DB update failed (likely missing DB access):', error);
+          // Non-fatal: keep serving stale token data rather than breaking the session
+          console.error('[Auth] JWT DB refresh failed:', error);
         }
       }
-      
-      // Admin Check
-      const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
-      if (token.email && adminEmails.includes(token.email)) {
-        token.isAdmin = true;
-      }
-      
+
+      // 3. Admin check (based on cached token.email — no extra DB query)
+      const adminEmails = (process.env.ADMIN_EMAILS || '')
+        .split(',')
+        .map(e => e.trim())
+        .filter(Boolean);
+      token.isAdmin = Boolean(token.email && adminEmails.includes(token.email as string));
+
       return token;
     },
     async session({ session, token }) {

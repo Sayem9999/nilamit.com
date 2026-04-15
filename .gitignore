@@ -36,10 +36,15 @@ yarn-error.log*
 # vercel
 .vercel
 
+# firebase / cloud run
+.firebase/
+.firebaserc.local
+firebase-debug.log*
+firebaseapphosting-debug.log*
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
 
 /src/generated/prisma
 
@@ -48,5 +53,3 @@ lint*.txt
 lint.json
 lint.log
 final-lint.txt
-
-.vercel

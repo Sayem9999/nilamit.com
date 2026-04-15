@@ -1,8 +1,20 @@
 {
   "crons": [
     {
+      "path": "/api/cron/process-auctions",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/close-auctions",
-      "schedule": "0 0 * * *"
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/closing-soon",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/process-alerts",
+      "schedule": "*/2 * * * *"
     }
   ]
 }

@@ -1,69 +1,85 @@
+/**
+ * GET /api/cron/process-alerts
+ *
+ * Checks all active PRICE_DROP and TARGET_REACHED alerts.
+ * Triggers Pusher notification + deactivates alert (one-time trigger).
+ *
+ * Called every 2 minutes by Vercel Cron.
+ */
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { pusherServer } from '@/lib/pusher-server';
+import { rtdbPush } from '@/lib/firebase-admin';
+import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
-  // 1. Security check (Internal/Cron only)
-  const authHeader = req.headers.get('authorization');
-  if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  const authError = verifyCronSecret(req);
+  if (authError) return authError;
 
-  try {
-    let processedCount = 0;
-
-    // Process TARGET_REACHED and PRICE_DROP alerts
+  const result = await withRetry(async () => {
     const activeAlerts = await prisma.alert.findMany({
       where: {
-        isActive: true,
-        type: { in: ['TARGET_REACHED', 'PRICE_DROP'] },
-        auctionId: { not: null }
+        isActive:  true,
+        type:      { in: ['TARGET_REACHED', 'PRICE_DROP'] },
+        auctionId: { not: null },
       },
       include: {
         auction: { select: { currentPrice: true, title: true } },
-        user: { select: { email: true, name: true, id: true } }
-      }
+        user:    { select: { id: true } },
+      },
     });
+
+    let triggered = 0;
+    const alertsToDeactivate: string[] = [];
 
     for (const alert of activeAlerts) {
-      if (alert.auction && alert.thresholdPrice !== null) {
-        const isTargetReached = alert.type === 'TARGET_REACHED' && alert.auction.currentPrice >= alert.thresholdPrice;
-        const isPriceDropped = alert.type === 'PRICE_DROP' && alert.auction.currentPrice <= alert.thresholdPrice;
+      if (!alert.auction || alert.thresholdPrice === null) continue;
 
-        if (isTargetReached || isPriceDropped) {
-          // Condition met
-          console.log(`[ALERT TRIGGERED] User ${alert.user.id}: ${alert.type} for '${alert.auction.title}'`);
-          
-          // Trigger Pusher
-          await pusherServer.trigger(`user-${alert.user.id}`, 'price-alert', {
-            auctionId: alert.auctionId,
-            auctionTitle: alert.auction.title,
-            amount: alert.auction.currentPrice,
-            type: alert.type,
-            threshold: alert.thresholdPrice
-          }).catch(console.error);
+      const { currentPrice } = alert.auction;
+      const threshold        = alert.thresholdPrice;
 
-          // Disable alert so it doesn't trigger again (One-time trigger)
-          await prisma.alert.update({
-            where: { id: alert.id },
-            data: { isActive: false }
-          });
-          
-          processedCount++;
-        }
-      }
+      const isTargetReached = alert.type === 'TARGET_REACHED' && currentPrice >= threshold;
+      const isPriceDropped  = alert.type === 'PRICE_DROP'     && currentPrice <= threshold;
+
+      if (!isTargetReached && !isPriceDropped) continue;
+
+      // Push real-time notification to user's RTDB inbox (non-fatal)
+      await rtdbPush(RTDB_PATHS.userNotifications(alert.user.id), {
+        event:        FIREBASE_EVENTS.PRICE_ALERT,
+        auctionId:    alert.auctionId,
+        auctionTitle: alert.auction.title,
+        amount:       currentPrice,
+        type:         alert.type,
+        threshold,
+      }).catch(err =>
+        console.error(`[Cron:process-alerts] RTDB push failed for alert ${alert.id}:`, err)
+      );
+
+      alertsToDeactivate.push(alert.id);
+      triggered++;
     }
 
-    return NextResponse.json({ 
-      success: true,
-      message: `Processed ${processedCount} alerts successfully.`,
-      processedCount
-    });
+    // Deactivate triggered alerts in a single batch update
+    if (alertsToDeactivate.length > 0) {
+      await prisma.alert.updateMany({
+        where: { id: { in: alertsToDeactivate } },
+        data:  { isActive: false },
+      });
+    }
 
-  } catch (error) {
-    console.error('[CRON ALERT ERROR]', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return { checked: activeAlerts.length, triggered };
+  }, { maxAttempts: 3 });
+
+  if (result.error) {
+    return cronError(`process-alerts failed: ${result.error.message}`);
   }
+
+  return NextResponse.json({
+    success: true,
+    ...result.data,
+    processedAt: new Date().toISOString(),
+  });
 }

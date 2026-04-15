@@ -1,44 +1,93 @@
+/**
+ * POST /api/pusher/auth
+ *
+ * Authenticates Pusher private and presence channel subscriptions.
+ * Called automatically by pusher-js when subscribing to private-* or presence-* channels.
+ *
+ * Channel naming conventions enforced here:
+ *   presence-auction-{id}      — Public bidding room (anyone can view)
+ *   private-user-{userId}      — Personal notifications (session user only)
+ *   private-conversation-{id}  — Chat (buyer or seller only)
+ */
+
 import { NextResponse } from 'next/server';
 import { pusherServer } from '@/lib/pusher-server';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/db';
 
-/**
- * Endpoint for Pusher Presence/Private Channel Authentication
- * Called automatically by pusher-js when subscribing to private-* or presence-* channels
- */
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    const data = await req.formData();
-    const socketId = data.get('socket_id') as string;
-    const channel = data.get('channel_name') as string;
 
-    // ── Channel Authorization Logic ──────────────────
-    
-    // Private User Channels: Must match session ID
-    if (channel.startsWith('private-user-')) {
-      const userId = channel.replace('private-user-', '');
-      if (session?.user?.id !== userId) {
-        return new NextResponse('Unauthorized Channel Access', { status: 403 });
-      }
+    const data     = await req.formData();
+    const socketId = data.get('socket_id') as string;
+    const channel  = data.get('channel_name') as string;
+
+    if (!socketId || !channel) {
+      return new NextResponse('Missing socket_id or channel_name', { status: 400 });
     }
 
-    // Determine the user details for presence channel
-    const presenceData = {
-      user_id: session?.user?.id || `anonymous_${Math.random().toString(36).substring(7)}`,
-      user_info: {
-        name: session?.user?.name || 'Anonymous Viewer',
-        image: session?.user?.image || null,
-        isGuest: !session?.user,
-      },
-    };
+    // ── 1. Private user channel — session must match ────────
+    if (channel.startsWith('private-user-')) {
+      const channelUserId = channel.replace('private-user-', '');
 
-    // Authenticate the subscription
-    const authResponse = pusherServer.authorizeChannel(socketId, channel, presenceData);
-    
-    return NextResponse.json(authResponse);
+      if (!session?.user?.id || session.user.id !== channelUserId) {
+        return new NextResponse('Forbidden: user channel mismatch', { status: 403 });
+      }
+
+      const token = pusherServer.authorizeChannel(socketId, channel);
+      return NextResponse.json(token);
+    }
+
+    // ── 2. Private conversation channel — buyer or seller only ─
+    if (channel.startsWith('private-conversation-')) {
+      if (!session?.user?.id) {
+        return new NextResponse('Unauthorized: must be signed in', { status: 401 });
+      }
+
+      const conversationId = channel.replace('private-conversation-', '');
+      const conversation = await prisma.conversation.findUnique({
+        where:  { id: conversationId },
+        select: { buyerId: true, sellerId: true },
+      });
+
+      if (!conversation) {
+        return new NextResponse('Forbidden: conversation not found', { status: 403 });
+      }
+
+      const { buyerId, sellerId } = conversation;
+      const isParticipant = session.user.id === buyerId || session.user.id === sellerId;
+
+      if (!isParticipant) {
+        return new NextResponse('Forbidden: not a conversation participant', { status: 403 });
+      }
+
+      const token = pusherServer.authorizeChannel(socketId, channel);
+      return NextResponse.json(token);
+    }
+
+    // ── 3. Presence auction channel — all viewers allowed ──
+    //    (even guests can watch bid counts, but names are anonymised)
+    if (channel.startsWith('presence-auction-')) {
+      const presenceData = {
+        user_id: session?.user?.id ?? `guest_${socketId.slice(0, 8)}`,
+        user_info: {
+          name:    session?.user?.name  ?? 'Anonymous Viewer',
+          image:   session?.user?.image ?? null,
+          isGuest: !session?.user,
+        },
+      };
+
+      const token = pusherServer.authorizeChannel(socketId, channel, presenceData);
+      return NextResponse.json(token);
+    }
+
+    // ── 4. Any other private/presence channel — deny by default ─
+    console.warn(`[Pusher Auth] Unrecognised channel pattern blocked: ${channel}`);
+    return new NextResponse('Forbidden: unrecognised channel', { status: 403 });
+
   } catch (error) {
-    console.error('Pusher auth error:', error);
+    console.error('[Pusher Auth] Error:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

@@ -1,12 +1,8 @@
-import PusherClient from 'pusher-js';
+/**
+ * @deprecated — Pusher has been replaced by Firebase Realtime Database.
+ * Use getClientDB() from @/lib/firebase-client for real-time subscriptions.
+ * This stub prevents build errors from any remaining stale imports.
+ */
 
-export const pusherClient = new PusherClient(
-  process.env.NEXT_PUBLIC_PUSHER_KEY!,
-  {
-    cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-    authEndpoint: '/api/pusher/auth',
-    activityTimeout: 60000,   // Increase heartbeat interval for mobile data savings
-    unavailableTimeout: 10000, // Detect offline faster (10s)
-    enabledTransports: ['ws', 'wss'], // Force WebSockets for lower latency
-  }
-);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const pusherClient: any = null;

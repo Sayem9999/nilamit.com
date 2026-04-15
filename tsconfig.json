@@ -4,7 +4,15 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
+
+    // ─── Strict mode (covers all strictness flags) ─────────────
     "strict": true,
+    // Extra checks on top of strict:
+    "noImplicitReturns": true,          // Functions must always return
+    "noFallthroughCasesInSwitch": true, // switch-case must have break/return
+    "noImplicitOverride": true,         // Class overrides must use `override`
+    "exactOptionalPropertyTypes": false, // Too noisy for existing code — re-enable later
+
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",

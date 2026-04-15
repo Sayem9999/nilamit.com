@@ -1,83 +1,129 @@
+/**
+ * GET /api/cron/process-auctions
+ *
+ * Finds ACTIVE auctions whose endTime has passed and transitions them:
+ *   - No bids  → EXPIRED
+ *   - Has bids → SOLD + creates EscrowTransaction + notifies winner via Pusher
+ *
+ * Called every minute by Vercel Cron.
+ */
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { pusherServer } from '@/lib/pusher-server';
+import { rtdbPush } from '@/lib/firebase-admin';
+import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
 
-// This would typically be called by a Vercel Cron or external scheduler every minute
-export async function GET(request: Request) {
-  // Simple auth check to ensure only the cron job can hit this
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new NextResponse('Unauthorized', { status: 401 });
-  }
+export const dynamic = 'force-dynamic';
 
-  try {
-    const now = new Date();
+interface ProcessResult {
+  totalExpired: number;
+  sold: number;
+  expired: number;
+  failed: number;
+  failedIds: string[];
+}
 
-    // Find all auctions that are ACTIVE but their endTime has passed
-    const expiredAuctions = await prisma.auction.findMany({
-      where: {
-        status: 'ACTIVE',
-        endTime: { lte: now },
-      },
-      include: {
-        bids: {
-          orderBy: { amount: 'desc' },
-          take: 1, // Only need the highest bid
-        },
-      },
-    });
+async function processExpiredAuctions(): Promise<ProcessResult> {
+  const now = new Date();
 
-    if (expiredAuctions.length === 0) {
-      return NextResponse.json({ success: true, processed: 0 });
-    }
+  const expiredAuctions = await prisma.auction.findMany({
+    where: { status: 'ACTIVE', endTime: { lte: now } },
+    include: {
+      bids: { orderBy: { amount: 'desc' }, take: 1 },
+    },
+  });
 
-    let processedCount = 0;
+  const result: ProcessResult = {
+    totalExpired: expiredAuctions.length,
+    sold: 0,
+    expired: 0,
+    failed: 0,
+    failedIds: [],
+  };
 
-    for (const auction of expiredAuctions) {
+  for (const auction of expiredAuctions) {
+    const attemptResult = await withRetry(async () => {
       const highestBid = auction.bids[0];
 
       await prisma.$transaction(async (tx) => {
         if (!highestBid) {
-          // No bids -> Expired without sale
+          // No bids — expire gracefully
           await tx.auction.update({
             where: { id: auction.id },
             data: { status: 'EXPIRED' },
           });
         } else {
-          // Bids exist -> Sold -> Transition to Escrow
+          // Has a winner — mark SOLD + create escrow
           await tx.auction.update({
             where: { id: auction.id },
-            data: {
-              status: 'SOLD',
-              winnerId: highestBid.bidderId,
-            },
+            data: { status: 'SOLD', winnerId: highestBid.bidderId },
           });
 
-          // Create the Escrow Transaction in HELD status awaiting frontend interaction
-          await tx.escrowTransaction.create({
-            data: {
+          // Only create escrow if one doesn't already exist (idempotent)
+          await tx.escrowTransaction.upsert({
+            where: { auctionId: auction.id },
+            create: {
               auctionId: auction.id,
-              buyerId: highestBid.bidderId,
-              amount: highestBid.amount,
-              status: 'HELD', // Initially held until payment is simulated
+              buyerId:   highestBid.bidderId,
+              amount:    highestBid.amount,
+              status:    'HELD',
             },
+            update: {}, // Already exists — no-op
           });
-
-          // Notify the winner via WebSocket
-          await pusherServer.trigger(`user-${highestBid.bidderId}`, 'auction-won', {
-            auctionId: auction.id,
-            title: auction.title,
-            amount: highestBid.amount,
-          }).catch(console.error);
-
-          processedCount++;
         }
       });
-    }
 
-    return NextResponse.json({ success: true, processed: processedCount });
-  } catch (error) {
-    console.error('Failed processing auctions:', error);
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+      // Notify winner via Firebase RTDB (outside transaction so RTDB failure doesn't roll back)
+      if (highestBid) {
+        await rtdbPush(RTDB_PATHS.userNotifications(highestBid.bidderId), {
+          event:     FIREBASE_EVENTS.AUCTION_WON,
+          auctionId: auction.id,
+          title:     auction.title,
+          amount:    highestBid.amount,
+        }).catch(err => console.error(`[Cron] RTDB notify failed for auction ${auction.id}:`, err));
+      }
+
+      return !!highestBid; // true = SOLD, false = EXPIRED
+    }, { maxAttempts: 3 });
+
+    if (attemptResult.error) {
+      console.error(`[Cron:process-auctions] Auction ${auction.id} failed after ${attemptResult.attempts} attempts:`, attemptResult.error);
+      result.failed++;
+      result.failedIds.push(auction.id);
+    } else if (attemptResult.data === true) {
+      result.sold++;
+    } else {
+      result.expired++;
+    }
   }
+
+  return result;
+}
+
+export async function GET(req: Request) {
+  const authError = verifyCronSecret(req);
+  if (authError) return authError;
+
+  const outerResult = await withRetry(processExpiredAuctions, { maxAttempts: 2 });
+
+  if (outerResult.error) {
+    return cronError(`process-auctions failed: ${outerResult.error.message}`);
+  }
+
+  const r = outerResult.data!;
+
+  if (r.failed > 0) {
+    console.error(`[Cron:process-auctions] ${r.failed} auctions failed to process:`, r.failedIds);
+  }
+
+  return NextResponse.json({
+    success: r.failed === 0,
+    totalExpired: r.totalExpired,
+    sold:         r.sold,
+    expired:      r.expired,
+    failed:       r.failed,
+    ...(r.failed > 0 ? { failedAuctionIds: r.failedIds } : {}),
+    processedAt: new Date().toISOString(),
+  });
 }

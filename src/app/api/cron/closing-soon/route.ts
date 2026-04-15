@@ -1,40 +1,38 @@
+/**
+ * GET /api/cron/closing-soon
+ *
+ * Notifies watchers and alert-holders about auctions ending within 1 hour.
+ * Sends email (Firebase Trigger Email extension) + real-time RTDB event.
+ *
+ * Called every 15 minutes by Google Cloud Scheduler.
+ */
+
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { Resend } from 'resend';
 import { AuctionStatus } from '@prisma/client';
-import { pusherServer } from '@/lib/pusher-server';
+import { rtdbPush } from '@/lib/firebase-admin';
+import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { sendEndingSoonEmail } from '@/lib/firebase-email';
+import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
-  const authHeader = req.headers.get('authorization');
-  if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  const authError = verifyCronSecret(req);
+  if (authError) return authError;
 
-  const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-  if (!resend) return NextResponse.json({ error: 'Resend API key missing' }, { status: 500 });
-
-  try {
-    const now = new Date();
+  const result = await withRetry(async () => {
+    const now            = new Date();
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
-    // Find active auctions ending in the next hour that haven't been notified yet
-    // Note: We might want a 'notifiedClosingSoon' flag in the Auction model for better scaling,
-    // but for now we'll just process them based on timing.
     const auctions = await prisma.auction.findMany({
       where: {
-        status: AuctionStatus.ACTIVE,
-        endTime: {
-          gt: now,
-          lte: oneHourFromNow,
-        },
+        status:  AuctionStatus.ACTIVE,
+        endTime: { gt: now, lte: oneHourFromNow },
       },
       include: {
         watchlist: {
-          include: {
-            user: { select: { id: true, email: true, name: true } },
-          },
+          include: { user: { select: { id: true, email: true, name: true } } },
         },
         alerts: {
           where: { type: 'ENDING_SOON', isActive: true },
@@ -43,53 +41,56 @@ export async function GET(req: Request) {
       },
     });
 
-    let sentCount = 0;
+    let emailsQueued = 0;
+    let rtdbEvents   = 0;
 
     for (const auction of auctions) {
-      for (const entry of auction.watchlist) {
-        if (entry.user.email) {
-          const { auctionEndingSoonEmailHtml } = await import('@/lib/emails');
-          const baseUrl = process.env.NEXTAUTH_URL || 'https://nilamit.com';
-          await resend.emails.send({
-            from: 'alerts@nilamit.com',
-            to: entry.user.email,
-            subject: `Closing Soon: ${auction.title}`,
-            html: auctionEndingSoonEmailHtml(auction.title, auction.currentPrice, auction.id, baseUrl),
-          });
-          sentCount++;
+      const notifiedUserIds = new Set<string>();
 
-          // Also push a real-time Pusher notification to this user
-          await pusherServer.trigger(`user-${entry.user.id}`, 'ending-soon', {
-            auctionId: auction.id,
-            auctionTitle: auction.title,
-            currentPrice: auction.currentPrice,
-            endTime: auction.endTime,
-          }).catch(console.error);
+      // 1. Notify watchlist users
+      for (const entry of auction.watchlist) {
+        const { user } = entry;
+        notifiedUserIds.add(user.id);
+
+        // Queue email via Firebase Trigger Email extension (non-fatal)
+        if (user.email) {
+          sendEndingSoonEmail(user.email, auction.title, auction.currentPrice, auction.id)
+            .catch(err => console.error(`[Cron:closing-soon] Email failed for user ${user.id}:`, err));
+          emailsQueued++;
         }
+
+        // Real-time RTDB notification
+        await rtdbPush(RTDB_PATHS.userNotifications(user.id), {
+          event:        FIREBASE_EVENTS.ENDING_SOON,
+          auctionId:    auction.id,
+          auctionTitle: auction.title,
+          currentPrice: auction.currentPrice,
+          endTime:      auction.endTime.toISOString(),
+        }).catch(err => console.error(`[Cron:closing-soon] RTDB failed for user ${user.id}:`, err));
+        rtdbEvents++;
       }
 
-      // Push ending-soon to users who set an explicit Alert (may not be on watchlist)
+      // 2. Notify explicit ENDING_SOON alert holders not already in watchlist
       for (const alert of auction.alerts) {
-        const alreadyNotified = auction.watchlist.some(w => w.user.id === alert.userId);
-        if (!alreadyNotified) {
-          await pusherServer.trigger(`user-${alert.userId}`, 'ending-soon', {
-            auctionId: auction.id,
-            auctionTitle: auction.title,
-            currentPrice: auction.currentPrice,
-            endTime: auction.endTime,
-          }).catch(console.error);
-        }
+        if (notifiedUserIds.has(alert.userId)) continue;
+
+        await rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
+          event:        FIREBASE_EVENTS.ENDING_SOON,
+          auctionId:    auction.id,
+          auctionTitle: auction.title,
+          currentPrice: auction.currentPrice,
+          endTime:      auction.endTime.toISOString(),
+        }).catch(err => console.error(`[Cron:closing-soon] RTDB (alert) failed for user ${alert.userId}:`, err));
+        rtdbEvents++;
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      auctionsProcessed: auctions.length,
-      emailsSent: sentCount
-    });
+    return { auctionsProcessed: auctions.length, emailsQueued, rtdbEvents };
+  }, { maxAttempts: 3, initialDelayMs: 2000 });
 
-  } catch (error) {
-    console.error('[CRON CLOSING SOON ERROR]', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  if (result.error) {
+    return cronError(`closing-soon failed: ${result.error.message}`);
   }
+
+  return NextResponse.json({ success: true, ...result.data, processedAt: new Date().toISOString() });
 }

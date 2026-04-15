@@ -1,0 +1,57 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "bids": {
+      "auction": {
+        "$auctionId": {
+          ".read": true,
+          ".write": false
+        }
+      }
+    },
+
+    "activity": {
+      "auction": {
+        "$auctionId": {
+          ".read": true,
+          ".write": false
+        }
+      },
+      "global": {
+        ".read": true,
+        ".write": false
+      }
+    },
+
+    "notifications": {
+      "user": {
+        "$userId": {
+          ".read": "auth !== null && auth.uid === $userId",
+          ".write": false
+        }
+      }
+    },
+
+    "chat": {
+      "conversation": {
+        "$conversationId": {
+          ".read": "auth !== null",
+          ".write": false
+        }
+      }
+    },
+
+    "presence": {
+      "auction": {
+        "$auctionId": {
+          ".read": true,
+          "$userId": {
+            ".write": "auth !== null && auth.uid === $userId"
+          }
+        }
+      }
+    }
+  }
+}

@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock } from "lucide-react";
-import { pusherClient } from "@/lib/pusher-client";
+import { onChildAdded, ref, query, limitToLast } from "firebase/database";
+import { getClientDB } from "@/lib/firebase-client";
+import { RTDB_PATHS } from "@/lib/firebase-events";
 
 export interface LatestActivity {
   id: string;
@@ -18,35 +20,33 @@ interface LiveTickerProps {
 }
 
 export function LiveTicker({ initialActivity }: LiveTickerProps) {
-  const [activities, setActivities] =
-    useState<LatestActivity[]>(initialActivity);
+  const [activities, setActivities] = useState<LatestActivity[]>(initialActivity);
 
   useEffect(() => {
-    const channel = pusherClient.subscribe("global-ticker");
-
-    channel.bind(
-      "new-activity",
-      (data: {
-        amount: number;
-        bidder: string;
-        auctionId: string;
-        auctionTitle: string;
-      }) => {
-        const newActivity: LatestActivity = {
-          id: Math.random().toString(),
-          amount: data.amount,
-          createdAt: new Date(),
-          bidder: { name: data.bidder },
-          auction: { id: data.auctionId, title: data.auctionTitle },
-        };
-
-        setActivities((prev) => [newActivity, ...prev].slice(0, 10));
-      },
+    const db         = getClientDB();
+    const globalRef  = query(
+      ref(db, RTDB_PATHS.globalActivity()),
+      limitToLast(20)            // Only tail the last 20 events
     );
 
-    return () => {
-      pusherClient.unsubscribe("global-ticker");
-    };
+    const startTime = Date.now();
+
+    const unsub = onChildAdded(globalRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data || !data.auctionId || (data._ts && data._ts < startTime)) return;
+
+      const newActivity: LatestActivity = {
+        id:        snapshot.key ?? Math.random().toString(),
+        amount:    data.amount,
+        createdAt: new Date(data._ts ?? Date.now()),
+        bidder:    { name: data.bidder ?? 'Someone' },
+        auction:   { id: data.auctionId, title: data.auctionTitle ?? '' },
+      };
+
+      setActivities(prev => [newActivity, ...prev].slice(0, 10));
+    });
+
+    return () => unsub();
   }, []);
 
   if (activities.length === 0) return null;
@@ -55,25 +55,16 @@ export function LiveTicker({ initialActivity }: LiveTickerProps) {
     <div className="bg-gray-900 overflow-hidden py-2 block">
       <div className="flex animate-marquee whitespace-nowrap">
         {[...activities, ...activities].map((activity, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-2 mx-8 text-[11px] font-bold text-gray-400"
-          >
+          <div key={i} className="flex items-center gap-2 mx-8 text-[11px] font-bold text-gray-400">
             <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
             <span className="text-white">{activity.bidder.name}</span>
             <span>bid ৳{activity.amount.toLocaleString()} on</span>
-            <Link
-              href={`/auctions/${activity.auction.id}`}
-              className="text-primary-400 hover:underline"
-            >
+            <Link href={`/auctions/${activity.auction.id}`} className="text-primary-400 hover:underline">
               {activity.auction.title}
             </Link>
             <Clock className="w-3 h-3 ml-1" />
             <span>
-              {new Date(activity.createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {new Date(activity.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           </div>
         ))}

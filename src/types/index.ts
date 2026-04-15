@@ -1,6 +1,62 @@
 import type { Auction, Bid, User, AuctionStatus, OrderStatus } from '@prisma/client';
 export type { AuctionStatus, OrderStatus };
 
+// ─── Standardized Server Action Result ────────────────────────
+/**
+ * All server actions MUST return ActionResult<T>.
+ * This creates a predictable contract for UI error handling.
+ *
+ * Usage:
+ *   export async function myAction(): Promise<ActionResult<{ id: string }>> {
+ *     try {
+ *       return { success: true, data: { id: '...' } };
+ *     } catch {
+ *       return actionError('Something went wrong');
+ *     }
+ *   }
+ *
+ * Client-side:
+ *   const result = await myAction();
+ *   if (!result.success) { showError(result.error); return; }
+ *   console.log(result.data.id);
+ */
+export type ActionResult<T = void> =
+  | { success: true;  data: T }
+  | { success: false; error: string; code?: string };
+
+/** Helper: create a success result */
+export function actionOk<T>(data: T): ActionResult<T> {
+  return { success: true, data };
+}
+
+/** Helper: create a typed error result */
+export function actionError(
+  error: string,
+  code?: string
+): ActionResult<never> {
+  return { success: false, error, code };
+}
+
+// ─── Known error codes ────────────────────────────────────────
+export const ERROR = {
+  // Auth
+  NOT_AUTHENTICATED:          'NOT_AUTHENTICATED',
+  PHONE_NOT_VERIFIED:         'PHONE_NOT_VERIFIED',
+  FORBIDDEN:                  'FORBIDDEN',
+  // Input
+  VALIDATION_ERROR:           'VALIDATION_ERROR',
+  NOT_FOUND:                  'NOT_FOUND',
+  // Auction
+  AUCTION_NOT_ACTIVE:         'AUCTION_NOT_ACTIVE',
+  BID_TOO_LOW:                'BID_TOO_LOW',
+  OWN_AUCTION:                'OWN_AUCTION',
+  BID_DEPOSIT_REQUIRED:       'BID_DEPOSIT_REQUIRED',
+  // Server
+  INTERNAL_ERROR:             'INTERNAL_ERROR',
+} as const;
+
+export type ErrorCode = typeof ERROR[keyof typeof ERROR];
+
 export type AuctionWithSeller = Auction & {
   seller: Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified' | 'winningStreak' | 'userLevel'>;
   _count?: { bids: number };

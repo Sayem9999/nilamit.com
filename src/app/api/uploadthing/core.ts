@@ -1,25 +1,8 @@
-import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { auth } from "@/lib/auth";
- 
-const f = createUploadthing();
- 
-const handleAuth = async () => {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  return { userId: session.user.id };
-};
- 
-export const ourFileRouter = {
-  auctionImage: f({ image: { maxFileSize: "4MB", maxFileCount: 4 } })
-    .middleware(async () => await handleAuth())
-    .onUploadComplete(async ({ metadata }) => {
-      return { uploadedBy: metadata.userId };
-    }),
-  chatAttachment: f({ image: { maxFileSize: "2MB", maxFileCount: 1 } })
-    .middleware(async () => await handleAuth())
-    .onUploadComplete(async ({ metadata }) => {
-      return { uploadedBy: metadata.userId };
-    }),
-} satisfies FileRouter;
- 
-export type OurFileRouter = typeof ourFileRouter;
+/**
+ * @deprecated — UploadThing has been replaced by Firebase Storage.
+ * Use /api/upload for server-side uploads or @/lib/uploadthing for client helpers.
+ * This file is kept only to avoid broken imports until all references are updated.
+ */
+
+export type OurFileRouter = Record<string, never>;
+export const ourFileRouter = {} as OurFileRouter;

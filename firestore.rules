@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // mail collection — used exclusively by Firebase Trigger Email extension.
+    // Only the server (Admin SDK) can write; nobody can read via client SDK.
+    match /mail/{docId} {
+      allow read, write: if false;
+    }
+
+    // Block everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,7 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { pusherServer } from "@/lib/pusher-server";
+import { rtdbPush } from "@/lib/firebase-admin";
+import { RTDB_PATHS } from "@/lib/firebase-events";
 
 import type { BadgeType } from "@/lib/gamification-config";
 import { BADGE_CONFIG } from "@/lib/gamification-config";
@@ -66,11 +67,10 @@ export async function checkAndAwardBadges(
         });
 
         // Notify user in real-time about their new badge
-        await pusherServer
-          .trigger(`user-${userId}`, "badge-earned", {
-            badge: BADGE_CONFIG[badge],
-          })
-          .catch(console.error);
+        await rtdbPush(RTDB_PATHS.userNotifications(userId), {
+          event: 'badge_earned',
+          badge: BADGE_CONFIG[badge],
+        }).catch(console.error);
       }
     }
   } catch (error) {

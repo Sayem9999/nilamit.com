@@ -3,7 +3,8 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { filterPII } from '@/lib/pii-filter';
-import { pusherServer, PUSHER_EVENTS } from '@/lib/pusher-server';
+import { rtdbPush } from '@/lib/firebase-admin';
+import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -63,20 +64,22 @@ export async function sendMessage(auctionId: string, content: string, imageUrl?:
       data: { lastMessageAt: new Date() }
     });
 
-    // Trigger Pusher
+    // Push message to Firebase RTDB conversation path
     const recipientId = session.user.id === conversation.buyerId ? conversation.sellerId : conversation.buyerId;
-    await pusherServer.trigger(`private-convo-${conversation.id}`, PUSHER_EVENTS.NEW_MESSAGE, {
-      id: message.id,
-      content: message.content,
-      imageUrl: message.imageUrl,
+    await rtdbPush(RTDB_PATHS.conversation(conversation.id), {
+      event:    FIREBASE_EVENTS.NEW_MESSAGE,
+      id:       message.id,
+      content:  message.content,
+      imageUrl: message.imageUrl ?? null,
       senderId: message.senderId,
-      createdAt: message.createdAt,
+      createdAt: message.createdAt.toISOString(),
     });
 
-    // Also trigger a notification for the recipient's private channel
-    await pusherServer.trigger(`private-user-${recipientId}`, PUSHER_EVENTS.CHAT_NOTIFICATION, {
+    // Push chat notification to recipient's inbox
+    await rtdbPush(RTDB_PATHS.userNotifications(recipientId), {
+      event:    FIREBASE_EVENTS.CHAT_NOTIFICATION,
       auctionId,
-      message: `New message for ${conversation.auction.title}`,
+      message:  `New message for ${conversation.auction.title}`,
     });
 
     return { success: true, message };
