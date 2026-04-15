@@ -84,8 +84,8 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 <>
                   {t("title")}{" "}
                   <span className="relative inline-block">
-                    <span className="relative z-10 text-primary-600 italic">
-                      Marketplace
+                    <span className="relative z-10 text-primary-600 italic bn">
+                      {t("marketplace")}
                     </span>
                     <motion.span
                       initial={{ width: 0 }}
@@ -270,7 +270,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                   <Bell className="w-4 h-4 text-orange-600" />
                 </div>
                 <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
-                  Instant Notify
+                  {t("instantNotify")}
                 </div>
               </div>
             </motion.div>

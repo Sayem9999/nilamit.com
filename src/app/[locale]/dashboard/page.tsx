@@ -26,19 +26,21 @@ export default async function DashboardPage({
   const { locale } = await params;
   const session = await auth();
   const t = await getTranslations("Dashboard");
+  const te = await getTranslations("Escrow");
 
   if (!session?.user) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/dashboard`);
   }
 
-  const systemConfig = await getSystemConfig() || {
-    heroTitle: 'Buy & Sell in Real-time Auctions',
-    heroSubtitle: "Bangladesh's most trusted C2C marketplace.",
-    heroImage: null,
-    announcement: null,
-    showAnnouncement: false,
-    treasuryBkash: "017XXXXXXXX",
-    treasuryNagad: "018XXXXXXXX",
+  const configFromDb = await getSystemConfig();
+  const systemConfig = {
+    heroTitle: configFromDb?.heroTitle || t("heroTitle"),
+    heroSubtitle: configFromDb?.heroSubtitle || t("heroSubtitle"),
+    heroImage: configFromDb?.heroImage || null,
+    announcement: configFromDb?.announcement || null,
+    showAnnouncement: configFromDb?.showAnnouncement || false,
+    treasuryBkash: configFromDb?.treasuryBkash || "017XXXXXXXX",
+    treasuryNagad: configFromDb?.treasuryNagad || "018XXXXXXXX",
   };
 
   const { tab } = await searchParams;
@@ -279,11 +281,13 @@ export default async function DashboardPage({
                  <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">
                        <Trophy className="w-6 h-6 text-amber-400" />
-                       <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Nilamit Score</span>
+                       <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">{t("nilamitScore")}</span>
                     </div>
-                    <div className="text-2xl font-heading font-bold mb-1">
-                      {(session.user as { reputationScore?: number })?.reputationScore || 0}
-                      <span className="text-xs text-indigo-300 ml-1">RP</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-black text-white">
+                        {Number(session.user.reputationScore) || 0}
+                      </span>
+                      <span className="text-xs text-indigo-300 ml-1">{t("reputationPoints")}</span>
                     </div>
                     <p className="text-[10px] text-indigo-300 mb-4 font-bold uppercase">{t("trustPointsTitle")}</p>
                     <Link 
@@ -404,14 +408,14 @@ export default async function DashboardPage({
                          <div className="flex-1">
                            <div className="flex items-center justify-between">
                               <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{conv.auction.title}</h3>
-                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border bn ${
                                 conv.auction.escrowTransaction?.status === 'DISPUTED' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                               }`}>
-                                {conv.auction.escrowTransaction?.status}
+                                {te(`status_${conv.auction.escrowTransaction?.status || 'PENDING'}`)}
                               </span>
                            </div>
                            <p className="text-sm text-gray-500 line-clamp-1 mt-1 font-medium italic">
-                             {conv.messages?.[0]?.content || "No messages yet."}
+                             {conv.messages?.[0]?.content || t("noMessagesYet")}
                            </p>
                             <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
                               {t("sharedLogistics")}

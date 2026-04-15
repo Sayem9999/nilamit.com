@@ -5,17 +5,10 @@ import { updateSystemConfig, toggleFeaturedAuction } from '@/actions/admin-conte
 import { Loader2, Trash2, Save, Image as ImageIcon } from 'lucide-react';
 import { ImageUpload } from '@/components/upload/ImageUpload';
 import Image from 'next/image';
+import { SystemConfig } from '@/types/home';
 
 interface ContentTabProps {
-  initialConfig: { 
-    heroTitle: string; 
-    heroSubtitle: string; 
-    heroImage: string | null; 
-    announcement: string | null; 
-    showAnnouncement: boolean;
-    treasuryBkash: string | null;
-    treasuryNagad: string | null;
-  };
+  initialConfig: SystemConfig;
   featuredAuctions: { id: string; title: string; currentPrice: number; images: string[] }[];
 }
 
@@ -29,13 +22,13 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
     setIsSaving(true);
     try {
       await updateSystemConfig({
-        heroTitle: config.heroTitle,
-        heroSubtitle: config.heroSubtitle,
+        heroTitle: config.heroTitle ?? undefined,
+        heroSubtitle: config.heroSubtitle ?? undefined,
         heroImage: config.heroImage ?? undefined,
         announcement: config.announcement ?? undefined,
         showAnnouncement: config.showAnnouncement,
-        treasuryBkash: config.treasuryBkash,
-        treasuryNagad: config.treasuryNagad,
+        treasuryBkash: config.treasuryBkash ?? undefined,
+        treasuryNagad: config.treasuryNagad ?? undefined,
       });
       alert('Content updated successfully!');
     } catch (e: unknown) {
@@ -76,7 +69,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
                 <label className="text-sm font-medium text-gray-700">Hero Title</label>
                 <input 
                     type="text" 
-                    value={config.heroTitle} 
+                    value={config.heroTitle || ''} 
                     onChange={e => setConfig({ ...config, heroTitle: e.target.value })}
                     className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
@@ -85,7 +78,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
                 <label className="text-sm font-medium text-gray-700">Hero Subtitle</label>
                 <input 
                     type="text" 
-                    value={config.heroSubtitle} 
+                    value={config.heroSubtitle || ''} 
                     onChange={e => setConfig({ ...config, heroSubtitle: e.target.value })}
                     className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                 />

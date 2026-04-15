@@ -78,7 +78,7 @@ export default async function AuctionDetailPage({ params }: Props) {
   const session = await auth();
   const auction = await getAuction(id);
   const t = await getTranslations("Auction");
-  if (!auction) return <div>Auction not found</div>;
+  if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
 
   const [bids, watched, chat] = await Promise.all([
     getAuctionBids(id),
@@ -207,16 +207,16 @@ export default async function AuctionDetailPage({ params }: Props) {
                     }
                     recipientName={
                       session?.user?.id === auction.sellerId
-                        ? auction.winner?.name || "Winner"
-                        : auction.seller.name || "Seller"
+                        ? auction.winner?.name || t("winnerFallback")
+                        : auction.seller.name || t("sellerFallback")
                     }
                   />
                 </div>
               ) : (
                 <div className="bg-gray-50 rounded-2xl p-6 flex items-center gap-4 text-gray-500">
                   <CheckCircle className="w-6 h-6 text-green-500" />
-                  <p className="font-medium">
-                    Transaction complete. feedback has been recorded.
+                  <p className="font-bold uppercase tracking-tight text-xs">
+                    {t("feedbackRecorded")}
                   </p>
                 </div>
               )}
@@ -267,7 +267,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                 {auction.seller?.image ? (
                   <Image
                     src={auction.seller.image}
-                    alt={auction.seller.name || "Seller"}
+                    alt={auction.seller.name || t("sellerFallback")}
                     width={48}
                     height={48}
                     className="w-12 h-12 rounded-full object-cover"
@@ -277,8 +277,8 @@ export default async function AuctionDetailPage({ params }: Props) {
                 )}
               </div>
               <div>
-                <p className="font-medium text-gray-900 flex items-center gap-1.5">
-                  {auction.seller?.name || "Seller"}
+                <p className="font-bold text-gray-900 flex items-center gap-1.5">
+                  {auction.seller?.name || t("sellerFallback")}
                   {auction.seller?.isVerifiedSeller && (
                     <Shield className="w-4 h-4 text-blue-500 fill-blue-500/10" />
                   )}
@@ -313,8 +313,8 @@ export default async function AuctionDetailPage({ params }: Props) {
                           initialMessages={chat.messages}
                           recipientName={
                             session?.user?.id === chat.buyerId 
-                              ? chat.auction.seller.name || 'Seller'
-                              : chat.auction.winner?.name || 'Buyer'
+                              ? chat.auction.seller.name || t("sellerFallback")
+                              : chat.auction.winner?.name || t("buyerFallback")
                           }
                           recipientImage={
                             session?.user?.id === chat.buyerId 
@@ -372,7 +372,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
                       <Truck className="w-3 h-3" /> {t("deliveryCharge")}
                     </span>
-                    <span className="text-[9px] text-slate-400">Seller Protection</span>
+                    <span className="text-[9px] text-slate-400">{t("sellerProtection")}</span>
                   </div>
                   <span className="text-sm font-semibold text-slate-700">{formatBDT(auction.deliveryCharge || 0)}</span>
                 </div>

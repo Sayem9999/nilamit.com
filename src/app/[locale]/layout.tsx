@@ -34,33 +34,29 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export const metadata: Metadata = {
-  title: "nilamit.com — Bangladesh's Trusted Auction Marketplace",
-  description:
-    "Buy and sell through transparent auctions. Verified sellers, anti-sniping protection, and real-time bidding. Bangladesh's #1 C2C auction platform.",
-  keywords: [
-    "nilam",
-    "auction",
-    "bangladesh",
-    "bidding",
-    "marketplace",
-    "নিলাম",
-  ],
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Nilamit",
-  },
-  icons: {
-    icon: "/icon-512.png",
-    apple: "/icon-512.png",
-  },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Meta" });
+  
+  return {
+    title: t("title"),
+    description: t("description"),
+    keywords: t("keywords").split(","),
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "Nilamit",
+    },
+    icons: {
+      icon: "/icon-512.png",
+      apple: "/icon-512.png",
+    },
+  };
+}
 
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
-
+import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "react-hot-toast";
 
 export default async function RootLayout({

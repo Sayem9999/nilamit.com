@@ -72,11 +72,9 @@ export default function CreateAuctionPage() {
       if (result.success && result.auction) {
         router.push(`/auctions/${result.auction.id}`);
       } else {
-        setError(result.error || "Failed to create auction.");
+        setError(result.error || t("createAuctionFailed"));
         if (result.error === "PHONE_NOT_VERIFIED") {
-          setError(
-            "Please verify your phone number before selling. Go to your Profile to verify.",
-          );
+          setError(t("phoneVerifyRequiredDesc"));
         }
       }
     });
@@ -130,7 +128,7 @@ export default function CreateAuctionPage() {
                 type="text"
                 value={form.title}
                 onChange={(e) => updateForm("title", e.target.value)}
-                placeholder="e.g., iPhone 15 Pro Max 256GB"
+                placeholder={t("itemTitlePlaceholder")}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
@@ -141,7 +139,7 @@ export default function CreateAuctionPage() {
               <textarea
                 value={form.description}
                 onChange={(e) => updateForm("description", e.target.value)}
-                placeholder="Describe your item in detail..."
+                placeholder={t("itemDescPlaceholder")}
                 rows={4}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
               />
@@ -238,8 +236,8 @@ export default function CreateAuctionPage() {
             </div>
 
             <div className="pt-4 border-t border-gray-100">
-              <label className="text-xs font-medium text-gray-900 mb-2 block">
-                Optional Upgrades
+              <label className="text-xs font-bold text-gray-900 mb-2 block uppercase tracking-widest">
+                {t("optionalUpgrades")}
               </label>
               <div className="space-y-4">
                 <div>
@@ -257,7 +255,7 @@ export default function CreateAuctionPage() {
                           : (undefined as unknown as number),
                       )
                     }
-                    placeholder="Hidden minimum price..."
+                    placeholder={t("reservePricePlaceholder")}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                   />
                   <p className="text-[10px] text-gray-400 mt-1">
@@ -279,7 +277,7 @@ export default function CreateAuctionPage() {
                           : (undefined as unknown as number),
                       )
                     }
-                    placeholder="Instant purchase price..."
+                    placeholder={t("buyNowPricePlaceholder")}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                   />
                   <p className="text-[10px] text-gray-400 mt-1">
@@ -383,7 +381,7 @@ export default function CreateAuctionPage() {
               <div>
                 <strong className="text-gray-700">{t("itemImages")}:</strong>{" "}
                 <span className="text-gray-600">
-                  {form.images.filter(Boolean).length} uploaded
+                  {form.images.filter(Boolean).length} {t("uploaded")}
                 </span>
               </div>
             </div>

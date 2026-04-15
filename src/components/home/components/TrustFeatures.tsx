@@ -12,10 +12,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 export function TrustFeatures() {
   const t = useTranslations("Home");
+  const locale = useLocale();
   return (
     <>
       {/* How It Works */}
@@ -121,7 +122,7 @@ export function TrustFeatures() {
           </h2>
           <p className="text-primary-100 mb-8">{t("ctaFooterDesc")}</p>
           <Link
-            href="/login"
+            href={`/${locale}/login`}
             className="inline-flex items-center gap-2 bg-white text-primary-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-primary-50 transition-all shadow-lg"
           >
             {t("ctaFooterBtn")} <ArrowRight className="w-4 h-4" />

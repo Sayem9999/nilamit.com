@@ -234,41 +234,41 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Reputation Card */}
-        <div className="bg-white border border-gray-100 rounded-3xl p-6 mb-6 shadow-sm overflow-hidden relative">
-          <div className="absolute top-0 right-0 p-4">
-             <Star className="w-8 h-8 text-primary-500/10 fill-primary-500/5 rotate-12" />
+      {/* Reputation Card */}
+      <div className="bg-white border border-gray-100 rounded-3xl p-6 mb-6 shadow-sm overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-4">
+           <Star className="w-8 h-8 text-primary-500/10 fill-primary-500/5 rotate-12" />
+        </div>
+        <div className="flex flex-col gap-4 relative z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                {t_prof("reputationRank")}
+              </p>
+              <TrustBadge 
+                score={(user?.reputationScore as number) || 0} 
+                size="lg"
+              />
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                {t_prof("trustPoints")}
+              </p>
+              <p className="text-2xl font-black text-gray-900 leading-none">
+                {(user?.reputationScore as number) || 0}
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col gap-4 relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                  {t_prof("reputationRank")}
-                </p>
-                <TrustBadge 
-                  score={(user?.reputationScore as number) || 0} 
-                  size="lg"
-                />
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                  {t_prof("trustPoints")}
-                </p>
-                <p className="text-2xl font-black text-gray-900 leading-none">
-                  {(user?.reputationScore as number) || 0}
-                </p>
-              </div>
-            </div>
-            
-            <div className="pt-4 border-t border-gray-50 flex items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-               <span className="flex items-center gap-1">
-                 <Shield className="w-3 h-3 text-blue-500" /> Bayesian Certified
-               </span>
-               <span className="flex items-center gap-1">
-                 <CheckCircle className="w-3 h-3 text-emerald-500" /> Active Trader
-               </span>
-            </div>
+          
+          <div className="pt-4 border-t border-gray-50 flex items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-wider bn">
+             <span className="flex items-center gap-1">
+               <Shield className="w-3 h-3 text-blue-500" /> {t_prof("bayesianCertified")}
+             </span>
+             <span className="flex items-center gap-1">
+               <CheckCircle className="w-3 h-3 text-emerald-500" /> {t_prof("activeTrader")}
+             </span>
           </div>
         </div>
       </div>
@@ -352,11 +352,11 @@ export default function ProfilePage() {
           </div>
         </div>
 
-          <p
-            className={`mt-4 text-sm px-3 py-2 rounded-lg ${msg.includes("linked") || msg.includes("সফলভাবে") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}
-          >
-            {msg}
-          </p>
+        <p
+          className={`mt-4 text-sm px-3 py-2 rounded-lg ${msg.includes("linked") || msg.includes("সফলভাবে") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}
+        >
+          {msg}
+        </p>
       </div>
 
       {/* Reviews Section */}

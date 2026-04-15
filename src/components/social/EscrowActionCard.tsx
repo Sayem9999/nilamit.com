@@ -128,13 +128,13 @@ export function EscrowActionCard({
           </CardTitle>
         </div>
         <span
-          className={`font-mono text-sm uppercase px-2 py-0.5 rounded ${
+          className={`font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded bn ${
             isDisputed
               ? "bg-red-100 text-red-700"
-              : "bg-slate-200 dark:bg-slate-800"
+              : "bg-slate-200 dark:bg-slate-800 text-slate-600"
           }`}
         >
-          {transaction.status}
+          {t(`status_${transaction.status}`)}
         </span>
       </CardHeader>
 

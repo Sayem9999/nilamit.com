@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Variants } from "framer-motion";
 import { Megaphone, Star } from "lucide-react";
 import { AuctionWithSeller } from "@/types";
@@ -41,6 +43,7 @@ export function HomeContent({
   locale = "en",
   stats,
 }: HomeContentProps) {
+  const t = useTranslations("Home");
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -95,10 +98,10 @@ export function HomeContent({
               </div>
               <div>
                 <h2 className="font-heading font-black text-3xl text-gray-900">
-                  Featured items
+                  {t("featuredTitle")}
                 </h2>
                 <p className="text-gray-500 text-sm font-medium">
-                  Handpicked by our curators
+                  {t("featuredSubtitle")}
                 </p>
               </div>
             </div>

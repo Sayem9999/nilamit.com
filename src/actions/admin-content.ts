@@ -23,13 +23,15 @@ function isDatabaseUnavailable(error: unknown) {
 
 export async function getSystemConfig() {
   const fallbackConfig = {
-    heroTitle: 'Buy & Sell in Real-time Auctions',
-    heroSubtitle: "Bangladesh's most trusted C2C marketplace.",
+    id: 'default',
+    heroTitle: null,
+    heroSubtitle: null,
     heroImage: null,
     announcement: null,
     showAnnouncement: false,
     treasuryBkash: "017XXXXXXXX",
     treasuryNagad: "018XXXXXXXX",
+    updatedAt: new Date(),
   };
 
   try {
@@ -37,7 +39,7 @@ export async function getSystemConfig() {
     return config ?? fallbackConfig;
   } catch (error) {
     if (isDatabaseUnavailable(error)) {
-      console.warn('[admin-content] DB unavailable while loading system config, using fallback values.');
+      console.warn('[admin-content] DB unavailable while loading system config, using safety fallback.');
       return fallbackConfig;
     }
 

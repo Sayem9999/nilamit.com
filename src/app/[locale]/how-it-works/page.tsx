@@ -1,103 +1,120 @@
 import { getTranslations } from "next-intl/server";
-import { Gavel, ShieldCheck, Truck, PackageCheck, Zap } from "lucide-react";
+import { 
+  Shield, 
+  CheckCircle, 
+  Smartphone, 
+  Zap, 
+  MessageSquare, 
+  BadgeCheck 
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
 
 export default async function HowItWorksPage() {
-  const t = await getTranslations("Navigation");
+  const t = await getTranslations("HowItWorks");
 
   const steps = [
     {
       title: t("step1Title"),
       desc: t("step1Desc"),
-      icon: <Zap className="w-8 h-8 text-amber-500" />,
-      color: "amber"
+      icon: Smartphone,
+      color: "bg-blue-600",
+      shadow: "shadow-blue-200"
     },
     {
       title: t("step2Title"),
       desc: t("step2Desc"),
-      icon: <Gavel className="w-8 h-8 text-primary-500" />,
-      color: "primary"
+      icon: Zap,
+      color: "bg-amber-500",
+      shadow: "shadow-amber-200"
     },
     {
-      title: "Win & Verify",
-      desc: "Winning triggers a secure payment gate. Link your bKash or Nagad to pay the official treasury instantly.",
-      icon: <ShieldCheck className="w-8 h-8 text-emerald-500" />,
-      color: "emerald"
+      title: t("step3Title"),
+      desc: t("step3Desc"),
+      icon: BadgeCheck,
+      color: "bg-emerald-500",
+      shadow: "shadow-emerald-200"
     },
     {
-      title: "Sync & Ships",
-      desc: "Once verified, the Coordination Hub unlocks real-time chat and delivery options. Both parties are now protected by the escrow hold.",
-      icon: <Truck className="w-8 h-8 text-blue-500" />,
-      color: "blue"
+      title: t("step4Title"),
+      desc: t("step4Desc"),
+      icon: MessageSquare,
+      color: "bg-indigo-600",
+      shadow: "shadow-indigo-200"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pt-24 pb-12">
+    <div className="pt-24 pb-20 min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-20">
-          <h1 className="text-5xl md:text-6xl font-heading font-bold text-gray-900 mb-6">
-            Bidding, Built for Trust.
+        <div className="text-center mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-6 tracking-tight">
+            {t("title")}
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            nilamit.com isn&apos;t just a marketplace—it&apos;s a verifiable coordinate system for Bangladeshi commerce. Here is how we protect your deals.
+          <p className="text-xl text-gray-500 max-w-3xl mx-auto font-medium leading-relaxed">
+            {t("subtitle")}
           </p>
         </div>
 
-        <div className="relative">
-          {/* Connector Line (Desktop) */}
-          <div className="hidden lg:block absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 z-0" />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-            {steps.map((step, index) => (
-              <div key={index} className="flex flex-col items-center group">
-                <div className={`w-20 h-20 bg-white border-4 border-white shadow-xl rounded-[2rem] flex items-center justify-center mb-8 relative z-10 transition-transform group-hover:-translate-y-2`}>
-                   {step.icon}
-                   <div className="absolute -top-3 -right-3 w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-bold border-4 border-white">
-                     {index + 1}
-                   </div>
-                </div>
-                <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm text-center flex-1 w-full hover:shadow-md transition-shadow">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
-                  <p className="text-gray-500 leading-relaxed text-sm">{step.desc}</p>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
+          {steps.map((step, idx) => (
+            <div key={idx} className="relative group p-8 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div className={`w-14 h-14 ${step.color} ${step.shadow} rounded-2xl flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
+                <step.icon size={28} />
               </div>
-            ))}
+              <h3 className="text-xl font-black text-gray-900 mb-3">{step.title}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed font-medium">{step.desc}</p>
+              <div className="absolute top-8 right-8 text-4xl font-black text-gray-100/50 group-hover:text-gray-100 transition-colors">
+                0{idx + 1}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-gray-900 rounded-[3rem] p-12 md:p-20 text-white relative overflow-hidden mb-24">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 blur-[100px]" />
+          <div className="relative z-10 max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-12">
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex items-center gap-2 mb-4 justify-center md:justify-start">
+                <Shield className="text-indigo-400 w-6 h-6" />
+                <span className="text-indigo-400 font-black uppercase tracking-[0.2em] text-xs">{t("securityMeta")}</span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight">
+                {t("shieldTitle")}
+              </h2>
+              <p className="text-indigo-100/70 text-lg font-medium leading-relaxed mb-8">
+                {t("shieldDesc")}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[t("feature1"), t("feature2"), t("feature3"), t("feature4")].map((f, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                      <CheckCircle className="w-3 h-3 text-indigo-400" />
+                    </div>
+                    <span className="text-sm font-bold text-indigo-50">{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="bg-primary-900 rounded-[3rem] p-12 text-white shadow-2xl overflow-hidden relative">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary-500/20 rounded-full blur-3xl" />
-            <h2 className="text-3xl font-heading font-bold mb-8">Ready to start?</h2>
-            <p className="text-primary-100 text-lg mb-10 leading-relaxed">
-              Join thousands of verified traders. Whether you are selling tech gear or buying a collection piece, nilamit ensures the transaction is zero-technicality and full-transparency.
-            </p>
-            <div className="flex gap-4">
-               <button className="bg-white text-primary-900 px-8 py-4 rounded-2xl font-bold hover:bg-primary-50 transition-all shadow-xl shadow-black/10">Browse Auctions</button>
-               <button className="bg-primary-800 text-white px-8 py-4 rounded-2xl font-bold hover:bg-primary-700 transition-all border border-primary-700/50">Sell an Item</button>
-            </div>
-          </div>
-          
-          <div className="bg-white p-12 rounded-[3rem] border border-gray-100 shadow-sm">
-             <div className="flex items-center gap-3 mb-6">
-                <PackageCheck className="w-8 h-8 text-primary-600" />
-                <h3 className="text-2xl font-bold text-gray-900">Guarantee Shield</h3>
-             </div>
-             <p className="text-gray-600 leading-relaxed text-lg mb-8">
-               Our anti-sniping protection ensures no one &quot;steals&quot; a deal in the last fraction of a second. Every participant gets a fair chance to place their final bid.
-             </p>
-             <ul className="space-y-4">
-                {[
-                  "Verified bKash/Nagad Identities",
-                  "Automated Platform Escrow",
-                  "2-Minute Extension (Soft Close)",
-                  "Real-time Coordination Hub"
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-700 font-medium">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full" /> {item}
-                  </li>
-                ))}
-             </ul>
+        <div className="text-center">
+          <h2 className="text-3xl font-black text-gray-900 mb-6">{t("ctaTitle")}</h2>
+          <p className="text-gray-500 mb-10 max-w-xl mx-auto font-medium">
+            {t("ctaDesc")}
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/search">
+              <Button size="lg" className="h-14 px-10 rounded-2xl bg-gray-900 hover:bg-black text-white font-bold text-lg pointer-events-auto">
+                {t("browseBtn")}
+              </Button>
+            </Link>
+            <Link href="/sell">
+              <Button size="lg" variant="outline" className="h-14 px-10 rounded-2xl border-2 border-gray-900 text-gray-900 font-bold text-lg hover:bg-gray-50 pointer-events-auto">
+                {t("sellBtn")}
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
