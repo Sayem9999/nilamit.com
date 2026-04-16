@@ -3,15 +3,11 @@
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { rtdbPush } from '@/lib/firebase-admin';
+import { adminDB, rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recalculateUserReputation } from '@/lib/reputation';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
-
-function requireAdminEmail(email: string | null | undefined) {
-  if (!email || !ADMIN_EMAILS.includes(email)) throw new Error('Unauthorized: Admin only');
-}
 
 /**
  * Transitions PENDING → HELD (buyer confirms advance payment).
@@ -68,6 +64,13 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         isSystemMessage: true, isRead: false, createdAt: now,
       });
     }
+    await adminDB.ref(`${RTDB_PATHS.conversation(convId)}/meta`).update({
+      auctionId: tx.auctionId,
+      participants: {
+        [tx.buyerId]: true,
+        [auction.sellerId]: true,
+      },
+    });
 
     // Notify seller
     await rtdbPush(RTDB_PATHS.userNotifications(auction.sellerId), {

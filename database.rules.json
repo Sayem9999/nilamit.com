@@ -37,8 +37,12 @@
     "chat": {
       "conversation": {
         "$conversationId": {
-          ".read": "auth !== null",
-          ".write": false
+          ".read": "auth !== null && (auth.token.isAdmin === true || root.child('chat/conversation/' + $conversationId + '/meta/participants/' + auth.uid).val() === true)",
+          ".write": false,
+          "meta": {
+            ".read": "auth !== null && (auth.token.isAdmin === true || root.child('chat/conversation/' + $conversationId + '/meta/participants/' + auth.uid).val() === true)",
+            ".write": false
+          }
         }
       }
     },

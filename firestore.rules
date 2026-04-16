@@ -1,14 +1,97 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
 
-    // mail collection — used exclusively by Firebase Trigger Email extension.
-    // Only the server (Admin SDK) can write; nobody can read via client SDK.
+    function isAdmin() {
+      return signedIn() && request.auth.token.isAdmin == true;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function conversationParticipant(conversationId) {
+      return signedIn() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/conversations/$(conversationId)).data.buyerId == request.auth.uid ||
+        get(/databases/$(database)/documents/conversations/$(conversationId)).data.sellerId == request.auth.uid
+      );
+    }
+
+    function auctionParticipant(auctionId) {
+      return signedIn() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/auctions/$(auctionId)).data.sellerId == request.auth.uid ||
+        get(/databases/$(database)/documents/auctions/$(auctionId)).data.winnerId == request.auth.uid
+      );
+    }
+
     match /mail/{docId} {
       allow read, write: if false;
     }
 
-    // Block everything else
+    match /systemConfig/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read, update: if isSelf(userId) || isAdmin();
+      allow create: if isSelf(userId) || isAdmin();
+      allow delete: if false;
+    }
+
+    match /auctions/{auctionId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.sellerId == request.auth.uid;
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.sellerId == request.auth.uid);
+    }
+
+    match /bids/{bidId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.bidderId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid;
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if conversationParticipant(conversationId);
+      allow write: if false;
+    }
+
+    match /messages/{messageId} {
+      allow read: if signedIn() && conversationParticipant(resource.data.conversationId);
+      allow write: if false;
+    }
+
+    match /escrowTransactions/{transactionId} {
+      allow read: if isAdmin() || (signedIn() && (
+        resource.data.buyerId == request.auth.uid ||
+        auctionParticipant(resource.data.auctionId)
+      ));
+      allow write: if false;
+    }
+
+    match /disputes/{disputeId} {
+      allow read: if isAdmin() || (signedIn() && (
+        resource.data.openerId == request.auth.uid ||
+        auctionParticipant(get(/databases/$(database)/documents/escrowTransactions/$(resource.data.transactionId)).data.auctionId)
+      ));
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

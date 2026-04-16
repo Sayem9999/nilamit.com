@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
@@ -13,17 +13,50 @@ async function requireAdmin() {
   }
 }
 
+function readDate(value: unknown): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === 'object' && value !== null && 'toDate' in value && typeof (value as { toDate: () => Date }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate();
+  }
+
+  const parsed = new Date(value as string | number);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+async function deleteCollection(name: string, batchSize = 100) {
+  while (true) {
+    const snap = await db.collection(name).limit(batchSize).get();
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+
+    if (snap.size < batchSize) break;
+  }
+}
+
+function csvEscape(value: unknown): string {
+  const text = String(value ?? '');
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
 export async function adminWipeTestData() {
   try {
     await requireAdmin();
 
-    // Transaction to ensure all or nothing
-    await prisma.$transaction([
-      prisma.bid.deleteMany({}),
-      // prisma.notification.deleteMany({}), // Model does not exist yet
-      prisma.watchlist.deleteMany({}),
-      prisma.auctionReport.deleteMany({}),
-      prisma.auction.deleteMany({}), // Deletes ALL auctions
+    await Promise.all([
+      deleteCollection('messages'),
+      deleteCollection('conversations'),
+      deleteCollection('escrowTransactions'),
+      deleteCollection('disputes'),
+      deleteCollection('bids'),
+      deleteCollection('watchlist'),
+      deleteCollection('alerts'),
+      deleteCollection('reports'),
+      deleteCollection('reviews'),
+      deleteCollection('auctions'),
     ]);
 
     revalidatePath('/');
@@ -39,37 +72,49 @@ export async function exportTransactionsCSV() {
   try {
     await requireAdmin();
 
-    // Fetch all SOLD auctions with winner data
-    const auctions = await prisma.auction.findMany({
-      where: {
-        status: 'SOLD',
-      },
-      include: {
-        winner: { select: { name: true, phone: true } },
-        seller: { select: { name: true, phone: true } },
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
+    const soldSnap = await db.collection('auctions')
+      .where('status', '==', 'SOLD')
+      .get();
+
+    const auctions = soldSnap.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Record<string, unknown>),
+        updatedAt: readDate(doc.data().updatedAt),
+      }))
+      .sort((a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0));
+
+    const userIds = new Set<string>();
+    auctions.forEach((auction) => {
+      if (typeof auction.winnerId === 'string' && auction.winnerId) userIds.add(auction.winnerId);
+      if (typeof auction.sellerId === 'string' && auction.sellerId) userIds.add(auction.sellerId);
     });
 
-    // Create CSV Header
-    let csv = 'Auction ID,Title,Final Price,Winner Name,Winner Phone,Commission (৳),Date\n';
+    const userSnaps = await Promise.all([...userIds].map((userId) => db.collection('users').doc(userId).get()));
+    const users = new Map(
+      userSnaps
+        .filter((snap) => snap.exists)
+        .map((snap) => [snap.id, snap.data() as Record<string, unknown>])
+    );
 
-    // Build Rows
+    let csv = 'Auction ID,Title,Final Price,Winner Name,Winner Phone,Commission (à§³),Date\n';
+
     for (const auction of auctions) {
-      const commission = auction.currentPrice * 0.1; // 10% standard commission
-      
+      const winner = typeof auction.winnerId === 'string' ? users.get(auction.winnerId) : null;
+      const seller = typeof auction.sellerId === 'string' ? users.get(auction.sellerId) : null;
+      const commission = Number(auction.commissionEarned ?? Number(auction.currentPrice ?? 0) * 0.1);
+      const updatedAt = auction.updatedAt ?? new Date();
+
       const row = [
         auction.id,
-        `"${auction.title.replace(/"/g, '""')}"`,
+        csvEscape(auction.title),
         auction.currentPrice,
-        auction.winner?.name || 'Unknown',
-        auction.winner?.phone || 'N/A',
+        csvEscape(winner?.name ?? 'Unknown'),
+        csvEscape(winner?.phone ?? seller?.phone ?? 'N/A'),
         commission.toFixed(2),
-        auction.updatedAt.toISOString().split('T')[0],
+        updatedAt.toISOString().split('T')[0],
       ];
-      
+
       csv += row.join(',') + '\n';
     }
 

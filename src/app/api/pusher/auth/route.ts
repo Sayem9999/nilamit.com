@@ -13,10 +13,17 @@
 import { NextResponse } from 'next/server';
 import { pusherServer } from '@/lib/pusher-server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
+    if (!pusherServer || typeof pusherServer.authorizeChannel !== 'function') {
+      return NextResponse.json(
+        { error: 'Pusher auth is disabled. Realtime now uses Firebase.' },
+        { status: 410 }
+      );
+    }
+
     const session = await auth();
 
     const data     = await req.formData();
@@ -46,15 +53,12 @@ export async function POST(req: Request) {
       }
 
       const conversationId = channel.replace('private-conversation-', '');
-      const conversation = await prisma.conversation.findUnique({
-        where:  { id: conversationId },
-        select: { buyerId: true, sellerId: true },
-      });
-
-      if (!conversation) {
+      const conversationSnap = await db.collection('conversations').doc(conversationId).get();
+      if (!conversationSnap.exists) {
         return new NextResponse('Forbidden: conversation not found', { status: 403 });
       }
 
+      const conversation = conversationSnap.data()!;
       const { buyerId, sellerId } = conversation;
       const isParticipant = session.user.id === buyerId || session.user.id === sellerId;
 

@@ -1,8 +1,8 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { db, FieldValue } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { AuctionStatus, OrderStatus } from '@prisma/client';
+import { AuctionStatus, type OrderStatus } from '@/types';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
@@ -14,200 +14,345 @@ async function requireAdmin() {
   return session;
 }
 
-/** Dashboard stats for admin */
+function readDate(value: unknown): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === 'object' && value !== null && 'toDate' in value && typeof (value as { toDate: () => Date }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate();
+  }
+
+  const parsed = new Date(value as string | number);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+async function getUserMap(userIds: string[]) {
+  const uniqueIds = [...new Set(userIds.filter(Boolean))];
+  const snaps = await Promise.all(uniqueIds.map((userId) => db.collection('users').doc(userId).get()));
+  return new Map(
+    snaps
+      .filter((snap) => snap.exists)
+      .map((snap) => [snap.id, snap.data() as Record<string, unknown>])
+  );
+}
+
 export async function getAdminStats() {
   await requireAdmin();
 
-  const [totalUsers, verifiedUsers, totalAuctions, activeAuctions, totalBids, revenueStats, recentUsers] = await Promise.all([
-    prisma.user.count(),
-    prisma.user.count({ where: { isPhoneVerified: true } }),
-    prisma.auction.count(),
-    prisma.auction.count({ where: { status: AuctionStatus.ACTIVE } }),
-    prisma.bid.count(),
-    prisma.auction.aggregate({
-      where: { status: AuctionStatus.SOLD },
-      _sum: { commissionEarned: true }
-    }),
-    prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 10, select: { id: true, name: true, email: true, isPhoneVerified: true, isVerifiedSeller: true, reputationScore: true, createdAt: true } }),
+  const [usersSnap, auctionsSnap, bidsSnap] = await Promise.all([
+    db.collection('users').get(),
+    db.collection('auctions').get(),
+    db.collection('bids').get(),
   ]);
 
-  return { 
-    totalUsers, 
-    verifiedUsers, 
-    totalAuctions, 
-    activeAuctions, 
-    totalBids, 
-    totalRevenue: (revenueStats._sum.commissionEarned as number | null) || 0,
-    recentUsers 
+  const users = usersSnap.docs.map((doc) => ({
+    id: doc.id,
+    ...(doc.data() as Record<string, unknown>),
+    createdAt: readDate(doc.data().createdAt),
+  }));
+  const auctions = auctionsSnap.docs.map((doc) => ({
+    id: doc.id,
+    ...(doc.data() as Record<string, unknown>),
+  }));
+
+  const recentUsers = users
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
+    .slice(0, 10)
+    .map((user) => ({
+      id: user.id,
+      name: (user.name as string | null) ?? null,
+      email: (user.email as string | null) ?? null,
+      isPhoneVerified: Boolean(user.isPhoneVerified),
+      isVerifiedSeller: Boolean(user.isVerifiedSeller),
+      reputationScore: Number(user.reputationScore ?? 0),
+      createdAt: user.createdAt ?? new Date(0),
+    }));
+
+  const totalRevenue = auctions.reduce((sum, auction) => {
+    if (auction.status !== AuctionStatus.SOLD) return sum;
+    return sum + Number(auction.commissionEarned ?? 0);
+  }, 0);
+
+  return {
+    totalUsers: users.length,
+    verifiedUsers: users.filter((user) => Boolean(user.isPhoneVerified)).length,
+    totalAuctions: auctions.length,
+    activeAuctions: auctions.filter((auction) => auction.status === AuctionStatus.ACTIVE).length,
+    totalBids: bidsSnap.size,
+    totalRevenue,
+    recentUsers,
   };
 }
 
-/** List all users with pagination */
 export async function getAdminUsers(page = 1, limit = 20, search?: string) {
   await requireAdmin();
 
-  const where = search ? {
-    OR: [
-      { name: { contains: search, mode: 'insensitive' as const } },
-      { email: { contains: search, mode: 'insensitive' as const } },
-      { phone: { contains: search } },
-    ],
-  } : {};
-
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where,
-      select: { id: true, name: true, email: true, phone: true, isPhoneVerified: true, isVerifiedSeller: true, reputationScore: true, createdAt: true, _count: { select: { bids: true, auctionsAsSeller: true } } },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.user.count({ where }),
+  const [usersSnap, auctionsSnap, bidsSnap] = await Promise.all([
+    db.collection('users').get(),
+    db.collection('auctions').get(),
+    db.collection('bids').get(),
   ]);
 
-  return { users, total, pages: Math.ceil(total / limit) };
+  const auctionCounts = new Map<string, number>();
+  auctionsSnap.docs.forEach((doc) => {
+    const sellerId = doc.data().sellerId as string | undefined;
+    if (sellerId) auctionCounts.set(sellerId, (auctionCounts.get(sellerId) ?? 0) + 1);
+  });
+
+  const bidCounts = new Map<string, number>();
+  bidsSnap.docs.forEach((doc) => {
+    const bidderId = doc.data().bidderId as string | undefined;
+    if (bidderId) bidCounts.set(bidderId, (bidCounts.get(bidderId) ?? 0) + 1);
+  });
+
+  const normalizedSearch = search?.trim().toLowerCase();
+  const users = usersSnap.docs
+    .map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Record<string, unknown>),
+      createdAt: readDate(doc.data().createdAt),
+    }))
+    .filter((user) => {
+      if (!normalizedSearch) return true;
+      const haystack = [user.name, user.email, user.phone]
+        .filter((value): value is string => typeof value === 'string')
+        .map((value) => value.toLowerCase());
+      return haystack.some((value) => value.includes(normalizedSearch));
+    })
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
+
+  const total = users.length;
+  const pagedUsers = users.slice((page - 1) * limit, page * limit).map((user) => ({
+    id: user.id,
+    name: (user.name as string | null) ?? null,
+    email: (user.email as string | null) ?? null,
+    phone: (user.phone as string | null) ?? null,
+    isPhoneVerified: Boolean(user.isPhoneVerified),
+    isVerifiedSeller: Boolean(user.isVerifiedSeller),
+    reputationScore: Number(user.reputationScore ?? 0),
+    createdAt: user.createdAt ?? new Date(0),
+    _count: {
+      bids: bidCounts.get(user.id) ?? 0,
+      auctionsAsSeller: auctionCounts.get(user.id) ?? 0,
+    },
+    password: undefined,
+  }));
+
+  return { users: pagedUsers, total, pages: Math.ceil(total / limit) };
 }
 
-/** List all auctions for admin */
 export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
   await requireAdmin();
 
-  const where = status ? { status: status as AuctionStatus } : {};
+  const auctionsSnap = await db.collection('auctions').get();
+  const filteredAuctions = auctionsSnap.docs
+    .map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Record<string, unknown>),
+      createdAt: readDate(doc.data().createdAt),
+    }))
+    .filter((auction) => !status || auction.status === status)
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
 
-  const [auctions, total] = await Promise.all([
-    prisma.auction.findMany({
-      where,
-      include: { seller: { select: { name: true, email: true } }, _count: { select: { bids: true } } },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.auction.count({ where }),
-  ]);
+  const total = filteredAuctions.length;
+  const pagedAuctions = filteredAuctions.slice((page - 1) * limit, page * limit);
+  const sellerMap = await getUserMap(
+    pagedAuctions
+      .map((auction) => auction.sellerId)
+      .filter((sellerId): sellerId is string => typeof sellerId === 'string')
+  );
+
+  const auctions = pagedAuctions.map((auction) => ({
+    ...auction,
+    seller: {
+      name: (sellerMap.get(auction.sellerId as string)?.name as string | null) ?? null,
+      email: (sellerMap.get(auction.sellerId as string)?.email as string | null) ?? null,
+    },
+    _count: {
+      bids: Number(auction.bidCount ?? 0),
+    },
+  }));
 
   return { auctions, total, pages: Math.ceil(total / limit) };
 }
 
-/** Admin: update user reputation */
 export async function adminUpdateUser(userId: string, data: { reputationScore?: number; isPhoneVerified?: boolean }) {
   await requireAdmin();
-  return prisma.user.update({ where: { id: userId }, data });
+  await db.collection('users').doc(userId).update({ ...data, updatedAt: new Date() });
+  const updated = await db.collection('users').doc(userId).get();
+  return { id: updated.id, ...updated.data() };
 }
 
-/** Admin: toggle verified seller status */
 export async function adminToggleVerification(userId: string) {
   await requireAdmin();
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { isVerifiedSeller: true } });
-  if (!user) throw new Error('User not found');
-  
-  return prisma.user.update({
-    where: { id: userId },
-    data: { isVerifiedSeller: !user.isVerifiedSeller }
+  const user = await db.collection('users').doc(userId).get();
+  if (!user.exists) throw new Error('User not found');
+
+  const nextValue = !Boolean(user.data()?.isVerifiedSeller);
+  await db.collection('users').doc(userId).update({
+    isVerifiedSeller: nextValue,
+    updatedAt: new Date(),
   });
+
+  return { success: true, isVerifiedSeller: nextValue };
 }
 
-/** Admin: update delivery status and tracking */
 export async function adminUpdateDelivery(auctionId: string, status: OrderStatus, trackingNumber?: string) {
   await requireAdmin();
-  
-  return prisma.auction.update({ 
-    where: { id: auctionId }, 
-    data: { 
-      deliveryStatus: status,
-      trackingNumber 
-    } 
+
+  await db.collection('auctions').doc(auctionId).update({
+    deliveryStatus: status,
+    trackingNumber: trackingNumber ?? null,
+    updatedAt: new Date(),
   });
+
+  const updated = await db.collection('auctions').doc(auctionId).get();
+  return { id: updated.id, ...updated.data() };
 }
 
-/** Admin: force-cancel an auction */
 export async function adminCancelAuction(auctionId: string) {
   await requireAdmin();
-  return prisma.auction.update({ where: { id: auctionId }, data: { status: AuctionStatus.CANCELLED } });
+  await db.collection('auctions').doc(auctionId).update({
+    status: AuctionStatus.CANCELLED,
+    updatedAt: new Date(),
+  });
+  return { success: true };
 }
 
-/** Admin: get all disputes */
 export async function getAdminDisputes() {
   await requireAdmin();
-  return prisma.escrowTransaction.findMany({
-    where: { status: 'DISPUTED' },
-    include: {
-      auction: { 
-        select: { 
-          title: true, 
-          id: true,
-          seller: { select: { name: true, phone: true } }
-        } 
+
+  const txSnap = await db.collection('escrowTransactions')
+    .where('status', '==', 'DISPUTED')
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  return Promise.all(txSnap.docs.map(async (doc) => {
+    const tx = doc.data();
+    const [auctionSnap, buyerSnap, disputeSnap] = await Promise.all([
+      db.collection('auctions').doc(tx.auctionId).get(),
+      db.collection('users').doc(tx.buyerId).get(),
+      db.collection('disputes').where('transactionId', '==', doc.id).limit(1).get(),
+    ]);
+
+    const auction = auctionSnap.data() ?? {};
+    const sellerSnap = auction.sellerId
+      ? await db.collection('users').doc(auction.sellerId as string).get()
+      : null;
+
+    return {
+      ...tx,
+      id: doc.id,
+      createdAt: readDate(tx.createdAt) ?? new Date(),
+      updatedAt: readDate(tx.updatedAt) ?? new Date(),
+      auction: {
+        id: auctionSnap.id,
+        title: (auction.title as string) ?? '',
+        seller: {
+          name: (sellerSnap?.data()?.name as string | null) ?? null,
+          phone: (sellerSnap?.data()?.phone as string | null) ?? null,
+        },
       },
-      buyer: { select: { name: true, phone: true } },
-      dispute: true
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+      buyer: {
+        name: (buyerSnap.data()?.name as string | null) ?? null,
+        phone: (buyerSnap.data()?.phone as string | null) ?? null,
+      },
+      dispute: disputeSnap.empty ? null : {
+        ...disputeSnap.docs[0].data(),
+        id: disputeSnap.docs[0].id,
+      },
+    };
+  }));
 }
 
-/** Admin: resolve a dispute */
 export async function resolveAdminDispute(transactionId: string, resolution: 'RELEASE' | 'REFUND') {
   await requireAdmin();
-  
-  const tx = await prisma.escrowTransaction.findUnique({
-    where: { id: transactionId },
-    include: { auction: { select: { id: true, sellerId: true } } }
-  });
 
-  if (!tx) throw new Error('Transaction not found');
+  const txRef = db.collection('escrowTransactions').doc(transactionId);
+  const txSnap = await txRef.get();
+  if (!txSnap.exists) throw new Error('Transaction not found');
+
+  const tx = txSnap.data()!;
+  const auctionRef = db.collection('auctions').doc(tx.auctionId);
+  const auctionSnap = await auctionRef.get();
+  if (!auctionSnap.exists) throw new Error('Auction not found');
+
+  const auction = auctionSnap.data()!;
+  const disputeSnap = await db.collection('disputes')
+    .where('transactionId', '==', transactionId)
+    .limit(1)
+    .get();
+
+  const batch = db.batch();
 
   if (resolution === 'RELEASE') {
-    // Release funds to seller
-    return prisma.$transaction([
-      prisma.escrowTransaction.update({
-        where: { id: transactionId },
-        data: { status: 'RELEASED' }
-      }),
-      prisma.auction.update({
-        where: { id: tx.auctionId },
-        data: { deliveryStatus: 'DELIVERED' }
-      }),
-      // Penalize buyer reputation slightly for false dispute? Or just settle.
-      // Boost seller reputation
-      prisma.user.update({
-        where: { id: tx.auction.sellerId },
-        data: { reputationScore: { increment: 5 } }
-      })
-    ]);
+    batch.update(txRef, { status: 'RELEASED', updatedAt: new Date() });
+    batch.update(auctionRef, { deliveryStatus: 'DELIVERED', updatedAt: new Date() });
+    batch.update(db.collection('users').doc(auction.sellerId), {
+      reputationScore: FieldValue.increment(5),
+      updatedAt: new Date(),
+    });
+    if (!disputeSnap.empty) {
+      batch.update(disputeSnap.docs[0].ref, {
+        status: 'RESOLVED_SELLER',
+        resolution: 'Admin released funds to seller.',
+        updatedAt: new Date(),
+      });
+    }
   } else {
-    // Refund funds to buyer
-    return prisma.$transaction([
-      prisma.escrowTransaction.update({
-        where: { id: transactionId },
-        data: { status: 'REFUNDED' }
-      }),
-      prisma.user.update({
-        where: { id: tx.buyerId },
-        data: { reputationScore: { increment: 2 } } // Minor boost for honesty if scam prevented
-      }),
-      prisma.user.update({
-        where: { id: tx.auction.sellerId },
-        data: { reputationScore: { decrement: 10 } } // Significant penalty for dispute loss
-      })
-    ]);
+    batch.update(txRef, { status: 'REFUNDED', updatedAt: new Date() });
+    batch.update(db.collection('users').doc(tx.buyerId), {
+      reputationScore: FieldValue.increment(2),
+      updatedAt: new Date(),
+    });
+    batch.update(db.collection('users').doc(auction.sellerId), {
+      reputationScore: FieldValue.increment(-10),
+      updatedAt: new Date(),
+    });
+    if (!disputeSnap.empty) {
+      batch.update(disputeSnap.docs[0].ref, {
+        status: 'RESOLVED_BUYER',
+        resolution: 'Admin refunded the buyer.',
+        updatedAt: new Date(),
+      });
+    }
   }
+
+  await batch.commit();
+  return { success: true };
 }
 
-/** Admin: get treasury audit log */
 export async function getTreasuryAudit() {
   await requireAdmin();
-  return prisma.escrowTransaction.findMany({
-    where: { 
-      OR: [
-        { verificationType: 'AUTOMATIC' },
-        { providerRef: { not: null } }
-      ]
-    },
-    include: {
-      auction: { select: { title: true, id: true } },
-      buyer: { select: { name: true, email: true } }
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 50
+
+  const txSnap = await db.collection('escrowTransactions')
+    .orderBy('createdAt', 'desc')
+    .limit(200)
+    .get();
+
+  const filtered = txSnap.docs.filter((doc) => {
+    const data = doc.data();
+    return data.verificationType === 'AUTOMATIC' || Boolean(data.providerRef);
   });
+
+  const auctionSnaps = await Promise.all(
+    filtered.map((doc) => db.collection('auctions').doc(doc.data().auctionId as string).get())
+  );
+  const buyerSnaps = await Promise.all(
+    filtered.map((doc) => db.collection('users').doc(doc.data().buyerId as string).get())
+  );
+
+  return filtered.slice(0, 50).map((doc, index) => ({
+    ...doc.data(),
+    id: doc.id,
+    createdAt: readDate(doc.data().createdAt) ?? new Date(),
+    updatedAt: readDate(doc.data().updatedAt) ?? new Date(),
+    auction: {
+      id: auctionSnaps[index]?.id,
+      title: (auctionSnaps[index]?.data()?.title as string | undefined) ?? '',
+    },
+    buyer: {
+      name: (buyerSnaps[index]?.data()?.name as string | null) ?? null,
+      email: (buyerSnaps[index]?.data()?.email as string | null) ?? null,
+    },
+  }));
 }

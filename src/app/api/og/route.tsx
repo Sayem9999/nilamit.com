@@ -4,6 +4,30 @@ import { NextRequest } from 'next/server';
 export const runtime = 'edge';
 
 const fontURL = 'https://github.com/google/fonts/raw/main/ofl/notosansbengali/NotoSansBengali-Bold.ttf';
+const ALLOWED_IMAGE_HOSTS = [
+  'utfs.io',
+  'lh3.googleusercontent.com',
+  'avatars.githubusercontent.com',
+  'uploadthing.com',
+  'storage.googleapis.com',
+  'firebasestorage.googleapis.com',
+] as const;
+
+function isAllowedImageUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:') return false;
+
+    const host = url.hostname.toLowerCase();
+    return (
+      ALLOWED_IMAGE_HOSTS.includes(host as (typeof ALLOWED_IMAGE_HOSTS)[number]) ||
+      host.endsWith('.supabase.co') ||
+      host.endsWith('.uploadthing.com')
+    );
+  } catch {
+    return false;
+  }
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,6 +40,10 @@ export async function GET(req: NextRequest) {
     const price = searchParams.get('price') || '0';
     const image = searchParams.get('image');
     const location = searchParams.get('location') || 'Bangladesh';
+
+    if (image && !isAllowedImageUrl(image)) {
+      return new Response('Invalid image URL', { status: 400 });
+    }
 
     return new ImageResponse(
       (

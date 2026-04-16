@@ -3,7 +3,7 @@
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { filterPII } from '@/lib/pii-filter';
-import { rtdbPush } from '@/lib/firebase-admin';
+import { adminDB, rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 
 export async function sendMessage(conversationId: string, content: string, imageUrl?: string) {
@@ -36,6 +36,21 @@ export async function sendMessage(conversationId: string, content: string, image
   });
 
   await db.collection('conversations').doc(conversationId).update({ lastMessageAt: now });
+  await adminDB.ref(`${RTDB_PATHS.conversation(conversationId)}/meta`).update({
+    auctionId: conv.auctionId,
+    participants: {
+      [conv.buyerId]: true,
+      [conv.sellerId]: true,
+    },
+  });
+  await rtdbPush(RTDB_PATHS.conversation(conversationId), {
+    event: FIREBASE_EVENTS.NEW_MESSAGE,
+    id: msgId,
+    senderId: session.user.id,
+    content: filtered,
+    imageUrl: imageUrl ?? null,
+    createdAt: now.toISOString(),
+  });
 
   const recipientId = session.user.id === conv.buyerId ? conv.sellerId : conv.buyerId;
   rtdbPush(RTDB_PATHS.userNotifications(recipientId), {
