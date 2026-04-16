@@ -1,103 +1,114 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { z } from 'zod';
+import { db, newId } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { AuctionStatus } from '@prisma/client';
-import { revalidatePath } from 'next/cache';
+import { filterPII } from '@/lib/pii-filter';
+import { CATEGORIES } from '@/types';
 
-/**
- * Enterprise Seller Tools - Bulk Upload
- * 
- * Implements CSV ingestion for mass item listing.
- */
+const VALID_CATEGORIES = CATEGORIES.map(c => c.slug);
 
-interface BulkUploadRow {
-  title: string;
-  description: string;
-  category: string;
-  startingPrice: number;
-  durationHours: number;
-}
+const BulkRowSchema = z.object({
+  title:         z.string().min(3).max(100),
+  description:   z.string().min(10).max(2000),
+  category:      z.string().refine(v => VALID_CATEGORIES.includes(v as never), 'Invalid category'),
+  startingPrice: z.number().positive().max(10_000_000),
+  durationHours: z.number().positive().max(720),
+});
+
+type BulkUploadRow = z.infer<typeof BulkRowSchema>;
 
 export async function processBulkUpload(fileName: string, rows: BulkUploadRow[]) {
   const session = await auth();
-  if (!session?.user?.id || !session.user.isVerifiedSeller) {
-    return { success: false, error: "Enterprise seller status required" };
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+  const userSnap = await db.collection('users').doc(session.user.id).get();
+  if (!userSnap.data()?.isVerifiedSeller) {
+    return { success: false, error: 'Only verified sellers can bulk upload.' };
   }
 
-  const userId = session.user.id;
+  const opId  = newId();
+  const now   = new Date();
+  const opRef = db.collection('bulkOperations').doc(opId);
 
-  // 1. Create Operation Record
-  const operation = await prisma.bulkOperation.create({
-    data: {
-      sellerId: userId,
-      fileName,
-      totalRows: rows.length,
-      status: "PROCESSING"
-    }
+  await opRef.set({
+    id: opId, sellerId: session.user.id, status: 'PROCESSING',
+    fileName, totalRows: rows.length, processedRows: 0, errors: [], createdAt: now, updatedAt: now,
   });
 
-  const errors: Record<number, string> = {};
   let processed = 0;
+  const errors: string[] = [];
 
-  // 2. Process Rows
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
+  for (const [i, row] of rows.entries()) {
+    const validation = BulkRowSchema.safeParse(row);
+    if (!validation.success) {
+      errors.push(`Row ${i + 1}: ${validation.error.errors[0]?.message}`);
+      continue;
+    }
+
     try {
-      // Basic validation
-      if (!row.title || row.startingPrice <= 0) {
-        throw new Error("Missing title or invalid price");
-      }
-
-      await prisma.auction.create({
-        data: {
-          title: row.title,
-          description: row.description,
-          category: row.category,
-          startingPrice: row.startingPrice,
-          currentPrice: row.startingPrice,
-          startTime: new Date(),
-          endTime: new Date(Date.now() + row.durationHours * 60 * 60 * 1000),
-          sellerId: userId,
-          status: AuctionStatus.ACTIVE
-        }
+      const auctionId = newId();
+      const rowNow    = new Date();
+      await db.collection('auctions').doc(auctionId).set({
+        id: auctionId,
+        title:           filterPII(row.title),
+        description:     filterPII(row.description),
+        category:        row.category,
+        startingPrice:   row.startingPrice,
+        currentPrice:    row.startingPrice,
+        minBidIncrement: 10,
+        images:          [],
+        startTime:       rowNow,
+        endTime:         new Date(rowNow.getTime() + row.durationHours * 3_600_000),
+        status:          'ACTIVE',
+        sellerId:        session.user.id,
+        winnerId:        null,
+        isFeatured:      false,
+        wasExtended:     false,
+        commissionRate:  0,
+        commissionEarned: null,
+        deliveryCharge:  0,
+        deliveryStatus:  'PENDING',
+        trackingNumber:  null,
+        bidCount:        0,
+        reservePrice:    null,
+        buyItNowPrice:   null,
+        location:        null,
+        createdAt:       rowNow,
+        updatedAt:       rowNow,
       });
       processed++;
-    } catch (error: unknown) {
-      errors[i + 1] = error instanceof Error ? error.message : "Failed to create auction";
+    } catch (e) {
+      errors.push(`Row ${i + 1}: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
 
-    // Progress update every 10 rows
-    if ((i + 1) % 10 === 0) {
-      await prisma.bulkOperation.update({
-        where: { id: operation.id },
-        data: { processedRows: processed }
-      });
+    // Update progress every 10 rows
+    if (processed % 10 === 0) {
+      await opRef.update({ processedRows: processed, updatedAt: new Date() });
     }
   }
 
-  // 3. Finalize Operation
-  await prisma.bulkOperation.update({
-    where: { id: operation.id },
-    data: {
-      status: Object.keys(errors).length === 0 ? "COMPLETED" : "COMPLETED_WITH_ERRORS",
-      processedRows: processed,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      errors: errors as any
-    }
+  await opRef.update({
+    status: errors.length === rows.length ? 'FAILED' : errors.length > 0 ? 'PARTIAL' : 'COMPLETED',
+    processedRows: processed, errors, updatedAt: new Date(),
   });
 
-  revalidatePath('/seller/inventory');
-  return { success: true, processed, total: rows.length, errorCount: Object.keys(errors).length };
+  return { success: true, processed, errors };
 }
 
 export async function getBulkOperations() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  return prisma.bulkOperation.findMany({
-    where: { sellerId: session.user.id },
-    orderBy: { createdAt: 'desc' },
-    take: 10
-  });
+  const snap = await db.collection('bulkOperations')
+    .where('sellerId', '==', session.user.id)
+    .orderBy('createdAt', 'desc')
+    .limit(10)
+    .get();
+
+  return snap.docs.map(d => ({
+    ...d.data(), id: d.id,
+    createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
+    updatedAt: d.data().updatedAt?.toDate?.() ?? new Date(d.data().updatedAt),
+  }));
 }

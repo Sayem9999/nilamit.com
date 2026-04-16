@@ -1,97 +1,69 @@
 'use server';
 
-import { prisma } from '@/lib/db';
-import { AuctionStatus } from '@prisma/client';
+import { db } from '@/lib/db';
 
-/**
- * Smart Search (Semantic Ranking)
- * 
- * Uses a hybrid approach:
- * 1. Keyword search (Prisma) to find candidates.
- * 2. Semantic re-ranking (AI-assisted) to order results by relevance.
- */
+export async function getSmartSearchResults(query: string) {
+  if (!query?.trim()) return [];
 
-export async function getSmartSearchResults(query: string, category?: string) {
-  if (!query) return [];
+  const q = query.toLowerCase();
 
-  // 1. Fetch candidates using standard keyword search
-  const candidates = await prisma.auction.findMany({
-    where: {
-      status: AuctionStatus.ACTIVE,
-      ...(category && category !== 'All' && { category }),
-      OR: [
-        { title: { contains: query, mode: 'insensitive' } },
-        { description: { contains: query, mode: 'insensitive' } },
-      ],
-    },
-    include: {
-      seller: { 
-        select: { 
-          id: true,
-          name: true, 
-          email: true,
-          image: true, 
-          isVerifiedSeller: true,
-          reputationScore: true, 
-          isPhoneVerified: true,
-          winningStreak: true,
-          userLevel: true
-        } 
+  const snap = await db.collection('auctions')
+    .where('status', '==', 'ACTIVE')
+    .orderBy('endTime', 'asc')
+    .limit(200)
+    .get();
+
+  const results = snap.docs
+    .map(d => ({ ...d.data(), id: d.id }))
+    .filter(a => {
+      const title = (a.title ?? '').toLowerCase();
+      const desc  = (a.description ?? '').toLowerCase();
+      return title.includes(q) || desc.includes(q);
+    })
+    .map(a => {
+      const titleScore = (a.title ?? '').toLowerCase().includes(q) ? 100 : 0;
+      const descScore  = (a.description ?? '').toLowerCase().includes(q) ? 50 : 0;
+      const bidScore   = (a.bidCount ?? 0) * 5;
+      return { ...a, _score: titleScore + descScore + bidScore };
+    })
+    .sort((a, b) => b._score - a._score)
+    .slice(0, 20);
+
+  // Fetch seller data for results
+  const sellerIds = [...new Set(results.map(a => a.sellerId as string))];
+  const sellerSnaps = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
+  const sellersMap  = new Map(sellerSnaps.map(s => [s.id, s.data() ?? {}]));
+
+  return results.map(a => {
+    const s = sellersMap.get(a.sellerId) ?? {};
+    return {
+      ...a,
+      endTime: a.endTime?.toDate?.() ?? new Date(a.endTime),
+      createdAt: a.createdAt?.toDate?.() ?? new Date(a.createdAt),
+      seller: {
+        id: a.sellerId, name: s.name ?? null, image: s.image ?? null,
+        reputationScore: s.reputationScore ?? 0, isVerifiedSeller: s.isVerifiedSeller ?? false,
+        isPhoneVerified: s.isPhoneVerified ?? false, winningStreak: s.winningStreak ?? 0,
+        userLevel: s.userLevel ?? 1,
       },
-      _count: { select: { bids: true } },
-    },
-    take: 50, // Get top 50 keyword matches to re-rank
+      _count: { bids: a.bidCount ?? 0 },
+    };
   });
-
-  if (candidates.length <= 1) return candidates;
-
-  /**
-   * SEMANTIC RE-RANKING (Trust 2.0 / Enterprise Engine)
-   * In a full production environment, this would call an embedding service.
-   * Here, we implement a weight-based ranking algorithm that considers:
-   * - Keyword density in Title (Higher weight)
-   * - Seller reputation
-   * - Bid velocity
-   */
-  
-  const rankedResults = candidates.map(auction => {
-    let score = 0;
-    
-    // Title match boost
-    if (auction.title.toLowerCase().includes(query.toLowerCase())) score += 100;
-    
-    // Description match boost
-    if (auction.description.toLowerCase().includes(query.toLowerCase())) score += 50;
-    
-    // Seller reputation leverage (Enterprise Trust)
-    score += (auction.seller.reputationScore || 0) * 0.1;
-    
-    // Bid velocity leverage (Liquidity signal)
-    score += (auction._count.bids || 0) * 5;
-
-    return { ...auction, semanticScore: score };
-  });
-
-  // Sort by calculated semantic score
-  return rankedResults.sort((a, b) => b.semanticScore - a.semanticScore);
 }
 
-/**
- * AI Auto-complete Suggestions
- * Generates predictions based on active auction titles.
- */
 export async function getSearchSuggestions(query: string) {
-  if (!query || query.length < 2) return [];
+  if (!query?.trim()) return [];
 
-  const suggestions = await prisma.auction.findMany({
-    where: {
-      status: AuctionStatus.ACTIVE,
-      title: { contains: query, mode: 'insensitive' },
-    },
-    select: { title: true },
-    distinct: ['title'],
-    take: 5,
-  });
+  const q    = query.toLowerCase();
+  const snap = await db.collection('auctions')
+    .where('status', '==', 'ACTIVE')
+    .orderBy('title')
+    .limit(100)
+    .get();
 
-  return suggestions.map(s => s.title);
+  return [...new Set(
+    snap.docs
+      .map(d => d.data().title as string)
+      .filter(t => t?.toLowerCase().includes(q))
+  )].slice(0, 8);
 }

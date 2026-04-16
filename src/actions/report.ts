@@ -1,50 +1,35 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
-/**
- * reportAuction — Allow users to flag problematic auctions
- */
-export async function reportAuction(auctionId: string, reason: string, description?: string) {
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
+
+export async function reportAuction(data: { auctionId: string; reason: string; description?: string }) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, error: 'You must be logged in to report an auction.' };
-  }
+  if (!session?.user?.id) return { success: false, error: 'Not authenticated' };
 
-  try {
-    const report = await prisma.auctionReport.create({
-      data: {
-        auctionId,
-        reporterId: session.user.id,
-        reason,
-        description,
-      },
-    });
+  const ref = db.collection('reports').doc();
+  const now = new Date();
+  await ref.set({
+    id: ref.id, auctionId: data.auctionId, reporterId: session.user.id,
+    reason: data.reason, description: data.description ?? null,
+    status: 'PENDING', createdAt: now, updatedAt: now,
+  });
 
-    return { success: true, report };
-  } catch {
-    return { success: false, error: 'Failed to submit report. You may have already reported this auction.' };
-  }
+  return { success: true };
 }
 
-/**
- * getReports — For Admin panel
- */
-export async function getReports(status: 'PENDING' | 'RESOLVED' = 'PENDING') {
+export async function getReports(status?: string) {
   const session = await auth();
-  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
-  
-  if (!session?.user?.id || !adminEmails.includes(session.user.email || '')) {
-    throw new Error('Unauthorized');
-  }
+  if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) return [];
 
-  return prisma.auctionReport.findMany({
-    where: { status },
-    include: {
-      auction: { select: { title: true, id: true } },
-      reporter: { select: { name: true, email: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  let query: FirebaseFirestore.Query = db.collection('reports').orderBy('createdAt', 'desc');
+  if (status) query = query.where('status', '==', status);
+
+  const snap = await query.get();
+  return snap.docs.map(d => ({
+    ...d.data(), id: d.id,
+    createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
+  }));
 }

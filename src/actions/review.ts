@@ -1,139 +1,83 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { filterPII } from '@/lib/pii-filter';
 
-/**
- * Submit a review for an auction
- */
 export async function submitReview({
-  auctionId,
-  toId,
-  rating,
-  comment
-}: {
-  auctionId: string;
-  toId: string;
-  rating: number;
-  comment?: string;
-}) {
+  auctionId, toId, rating, comment,
+}: { auctionId: string; toId: string; rating: number; comment?: string }) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, error: 'Not authenticated' };
-  }
-
+  if (!session?.user?.id) return { success: false, error: 'Not authenticated' };
   const fromId = session.user.id;
+  if (fromId === toId) return { success: false, error: 'You cannot review yourself' };
 
-  if (fromId === toId) {
-    return { success: false, error: 'You cannot review yourself' };
+  // SECURITY FIX: verify caller is seller or winner of the auction
+  const aSnap = await db.collection('auctions').doc(auctionId).get();
+  if (!aSnap.exists) return { success: false, error: 'Auction not found' };
+  const auction = aSnap.data()!;
+  if (auction.status !== 'SOLD') return { success: false, error: 'Auction not yet completed' };
+  if (auction.sellerId !== fromId && auction.winnerId !== fromId) {
+    return { success: false, error: 'You can only review auctions you participated in' };
   }
 
-  try {
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Create the review
-      const review = await tx.review.create({
-        data: {
-          auctionId,
-          fromId,
-          toId,
-          rating,
-          comment: filterPII(comment),
-        }
-      });
+  // Uniqueness check: one review per user per auction
+  const reviewId = `${fromId}_${auctionId}`;
+  const existing = await db.collection('reviews').doc(reviewId).get();
+  if (existing.exists) return { success: false, error: 'You have already reviewed this auction.' };
 
-      // 2. Calculate new reputation score for the recipient
-      const aggregate = await tx.review.aggregate({
-        where: { toId },
-        _avg: { rating: true },
-        _count: { rating: true },
-      });
+  const now    = new Date();
+  const review = {
+    id: reviewId, auctionId, fromId, toId,
+    rating: Math.max(1, Math.min(5, Math.round(rating))),
+    comment: filterPII(comment) || null,
+    createdAt: now,
+  };
 
-      const avgRating = aggregate._avg.rating || 0;
-      const totalReviews = aggregate._count.rating || 0;
+  await db.collection('reviews').doc(reviewId).set(review);
 
-      // Simple score: Average * 10 + bonus for volume
-      const newScore = Math.round((avgRating * 20) + (totalReviews * 2));
+  // Update recipient reputation score
+  const allReviewsSnap = await db.collection('reviews').where('toId', '==', toId).get();
+  const ratings = allReviewsSnap.docs.map(d => d.data().rating as number);
+  const avg     = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+  const newScore = Math.round((avg * 20) + (ratings.length * 2));
+  await db.collection('users').doc(toId).update({ reputationScore: newScore, updatedAt: now });
 
-      // 3. Update the user's score
-      await tx.user.update({
-        where: { id: toId },
-        data: { reputationScore: newScore }
-      });
-
-      return review;
-    });
-
-    revalidatePath(`/profile/${toId}`);
-    revalidatePath(`/auctions/${auctionId}`);
-    
-    return { success: true, review: result };
-  } catch (error: unknown) {
-    const err = error as { code?: string; message?: string };
-    if (err.code === 'P2002') {
-      return { success: false, error: 'You have already reviewed this auction.' };
-    }
-    return { success: false, error: err.message || 'Failed to submit review' };
-  }
+  revalidatePath(`/profile/${toId}`);
+  revalidatePath(`/auctions/${auctionId}`);
+  return { success: true, review };
 }
 
-/**
- * Get reviews received by a user
- */
 export async function getUserReviews(userId: string) {
-  return prisma.review.findMany({
-    where: { toId: userId },
-    include: {
-      from: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-        }
-      },
-      auction: {
-        select: {
-          title: true,
-        }
-      }
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  const snap = await db.collection('reviews')
+    .where('toId', '==', userId)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  return Promise.all(snap.docs.map(async d => {
+    const r = d.data();
+    const [fromSnap, aSnap] = await Promise.all([
+      db.collection('users').doc(r.fromId).get(),
+      db.collection('auctions').doc(r.auctionId).get(),
+    ]);
+    return { ...r, id: d.id,
+      createdAt: r.createdAt?.toDate?.() ?? new Date(r.createdAt),
+      from:    { id: r.fromId, name: fromSnap.data()?.name ?? null, image: fromSnap.data()?.image ?? null },
+      auction: { title: aSnap.data()?.title ?? '' } };
+  }));
 }
 
-/**
- * Check if a user can review a specific auction/user
- */
 export async function canReviewAuction(auctionId: string) {
   const session = await auth();
   if (!session?.user?.id) return false;
 
-  const auction = await prisma.auction.findUnique({
-    where: { id: auctionId },
-    select: {
-      status: true,
-      sellerId: true,
-      winnerId: true,
-    }
-  });
+  const aSnap = await db.collection('auctions').doc(auctionId).get();
+  if (!aSnap.exists) return false;
+  const a = aSnap.data()!;
+  if (a.status !== 'SOLD') return false;
+  if (a.sellerId !== session.user.id && a.winnerId !== session.user.id) return false;
 
-  if (!auction || auction.status !== 'SOLD') return false;
-
-  const isSeller = auction.sellerId === session.user.id;
-  const isWinner = auction.winnerId === session.user.id;
-
-  if (!isSeller && !isWinner) return false;
-
-  // Check if already reviewed
-  const existing = await prisma.review.findUnique({
-    where: {
-      fromId_auctionId: {
-        fromId: session.user.id,
-        auctionId,
-      }
-    }
-  });
-
-  return !existing;
+  const existing = await db.collection('reviews').doc(`${session.user.id}_${auctionId}`).get();
+  return !existing.exists;
 }

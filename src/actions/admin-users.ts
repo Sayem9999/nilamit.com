@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
@@ -8,35 +8,38 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim
 async function requireAdmin() {
   const session = await auth();
   if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
-    return null;
+    throw new Error('Unauthorized: Admin access required.');
   }
   return session;
 }
 
 export async function grantVerifiedSeller(userId: string) {
-  if (!(await requireAdmin())) return { success: false, error: 'Not authorized' };
-  await prisma.user.update({ where: { id: userId }, data: { isVerifiedSeller: true } });
+  await requireAdmin();
+  await db.collection('users').doc(userId).update({
+    isVerifiedSeller: true, updatedAt: new Date(),
+  });
   return { success: true };
 }
 
 export async function revokeVerifiedSeller(userId: string) {
-  if (!(await requireAdmin())) return { success: false, error: 'Not authorized' };
-  await prisma.user.update({ where: { id: userId }, data: { isVerifiedSeller: false } });
+  await requireAdmin();
+  await db.collection('users').doc(userId).update({
+    isVerifiedSeller: false, updatedAt: new Date(),
+  });
   return { success: true };
 }
 
 export async function getAdminUsers() {
-  if (!(await requireAdmin())) return { success: false, users: [] };
+  await requireAdmin();
 
-  const users = await prisma.user.findMany({
-    select: {
-      id: true, name: true, email: true, image: true,
-      isVerifiedSeller: true, isPhoneVerified: true, reputationScore: true, createdAt: true,
-      _count: { select: { bids: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 100,
-  });
+  const snap = await db.collection('users')
+    .orderBy('createdAt', 'desc')
+    .limit(100)
+    .get();
 
-  return { success: true, users };
+  return snap.docs.map(d => ({
+    ...d.data(), id: d.id,
+    createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
+    password: undefined, // never expose hashed password
+  }));
 }

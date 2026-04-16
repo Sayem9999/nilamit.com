@@ -1,178 +1,116 @@
-import { prisma } from '@/lib/db';
-import { sendEmail } from '@/lib/firebase-email';
-import { PrismaClient, AuctionStatus, OrderStatus } from '@prisma/client';
+import 'server-only';
+import { db } from '@/lib/db';
+import { sendAuctionWonEmail } from '@/lib/firebase-email';
+import type { AuctionStatus } from '@/types';
 
-type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
-
-/**
- * Calculates the dynamic success fee (commission) based on final price.
- * Tiers (Approved v1.5):
- * - <= ৳10,000: 2.5% + ৳20
- * - ৳10,001 - ৳150,000: 1.5% + ৳20
- * - > ৳150,000: 1% + ৳20
- */
-export function calculateSuccessFee(finalPrice: number): number {
-  const flatFee = 20;
-  let rate = 0.025; // Default <= 10k
-
-  if (finalPrice > 150000) {
-    rate = 0.01; // > 150k
-  } else if (finalPrice > 10000) {
-    rate = 0.015; // 10k - 150k
-  }
-
-  return (finalPrice * rate) + flatFee;
+// ─── Commission Tiers ────────────────────────────────────────────────────────
+export function calculateSuccessFee(finalPrice: number): { fee: number; rate: number } {
+  if (finalPrice <= 10000)  return { fee: Math.round(finalPrice * 0.025) + 20, rate: 0.025 };
+  if (finalPrice <= 150000) return { fee: Math.round(finalPrice * 0.015) + 20, rate: 0.015 };
+  return { fee: Math.round(finalPrice * 0.01) + 20, rate: 0.01 };
 }
 
+// ─── processAuctionSale ──────────────────────────────────────────────────────
 /**
- * processAuctionSale — Centralized logic for finalizing a sale.
- * Used by both auto-close cron and Buy It Now actions.
+ * Centralised sale logic — must be called inside a Firestore transaction.
+ * Updates auction → SOLD and creates / upserts EscrowTransaction.
  */
 export async function processAuctionSale(
-  tx: TransactionClient, 
-  auction: { id: string, title: string, deliveryCharge: number, reservePrice?: number | null },
-  seller: { id: string, isVerifiedSeller: boolean },
-  winner: { id: string, email: string | null, name: string | null },
-  finalPrice: number
+  transaction: FirebaseFirestore.Transaction,
+  auction: {
+    id: string; title: string; sellerId: string;
+    deliveryCharge?: number | null;
+    reservePrice?: number | null;
+  },
+  seller: { id: string; isVerifiedSeller: boolean },
+  winner: { id: string; email: string | null; name: string | null },
+  finalPrice: number,
 ) {
-  const meetsReserve = !auction.reservePrice || finalPrice >= auction.reservePrice;
-
-  if (meetsReserve) {
-    // 1. Dynamic Success Fee Calculation
-    const commissionEarned = calculateSuccessFee(finalPrice);
-
-    // 2. Update Auction to SOLD
-    await tx.auction.update({
-      where: { id: auction.id },
-      data: {
-        status: AuctionStatus.SOLD,
-        winnerId: winner.id,
-        commissionEarned,
-        deliveryStatus: OrderStatus.PENDING,
-        currentPrice: finalPrice, // Ensure final price is set correctly (esp for BIN)
-      },
-    });
-
-    // 3. Handle Escrow creation with Trust-Tiered Advance Logic
-    const isVerified = seller.isVerifiedSeller;
-    const advanceAmount = isVerified ? finalPrice : (commissionEarned + (auction.deliveryCharge || 0));
-
-    await tx.escrowTransaction.create({
-      data: {
-        auctionId: auction.id,
-        buyerId: winner.id,
-        amount: advanceAmount,
-        status: isVerified ? 'HELD' : 'PENDING',
-      }
-    });
-
-    // 4. Notify Winner via Firebase email queue (non-fatal)
-    if (winner.email) {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? 'https://nilamit.app';
-      sendEmail({
-        to: winner.email,
-        subject: `Congratulations! You won: ${auction.title}`,
-        html: `
-          <h3>You won ${auction.title}!</h3>
-          <p>Final Price: ৳${finalPrice.toLocaleString()}</p>
-          ${isVerified
-            ? `<p>Seller is <b>Verified</b>. Contact information has been released in your dashboard.</p>`
-            : `<p>Please pay the <b>Advance of ৳${advanceAmount.toLocaleString()}</b> (Success Fee + Delivery) to unlock the seller&apos;s contact information.</p>`
-          }
-          <p>Visit your <a href="${baseUrl}/dashboard?tab=escrow">Dashboard</a> to proceed.</p>
-        `,
-      }).catch(err => console.error('[auction-logic] Winner email failed:', err));
-    }
-    return true;
-  } else {
-    // Reserve not met
-    await tx.auction.update({
-      where: { id: auction.id },
-      data: { status: AuctionStatus.EXPIRED },
-    });
-    return false;
+  if (auction.reservePrice && finalPrice < auction.reservePrice) {
+    throw new Error('Reserve price not met.');
   }
-}
 
-/**
- * Closes a single auction if it has ended.
- * Returns true if the auction was processed (sold/expired).
- */
-export async function closeAuctionIfEnded(auctionId: string) {
-  const auction = await prisma.auction.findUnique({
-    where: { id: auctionId },
-    include: {
-      bids: {
-        orderBy: { amount: 'desc' },
-        take: 1,
-        include: { bidder: { select: { id: true, email: true, name: true } } },
-      },
-      seller: { select: { id: true, email: true, name: true, isVerifiedSeller: true } },
-    },
-  });
-
-  if (!auction || auction.status !== AuctionStatus.ACTIVE) return false;
-
+  const { fee, rate } = calculateSuccessFee(finalPrice);
   const now = new Date();
-  if (auction.endTime > now) return false;
 
+  const auctionRef = db.collection('auctions').doc(auction.id);
+  transaction.update(auctionRef, {
+    status:          'SOLD' as AuctionStatus,
+    winnerId:        winner.id,
+    commissionRate:  rate,
+    commissionEarned: fee,
+    updatedAt:       now,
+  });
+
+  // Escrow doc ID = auctionId for idempotent upsert
+  const deliveryCharge = auction.deliveryCharge ?? 0;
+  const escrowAmount   = seller.isVerifiedSeller ? finalPrice : fee + deliveryCharge;
+  const escrowRef      = db.collection('escrowTransactions').doc(auction.id);
+  transaction.set(escrowRef, {
+    id:               auction.id,
+    auctionId:        auction.id,
+    buyerId:          winner.id,
+    amount:           escrowAmount,
+    status:           'PENDING',
+    paymentMethod:    null,
+    providerRef:      null,
+    verificationType: null,
+    createdAt:        now,
+    updatedAt:        now,
+  }, { merge: true });
+
+  // Non-blocking winner email
+  sendAuctionWonEmail(winner.email, winner.name, auction.title, finalPrice, auction.id).catch(console.error);
+}
+
+// ─── closeAuctionIfEnded ─────────────────────────────────────────────────────
+export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
   try {
-    await prisma.$transaction(async (tx) => {
-      // Re-fetch with lock
-      const currentAuction = await tx.auction.findUnique({
-        where: { id: auctionId },
-        include: {
-          bids: {
-            orderBy: { amount: 'desc' },
-            take: 1,
-            include: { bidder: { select: { id: true, email: true, name: true } } },
-          },
-          seller: { select: { id: true, isVerifiedSeller: true } },
-        }
-      });
+    await db.runTransaction(async (tx) => {
+      const aRef  = db.collection('auctions').doc(auctionId);
+      const aSnap = await tx.get(aRef);
+      if (!aSnap.exists) return;
+      const a   = aSnap.data()!;
+      if (a.status !== 'ACTIVE') return;
 
-      if (!currentAuction || currentAuction.status !== AuctionStatus.ACTIVE) return;
+      const now     = new Date();
+      const endTime = a.endTime?.toDate ? a.endTime.toDate() : new Date(a.endTime);
+      if (now < endTime) return;
 
-      const highestBid = currentAuction.bids[0];
+      const bidsSnap = await db.collection('bids')
+        .where('auctionId', '==', auctionId)
+        .orderBy('amount', 'desc')
+        .limit(1)
+        .get();
 
-      if (highestBid) {
-        await processAuctionSale(
-          tx,
-          currentAuction,
-          currentAuction.seller,
-          highestBid.bidder,
-          highestBid.amount
-        );
-      } else {
-        await tx.auction.update({
-          where: { id: currentAuction.id },
-          data: { status: AuctionStatus.EXPIRED },
-        });
+      if (bidsSnap.empty) {
+        tx.update(aRef, { status: 'EXPIRED', updatedAt: now });
+        return;
       }
-    });
 
-    return true;
-  } catch (error) {
-    console.error(`Failed to close auction ${auctionId}:`, error);
-    return false;
+      const topBid     = bidsSnap.docs[0].data();
+      const sellerSnap = await tx.get(db.collection('users').doc(a.sellerId));
+      const sellerData = sellerSnap.data() ?? {};
+
+      await processAuctionSale(
+        tx,
+        { id: auctionId, title: a.title, sellerId: a.sellerId,
+          deliveryCharge: a.deliveryCharge, reservePrice: a.reservePrice },
+        { id: a.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
+        { id: topBid.bidderId, email: null, name: null },
+        topBid.amount,
+      );
+    });
+  } catch (e) {
+    console.error('[auction-logic] closeAuctionIfEnded failed:', auctionId, e);
   }
 }
 
-/**
- * Closes all auctions that have ended across the system.
- */
-export async function closeAllEndedAuctions() {
-  const auctions = await prisma.auction.findMany({
-    where: {
-      status: AuctionStatus.ACTIVE,
-      endTime: { lte: new Date() },
-    },
-    select: { id: true },
-  });
-
-  if (auctions.length === 0) return;
-
-  // Process in parallel to handle scale, limited by internal Promise.all 
-  // (could use p-limit for very high volume, but for now this is a huge win)
-  await Promise.all(auctions.map(a => closeAuctionIfEnded(a.id)));
+// ─── closeAllEndedAuctions ───────────────────────────────────────────────────
+export async function closeAllEndedAuctions(): Promise<void> {
+  const snap = await db.collection('auctions')
+    .where('status', '==', 'ACTIVE')
+    .where('endTime', '<=', new Date())
+    .get();
+  await Promise.all(snap.docs.map(d => closeAuctionIfEnded(d.id)));
 }

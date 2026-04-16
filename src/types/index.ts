@@ -1,72 +1,193 @@
-import type { Auction, Bid, User, AuctionStatus, OrderStatus } from '@prisma/client';
-export type { AuctionStatus, OrderStatus };
+// ─── Domain Enums (previously from @prisma/client) ────────────────────────────
+export const AuctionStatus = {
+  DRAFT:             'DRAFT',
+  ACTIVE:            'ACTIVE',
+  SOLD:              'SOLD',
+  EXPIRED:           'EXPIRED',
+  CANCELLED:         'CANCELLED',
+  AWAITING_PAYMENT:  'AWAITING_PAYMENT',
+} as const;
+export type AuctionStatus = typeof AuctionStatus[keyof typeof AuctionStatus];
 
-// ─── Standardized Server Action Result ────────────────────────
-/**
- * All server actions MUST return ActionResult<T>.
- * This creates a predictable contract for UI error handling.
- *
- * Usage:
- *   export async function myAction(): Promise<ActionResult<{ id: string }>> {
- *     try {
- *       return { success: true, data: { id: '...' } };
- *     } catch {
- *       return actionError('Something went wrong');
- *     }
- *   }
- *
- * Client-side:
- *   const result = await myAction();
- *   if (!result.success) { showError(result.error); return; }
- *   console.log(result.data.id);
- */
+export const OrderStatus = {
+  PENDING:   'PENDING',
+  SHIPPED:   'SHIPPED',
+  DELIVERED: 'DELIVERED',
+  RECEIVED:  'RECEIVED',
+} as const;
+export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
+
+export const EscrowStatus = {
+  PENDING:      'PENDING',
+  HELD:         'HELD',
+  RELEASED:     'RELEASED',
+  REFUNDED:     'REFUNDED',
+  DISPUTED:     'DISPUTED',
+  FEE_REFUNDED: 'FEE_REFUNDED',
+} as const;
+export type EscrowStatus = typeof EscrowStatus[keyof typeof EscrowStatus];
+
+export const DisputeStatus = {
+  OPEN:             'OPEN',
+  RESOLVED_SELLER:  'RESOLVED_SELLER',
+  RESOLVED_BUYER:   'RESOLVED_BUYER',
+} as const;
+export type DisputeStatus = typeof DisputeStatus[keyof typeof DisputeStatus];
+
+export const ReportStatus = {
+  PENDING:   'PENDING',
+  REVIEWED:  'REVIEWED',
+  RESOLVED:  'RESOLVED',
+  DISMISSED: 'DISMISSED',
+} as const;
+export type ReportStatus = typeof ReportStatus[keyof typeof ReportStatus];
+
+export const AlertType = {
+  PRICE_DROP:               'PRICE_DROP',
+  ENDING_SOON:              'ENDING_SOON',
+  OUTBID:                   'OUTBID',
+  NEW_AUCTION_IN_CATEGORY:  'NEW_AUCTION_IN_CATEGORY',
+  TARGET_REACHED:           'TARGET_REACHED',
+} as const;
+export type AlertType = typeof AlertType[keyof typeof AlertType];
+
+// ─── Domain Model Interfaces ───────────────────────────────────────────────────
+export interface User {
+  id: string;
+  name: string | null;
+  email: string | null;
+  emailVerified: Date | null;
+  image: string | null;
+  password?: string | null;
+  phone?: string | null;
+  isPhoneVerified: boolean;
+  isVerifiedSeller: boolean;
+  reputationScore: number;
+  googleId?: string | null;
+  bkashNumber?: string | null;
+  nagadNumber?: string | null;
+  winningStreak: number;
+  userLevel: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Auction {
+  id: string;
+  title: string;
+  description: string;
+  images: string[];
+  category: string;
+  location?: string | null;
+  startingPrice: number;
+  currentPrice: number;
+  reservePrice?: number | null;
+  buyItNowPrice?: number | null;
+  minBidIncrement: number;
+  startTime: Date;
+  endTime: Date;
+  status: AuctionStatus;
+  isFeatured: boolean;
+  wasExtended: boolean;
+  commissionRate: number;
+  commissionEarned?: number | null;
+  deliveryCharge: number;
+  deliveryStatus: OrderStatus;
+  trackingNumber?: string | null;
+  sellerId: string;
+  winnerId?: string | null;
+  bidCount?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Bid {
+  id: string;
+  amount: number;
+  auctionId: string;
+  bidderId: string;
+  createdAt: Date;
+}
+
+export interface EscrowTransaction {
+  id: string;
+  auctionId: string;
+  buyerId: string;
+  amount: number;
+  status: EscrowStatus;
+  paymentMethod?: string | null;
+  providerRef?: string | null;
+  automationToken?: string | null;
+  verificationType?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Dispute {
+  id: string;
+  transactionId: string;
+  openerId: string;
+  reason: string;
+  status: DisputeStatus;
+  resolution?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Conversation {
+  id: string;
+  auctionId: string;
+  buyerId: string;
+  sellerId: string;
+  lastMessageAt: Date;
+  createdAt: Date;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  imageUrl?: string | null;
+  isSystemMessage: boolean;
+  isRead: boolean;
+  createdAt: Date;
+}
+
+export interface Review {
+  id: string;
+  auctionId: string;
+  fromId: string;
+  toId: string;
+  rating: number;
+  comment?: string | null;
+  createdAt: Date;
+}
+
+// ─── Standardized Server Action Result ────────────────────────────────────────
 export type ActionResult<T = void> =
   | { success: true;  data: T }
   | { success: false; error: string; code?: string };
 
-/** Helper: create a success result */
 export function actionOk<T>(data: T): ActionResult<T> {
   return { success: true, data };
 }
-
-/** Helper: create a typed error result */
-export function actionError(
-  error: string,
-  code?: string
-): ActionResult<never> {
+export function actionError(error: string, code?: string): ActionResult<never> {
   return { success: false, error, code };
 }
 
-// ─── Known error codes ────────────────────────────────────────
-export const ERROR = {
-  // Auth
-  NOT_AUTHENTICATED:          'NOT_AUTHENTICATED',
-  PHONE_NOT_VERIFIED:         'PHONE_NOT_VERIFIED',
-  FORBIDDEN:                  'FORBIDDEN',
-  // Input
-  VALIDATION_ERROR:           'VALIDATION_ERROR',
-  NOT_FOUND:                  'NOT_FOUND',
-  // Auction
-  AUCTION_NOT_ACTIVE:         'AUCTION_NOT_ACTIVE',
-  BID_TOO_LOW:                'BID_TOO_LOW',
-  OWN_AUCTION:                'OWN_AUCTION',
-  BID_DEPOSIT_REQUIRED:       'BID_DEPOSIT_REQUIRED',
-  // Server
-  INTERNAL_ERROR:             'INTERNAL_ERROR',
-} as const;
-
-export type ErrorCode = typeof ERROR[keyof typeof ERROR];
+// ─── Composite Types ───────────────────────────────────────────────────────────
+export type SellerPublic = Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified' | 'winningStreak' | 'userLevel'> & { phone?: string | null };
 
 export type AuctionWithSeller = Auction & {
-  seller: Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified' | 'winningStreak' | 'userLevel'>;
-  _count?: { bids: number };
-  location?: string | null;
+  seller: SellerPublic;
   watchlist?: { userId: string }[];
 };
 
 export type AuctionWithBids = AuctionWithSeller & {
   bids: (Bid & { bidder: Pick<User, 'id' | 'name' | 'image'> })[];
   winner?: Pick<User, 'id' | 'name' | 'image'> | null;
+  escrowTransaction?: (EscrowTransaction & { dispute?: Dispute | null }) | null;
 };
 
 export type BidWithAuction = Bid & {
@@ -106,29 +227,30 @@ export interface AuctionFilters {
   limit?: number;
 }
 
+// ─── Static Data ────────────────────────────────────────────────────────────────
 export const LOCATIONS = [
-  { id: 'mirpur', label: 'Mirpur' },
-  { id: 'banani', label: 'Banani' },
-  { id: 'dhanmondi', label: 'Dhanmondi' },
-  { id: 'gulshan', label: 'Gulshan' },
-  { id: 'uttara', label: 'Uttara' },
-  { id: 'motijheel', label: 'Motijheel' },
-  { id: 'mohammadpur', label: 'Mohammadpur' },
-  { id: 'badda', label: 'Badda' },
-  { id: 'khilgaon', label: 'Khilgaon' },
-  { id: 'farmgate', label: 'Farmgate' },
+  { id: 'mirpur',       label: 'Mirpur' },
+  { id: 'banani',       label: 'Banani' },
+  { id: 'dhanmondi',    label: 'Dhanmondi' },
+  { id: 'gulshan',      label: 'Gulshan' },
+  { id: 'uttara',       label: 'Uttara' },
+  { id: 'motijheel',    label: 'Motijheel' },
+  { id: 'mohammadpur',  label: 'Mohammadpur' },
+  { id: 'badda',        label: 'Badda' },
+  { id: 'khilgaon',     label: 'Khilgaon' },
+  { id: 'farmgate',     label: 'Farmgate' },
 ] as const;
 
 export const CATEGORIES = [
-  { slug: 'mobile-phones', label: 'Mobile Phones', icon: '📱' },
-  { slug: 'electronics', label: 'Electronics', icon: '💻' },
-  { slug: 'vehicles', label: 'Vehicles', icon: '🚗' },
-  { slug: 'fashion', label: 'Fashion', icon: '👗' },
-  { slug: 'home-garden', label: 'Home & Garden', icon: '🏡' },
-  { slug: 'sports', label: 'Sports', icon: '⚽' },
-  { slug: 'books', label: 'Books', icon: '📚' },
-  { slug: 'collectibles', label: 'Collectibles', icon: '🎨' },
-  { slug: 'other', label: 'Other', icon: '📦' },
+  { slug: 'mobile-phones',  label: 'Mobile Phones',  icon: '📱' },
+  { slug: 'electronics',    label: 'Electronics',    icon: '💻' },
+  { slug: 'vehicles',       label: 'Vehicles',       icon: '🚗' },
+  { slug: 'fashion',        label: 'Fashion',        icon: '👗' },
+  { slug: 'home-garden',    label: 'Home & Garden',  icon: '🏡' },
+  { slug: 'sports',         label: 'Sports',         icon: '⚽' },
+  { slug: 'books',          label: 'Books',          icon: '📚' },
+  { slug: 'collectibles',   label: 'Collectibles',   icon: '🎨' },
+  { slug: 'other',          label: 'Other',          icon: '📦' },
 ] as const;
 
 export type CategorySlug = typeof CATEGORIES[number]['slug'];

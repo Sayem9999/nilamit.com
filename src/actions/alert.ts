@@ -1,110 +1,58 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { AlertType } from '@prisma/client';
 
-export async function createAlert({
-  auctionId,
-  type,
-  thresholdPrice
-}: {
-  auctionId: string;
-  type: AlertType;
-  thresholdPrice?: number;
+export async function createAlert(data: {
+  auctionId?: string; type: string; thresholdPrice?: number;
 }) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: 'Unauthorized' };
-    }
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
-    const userId = session.user.id;
+  const docId = `${session.user.id}_${data.auctionId ?? data.type}`;
+  const now   = new Date();
+  await db.collection('alerts').doc(docId).set({
+    id: docId, userId: session.user.id,
+    auctionId: data.auctionId ?? null,
+    type: data.type,
+    thresholdPrice: data.thresholdPrice ?? null,
+    isActive: true, createdAt: now, updatedAt: now,
+  }, { merge: true });
 
-    // Check if alert already exists for this type/auction
-    const existing = await prisma.alert.findFirst({
-      where: { userId, auctionId, type, isActive: true }
-    });
-
-    if (existing) {
-      // Update existing
-      const updated = await prisma.alert.update({
-        where: { id: existing.id },
-        data: { thresholdPrice }
-      });
-      revalidatePath(`/auction/${auctionId}`);
-      return { success: true, alert: updated };
-    }
-
-    const newAlert = await prisma.alert.create({
-      data: {
-        userId,
-        auctionId,
-        type,
-        thresholdPrice,
-      },
-    });
-
-    revalidatePath(`/auction/${auctionId}`);
-    return { success: true, alert: newAlert };
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('Create alert error:', err);
-    return { success: false, error: 'Failed to create alert: ' + err.message };
-  }
+  return { success: true };
 }
 
 export async function getUserAlerts() {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: 'Unauthorized', data: [] };
-    }
+  const session = await auth();
+  if (!session?.user?.id) return [];
 
-    const alerts = await prisma.alert.findMany({
-      where: { userId: session.user.id, isActive: true },
-      include: {
-        auction: {
-          select: { title: true, currentPrice: true, endTime: true, id: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+  const snap = await db.collection('alerts')
+    .where('userId', '==', session.user.id)
+    .where('isActive', '==', true)
+    .orderBy('createdAt', 'desc')
+    .get();
 
-    return { success: true, data: alerts };
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('Get user alerts error:', err);
-    return { success: false, error: 'Failed to retrieve alerts: ' + err.message, data: [] };
-  }
+  return Promise.all(snap.docs.map(async d => {
+    const a      = d.data();
+    const aSnap  = a.auctionId ? await db.collection('auctions').doc(a.auctionId).get() : null;
+    return {
+      ...a, id: d.id,
+      createdAt: a.createdAt?.toDate?.() ?? new Date(a.createdAt),
+      auction: aSnap?.exists ? { id: aSnap.id, title: aSnap.data()?.title, status: aSnap.data()?.status } : null,
+    };
+  }));
 }
 
 export async function deleteAlert(alertId: string) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: 'Unauthorized' };
-    }
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
-    // Verify ownership
-    const alert = await prisma.alert.findUnique({ where: { id: alertId } });
-    if (!alert || alert.userId !== session.user.id) {
-      return { success: false, error: 'Alert not found or unauthorized' };
-    }
+  const snap = await db.collection('alerts').doc(alertId).get();
+  if (!snap.exists) return { success: false, error: 'Alert not found' };
+  if (snap.data()!.userId !== session.user.id) return { success: false, error: 'Unauthorized' };
 
-    await prisma.alert.delete({
-      where: { id: alertId },
-    });
-
-    if (alert.auctionId) {
-      revalidatePath(`/auction/${alert.auctionId}`);
-    }
-    revalidatePath('/dashboard');
-    return { success: true };
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('Delete alert error:', err);
-    return { success: false, error: 'Failed to delete alert: ' + err.message };
-  }
+  await db.collection('alerts').doc(alertId).delete();
+  revalidatePath('/dashboard');
+  return { success: true };
 }

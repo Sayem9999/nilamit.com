@@ -1,9 +1,8 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { Prisma } from '@prisma/client';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
@@ -12,89 +11,62 @@ async function requireAdmin() {
   if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
     throw new Error('Unauthorized: Admin access required.');
   }
-}
-
-function isDatabaseUnavailable(error: unknown) {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    (error.code === 'P1001' || error.code === 'P2021' || error.code === 'P2022')
-  );
+  return session;
 }
 
 export async function getSystemConfig() {
-  const fallbackConfig = {
-    id: 'default',
-    heroTitle: null,
-    heroSubtitle: null,
-    heroImage: null,
-    announcement: null,
-    showAnnouncement: false,
-    treasuryBkash: "017XXXXXXXX",
-    treasuryNagad: "018XXXXXXXX",
-    updatedAt: new Date(),
-  };
-
   try {
-    const config = await prisma.systemConfig.findUnique({ where: { id: 'default' } });
-    return config ?? fallbackConfig;
-  } catch (error) {
-    if (isDatabaseUnavailable(error)) {
-      console.warn('[admin-content] DB unavailable while loading system config, using safety fallback.');
-      return fallbackConfig;
+    const snap = await db.collection('systemConfig').doc('default').get();
+    if (!snap.exists) {
+      return {
+        id: 'default', heroTitle: '', heroSubtitle: '', heroImage: null,
+        announcement: null, showAnnouncement: false,
+        treasuryBkash: null, treasuryNagad: null,
+      };
     }
-
-    throw error;
+    return { ...snap.data(), id: snap.id };
+  } catch (e) {
+    console.error('[admin-content] getSystemConfig failed:', e);
+    return {
+      id: 'default', heroTitle: '', heroSubtitle: '', heroImage: null,
+      announcement: null, showAnnouncement: false,
+      treasuryBkash: null, treasuryNagad: null,
+    };
   }
 }
 
 export async function updateSystemConfig(data: {
-  heroTitle?: string;
-  heroSubtitle?: string;
-  heroImage?: string | null;
-  announcement?: string | null;
-  showAnnouncement?: boolean;
-  treasuryBkash?: string | null;
-  treasuryNagad?: string | null;
+  heroTitle?: string; heroSubtitle?: string; heroImage?: string;
+  announcement?: string; showAnnouncement?: boolean;
+  treasuryBkash?: string; treasuryNagad?: string;
 }) {
   await requireAdmin();
-
-  const config = await prisma.systemConfig.upsert({
-    where: { id: 'default' },
-    update: data,
-    create: { id: 'default', ...data },
-  });
-
-  revalidatePath('/'); // Refresh homepage
-  return { success: true, config };
+  await db.collection('systemConfig').doc('default').set(
+    { ...data, id: 'default', updatedAt: new Date() }, { merge: true }
+  );
+  revalidatePath('/');
+  revalidatePath('/admin');
+  return { success: true };
 }
 
-export async function toggleFeaturedAuction(auctionId: string) {
+export async function toggleFeaturedAuction(auctionId: string, featured: boolean) {
   await requireAdmin();
-
-  const auction = await prisma.auction.findUnique({ where: { id: auctionId } });
-  if (!auction) throw new Error('Auction not found');
-
-  const updated = await prisma.auction.update({
-    where: { id: auctionId },
-    data: { isFeatured: !auction.isFeatured },
+  await db.collection('auctions').doc(auctionId).update({
+    isFeatured: featured, updatedAt: new Date(),
   });
-
   revalidatePath('/');
-  return { success: true, isFeatured: updated.isFeatured };
+  return { success: true };
 }
 
 export async function getFeaturedAuctions() {
-  try {
-    return await prisma.auction.findMany({
-      where: { isFeatured: true },
-      select: { id: true, title: true, currentPrice: true, images: true, status: true },
-    });
-  } catch (error) {
-    if (isDatabaseUnavailable(error)) {
-      console.warn('[admin-content] DB unavailable while loading featured auctions, returning empty list.');
-      return [];
-    }
+  const snap = await db.collection('auctions')
+    .where('isFeatured', '==', true)
+    .where('status', '==', 'ACTIVE')
+    .orderBy('endTime', 'asc')
+    .get();
 
-    throw error;
-  }
+  return snap.docs.map(d => ({
+    ...d.data(), id: d.id,
+    endTime: d.data().endTime?.toDate?.() ?? new Date(d.data().endTime),
+  }));
 }

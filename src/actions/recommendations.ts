@@ -1,137 +1,82 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { AuctionStatus } from '@prisma/client';
-
-/**
- * Behavioral Tracking & Recommendation Engine
- * 
- * Implements a weighted affinity system based on:
- * - Category views (Medium weight)
- * - Bid history (High weight)
- * - Search history (Low weight)
- */
 
 export async function trackCategoryView(category: string) {
   const session = await auth();
-  if (!session?.user?.id) return;
+  if (!session?.user?.id || !category) return;
 
-  const userId = session.user.id;
+  const prefRef  = db.collection('userPreferences').doc(session.user.id);
+  const prefSnap = await prefRef.get();
+  const prefs    = prefSnap.data() ?? {};
 
-  try {
-    const preferences = await prisma.userPreference.upsert({
-      where: { userId },
-      update: {
-        viewedCategories: {
-          push: category
-        },
-        affinityScore: {
-          upsert: {
-            update: { [category]: { increment: 1 } },
-            set: { [category]: 1 }
-          }
-        }
-      },
-      create: {
-        userId,
-        viewedCategories: [category],
-        affinityScore: { [category]: 1 }
-      }
-    });
+  const viewed: string[] = prefs.viewedCategories ?? [];
+  viewed.unshift(category);
+  const trimmed = viewed.slice(0, 50);
 
-    // Cleanup logic: Keep only last 50 viewed categories to prevent array bloat
-    if (preferences.viewedCategories.length > 50) {
-      await prisma.userPreference.update({
-        where: { userId },
-        data: {
-          viewedCategories: preferences.viewedCategories.slice(-50)
-        }
-      });
-    }
-  } catch (error) {
-    console.error("Failed to track category view:", error);
-  }
+  // Affinity score — count appearances
+  const affinity: Record<string, number> = prefs.affinityScore ?? {};
+  affinity[category] = (affinity[category] ?? 0) + 1;
+
+  await prefRef.set({
+    id: session.user.id, userId: session.user.id,
+    viewedCategories: trimmed, affinityScore: affinity,
+    updatedAt: new Date(),
+  }, { merge: true });
 }
 
-export async function getRecommendations(limit: number = 6) {
+export async function getRecommendations(limit = 8) {
   const session = await auth();
-  if (!session?.user?.id) {
-    // Fallback to featured/ending soon for guests
-    return prisma.auction.findMany({
-      where: { status: AuctionStatus.ACTIVE },
-      orderBy: { endTime: 'asc' },
-      take: limit,
-      include: {
-        seller: { select: { name: true, image: true, reputationScore: true } },
-        _count: { select: { bids: true } }
-      }
-    });
-  }
+  if (!session?.user?.id) return getGenericRecommendations(limit);
 
-  const userId = session.user.id;
+  const prefSnap = await db.collection('userPreferences').doc(session.user.id).get();
+  const prefs    = prefSnap.data() ?? {};
+  const affinity: Record<string, number> = prefs.affinityScore ?? {};
 
-  // 1. Get user preferences
-  const prefs = await prisma.userPreference.findUnique({
-    where: { userId }
-  });
-
-  if (!prefs || !prefs.viewedCategories.length) {
-    // Fallback if no history
-    return prisma.auction.findMany({
-      where: { status: AuctionStatus.ACTIVE },
-      orderBy: { currentPrice: 'desc' }, // Show high value for now
-      take: limit,
-      include: {
-        seller: { select: { name: true, image: true, reputationScore: true } },
-        _count: { select: { bids: true } }
-      }
-    });
-  }
-
-  // 2. Identify top categories based on frequency
-  const catFrequency: Record<string, number> = {};
-  prefs.viewedCategories.forEach(cat => {
-    catFrequency[cat] = (catFrequency[cat] || 0) + 1;
-  });
-
-  const topCategories = Object.entries(catFrequency)
+  const topCategories = Object.entries(affinity)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
-    .map(entry => entry[0]);
+    .map(([cat]) => cat);
 
-  // 3. Fetch auctions from top categories
-  const recommendations = await prisma.auction.findMany({
-    where: {
-      status: AuctionStatus.ACTIVE,
-      category: { in: topCategories },
-      sellerId: { not: userId } // Don't recommend own auctions
-    },
-    orderBy: { endTime: 'asc' },
-    take: limit,
-    include: {
-      seller: { select: { name: true, image: true, reputationScore: true, isVerifiedSeller: true } },
-      _count: { select: { bids: true } }
-    }
-  });
+  if (topCategories.length === 0) return getGenericRecommendations(limit);
 
-  // 4. Fill with general if not enough
-  if (recommendations.length < limit) {
-    const additional = await prisma.auction.findMany({
-      where: {
-        status: AuctionStatus.ACTIVE,
-        id: { notIn: recommendations.map(r => r.id) },
-        sellerId: { not: userId }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit - recommendations.length,
-      include: {
-        seller: { select: { name: true, image: true, reputationScore: true, isVerifiedSeller: true } },
-        _count: { select: { bids: true } }
-      }
-    });
-    return [...recommendations, ...additional];
-  }
+  const snaps = await Promise.all(
+    topCategories.map(cat =>
+      db.collection('auctions')
+        .where('status', '==', 'ACTIVE')
+        .where('category', '==', cat)
+        .orderBy('endTime', 'asc')
+        .limit(4)
+        .get()
+    )
+  );
 
-  return recommendations;
+  const seen = new Set<string>();
+  const auctions = snaps.flatMap(s =>
+    s.docs.map(d => ({ ...d.data(), id: d.id })).filter(a => {
+      if (seen.has(a.id)) return false;
+      seen.add(a.id);
+      return true;
+    })
+  );
+
+  if (auctions.length >= limit) return auctions.slice(0, limit);
+
+  const backfill = await getGenericRecommendations(limit - auctions.length, [...seen]);
+  return [...auctions, ...backfill].slice(0, limit);
+}
+
+async function getGenericRecommendations(limit: number, excludeIds: string[] = []) {
+  const snap = await db.collection('auctions')
+    .where('status', '==', 'ACTIVE')
+    .orderBy('endTime', 'asc')
+    .limit(limit + excludeIds.length)
+    .get();
+
+  return snap.docs
+    .filter(d => !excludeIds.includes(d.id))
+    .slice(0, limit)
+    .map(d => ({ ...d.data(), id: d.id,
+      endTime: d.data().endTime?.toDate?.() ?? new Date(d.data().endTime) }));
 }

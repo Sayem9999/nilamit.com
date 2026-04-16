@@ -1,5 +1,5 @@
 // Prisma Schema for nilamit.com — C2C Auction Marketplace (Bangladesh)
-// Database: PostgreSQL via Supabase
+// Database: PostgreSQL via Google Cloud SQL
 
 generator client {
   provider      = "prisma-client-js"
