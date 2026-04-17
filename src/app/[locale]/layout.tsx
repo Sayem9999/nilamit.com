@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers/Providers";
 import "../globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-heading",
@@ -87,6 +88,7 @@ export default async function RootLayout({
             <Navbar />
             <main className="min-h-screen bg-gray-50/50">{children}</main>
             <Footer />
+            <MobileBottomNav />
           </Providers>
         </NextIntlClientProvider>
         <script

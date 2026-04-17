@@ -18,7 +18,14 @@
     "safety": "Safety",
     "contact": "Contact",
     "privacy": "Privacy",
-    "terms": "Terms"
+    "terms": "Terms",
+    "home": "Home",
+    "search": "Search",
+    "watchlist": "Saved",
+    "register": "Join",
+    "notifications": "Notifications",
+    "notificationsEmpty": "You're all caught up",
+    "clearAll": "Clear all"
   },
   "Auth": {
     "verificationRequired": "Verification Required",

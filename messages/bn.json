@@ -18,7 +18,14 @@
     "safety": "নিরাপত্তা",
     "contact": "যোগাযোগ",
     "privacy": "প্রাইভেসি",
-    "terms": "শর্তাবলী"
+    "terms": "শর্তাবলী",
+    "home": "হোম",
+    "search": "খুঁজুন",
+    "watchlist": "সংরক্ষিত",
+    "register": "যোগ দিন",
+    "notifications": "বিজ্ঞপ্তি",
+    "notificationsEmpty": "সব আপডেট দেখা হয়েছে",
+    "clearAll": "সব মুছুন"
   },
   "Auth": {
     "verificationRequired": "ভেরিফিকেশন আবশ্যক",

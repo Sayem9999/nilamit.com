@@ -2,7 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { SettingsProvider } from "@/context/SettingsContext";
-import { NotificationProvider } from "./NotificationProvider";
+import { NotificationsProvider } from "@/context/NotificationsContext";
 
 import { Toaster } from "react-hot-toast";
 
@@ -10,10 +10,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <SettingsProvider>
-        <NotificationProvider>
+        <NotificationsProvider>
           {children}
           <Toaster position="bottom-center" />
-        </NotificationProvider>
+        </NotificationsProvider>
       </SettingsProvider>
     </SessionProvider>
   );

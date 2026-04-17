@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
+import { NotificationBell } from "./NotificationBell";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -139,6 +140,7 @@ export function Navbar() {
                   >
                     <LayoutDashboard className="w-4 h-4" /> {t("dashboard")}
                   </Link>
+                  <NotificationBell />
                   <div className="relative group">
                     <button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors">
                       {session.user?.image ? (
