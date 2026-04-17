@@ -9,7 +9,6 @@
  */
 
 const REQUIRED: Record<string, string> = {
-  DATABASE_URL: 'PostgreSQL connection string (Cloud SQL or Supabase)',
   AUTH_SECRET:  'Auth.js secret — generate with: openssl rand -base64 32',
   ADMIN_EMAILS: 'Comma-separated admin email addresses',
 };

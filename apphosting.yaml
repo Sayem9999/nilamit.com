@@ -21,10 +21,6 @@ env:
   - variable: NODE_ENV
     value: production
 
-  # ─── Database (Cloud SQL PostgreSQL) ─────────────────────────
-  - variable: DATABASE_URL
-    secret: DATABASE_URL    # postgresql://user:pass@/dbname?host=/cloudsql/project:region:instance
-
   # ─── Auth.js ─────────────────────────────────────────────────
   - variable: AUTH_SECRET
     secret: AUTH_SECRET     # openssl rand -base64 32
@@ -86,22 +82,16 @@ env:
   - variable: NEXT_PUBLIC_APP_URL
     value: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
 
-  # ─── Supabase Storage (keep if still using Supabase for existing images) ─
+  # ─── Supabase Storage (legacy — for existing image uploads) ──
   - variable: NEXT_PUBLIC_SUPABASE_URL
     secret: SUPABASE_URL
 
   - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
     secret: SUPABASE_ANON_KEY
 
-  - variable: SUPABASE_SERVICE_ROLE_KEY
-    secret: SUPABASE_SERVICE_ROLE_KEY
-
-  # ─── SMS Gateway ─────────────────────────────────────────────
+  # ─── SMS Gateway (console mode for first deploy) ─────────────
   - variable: SMS_PROVIDER
-    value: greenweb           # greenweb | bulksmsbd | console
-
-  - variable: GREENWEB_TOKEN
-    secret: GREENWEB_TOKEN
+    value: console            # greenweb | bulksmsbd | console
 
   # ─── Sentry (optional) ───────────────────────────────────────
   # - variable: SENTRY_DSN

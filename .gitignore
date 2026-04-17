@@ -54,3 +54,5 @@ lint*.txt
 lint.json
 lint.log
 final-lint.txt
+.tmp-sa.json
+.tmp-bootstrap.mjs
