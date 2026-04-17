@@ -47,6 +47,10 @@ export function CountdownTimer({
 
   return (
     <span
+      role="timer"
+      aria-live={isUrgent ? "assertive" : "off"}
+      aria-atomic="true"
+      aria-label={isExpired ? "Auction ended" : `Time remaining: ${timeLeft}`}
       className={`price ${isExpired ? "text-gray-400" : isUrgent ? "countdown-urgent font-bold" : "text-gray-700"} ${className}`}
     >
       {timeLeft}

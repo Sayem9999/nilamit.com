@@ -54,9 +54,9 @@ export function MobileBottomNav() {
                   <Link
                     href={it.href}
                     aria-label={it.label}
-                    className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-lg flex items-center justify-center focus:outline-none focus:ring-4 focus:ring-primary-500/30 active:scale-95 transition-transform"
+                    className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-lg flex items-center justify-center focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/40 focus-visible:ring-offset-2 active:scale-95 transition-transform"
                   >
-                    <Icon className="w-6 h-6" strokeWidth={2.5} />
+                    <Icon className="w-6 h-6" strokeWidth={2.5} aria-hidden="true" />
                   </Link>
                 </li>
               );
@@ -65,16 +65,19 @@ export function MobileBottomNav() {
               <li key={it.href} className="flex-1">
                 <Link
                   href={it.href}
-                  aria-label={it.label}
+                  aria-label={(it.badge ?? 0) > 0 ? `${it.label} (${it.badge} unread)` : it.label}
                   aria-current={active ? "page" : undefined}
-                  className={`relative h-full flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold tracking-wide transition-colors focus:outline-none focus:bg-gray-50 ${
+                  className={`relative h-full flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold tracking-wide transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500 ${
                     active ? "text-primary-600" : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
                   <span className="relative">
-                    <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
+                    <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
                     {(it.badge ?? 0) > 0 && (
-                      <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                      <span
+                        aria-hidden="true"
+                        className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none"
+                      >
                         {it.badge! > 9 ? "9+" : it.badge}
                       </span>
                     )}

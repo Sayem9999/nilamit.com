@@ -40,13 +40,13 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 glass !bg-white/70 border-b border-gray-100 shadow-sm">
+    <nav aria-label="Primary" className="sticky top-0 z-50 glass !bg-white/70 border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" aria-label="Nilamit home" className="flex items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-xl">
             <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-              <Gavel className="w-5 h-5 text-white" />
+              <Gavel className="w-5 h-5 text-white" aria-hidden="true" />
             </div>
             <span className="font-heading font-bold text-xl text-gray-900">
               nilam<span className="text-primary-600">it</span>
@@ -57,10 +57,13 @@ export function Navbar() {
           <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
             <form
               action={`/${locale}/search`}
+              role="search"
               className="w-full relative group"
             >
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-primary-500 transition-colors" />
+              <label htmlFor="navbar-search" className="sr-only">{t("searchPlaceholder")}</label>
+              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-primary-500 transition-colors" aria-hidden="true" />
               <input
+                id="navbar-search"
                 type="search"
                 name="q"
                 placeholder={t("searchPlaceholder")}
@@ -73,7 +76,8 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-2 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-100 hover:bg-white hover:border-primary-200 transition-all px-4 py-2 rounded-xl shadow-sm"
+              aria-label={locale === "en" ? "Switch language to Bangla" : "Switch language to English"}
+              className="flex items-center gap-2 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-100 hover:bg-white hover:border-primary-200 transition-all px-4 py-2 rounded-xl shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
               title={
                 locale === "en" ? "বাংলা" : "English"
               }
@@ -234,12 +238,15 @@ export function Navbar() {
               </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-xl hover:bg-gray-50"
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-menu"
+                className="p-2 rounded-xl hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               >
                 {mobileMenuOpen ? (
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5" aria-hidden="true" />
                 ) : (
-                  <Menu className="w-5 h-5" />
+                  <Menu className="w-5 h-5" aria-hidden="true" />
                 )}
               </button>
             </div>
@@ -248,7 +255,7 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-100 bg-white shadow-lg animate-in slide-in-from-top duration-300">
+          <div id="mobile-menu" className="md:hidden border-t border-gray-100 bg-white shadow-lg animate-in slide-in-from-top duration-300">
             <div className="px-4 py-4 space-y-2">
               <div className="pt-2 pb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 {t("settings")}

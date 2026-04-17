@@ -354,7 +354,15 @@
     "subNote": "Zero-Technicality Protection",
     "warningTitle": "Notice to All Traders",
     "warningDesc": "Never share your personal phone number or payment details outside the Coordination Hub. Nilamit staff will never ask for your password or OTP.",
-    "heroDesc": "Every transaction on Nilamit is backed by our coordinate-first safety protocol."
+    "heroDesc": "Every transaction on Nilamit is backed by our coordinate-first safety protocol.",
+    "escrowTitle": "Escrow-Backed Transactions",
+    "escrowDesc": "Buyers commit an advance before delivery. Funds stay with Nilamit until you confirm the item matches the listing — sellers are paid only after you're satisfied.",
+    "identityTitle": "Verified Identities",
+    "identityDesc": "Every seller is phone and NID verified. Trust scores are visible on each listing so you know exactly who you're dealing with.",
+    "coordTitle": "In-App Coordination Hub",
+    "coordDesc": "Share delivery details, photos, and updates inside Nilamit's secure chat. No personal contact info leaves the platform.",
+    "disputeTitle": "Dispute Resolution",
+    "disputeDesc": "If something goes wrong, open a dispute and our moderation team steps in. Refunds, partial settlements, and returns are all handled inside the app."
   },
   "Leaderboard": {
     "title": "Platform Champions",
