@@ -57,16 +57,19 @@ export function WatchlistButton({
     <button
       onClick={handleToggle}
       disabled={isPending}
-      className={`p-2 rounded-full backdrop-blur-md transition-all ${
+      aria-label={isWatchlisted ? "Remove from watchlist" : "Add to watchlist"}
+      aria-pressed={isWatchlisted}
+      className={`p-2 rounded-full backdrop-blur-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
         isWatchlisted
           ? "bg-red-50 text-red-500 hover:bg-red-100"
           : "bg-white/80 text-gray-500 hover:text-red-500 hover:bg-white"
-      } ${hoverOnly ? "opacity-0 group-hover:opacity-100" : ""} ${className}`}
+      } ${hoverOnly ? "opacity-0 group-hover:opacity-100 focus-visible:opacity-100" : ""} ${className}`}
       title={isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist"}
     >
       <Heart
         className="w-5 h-5 transition-transform"
         fill={isWatchlisted ? "currentColor" : "none"}
+        aria-hidden="true"
       />
     </button>
   );

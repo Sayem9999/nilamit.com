@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Clock, Users, Zap, MapPin, AlertTriangle, ShieldCheck, Package } from "lucide-react";
+import { Clock, Users, Zap, MapPin, AlertTriangle, ShieldCheck, Package, Star } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -105,11 +105,21 @@ export default function AuctionCard({
               )}
             </div>
             {auction.seller.reputationScore > 0 && (
-              <TrustBadge 
-                score={auction.seller.reputationScore} 
+              <TrustBadge
+                score={auction.seller.reputationScore}
                 size="sm"
                 className="scale-95 origin-left"
               />
+            )}
+            {(auction.seller.reviewCount ?? 0) > 0 && (
+              <span
+                className="flex items-center gap-0.5 text-[10px] font-bold text-amber-600"
+                aria-label={`${auction.seller.averageRating?.toFixed(1)} out of 5 stars from ${auction.seller.reviewCount} reviews`}
+              >
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" aria-hidden="true" />
+                {auction.seller.averageRating?.toFixed(1)}
+                <span className="text-gray-400 font-semibold">({auction.seller.reviewCount})</span>
+              </span>
             )}
           </div>
 

@@ -63,6 +63,8 @@ export interface User {
   isPhoneVerified: boolean;
   isVerifiedSeller: boolean;
   reputationScore: number;
+  reviewCount?: number;
+  averageRating?: number;
   googleId?: string | null;
   bkashNumber?: string | null;
   nagadNumber?: string | null;
@@ -177,7 +179,7 @@ export function actionError(error: string, code?: string): ActionResult<never> {
 }
 
 // ─── Composite Types ───────────────────────────────────────────────────────────
-export type SellerPublic = Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified' | 'winningStreak' | 'userLevel'> & { phone?: string | null };
+export type SellerPublic = Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified' | 'winningStreak' | 'userLevel' | 'reviewCount' | 'averageRating'> & { phone?: string | null };
 
 export type AuctionWithSeller = Auction & {
   seller: SellerPublic;

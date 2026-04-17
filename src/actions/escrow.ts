@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { adminDB, rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recalculateUserReputation } from '@/lib/reputation';
+import { getPaymentAdapter } from '@/lib/payments';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
@@ -37,15 +38,46 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
     const auctionSnap = await db.collection('auctions').doc(tx.auctionId).get();
     const auction     = auctionSnap.data() ?? {};
 
-    const ref = providerRef ?? `SIM-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    // Kick off real payment via adapter (bKash/Nagad/sandbox based on env).
+    // Sandbox adapter returns an auto-success URL that hits the webhook route.
+    const adapter = getPaymentAdapter();
+    const origin = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? '';
+    const callbackUrl = `${origin}/api/webhooks/payments/${adapter.provider}`;
 
+    let checkoutUrl: string | undefined;
+    let paymentId: string | undefined;
+    try {
+      const payment = await adapter.createPayment({
+        transactionId,
+        amount: Number(tx.advanceAmount ?? tx.amount ?? 0),
+        currency: 'BDT',
+        payerReference: buyer.bkashNumber ?? buyer.nagadNumber ?? undefined,
+        callbackUrl,
+      });
+      checkoutUrl = payment.checkoutUrl;
+      paymentId = payment.paymentId;
+    } catch (err) {
+      console.error('[escrow] adapter.createPayment failed, falling back to manual ref:', err);
+    }
+
+    const ref = providerRef ?? paymentId ?? `SIM-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+    // For real providers the webhook transitions PENDING→HELD on SUCCESS.
+    // For sandbox we transition immediately so local/dev flows still work.
+    const isSandbox = adapter.provider === 'sandbox';
     await db.collection('escrowTransactions').doc(transactionId).update({
-      status:           'HELD',
-      paymentMethod:    'bkash_automatic',
+      status:           isSandbox ? 'HELD' : 'PENDING',
+      paymentMethod:    `${adapter.provider}_automatic`,
       providerRef:      ref,
       verificationType: 'AUTOMATIC',
       updatedAt:        new Date(),
     });
+
+    if (!isSandbox) {
+      revalidatePath('/dashboard');
+      revalidatePath(`/auctions/${tx.auctionId}`);
+      return { success: true, checkoutUrl, paymentId, provider: adapter.provider };
+    }
 
     // Open direct chat conversation
     const convId = tx.auctionId;
@@ -83,7 +115,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
 
     revalidatePath('/dashboard');
     revalidatePath(`/auctions/${tx.auctionId}`);
-    return { success: true };
+    return { success: true, checkoutUrl, paymentId, provider: adapter.provider };
   } catch (e) {
     console.error('[escrow] payEscrowAdvance failed:', e);
     return { success: false, error: 'Internal error during advance payment' };

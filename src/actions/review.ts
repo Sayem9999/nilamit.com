@@ -37,12 +37,17 @@ export async function submitReview({
 
   await db.collection('reviews').doc(reviewId).set(review);
 
-  // Update recipient reputation score
+  // Update recipient reputation score + review aggregates
   const allReviewsSnap = await db.collection('reviews').where('toId', '==', toId).get();
   const ratings = allReviewsSnap.docs.map(d => d.data().rating as number);
   const avg     = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
   const newScore = Math.round((avg * 20) + (ratings.length * 2));
-  await db.collection('users').doc(toId).update({ reputationScore: newScore, updatedAt: now });
+  await db.collection('users').doc(toId).update({
+    reputationScore: newScore,
+    reviewCount: ratings.length,
+    averageRating: Math.round(avg * 10) / 10,
+    updatedAt: now,
+  });
 
   revalidatePath(`/profile/${toId}`);
   revalidatePath(`/auctions/${auctionId}`);

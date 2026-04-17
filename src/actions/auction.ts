@@ -16,7 +16,8 @@ async function getSellerPublic(sellerId: string): Promise<SellerPublic> {
   return { id: sellerId, name: d.name ?? null, email: d.email ?? null, phone: d.phone ?? null,
     image: d.image ?? null, reputationScore: d.reputationScore ?? 0,
     isPhoneVerified: d.isPhoneVerified ?? false, isVerifiedSeller: d.isVerifiedSeller ?? false,
-    winningStreak: d.winningStreak ?? 0, userLevel: d.userLevel ?? 1 };
+    winningStreak: d.winningStreak ?? 0, userLevel: d.userLevel ?? 1,
+    reviewCount: d.reviewCount ?? 0, averageRating: d.averageRating ?? 0 };
 }
 
 const CreateAuctionSchema = z.object({
