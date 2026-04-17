@@ -334,7 +334,9 @@
     "tier_Trusted": "Trusted",
     "tier_New": "New Trader",
     "trustScore": "Trust Score",
-    "reputationDescription": "Reputation is built on verified successful sales and buyer reliability. Bayesian weighted for authenticity."
+    "reputationDescription": "Reputation is built on verified successful sales and buyer reliability. Bayesian weighted for authenticity.",
+    "typeMessage": "Type a message...",
+    "uploadFailed": "Upload failed."
   },
   "FAQ": {
     "title": "Frequently Asked Questions",
@@ -513,6 +515,7 @@
     "noResults": "No results found",
     "noResultsDesc": "We couldn't find any auctions matching your criteria. Try adjusting your filters or search term.",
     "clearFilters": "Clear all filters",
+    "searchPlaceholder": "Search auctions...",
     "allCategories": "All Categories"
   },
   "Categories": {

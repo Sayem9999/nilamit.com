@@ -14,13 +14,14 @@ import {
 } from "lucide-react";
 import { ImageUpload } from "@/components/upload/ImageUpload";
 import { VerificationGuard } from "@/components/auth/VerificationGuard";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 type Step = "details" | "pricing" | "schedule" | "review";
 
 export default function CreateAuctionPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("Auction");
   const tCat = useTranslations("Categories");
   const tLoc = useTranslations("Locations");
@@ -43,9 +44,9 @@ export default function CreateAuctionPage() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/login");
+      router.push(`/${locale}/login`);
     }
-  }, [status, router]);
+  }, [status, router, locale]);
 
   if (status === "loading") {
     return (

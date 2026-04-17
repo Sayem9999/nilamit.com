@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
 import {
@@ -28,6 +28,7 @@ import Image from "next/image";
 export default function ProfilePage() {
   const { data: session, update, status } = useSession();
   const router = useRouter();
+  const locale = useLocale();
   const t_prof = useTranslations("Profile");
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
@@ -48,9 +49,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/login");
+      router.push(`/${locale}/login`);
     }
-  }, [status, router]);
+  }, [status, router, locale]);
 
   if (status === "loading") {
     return (
