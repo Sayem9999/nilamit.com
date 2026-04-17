@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "node .next/standalone/server.js",
     "lint": "eslint",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@auth/firebase-adapter": "^2.7.4",
