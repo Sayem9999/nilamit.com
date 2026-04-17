@@ -25,7 +25,7 @@ export function DisputesTab() {
     setLoading(true);
     try {
       const res = await getAdminDisputes();
-      setDisputes(res as DisputeTransaction[]);
+      setDisputes(res as unknown as DisputeTransaction[]);
     } catch {
       toast.error("Failed to load disputes");
     } finally {

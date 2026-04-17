@@ -182,6 +182,7 @@ export type SellerPublic = Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVer
 export type AuctionWithSeller = Auction & {
   seller: SellerPublic;
   watchlist?: { userId: string }[];
+  _count?: { bids: number };
 };
 
 export type AuctionWithBids = AuctionWithSeller & {

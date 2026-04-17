@@ -35,7 +35,8 @@ export default async function SearchPage({
   };
 
   const { getAuctions } = await import("@/actions/auction");
-  const { auctions, error } = await getAuctions(filters);
+  const { auctions } = await getAuctions(filters);
+  const error: string | null = null;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">

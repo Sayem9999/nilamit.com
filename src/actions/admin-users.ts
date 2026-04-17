@@ -30,16 +30,22 @@ export async function revokeVerifiedSeller(userId: string) {
 }
 
 export async function getAdminUsers() {
-  await requireAdmin();
+  try {
+    await requireAdmin();
 
-  const snap = await db.collection('users')
-    .orderBy('createdAt', 'desc')
-    .limit(100)
-    .get();
+    const snap = await db.collection('users')
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .get();
 
-  return snap.docs.map(d => ({
-    ...d.data(), id: d.id,
-    createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
-    password: undefined, // never expose hashed password
-  }));
+    const users = snap.docs.map(d => ({
+      ...d.data(), id: d.id,
+      createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
+      password: undefined,
+    } as any));
+
+    return { success: true, users };
+  } catch (e) {
+    return { success: false, users: [] as any[], error: e instanceof Error ? e.message : 'Failed' };
+  }
 }

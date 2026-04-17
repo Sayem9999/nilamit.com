@@ -75,21 +75,21 @@ export async function getKeyMetrics(): Promise<KeyMetrics> {
 
   const users = usersSnap.docs.map((doc) => ({
     id: doc.id,
-    ...(doc.data() as Record<string, unknown>),
+    ...(doc.data() as Record<string, any>),
     createdAt: readDate(doc.data().createdAt),
-  }));
+  } as { id: string; createdAt: Date | null; [key: string]: any }));
 
   const auctions = auctionsSnap.docs.map((doc) => ({
     id: doc.id,
-    ...(doc.data() as Record<string, unknown>),
+    ...(doc.data() as Record<string, any>),
     createdAt: readDate(doc.data().createdAt),
-  }));
+  } as { id: string; createdAt: Date | null; [key: string]: any }));
 
   const bids = bidsSnap.docs.map((doc) => ({
     id: doc.id,
-    ...(doc.data() as Record<string, unknown>),
+    ...(doc.data() as Record<string, any>),
     createdAt: readDate(doc.data().createdAt),
-  }));
+  } as { id: string; createdAt: Date | null; [key: string]: any }));
 
   const totalUsers = users.length;
   const totalAuctions = auctions.length;

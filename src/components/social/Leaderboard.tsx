@@ -1,46 +1,63 @@
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BadgeList } from "@/components/social/BadgeDisplay";
 import { Trophy, Flame, TrendingUp } from "lucide-react";
 import { BadgeType } from "@/lib/gamification-config";
 
+async function userBadges(userId: string): Promise<{ badgeId: string }[]> {
+  const snap = await db.collection("userBadges").where("userId", "==", userId).get();
+  return snap.docs.map(d => ({ badgeId: d.data().badgeId as string }));
+}
+
 export async function getLeaderboardData() {
+  // Top winning streaks
+  const streakSnap = await db.collection("users")
+    .where("winningStreak", ">", 0)
+    .orderBy("winningStreak", "desc")
+    .limit(5)
+    .get();
+
+  // Users who have won the most auctions: aggregate from auctions collection
+  const winnerSnap = await db.collection("auctions")
+    .where("winnerId", "!=", null)
+    .get();
+
+  const winCounts = new Map<string, number>();
+  for (const d of winnerSnap.docs) {
+    const w = d.data().winnerId as string | null | undefined;
+    if (!w) continue;
+    winCounts.set(w, (winCounts.get(w) ?? 0) + 1);
+  }
+  const topWinnerIds = [...winCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const buyerSnaps = await Promise.all(
+    topWinnerIds.map(([uid]) => db.collection("users").doc(uid).get())
+  );
+
   const [topStreaks, topBuyers] = await Promise.all([
-    // Highest winning streaks
-    prisma.user.findMany({
-      where: { winningStreak: { gt: 0 } },
-      orderBy: { winningStreak: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        name: true,
-        image: true,
-        winningStreak: true,
-        badges: { select: { badgeId: true } },
-      },
-    }),
-    // Users who have won the most auctions
-    prisma.user.findMany({
-      where: {
-        auctionsAsWinner: {
-          some: {},
-        },
-      },
-      orderBy: {
-        auctionsAsWinner: {
-          _count: "desc",
-        },
-      },
-      take: 5,
-      select: {
-        id: true,
-        name: true,
-        image: true,
-        badges: { select: { badgeId: true } },
-        _count: { select: { auctionsAsWinner: true } },
-      },
-    }),
+    Promise.all(streakSnap.docs.map(async d => {
+      const u = d.data();
+      return {
+        id:            d.id,
+        name:          u.name  ?? null,
+        image:         u.image ?? null,
+        winningStreak: u.winningStreak ?? 0,
+        badges:        await userBadges(d.id),
+      };
+    })),
+    Promise.all(buyerSnaps.map(async (s, i) => {
+      const u = s.data() ?? {};
+      return {
+        id:     s.id,
+        name:   u.name  ?? null,
+        image:  u.image ?? null,
+        badges: await userBadges(s.id),
+        _count: { auctionsAsWinner: topWinnerIds[i][1] },
+      };
+    })),
   ]);
 
   return { topStreaks, topBuyers };

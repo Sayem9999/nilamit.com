@@ -8,7 +8,7 @@
  *   { status: "ok" | "degraded", db: "ok" | "error", uptime: number, timestamp: string }
  */
 
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 
 // Vercel cron / CDN must not cache health checks
 export const dynamic = "force-dynamic";
@@ -18,9 +18,9 @@ export async function GET() {
   let dbStatus: "ok" | "error" = "error";
   let dbError: string | undefined;
 
-  // Ping the database with a lightweight raw query
+  // Ping Firestore with a tiny read
   try {
-    await prisma.$queryRaw`SELECT 1`;
+    await db.collection("_health").limit(1).get();
     dbStatus = "ok";
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);

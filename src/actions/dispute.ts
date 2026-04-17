@@ -101,7 +101,7 @@ export async function getOpenDisputes() {
   const snap = await db.collection('disputes').where('status', '==', 'OPEN').orderBy('createdAt', 'desc').get();
 
   return Promise.all(snap.docs.map(async d => {
-    const dispute = { ...d.data(), id: d.id };
+    const dispute = { ...d.data(), id: d.id } as { id: string; transactionId: string; openerId: string; [key: string]: any };
     const [txSnap, openerSnap] = await Promise.all([
       db.collection('escrowTransactions').doc(dispute.transactionId).get(),
       db.collection('users').doc(dispute.openerId).get(),

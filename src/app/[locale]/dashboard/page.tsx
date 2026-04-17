@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { Package, Heart, RefreshCw, LogOut, CheckCircle, MessageSquare } from "lucide-react";
 import Link from "next/link";
@@ -10,11 +10,65 @@ import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 import { getTranslations } from "next-intl/server";
 import { getSystemConfig } from "@/actions/admin-content";
 import { SellerPerformance } from "@/components/seller/SellerPerformance";
-import { 
-  BarChart3, 
-  ChevronRight, 
+import {
+  BarChart3,
+  ChevronRight,
   Trophy
 } from "lucide-react";
+
+type DocData = FirebaseFirestore.DocumentData;
+
+function toDate(v: unknown): Date {
+  if (!v) return new Date();
+  if (v instanceof Date) return v;
+  if (typeof v === "object" && v !== null && "toDate" in v && typeof (v as { toDate: () => Date }).toDate === "function") {
+    return (v as { toDate: () => Date }).toDate();
+  }
+  return new Date(v as string);
+}
+
+function normalizeAuctionDoc(id: string, a: DocData) {
+  return {
+    ...a,
+    id,
+    startTime: toDate(a.startTime),
+    endTime:   toDate(a.endTime),
+    createdAt: toDate(a.createdAt),
+    updatedAt: toDate(a.updatedAt),
+  } as { id: string; startTime: Date; endTime: Date; createdAt: Date; updatedAt: Date; [key: string]: any };
+}
+
+async function enrichAuctions(rawAuctions: { id: string; data: DocData }[], userId: string): Promise<AuctionWithSeller[]> {
+  if (rawAuctions.length === 0) return [];
+  const sellerIds   = [...new Set(rawAuctions.map(r => r.data.sellerId as string))];
+  const sellerSnaps = await Promise.all(sellerIds.map(sid => db.collection("users").doc(sid).get()));
+  const sellersMap  = new Map(sellerSnaps.map(s => {
+    const u = s.data() ?? {};
+    return [s.id, {
+      id:               s.id,
+      name:             u.name ?? null,
+      image:            u.image ?? null,
+      isVerifiedSeller: u.isVerifiedSeller ?? false,
+      reputationScore:  u.reputationScore  ?? 0,
+    }];
+  }));
+
+  const watchSnaps = await Promise.all(rawAuctions.map(r =>
+    db.collection("watchlist").doc(`${userId}_${r.id}`).get()
+  ));
+  const watchedSet = new Set(watchSnaps.filter(s => s.exists).map(s => s.id));
+
+  return rawAuctions.map(r => {
+    const a       = normalizeAuctionDoc(r.id, r.data);
+    const watched = watchedSet.has(`${userId}_${r.id}`);
+    return {
+      ...a,
+      seller:    sellersMap.get(a.sellerId) ?? { id: a.sellerId, name: null, image: null, isVerifiedSeller: false, reputationScore: 0 },
+      watchlist: watched ? [{ userId }] : [],
+      _count:    { bids: a.bidCount ?? 0 },
+    } as unknown as AuctionWithSeller;
+  });
+}
 
 export default async function DashboardPage({
   params,
@@ -48,135 +102,156 @@ export default async function DashboardPage({
 
   const userId = session.user.id;
 
-  // Fetch relevant data based on tab
   let watchlistAuctions: AuctionWithSeller[] = [];
   let activeBids: AuctionWithSeller[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   let escrowTransactions: any[] = [];
 
   if (currentTab === "listings") {
-    const rawAuctions = await prisma.auction.findMany({
-      where: { sellerId: userId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        seller: {
-          select: {
-            name: true,
-            image: true,
-            isVerifiedSeller: true,
-            reputationScore: true,
-          },
-        },
-        _count: { select: { bids: true } },
-        watchlist: { where: { userId } },
-      },
-    });
-    watchlistAuctions = rawAuctions as unknown as AuctionWithSeller[];
+    const snap = await db.collection("auctions")
+      .where("sellerId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
+    watchlistAuctions = await enrichAuctions(snap.docs.map(d => ({ id: d.id, data: d.data() })), userId);
   } else if (currentTab === "watchlist") {
-    const watchlists = await prisma.watchlist.findMany({
-      where: { userId },
-      include: {
-        auction: {
-          include: {
-            seller: {
-              select: {
-                name: true,
-                image: true,
-                isVerifiedSeller: true,
-                reputationScore: true,
-              },
-            },
-            _count: { select: { bids: true } },
-            watchlist: { where: { userId } },
-          },
-        },
-      },
-    });
-    watchlistAuctions = watchlists.map(
-      (w) => w.auction,
-    ) as unknown as AuctionWithSeller[];
+    const snap = await db.collection("watchlist")
+      .where("userId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
+    const auctionIds = snap.docs.map(d => d.data().auctionId as string).filter(Boolean);
+    const aucSnaps   = await Promise.all(auctionIds.map(id => db.collection("auctions").doc(id).get()));
+    const raws       = aucSnaps.filter(s => s.exists).map(s => ({ id: s.id, data: s.data()! }));
+    watchlistAuctions = await enrichAuctions(raws, userId);
   } else if (currentTab === "bids") {
-    // get unique auctions where user has placed a bid and auction is active
-    const bids = await prisma.bid.findMany({
-      where: { bidderId: userId, auction: { status: "ACTIVE" } },
-      include: {
-        auction: {
-          include: {
-            seller: {
-              select: {
-                name: true,
-                image: true,
-                isVerifiedSeller: true,
-                reputationScore: true,
-              },
-            },
-            _count: { select: { bids: true } },
-            watchlist: { where: { userId } },
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      distinct: ["auctionId"],
-    });
-    activeBids = bids.map((b) => b.auction) as unknown as AuctionWithSeller[];
+    const bidSnap = await db.collection("bids")
+      .where("bidderId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
+    const auctionIds = [...new Set(bidSnap.docs.map(d => d.data().auctionId as string))];
+    const aucSnaps = await Promise.all(auctionIds.map(id => db.collection("auctions").doc(id).get()));
+    const raws = aucSnaps
+      .filter(s => s.exists && s.data()?.status === "ACTIVE")
+      .map(s => ({ id: s.id, data: s.data()! }));
+    activeBids = await enrichAuctions(raws, userId);
   } else if (currentTab === "escrow") {
-    // Phase 10: Escrow logic
-    escrowTransactions = await prisma.escrowTransaction.findMany({
-      where: { buyerId: userId },
-      include: {
-        auction: {
-          include: {
-            seller: { select: { name: true, image: true } },
-          },
-        },
-        dispute: true,
-      },
-      orderBy: { createdAt: "desc" },
+    const txSnap = await db.collection("escrowTransactions")
+      .where("buyerId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const txs = txSnap.docs.map(d => ({ id: d.id, ...d.data() } as DocData & { id: string; auctionId: string }));
+    const auctionIds = txs.map(t => t.auctionId).filter(Boolean);
+
+    const [aucSnaps, dispSnaps] = await Promise.all([
+      Promise.all(auctionIds.map(id => db.collection("auctions").doc(id).get())),
+      Promise.all(txs.map(t => db.collection("disputes").where("transactionId", "==", t.id).limit(1).get())),
+    ]);
+
+    const aucMap = new Map(aucSnaps.filter(s => s.exists).map(s => [s.id, s.data()!] as const));
+    const sellerIds = [...new Set([...aucMap.values()].map(a => a.sellerId as string))];
+    const sellerSnaps = await Promise.all(sellerIds.map(sid => db.collection("users").doc(sid).get()));
+    const sellerMap = new Map(sellerSnaps.map(s => {
+      const u = s.data() ?? {};
+      return [s.id, { name: u.name ?? null, image: u.image ?? null }];
+    }));
+
+    escrowTransactions = txs.map((tx, i) => {
+      const auc       = aucMap.get(tx.auctionId);
+      const dispDocs  = dispSnaps[i].docs;
+      const dispute   = dispDocs[0] ? { id: dispDocs[0].id, ...dispDocs[0].data() } : null;
+      const seller    = auc ? sellerMap.get(auc.sellerId as string) ?? { name: null, image: null } : { name: null, image: null };
+      return {
+        ...tx,
+        createdAt: toDate(tx.createdAt),
+        updatedAt: toDate(tx.updatedAt),
+        auction: auc ? { ...normalizeAuctionDoc(tx.auctionId, auc), seller } : null,
+        dispute,
+      };
     });
   } else if (currentTab === "coordination") {
-    // Phase 11: Coordination Hub (Post-Advance Chat)
-    const conversations = await prisma.conversation.findMany({
-      where: {
-        OR: [{ buyerId: userId }, { sellerId: userId }],
-        auction: { escrowTransaction: { status: { in: ['HELD', 'DISPUTED'] } } }
-      },
-      include: {
-        auction: {
-          select: {
-            title: true,
-            images: true,
-            id: true,
-            escrowTransaction: { 
-              select: { 
-                status: true, 
-                id: true,
-                dispute: true 
-              } 
-            }
-          }
-        },
-        messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 1
-        }
-      },
-      orderBy: { lastMessageAt: 'desc' }
-    });
-    escrowTransactions = conversations; // Reusing the slot for simplicity in rendering
+    const [buyerSnap, sellerSnap] = await Promise.all([
+      db.collection("conversations").where("buyerId",  "==", userId).orderBy("lastMessageAt", "desc").get(),
+      db.collection("conversations").where("sellerId", "==", userId).orderBy("lastMessageAt", "desc").get(),
+    ]);
+
+    const convsMap = new Map<string, DocData & { id: string; auctionId: string; lastMessageAt: Date }>();
+    for (const d of [...buyerSnap.docs, ...sellerSnap.docs]) {
+      if (convsMap.has(d.id)) continue;
+      const data = d.data();
+      convsMap.set(d.id, { ...data, id: d.id, auctionId: data.auctionId, lastMessageAt: toDate(data.lastMessageAt) });
+    }
+    const convs = [...convsMap.values()].sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime());
+
+    if (convs.length > 0) {
+      const auctionIds = [...new Set(convs.map(c => c.auctionId).filter(Boolean))];
+      const [aucSnaps, escrowSnaps, lastMsgsSnaps] = await Promise.all([
+        Promise.all(auctionIds.map(id => db.collection("auctions").doc(id).get())),
+        Promise.all(auctionIds.map(id => db.collection("escrowTransactions").doc(id).get())),
+        Promise.all(convs.map(c =>
+          db.collection("messages")
+            .where("conversationId", "==", c.id)
+            .orderBy("createdAt", "desc")
+            .limit(1)
+            .get()
+        )),
+      ]);
+
+      const aucMap    = new Map(aucSnaps.filter(s => s.exists).map(s => [s.id, s.data()!] as const));
+      const escrowMap = new Map(escrowSnaps.filter(s => s.exists).map(s => [s.id, s.data()!] as const));
+
+      const disputeSnaps = await Promise.all(
+        [...escrowMap.entries()].map(([txId]) =>
+          db.collection("disputes").where("transactionId", "==", txId).limit(1).get()
+        )
+      );
+      const disputeMap = new Map(
+        [...escrowMap.keys()].map((txId, i) => {
+          const d = disputeSnaps[i].docs[0];
+          return [txId, d ? { id: d.id, ...d.data() } : null] as const;
+        })
+      );
+
+      const filtered = convs
+        .map((c, i) => {
+          const escrow  = escrowMap.get(c.auctionId);
+          const auc     = aucMap.get(c.auctionId);
+          const lastMsg = lastMsgsSnaps[i].docs[0];
+          if (!escrow || !["HELD", "DISPUTED"].includes(escrow.status as string)) return null;
+          return {
+            ...c,
+            auction: auc ? {
+              id:     c.auctionId,
+              title:  auc.title,
+              images: auc.images ?? [],
+              escrowTransaction: {
+                id:      c.auctionId,
+                status:  escrow.status,
+                dispute: disputeMap.get(c.auctionId) ?? null,
+              },
+            } : null,
+            messages: lastMsg ? [{ id: lastMsg.id, ...lastMsg.data() }] : [],
+          };
+        })
+        .filter(Boolean);
+
+      escrowTransactions = filtered;
+    }
   } else if (currentTab === "performance") {
-    // Derived stats for the performance tab
-    const sellerAuctions = await prisma.auction.findMany({
-      where: { sellerId: userId },
-      select: { status: true, currentPrice: true }
-    });
-    
+    const snap = await db.collection("auctions")
+      .where("sellerId", "==", userId)
+      .get();
+    const sellerAuctions = snap.docs.map(d => ({
+      status:       d.data().status as string,
+      currentPrice: Number(d.data().currentPrice ?? 0),
+    }));
+    const soldCount = sellerAuctions.filter(a => a.status === "SOLD").length;
     const stats = {
-      totalSales: sellerAuctions.filter(a => a.status === 'SOLD').length,
-      revenue: sellerAuctions.reduce((acc, curr) => acc + (Number(curr.currentPrice) || 0), 0),
-      reputation: typeof session.user.reputationScore === 'number' ? session.user.reputationScore : 0,
-      successRate: sellerAuctions.length > 0 ? Math.round((sellerAuctions.filter(a => a.status === 'SOLD').length / sellerAuctions.length) * 100) : 100
+      totalSales: soldCount,
+      revenue:    sellerAuctions.reduce((acc, c) => acc + c.currentPrice, 0),
+      reputation: typeof session.user.reputationScore === "number" ? session.user.reputationScore : 0,
+      successRate: sellerAuctions.length > 0 ? Math.round((soldCount / sellerAuctions.length) * 100) : 100,
     };
-    escrowTransactions = [stats]; // Borrowing the slot
+    escrowTransactions = [stats];
   }
 
   return (
@@ -290,7 +365,7 @@ export default async function DashboardPage({
                       <span className="text-xs text-indigo-300 ml-1">{t("reputationPoints")}</span>
                     </div>
                     <p className="text-[10px] text-indigo-300 mb-4 font-bold uppercase">{t("trustPointsTitle")}</p>
-                    <Link 
+                    <Link
                       href={`/${locale}/leaderboard`}
                       className="flex items-center justify-between w-full py-2 px-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase transition-all"
                     >
@@ -354,9 +429,9 @@ export default async function DashboardPage({
                 {escrowTransactions.length > 0 ? (
                   <div className="space-y-4">
                     {escrowTransactions.map((tx) => (
-                      <EscrowActionCard 
-                        key={tx.id} 
-                        transaction={tx} 
+                      <EscrowActionCard
+                        key={tx.id}
+                        transaction={tx}
                         treasuryNumbers={{
                           bkash: systemConfig.treasuryBkash,
                           nagad: systemConfig.treasuryNagad
@@ -385,19 +460,19 @@ export default async function DashboardPage({
                 {escrowTransactions.length > 0 ? (
                   <div className="grid grid-cols-1 gap-4">
                     {escrowTransactions.map((conv) => (
-                      <Link 
-                        key={conv.id} 
+                      <Link
+                        key={conv.id}
                         href={`/${locale}/dashboard/coordination/${conv.id}`}
                         className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-4"
                       >
                          <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                            {conv.auction.images?.[0] ? (
-                              <Image 
-                                src={conv.auction.images[0]} 
-                                alt={conv.auction.title} 
-                                width={64} 
-                                height={64} 
-                                className="w-full h-full object-cover" 
+                            {conv.auction?.images?.[0] ? (
+                              <Image
+                                src={conv.auction.images[0]}
+                                alt={conv.auction.title}
+                                width={64}
+                                height={64}
+                                className="w-full h-full object-cover"
                               />
                             ) : (
                              <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -407,11 +482,11 @@ export default async function DashboardPage({
                          </div>
                          <div className="flex-1">
                            <div className="flex items-center justify-between">
-                              <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{conv.auction.title}</h3>
+                              <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{conv.auction?.title}</h3>
                               <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border bn ${
-                                conv.auction.escrowTransaction?.status === 'DISPUTED' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                conv.auction?.escrowTransaction?.status === 'DISPUTED' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                               }`}>
-                                {te(`status_${conv.auction.escrowTransaction?.status || 'PENDING'}`)}
+                                {te(`status_${conv.auction?.escrowTransaction?.status || 'PENDING'}`)}
                               </span>
                            </div>
                            <p className="text-sm text-gray-500 line-clamp-1 mt-1 font-medium italic">

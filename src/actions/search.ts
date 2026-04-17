@@ -14,7 +14,7 @@ export async function getSmartSearchResults(query: string) {
     .get();
 
   const results = snap.docs
-    .map(d => ({ ...d.data(), id: d.id }))
+    .map(d => ({ ...d.data(), id: d.id } as { id: string; [key: string]: any }))
     .filter(a => {
       const title = (a.title ?? '').toLowerCase();
       const desc  = (a.description ?? '').toLowerCase();
@@ -24,7 +24,7 @@ export async function getSmartSearchResults(query: string) {
       const titleScore = (a.title ?? '').toLowerCase().includes(q) ? 100 : 0;
       const descScore  = (a.description ?? '').toLowerCase().includes(q) ? 50 : 0;
       const bidScore   = (a.bidCount ?? 0) * 5;
-      return { ...a, _score: titleScore + descScore + bidScore };
+      return { ...a, _score: titleScore + descScore + bidScore } as { id: string; _score: number; [key: string]: any };
     })
     .sort((a, b) => b._score - a._score)
     .slice(0, 20);
@@ -32,7 +32,7 @@ export async function getSmartSearchResults(query: string) {
   // Fetch seller data for results
   const sellerIds = [...new Set(results.map(a => a.sellerId as string))];
   const sellerSnaps = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
-  const sellersMap  = new Map(sellerSnaps.map(s => [s.id, s.data() ?? {}]));
+  const sellersMap  = new Map(sellerSnaps.map(s => [s.id, (s.data() ?? {}) as Record<string, any>]));
 
   return results.map(a => {
     const s = sellersMap.get(a.sellerId) ?? {};

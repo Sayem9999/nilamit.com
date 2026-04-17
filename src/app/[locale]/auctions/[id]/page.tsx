@@ -36,7 +36,7 @@ import { getAuctionChat } from "@/actions/chat";
 import ChatInterface from "@/components/social/ChatInterface";
 import { Metadata } from "next";
 import Script from "next/script";
-import { AuctionStatus } from "@prisma/client";
+import { AuctionStatus } from "@/types";
 import { getTranslations } from "next-intl/server";
 
 interface Props {

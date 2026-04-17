@@ -97,7 +97,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         .get();
 
       const triggeredAlerts = alertsSnap.docs
-        .map(d => ({ ...d.data(), id: d.id }))
+        .map(d => ({ ...d.data(), id: d.id } as { id: string; userId: string; type: string; thresholdPrice?: number; [key: string]: any }))
         .filter(a =>
           a.userId !== userId &&
           (a.type === 'OUTBID' || (a.type === 'TARGET_REACHED' && (a.thresholdPrice ?? 0) <= amount))
@@ -243,7 +243,7 @@ export async function getAuctionBids(auctionId: string) {
   return snap.docs.map(d => {
     const b = d.data();
     return { ...b, id: d.id, createdAt: b.createdAt?.toDate?.() ?? new Date(b.createdAt),
-      bidder: biddersMap.get(b.bidderId) ?? { id: b.bidderId, name: null, image: null } };
+      bidder: biddersMap.get(b.bidderId) ?? { id: b.bidderId, name: null, image: null } } as { id: string; amount: number; createdAt: Date; bidder: { id: string; name: string | null; image: string | null }; [key: string]: any };
   });
 }
 

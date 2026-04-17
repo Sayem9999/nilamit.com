@@ -61,7 +61,7 @@ function FirestoreAdapter(): Adapter {
     // JWT strategy — sessions not stored in DB
     async createSession(session) { return session; },
     async getSessionAndUser() { return null; },
-    async updateSession(session) { return session; },
+    async updateSession() { return null; },
     async deleteSession() {},
     async createVerificationToken(token: VerificationToken) {
       const id = `${token.identifier}__${token.token}`;
@@ -119,7 +119,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             image: user.image as string | null,
             isVerifiedSeller: user.isVerifiedSeller, reputationScore: user.reputationScore,
             isPhoneVerified: user.isPhoneVerified, emailVerified: user.emailVerified,
-            userLevel: user.userLevel, winningStreak: user.winningStreak };
+            userLevel: user.userLevel, winningStreak: user.winningStreak } as any;
         } catch (e) {
           console.error('[Auth] credentials authorize error:', e);
           return null;
@@ -148,7 +148,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: user.name as string, image: user.image as string | null,
             isVerifiedSeller: user.isVerifiedSeller, reputationScore: user.reputationScore,
             isPhoneVerified: user.isPhoneVerified, emailVerified: user.emailVerified,
-            userLevel: user.userLevel, winningStreak: user.winningStreak };
+            userLevel: user.userLevel, winningStreak: user.winningStreak } as any;
         } catch (e) {
           console.error('[Auth-Phone] authorize error:', e);
           return null;
@@ -162,13 +162,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // First login — seed from freshly-authenticated user
       if (user) {
         token.id              = user.id;
-        token.isPhoneVerified  = (user as Record<string, unknown>).isPhoneVerified  ?? false;
-        token.emailVerified    = (user as Record<string, unknown>).emailVerified    ?? null;
-        token.phone            = (user as Record<string, unknown>).phone            ?? null;
-        token.reputationScore  = (user as Record<string, unknown>).reputationScore  ?? 0;
-        token.isVerifiedSeller = (user as Record<string, unknown>).isVerifiedSeller ?? false;
-        token.userLevel        = (user as Record<string, unknown>).userLevel        ?? 1;
-        token.winningStreak    = (user as Record<string, unknown>).winningStreak    ?? 0;
+        token.isPhoneVerified  = (user as unknown as Record<string, unknown>).isPhoneVerified  ?? false;
+        token.emailVerified    = (user as unknown as Record<string, unknown>).emailVerified    ?? null;
+        token.phone            = (user as unknown as Record<string, unknown>).phone            ?? null;
+        token.reputationScore  = (user as unknown as Record<string, unknown>).reputationScore  ?? 0;
+        token.isVerifiedSeller = (user as unknown as Record<string, unknown>).isVerifiedSeller ?? false;
+        token.userLevel        = (user as unknown as Record<string, unknown>).userLevel        ?? 1;
+        token.winningStreak    = (user as unknown as Record<string, unknown>).winningStreak    ?? 0;
         token.lastDbRefresh    = Date.now();
       }
 
@@ -205,7 +205,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        const u = session.user as Record<string, unknown>;
+        const u = session.user as unknown as Record<string, unknown>;
         u.id              = token.id;
         u.isPhoneVerified  = token.isPhoneVerified;
         u.emailVerified    = token.emailVerified;

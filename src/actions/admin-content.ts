@@ -49,13 +49,15 @@ export async function updateSystemConfig(data: {
   return { success: true };
 }
 
-export async function toggleFeaturedAuction(auctionId: string, featured: boolean) {
+export async function toggleFeaturedAuction(auctionId: string) {
   await requireAdmin();
-  await db.collection('auctions').doc(auctionId).update({
-    isFeatured: featured, updatedAt: new Date(),
-  });
+  const ref = db.collection('auctions').doc(auctionId);
+  const snap = await ref.get();
+  const current = Boolean(snap.data()?.isFeatured);
+  const next = !current;
+  await ref.update({ isFeatured: next, updatedAt: new Date() });
   revalidatePath('/');
-  return { success: true };
+  return { success: true, isFeatured: next };
 }
 
 export async function getFeaturedAuctions() {
@@ -68,5 +70,5 @@ export async function getFeaturedAuctions() {
   return snap.docs.map(d => ({
     ...d.data(), id: d.id,
     endTime: d.data().endTime?.toDate?.() ?? new Date(d.data().endTime),
-  }));
+  } as any));
 }

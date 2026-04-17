@@ -121,7 +121,7 @@ export async function getAuction(id: string) {
   const bids = bidsSnap.docs.map(d => {
     const b = d.data();
     return { ...b, id: d.id, createdAt: b.createdAt?.toDate?.() ?? new Date(b.createdAt),
-      bidder: biddersMap.get(b.bidderId) ?? { id: b.bidderId, name: null, image: null } };
+      bidder: biddersMap.get(b.bidderId) ?? { id: b.bidderId, name: null, image: null } } as any;
   });
 
   const escrow = escrowSnap.exists ? (() => {
@@ -129,7 +129,7 @@ export async function getAuction(id: string) {
     return { ...e, id: escrowSnap.id,
       createdAt: e.createdAt?.toDate?.() ?? new Date(e.createdAt),
       updatedAt: e.updatedAt?.toDate?.() ?? new Date(e.updatedAt),
-    };
+    } as any;
   })() : null;
 
   const winnerData = winner?.exists ? { id: winner.id, name: winner.data()?.name ?? null,
@@ -151,7 +151,7 @@ export async function getAuction(id: string) {
     winner: winnerData,
     escrowTransaction: escrow,
     _count: { bids: bids.length },
-  };
+  } as any;
 }
 
 export async function getAuctions(filters: AuctionFilters = {}) {
@@ -193,7 +193,7 @@ export async function getAuctions(filters: AuctionFilters = {}) {
         createdAt: a.createdAt?.toDate?.() ?? new Date(a.createdAt),
         seller,
         _count: { bids: a.bidCount ?? 0 },
-      };
+      } as any;
     }));
 
     return { auctions: auctionsWithSellers, total, pages: Math.ceil(total / limit), page };
@@ -218,7 +218,7 @@ export async function getMyAuctions() {
     endTime:   d.data().endTime?.toDate?.()   ?? new Date(d.data().endTime),
     createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
     _count: { bids: d.data().bidCount ?? 0 },
-  }));
+  } as any));
 }
 
 export async function getSpecializedFeeds() {
@@ -245,7 +245,7 @@ export async function getSpecializedFeeds() {
       return { ...a, id: d.id,
         endTime: a.endTime?.toDate?.() ?? new Date(a.endTime),
         seller: await getSellerPublic(a.sellerId),
-        _count: { bids: a.bidCount ?? 0 } };
+        _count: { bids: a.bidCount ?? 0 } } as any;
     }));
 
     const latestBids = await Promise.all(latestBidsSnap.docs.map(async d => {
@@ -257,7 +257,7 @@ export async function getSpecializedFeeds() {
       return { ...b, id: d.id,
         createdAt: b.createdAt?.toDate?.() ?? new Date(b.createdAt),
         bidder: { name: bidderSnap.data()?.name ?? null },
-        auction: { id: b.auctionId, title: auctionSnap.data()?.title ?? '' } };
+        auction: { id: b.auctionId, title: auctionSnap.data()?.title ?? '' } } as any;
     }));
 
     return { endingSoon, latestBids };

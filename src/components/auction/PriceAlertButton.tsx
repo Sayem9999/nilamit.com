@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createAlert } from "@/actions/alert";
 import { Bell, Loader2, Target, Zap } from "lucide-react";
-import { AlertType } from "@prisma/client";
+import { AlertType } from "@/types";
 import { toast } from "react-hot-toast";
 
 interface PriceAlertButtonProps {

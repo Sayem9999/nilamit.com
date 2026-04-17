@@ -46,13 +46,13 @@ export async function getAdminStats() {
 
   const users = usersSnap.docs.map((doc) => ({
     id: doc.id,
-    ...(doc.data() as Record<string, unknown>),
+    ...(doc.data() as Record<string, any>),
     createdAt: readDate(doc.data().createdAt),
-  }));
+  } as { id: string; createdAt: Date | null; [key: string]: any }));
   const auctions = auctionsSnap.docs.map((doc) => ({
     id: doc.id,
-    ...(doc.data() as Record<string, unknown>),
-  }));
+    ...(doc.data() as Record<string, any>),
+  } as { id: string; [key: string]: any }));
 
   const recentUsers = users
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
@@ -108,9 +108,9 @@ export async function getAdminUsers(page = 1, limit = 20, search?: string) {
   const users = usersSnap.docs
     .map((doc) => ({
       id: doc.id,
-      ...(doc.data() as Record<string, unknown>),
+      ...(doc.data() as Record<string, any>),
       createdAt: readDate(doc.data().createdAt),
-    }))
+    } as { id: string; createdAt: Date | null; [key: string]: any }))
     .filter((user) => {
       if (!normalizedSearch) return true;
       const haystack = [user.name, user.email, user.phone]
@@ -147,9 +147,9 @@ export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
   const filteredAuctions = auctionsSnap.docs
     .map((doc) => ({
       id: doc.id,
-      ...(doc.data() as Record<string, unknown>),
+      ...(doc.data() as Record<string, any>),
       createdAt: readDate(doc.data().createdAt),
-    }))
+    } as { id: string; createdAt: Date | null; [key: string]: any }))
     .filter((auction) => !status || auction.status === status)
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
 

@@ -8,7 +8,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
@@ -20,37 +20,40 @@ export async function GET(req: Request) {
   if (authError) return authError;
 
   const result = await withRetry(async () => {
-    const activeAlerts = await prisma.alert.findMany({
-      where: {
-        isActive:  true,
-        type:      { in: ['TARGET_REACHED', 'PRICE_DROP'] },
-        auctionId: { not: null },
-      },
-      include: {
-        auction: { select: { currentPrice: true, title: true } },
-        user:    { select: { id: true } },
-      },
-    });
+    const snap = await db.collection('alerts')
+      .where('isActive', '==', true)
+      .where('type',     'in', ['TARGET_REACHED', 'PRICE_DROP'])
+      .get();
+
+    const candidates = snap.docs
+      .map(d => ({ id: d.id, ...d.data() } as { id: string; userId: string; auctionId?: string | null; type: string; thresholdPrice?: number | null }))
+      .filter(a => a.auctionId);
+
+    const auctionIds = [...new Set(candidates.map(a => a.auctionId!))];
+    const aucSnaps   = await Promise.all(auctionIds.map(id => db.collection('auctions').doc(id).get()));
+    const aucMap     = new Map(aucSnaps.filter(s => s.exists).map(s => {
+      const a = s.data()!;
+      return [s.id, { currentPrice: a.currentPrice as number, title: a.title as string }];
+    }));
 
     let triggered = 0;
     const alertsToDeactivate: string[] = [];
 
-    for (const alert of activeAlerts) {
-      if (!alert.auction || alert.thresholdPrice === null) continue;
+    for (const alert of candidates) {
+      const auc = aucMap.get(alert.auctionId!);
+      if (!auc || alert.thresholdPrice == null) continue;
 
-      const { currentPrice } = alert.auction;
+      const { currentPrice } = auc;
       const threshold        = alert.thresholdPrice;
 
       const isTargetReached = alert.type === 'TARGET_REACHED' && currentPrice >= threshold;
       const isPriceDropped  = alert.type === 'PRICE_DROP'     && currentPrice <= threshold;
-
       if (!isTargetReached && !isPriceDropped) continue;
 
-      // Push real-time notification to user's RTDB inbox (non-fatal)
-      await rtdbPush(RTDB_PATHS.userNotifications(alert.user.id), {
+      await rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
         event:        FIREBASE_EVENTS.PRICE_ALERT,
         auctionId:    alert.auctionId,
-        auctionTitle: alert.auction.title,
+        auctionTitle: auc.title,
         amount:       currentPrice,
         type:         alert.type,
         threshold,
@@ -62,15 +65,16 @@ export async function GET(req: Request) {
       triggered++;
     }
 
-    // Deactivate triggered alerts in a single batch update
     if (alertsToDeactivate.length > 0) {
-      await prisma.alert.updateMany({
-        where: { id: { in: alertsToDeactivate } },
-        data:  { isActive: false },
-      });
+      const batch = db.batch();
+      const now   = new Date();
+      for (const id of alertsToDeactivate) {
+        batch.update(db.collection('alerts').doc(id), { isActive: false, updatedAt: now });
+      }
+      await batch.commit();
     }
 
-    return { checked: activeAlerts.length, triggered };
+    return { checked: candidates.length, triggered };
   }, { maxAttempts: 3 });
 
   if (result.error) {

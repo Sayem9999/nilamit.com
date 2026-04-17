@@ -101,12 +101,12 @@ export async function getAuctionChat(auctionId: string) {
   const messages = messagesSnap.docs.map(d => ({
     ...d.data(), id: d.id,
     createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
-  }));
+  } as any));
 
   return {
     ...conv, id: convSnap.id,
     lastMessageAt: conv.lastMessageAt?.toDate?.() ?? new Date(conv.lastMessageAt),
     createdAt:     conv.createdAt?.toDate?.()     ?? new Date(conv.createdAt),
     messages,
-  };
+  } as any;
 }

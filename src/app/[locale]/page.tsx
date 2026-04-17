@@ -2,8 +2,13 @@ import { HomeContent } from "@/components/home/HomeContent";
 import ForYouFeed from "@/components/home/components/ForYouFeed";
 export const dynamic = "force-dynamic";
 import { getAuctions, getSpecializedFeeds } from "@/actions/auction";
-import { prisma } from "@/lib/db";
-import { AuctionStatus } from "@prisma/client";
+import { db } from "@/lib/db";
+import { AuctionStatus } from "@/types";
+
+async function countCollection(query: FirebaseFirestore.Query): Promise<number> {
+  const snap = await query.count().get();
+  return snap.data().count;
+}
 
 export default async function HomePage({
   params,
@@ -24,10 +29,10 @@ export default async function HomePage({
     getAuctions({ sortBy: "bids", sortOrder: "desc", limit: 8 }),
     getSpecializedFeeds(),
     getAuctions({ limit: 4 }),
-    prisma.user.count(),
-    prisma.bid.count(),
-    prisma.auction.count({ where: { status: AuctionStatus.ACTIVE } }),
-    prisma.user.count({ where: { isVerifiedSeller: true } }),
+    countCollection(db.collection("users")),
+    countCollection(db.collection("bids")),
+    countCollection(db.collection("auctions").where("status", "==", AuctionStatus.ACTIVE)),
+    countCollection(db.collection("users").where("isVerifiedSeller", "==", true)),
   ]);
 
   return (

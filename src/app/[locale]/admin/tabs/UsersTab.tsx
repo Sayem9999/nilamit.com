@@ -31,8 +31,12 @@ export function UsersTab() {
     let mounted = true;
     const load = async () => {
       setLoading(true);
-      const res = await getAdminUsers();
-      if (mounted && res.success) setUsers(res.users || []);
+      try {
+        const res = await getAdminUsers();
+        if (mounted) setUsers((res.users || []) as unknown as AdminUser[]);
+      } catch {
+        // ignore
+      }
       if (mounted) setLoading(false);
     };
     load();

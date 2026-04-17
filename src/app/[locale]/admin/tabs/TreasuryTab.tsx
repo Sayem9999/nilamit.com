@@ -22,7 +22,7 @@ export function TreasuryTab() {
     async function loadLogs() {
       try {
         const data = await getTreasuryAudit();
-        setLogs(data);
+        setLogs(data as unknown as TreasuryLog[]);
       } catch (e) {
         console.error(e);
       } finally {

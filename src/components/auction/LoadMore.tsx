@@ -30,7 +30,7 @@ export default function LoadMore({
       if (result.auctions.length > 0) {
         setAuctions((prev) => [
           ...prev,
-          ...(result.auctions as AuctionWithSeller[]),
+          ...(result.auctions as unknown as AuctionWithSeller[]),
         ]);
         setPage((prev) => prev + 1);
         if (result.page >= result.pages) {

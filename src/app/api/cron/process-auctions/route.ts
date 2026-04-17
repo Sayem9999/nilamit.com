@@ -9,7 +9,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
@@ -27,12 +27,22 @@ interface ProcessResult {
 async function processExpiredAuctions(): Promise<ProcessResult> {
   const now = new Date();
 
-  const expiredAuctions = await prisma.auction.findMany({
-    where: { status: 'ACTIVE', endTime: { lte: now } },
-    include: {
-      bids: { orderBy: { amount: 'desc' }, take: 1 },
-    },
-  });
+  const expiredSnap = await db.collection('auctions')
+    .where('status', '==', 'ACTIVE')
+    .where('endTime', '<=', now)
+    .get();
+
+  const expiredAuctions = await Promise.all(expiredSnap.docs.map(async d => {
+    const a       = d.data();
+    const bidSnap = await db.collection('bids')
+      .where('auctionId', '==', d.id)
+      .orderBy('amount', 'desc')
+      .limit(1)
+      .get();
+    const bidDoc  = bidSnap.docs[0];
+    const highestBid = bidDoc ? { id: bidDoc.id, ...bidDoc.data() } as { id: string; bidderId: string; amount: number } : null;
+    return { id: d.id, title: a.title as string, highestBid };
+  }));
 
   const result: ProcessResult = {
     totalExpired: expiredAuctions.length,
@@ -44,37 +54,32 @@ async function processExpiredAuctions(): Promise<ProcessResult> {
 
   for (const auction of expiredAuctions) {
     const attemptResult = await withRetry(async () => {
-      const highestBid = auction.bids[0];
+      const highestBid = auction.highestBid;
 
-      await prisma.$transaction(async (tx) => {
+      await db.runTransaction(async (tx) => {
+        const auctionRef = db.collection('auctions').doc(auction.id);
         if (!highestBid) {
-          // No bids — expire gracefully
-          await tx.auction.update({
-            where: { id: auction.id },
-            data: { status: 'EXPIRED' },
-          });
+          tx.update(auctionRef, { status: 'EXPIRED', updatedAt: new Date() });
         } else {
-          // Has a winner — mark SOLD + create escrow
-          await tx.auction.update({
-            where: { id: auction.id },
-            data: { status: 'SOLD', winnerId: highestBid.bidderId },
-          });
+          tx.update(auctionRef, { status: 'SOLD', winnerId: highestBid.bidderId, updatedAt: new Date() });
 
-          // Only create escrow if one doesn't already exist (idempotent)
-          await tx.escrowTransaction.upsert({
-            where: { auctionId: auction.id },
-            create: {
+          // Idempotent: doc id = auctionId, only create if missing
+          const escrowRef  = db.collection('escrowTransactions').doc(auction.id);
+          const escrowSnap = await tx.get(escrowRef);
+          if (!escrowSnap.exists) {
+            tx.set(escrowRef, {
+              id:        auction.id,
               auctionId: auction.id,
               buyerId:   highestBid.bidderId,
               amount:    highestBid.amount,
               status:    'HELD',
-            },
-            update: {}, // Already exists — no-op
-          });
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            });
+          }
         }
       });
 
-      // Notify winner via Firebase RTDB (outside transaction so RTDB failure doesn't roll back)
       if (highestBid) {
         await rtdbPush(RTDB_PATHS.userNotifications(highestBid.bidderId), {
           event:     FIREBASE_EVENTS.AUCTION_WON,
@@ -84,7 +89,7 @@ async function processExpiredAuctions(): Promise<ProcessResult> {
         }).catch(err => console.error(`[Cron] RTDB notify failed for auction ${auction.id}:`, err));
       }
 
-      return !!highestBid; // true = SOLD, false = EXPIRED
+      return !!highestBid;
     }, { maxAttempts: 3 });
 
     if (attemptResult.error) {

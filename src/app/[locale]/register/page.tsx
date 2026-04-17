@@ -94,6 +94,7 @@ export default function RegisterPage() {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [resendTimer]);
 
   if (success) {

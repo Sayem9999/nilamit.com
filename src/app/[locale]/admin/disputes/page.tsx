@@ -35,7 +35,7 @@ export default function AdminDisputesPage() {
   const fetchDisputes = async () => {
     setLoading(true);
     const data = await getOpenDisputes();
-    setDisputes(data);
+    setDisputes(data as unknown as Dispute[]);
     setLoading(false);
   };
 
@@ -44,7 +44,7 @@ export default function AdminDisputesPage() {
     const load = async () => {
       const data = await getOpenDisputes();
       if (mounted) {
-        setDisputes(data);
+        setDisputes(data as unknown as Dispute[]);
         setLoading(false);
       }
     };

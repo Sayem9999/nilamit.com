@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import ChatInterface from "@/components/social/ChatInterface";
 import { ChevronLeft, ShieldCheck, Info } from "lucide-react";
@@ -7,6 +7,15 @@ import Link from "next/link";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 import { getTranslations } from "next-intl/server";
 import { getSystemConfig } from "@/actions/admin-content";
+
+function toDate(v: unknown): Date {
+  if (!v) return new Date();
+  if (v instanceof Date) return v;
+  if (typeof v === "object" && v !== null && "toDate" in v && typeof (v as { toDate: () => Date }).toDate === "function") {
+    return (v as { toDate: () => Date }).toDate();
+  }
+  return new Date(v as string);
+}
 
 export default async function CoordinationPage({
   params,
@@ -25,39 +34,73 @@ export default async function CoordinationPage({
 
   const userId = session.user.id;
 
-  const conversation = await prisma.conversation.findUnique({
-    where: { id },
-    include: {
-      auction: {
-        include: {
-          seller: { select: { id: true, name: true, image: true } },
-          winner: { select: { id: true, name: true, image: true } },
-          escrowTransaction: {
-            include: { dispute: true }
-          }
-        },
-      },
-      messages: {
-        orderBy: { createdAt: "asc" },
-      },
-    },
-  });
+  const convSnap = await db.collection("conversations").doc(id).get();
+  if (!convSnap.exists) notFound();
+  const convData = convSnap.data()!;
 
-  if (!conversation) {
-    notFound();
-  }
-
-  // Ensure user is part of the conversation
-  if (conversation.buyerId !== userId && conversation.sellerId !== userId) {
+  if (convData.buyerId !== userId && convData.sellerId !== userId) {
     redirect(`/${locale}/dashboard`);
   }
 
-  // Ensure escrow is HELD or DISPUTED (Post-advance coordination)
-  const escrowStatus = conversation.auction.escrowTransaction?.status;
-  if (!escrowStatus || (escrowStatus !== 'HELD' && escrowStatus !== 'DISPUTED' && escrowStatus !== 'RELEASED')) {
-     // If not yet advanced, redirect back to dashboard escrow tab
-     redirect(`/${locale}/dashboard?tab=escrow`);
+  const auctionId = convData.auctionId as string;
+  const [aucSnap, escrowSnap, messagesSnap] = await Promise.all([
+    db.collection("auctions").doc(auctionId).get(),
+    db.collection("escrowTransactions").doc(auctionId).get(),
+    db.collection("messages")
+      .where("conversationId", "==", id)
+      .orderBy("createdAt", "asc")
+      .get(),
+  ]);
+  if (!aucSnap.exists) notFound();
+  const aucData = aucSnap.data()!;
+
+  const escrowData = escrowSnap.exists ? escrowSnap.data()! : null;
+  let dispute: FirebaseFirestore.DocumentData | null = null;
+  if (escrowData) {
+    const dispSnap = await db.collection("disputes")
+      .where("transactionId", "==", escrowSnap.id)
+      .limit(1)
+      .get();
+    const d = dispSnap.docs[0];
+    dispute = d ? { id: d.id, ...d.data() } : null;
   }
+
+  const escrowStatus = escrowData?.status as string | undefined;
+  if (!escrowStatus || (escrowStatus !== "HELD" && escrowStatus !== "DISPUTED" && escrowStatus !== "RELEASED")) {
+    redirect(`/${locale}/dashboard?tab=escrow`);
+  }
+
+  const sellerId = aucData.sellerId as string;
+  const winnerId = aucData.winnerId as string | null | undefined;
+  const [sellerSnap, winnerSnap] = await Promise.all([
+    db.collection("users").doc(sellerId).get(),
+    winnerId ? db.collection("users").doc(winnerId).get() : Promise.resolve(null),
+  ]);
+  const sellerData = sellerSnap.data() ?? {};
+  const winnerData = winnerSnap?.exists ? winnerSnap.data() ?? {} : null;
+
+  const conversation = {
+    id,
+    auctionId,
+    buyerId:  convData.buyerId,
+    sellerId: convData.sellerId,
+    auction: {
+      id:          auctionId,
+      title:       aucData.title,
+      endTime:     toDate(aucData.endTime),
+      seller: { id: sellerId, name: sellerData.name ?? null, image: sellerData.image ?? null },
+      winner: winnerData && winnerId
+        ? { id: winnerId, name: winnerData.name ?? null, image: winnerData.image ?? null }
+        : null,
+      escrowTransaction: escrowData
+        ? { ...escrowData, id: escrowSnap.id, dispute }
+        : null,
+    },
+    messages: messagesSnap.docs.map(d => {
+      const m = d.data();
+      return { ...m, id: d.id, createdAt: toDate(m.createdAt) };
+    }),
+  };
 
   const isBuyer = conversation.buyerId === userId;
   const recipient = isBuyer ? conversation.auction.seller : conversation.auction.winner;
@@ -86,12 +129,12 @@ export default async function CoordinationPage({
             <ChatInterface
               auctionId={conversation.auctionId}
               conversationId={conversation.id}
-              initialMessages={conversation.messages.map((m) => ({
+              initialMessages={conversation.messages.map((m: any) => ({
                 ...m,
                 createdAt: m.createdAt.toISOString(),
-              }))}
+              })) as any}
               recipientName={recipient?.name || "User"}
-              recipientImage={recipient?.image}
+              recipientImage={recipient?.image ?? null}
             />
             
             <div className="mt-4 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3 text-amber-800">
@@ -118,11 +161,11 @@ export default async function CoordinationPage({
                     seller: { name: conversation.auction.seller.name },
                     endTime: conversation.auction.endTime
                   }
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 } as any} 
                 treasuryNumbers={{
-                  bkash: systemConfig.treasuryBkash,
-                  nagad: systemConfig.treasuryNagad
+                  bkash: systemConfig.treasuryBkash ?? null,
+                  nagad: systemConfig.treasuryNagad ?? null
                 }}
               />
             </div>

@@ -8,12 +8,21 @@
  */
 
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { AuctionStatus } from '@prisma/client';
+import { db } from '@/lib/db';
+import { AuctionStatus } from '@/types';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { sendEndingSoonEmail } from '@/lib/firebase-email';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
+
+function toDate(v: unknown): Date {
+  if (!v) return new Date();
+  if (v instanceof Date) return v;
+  if (typeof v === 'object' && v !== null && 'toDate' in v && typeof (v as { toDate: () => Date }).toDate === 'function') {
+    return (v as { toDate: () => Date }).toDate();
+  }
+  return new Date(v as string);
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -25,41 +34,53 @@ export async function GET(req: Request) {
     const now            = new Date();
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
-    const auctions = await prisma.auction.findMany({
-      where: {
-        status:  AuctionStatus.ACTIVE,
-        endTime: { gt: now, lte: oneHourFromNow },
-      },
-      include: {
-        watchlist: {
-          include: { user: { select: { id: true, email: true, name: true } } },
-        },
-        alerts: {
-          where: { type: 'ENDING_SOON', isActive: true },
-          select: { userId: true },
-        },
-      },
-    });
+    const aucSnap = await db.collection('auctions')
+      .where('status',  '==', AuctionStatus.ACTIVE)
+      .where('endTime', '>',  now)
+      .where('endTime', '<=', oneHourFromNow)
+      .get();
 
     let emailsQueued = 0;
     let rtdbEvents   = 0;
+    let auctionsProcessed = 0;
 
-    for (const auction of auctions) {
+    for (const aucDoc of aucSnap.docs) {
+      auctionsProcessed++;
+      const auction = {
+        id:           aucDoc.id,
+        title:        aucDoc.data().title as string,
+        currentPrice: aucDoc.data().currentPrice as number,
+        endTime:      toDate(aucDoc.data().endTime),
+      };
+
+      const [watchSnap, alertSnap] = await Promise.all([
+        db.collection('watchlist').where('auctionId', '==', auction.id).get(),
+        db.collection('alerts')
+          .where('auctionId', '==', auction.id)
+          .where('type',      '==', 'ENDING_SOON')
+          .where('isActive',  '==', true)
+          .get(),
+      ]);
+
+      const watcherIds = watchSnap.docs.map(d => d.data().userId as string);
+      const userSnaps  = await Promise.all(watcherIds.map(uid => db.collection('users').doc(uid).get()));
+      const watchers   = userSnaps.filter(s => s.exists).map(s => ({
+        id:    s.id,
+        email: s.data()?.email as string | null,
+        name:  s.data()?.name  as string | null,
+      }));
+
       const notifiedUserIds = new Set<string>();
 
-      // 1. Notify watchlist users
-      for (const entry of auction.watchlist) {
-        const { user } = entry;
+      for (const user of watchers) {
         notifiedUserIds.add(user.id);
 
-        // Queue email via Firebase Trigger Email extension (non-fatal)
         if (user.email) {
           sendEndingSoonEmail(user.email, auction.title, auction.currentPrice, auction.id)
             .catch(err => console.error(`[Cron:closing-soon] Email failed for user ${user.id}:`, err));
           emailsQueued++;
         }
 
-        // Real-time RTDB notification
         await rtdbPush(RTDB_PATHS.userNotifications(user.id), {
           event:        FIREBASE_EVENTS.ENDING_SOON,
           auctionId:    auction.id,
@@ -70,22 +91,22 @@ export async function GET(req: Request) {
         rtdbEvents++;
       }
 
-      // 2. Notify explicit ENDING_SOON alert holders not already in watchlist
-      for (const alert of auction.alerts) {
-        if (notifiedUserIds.has(alert.userId)) continue;
+      for (const a of alertSnap.docs) {
+        const userId = a.data().userId as string;
+        if (notifiedUserIds.has(userId)) continue;
 
-        await rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
+        await rtdbPush(RTDB_PATHS.userNotifications(userId), {
           event:        FIREBASE_EVENTS.ENDING_SOON,
           auctionId:    auction.id,
           auctionTitle: auction.title,
           currentPrice: auction.currentPrice,
           endTime:      auction.endTime.toISOString(),
-        }).catch(err => console.error(`[Cron:closing-soon] RTDB (alert) failed for user ${alert.userId}:`, err));
+        }).catch(err => console.error(`[Cron:closing-soon] RTDB (alert) failed for user ${userId}:`, err));
         rtdbEvents++;
       }
     }
 
-    return { auctionsProcessed: auctions.length, emailsQueued, rtdbEvents };
+    return { auctionsProcessed, emailsQueued, rtdbEvents };
   }, { maxAttempts: 3, initialDelayMs: 2000 });
 
   if (result.error) {

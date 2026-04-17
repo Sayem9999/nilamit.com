@@ -79,9 +79,9 @@ export async function exportTransactionsCSV() {
     const auctions = soldSnap.docs
       .map((doc) => ({
         id: doc.id,
-        ...(doc.data() as Record<string, unknown>),
+        ...(doc.data() as Record<string, any>),
         updatedAt: readDate(doc.data().updatedAt),
-      }))
+      } as { id: string; updatedAt: Date | null; [key: string]: any }))
       .sort((a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0));
 
     const userIds = new Set<string>();

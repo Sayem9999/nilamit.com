@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { Shield, Star, Calendar, Package, Gavel } from "lucide-react";
@@ -8,59 +8,95 @@ interface Props {
   params: Promise<{ locale: string; id: string }>;
 }
 
+function toDate(v: unknown): Date {
+  if (!v) return new Date();
+  if (v instanceof Date) return v;
+  if (typeof v === "object" && v !== null && "toDate" in v && typeof (v as { toDate: () => Date }).toDate === "function") {
+    return (v as { toDate: () => Date }).toDate();
+  }
+  return new Date(v as string);
+}
+
 export default async function SellerProfilePage({ params }: Props) {
   const { id } = await params;
 
-  const seller = await prisma.user.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      image: true,
-      isVerifiedSeller: true,
-      isPhoneVerified: true,
-      reputationScore: true,
-      createdAt: true,
-      winningStreak: true,
-      userLevel: true,
-      _count: { select: { bids: true } },
-    },
+  const sellerSnap = await db.collection("users").doc(id).get();
+  if (!sellerSnap.exists) return notFound();
+  const u = sellerSnap.data()!;
+
+  const [bidCountSnap, auctionSnap, reviewSnap] = await Promise.all([
+    db.collection("bids").where("bidderId", "==", id).count().get(),
+    db.collection("auctions")
+      .where("sellerId", "==", id)
+      .where("status", "in", ["ACTIVE", "SOLD"])
+      .orderBy("createdAt", "desc")
+      .limit(20)
+      .get(),
+    db.collection("reviews")
+      .where("toId", "==", id)
+      .orderBy("createdAt", "desc")
+      .limit(10)
+      .get(),
+  ]);
+
+  const seller = {
+    id,
+    name:             u.name ?? null,
+    image:            u.image ?? null,
+    isVerifiedSeller: u.isVerifiedSeller ?? false,
+    isPhoneVerified:  u.isPhoneVerified  ?? false,
+    reputationScore:  u.reputationScore  ?? 0,
+    winningStreak:    u.winningStreak    ?? 0,
+    userLevel:        u.userLevel        ?? 1,
+    createdAt:        toDate(u.createdAt),
+    _count:           { bids: bidCountSnap.data().count },
+  };
+
+  const sellerInline = {
+    id:               seller.id,
+    name:             seller.name,
+    image:            seller.image,
+    isVerifiedSeller: seller.isVerifiedSeller,
+    winningStreak:    seller.winningStreak,
+    userLevel:        seller.userLevel,
+    reputationScore:  seller.reputationScore,
+  };
+
+  const auctions = auctionSnap.docs.map(d => {
+    const a = d.data();
+    return {
+      ...a,
+      id:        d.id,
+      startTime: toDate(a.startTime),
+      endTime:   toDate(a.endTime),
+      createdAt: toDate(a.createdAt),
+      updatedAt: toDate(a.updatedAt),
+      seller:    sellerInline,
+      _count:    { bids: a.bidCount ?? 0 },
+    };
   });
 
-  if (!seller) return notFound();
+  const reviewerIds = [...new Set(reviewSnap.docs.map(d => d.data().fromId as string))];
+  const reviewerSnaps = await Promise.all(reviewerIds.map(rid => db.collection("users").doc(rid).get()));
+  const reviewerMap   = new Map(reviewerSnaps.map(s => {
+    const ru = s.data() ?? {};
+    return [s.id, { name: ru.name ?? null, image: ru.image ?? null }];
+  }));
 
-  const auctions = await prisma.auction.findMany({
-    where: { sellerId: id, status: { in: ["ACTIVE", "SOLD"] } },
-    include: {
-      seller: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          isVerifiedSeller: true,
-          winningStreak: true,
-          userLevel: true,
-          reputationScore: true,
-        },
-      },
-      _count: { select: { bids: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
-
-  const reviews = await prisma.review.findMany({
-    where: { toId: id },
-    include: { from: { select: { name: true, image: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 10,
+  const reviews = reviewSnap.docs.map(d => {
+    const r = d.data();
+    return {
+      id:        d.id,
+      rating:    r.rating ?? 5,
+      comment:   r.comment ?? null,
+      createdAt: toDate(r.createdAt),
+      from:      reviewerMap.get(r.fromId) ?? { name: null, image: null },
+    };
   });
 
   const avgRating =
     reviews.length > 0
-      ? (
-          reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-        ).toFixed(1)
+      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : null;
 
   return (
@@ -97,7 +133,7 @@ export default async function SellerProfilePage({ params }: Props) {
             <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" /> Joined{" "}
-                {new Date(seller.createdAt).toLocaleDateString("en-US", {
+                {seller.createdAt.toLocaleDateString("en-US", {
                   month: "long",
                   year: "numeric",
                 })}

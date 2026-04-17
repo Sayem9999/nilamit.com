@@ -15,26 +15,32 @@ async function requireAdmin() {
 }
 
 export async function getAdminReports(status?: string) {
-  await requireAdmin();
+  try {
+    await requireAdmin();
 
-  let query: FirebaseFirestore.Query = db.collection('reports').orderBy('createdAt', 'desc');
-  if (status) query = query.where('status', '==', status);
+    let query: FirebaseFirestore.Query = db.collection('reports').orderBy('createdAt', 'desc');
+    if (status) query = query.where('status', '==', status);
 
-  const snap = await query.limit(100).get();
+    const snap = await query.limit(100).get();
 
-  return Promise.all(snap.docs.map(async d => {
-    const r = d.data();
-    const [aSnap, reporterSnap] = await Promise.all([
-      db.collection('auctions').doc(r.auctionId).get(),
-      db.collection('users').doc(r.reporterId).get(),
-    ]);
-    return {
-      ...r, id: d.id,
-      createdAt: r.createdAt?.toDate?.() ?? new Date(r.createdAt),
-      auction:  aSnap.exists  ? { id: aSnap.id, title: aSnap.data()?.title ?? '' } : null,
-      reporter: reporterSnap.exists ? { id: reporterSnap.id, name: reporterSnap.data()?.name ?? '' } : null,
-    };
-  }));
+    const reports = await Promise.all(snap.docs.map(async d => {
+      const r = d.data();
+      const [aSnap, reporterSnap] = await Promise.all([
+        db.collection('auctions').doc(r.auctionId).get(),
+        db.collection('users').doc(r.reporterId).get(),
+      ]);
+      return {
+        ...r, id: d.id,
+        createdAt: r.createdAt?.toDate?.() ?? new Date(r.createdAt),
+        auction:  aSnap.exists  ? { id: aSnap.id, title: aSnap.data()?.title ?? '' } : null,
+        reporter: reporterSnap.exists ? { id: reporterSnap.id, name: reporterSnap.data()?.name ?? '' } : null,
+      } as any;
+    }));
+
+    return { success: true, reports };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Failed', reports: [] as any[] };
+  }
 }
 
 export async function resolveReport(reportId: string, status: string) {
