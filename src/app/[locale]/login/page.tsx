@@ -70,18 +70,21 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} aria-label={t("signInTitle")}>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">
+              <label htmlFor="login-email" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">
                 {t("emailLabel")}
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-600 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-600 transition-colors" aria-hidden="true">
                   <Mail size={18} />
                 </div>
                 <Input
+                  id="login-email"
                   type="email"
+                  autoComplete="email"
                   required
+                  aria-required="true"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-12 h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-lg font-medium"
@@ -92,23 +95,26 @@ export default function LoginPage() {
 
             <div className="space-y-1">
               <div className="flex justify-between items-center pl-1 mb-1">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block font-bold">
+                <label htmlFor="login-password" className="text-xs font-bold text-gray-400 uppercase tracking-widest block font-bold">
                   {t("passwordLabel")}
                 </label>
                 <Link
                   href={`/${locale}/forgot-password`}
-                  className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors uppercase tracking-widest"
+                  className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors uppercase tracking-widest focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
                 >
                   {t("forgotPassword")}
                 </Link>
               </div>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-600 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-600 transition-colors" aria-hidden="true">
                   <Lock size={18} />
                 </div>
                 <Input
+                  id="login-password"
                   type="password"
+                  autoComplete="current-password"
                   required
+                  aria-required="true"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-12 h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-lg font-medium"
@@ -120,14 +126,18 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-2xl transition-all shadow-lg hover:shadow-xl font-bold text-lg group"
+              aria-busy={loading}
+              className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-2xl transition-all shadow-lg hover:shadow-xl font-bold text-lg group focus-visible:ring-4 focus-visible:ring-primary-500/30"
             >
               {loading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin" aria-hidden="true" />
+                  <span className="sr-only">{t("signInBtn")}</span>
+                </>
               ) : (
                 <div className="flex items-center gap-2">
                   {t("signInBtn")}
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
                 </div>
               )}
             </Button>

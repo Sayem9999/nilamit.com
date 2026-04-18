@@ -18,7 +18,7 @@ import { useSettings } from "@/context/SettingsContext";
 import { useAuctionBids } from "@/hooks/useAuctionBids";
 import { useSound } from "@/hooks/useSound";
 import { Volume2, VolumeX } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { VerificationGuard } from "../auth/VerificationGuard";
 
@@ -49,6 +49,7 @@ export function BidPanel({
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
   const { play: playGavel } = useSound("/sounds/gavel.mp3");
   const t = useTranslations("BidPanel");
+  const locale = useLocale();
   const [latestPrice, setLatestPrice] = useState(currentPrice);
   const [latestEndTime] = useState(new Date(endTime));
   const [bidAmount, setBidAmount] = useState(currentPrice + minBidIncrement);
@@ -85,7 +86,7 @@ export function BidPanel({
   const handleBid = () => {
     if (!session) {
       if (typeof window !== "undefined") {
-        window.location.href = "/login";
+        window.location.href = `/${locale}/login`;
       }
       return;
     }
@@ -124,7 +125,7 @@ export function BidPanel({
   const handleBuyItNow = () => {
     if (!session) {
       if (typeof window !== "undefined") {
-        window.location.href = "/login";
+        window.location.href = `/${locale}/login`;
       }
       return;
     }
@@ -159,7 +160,7 @@ export function BidPanel({
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-heading font-semibold text-gray-900 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-primary-600" />
+          <TrendingUp className="w-5 h-5 text-primary-600" aria-hidden="true" />
           {t("placeBid")}
         </h3>
         <div className="flex items-center gap-2">
@@ -167,14 +168,18 @@ export function BidPanel({
             <div
               className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-medium animate-pulse"
               title={`${viewers} person(s) currently viewing this auction`}
+              aria-label={`${viewers} ${t("viewing", { fallback: "viewing" })}`}
             >
-              <Users className="w-3.5 h-3.5" />
-              {viewers} {t("viewing", { fallback: "viewing" })}
+              <Users className="w-3.5 h-3.5" aria-hidden="true" />
+              <span aria-hidden="true">{viewers} {t("viewing", { fallback: "viewing" })}</span>
             </div>
           )}
           <button
+            type="button"
             onClick={toggleSoundEffects}
-            className={`p-1.5 rounded-lg transition-colors ${
+            aria-pressed={soundEffectsEnabled}
+            aria-label={soundEffectsEnabled ? "Mute sound effects" : "Unmute sound effects"}
+            className={`p-1.5 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
               soundEffectsEnabled
                 ? "text-primary-600 bg-primary-50"
                 : "text-gray-400 bg-gray-50"
@@ -182,13 +187,13 @@ export function BidPanel({
             title={soundEffectsEnabled ? "Mute" : "Unmute"}
           >
             {soundEffectsEnabled ? (
-              <Volume2 className="w-4 h-4" />
+              <Volume2 className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <VolumeX className="w-4 h-4" />
+              <VolumeX className="w-4 h-4" aria-hidden="true" />
             )}
           </button>
           <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg">
-            <Clock className="w-4 h-4" />
+            <Clock className="w-4 h-4" aria-hidden="true" />
             <CountdownTimer endTime={displayEndTime} />
           </div>
         </div>
@@ -229,9 +234,12 @@ export function BidPanel({
             <div className="mb-4">
               <VerificationGuard>
                 <button
+                  type="button"
                   onClick={handleBuyItNow}
                   disabled={isPending}
-                  className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center gap-0.5 overflow-hidden relative"
+                  aria-busy={isPending}
+                  aria-label={`Buy it now for ${formatBDT(buyItNowPrice as number)}`}
+                  className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center gap-0.5 overflow-hidden relative focus:outline-none focus-visible:ring-4 focus-visible:ring-accent-500/30"
                 >
                   <div className="flex items-center gap-2 relative z-10 text-sm">
                     <span>BUY IT NOW</span>
@@ -255,29 +263,34 @@ export function BidPanel({
 
           {/* Bid Input */}
           <div className="mb-3">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
+            <label htmlFor="bid-amount" className="text-xs font-medium text-gray-500 mb-1 block">
               {t("yourBid")}
             </label>
             <input
+              id="bid-amount"
               type="number"
               value={bidAmount}
               onChange={(e) => setBidAmount(Number(e.target.value))}
               min={minBid}
               step={minBidIncrement}
+              aria-describedby="bid-amount-hint"
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 price text-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p id="bid-amount-hint" className="text-xs text-gray-400 mt-1">
               {t("minimumBid")} {formatBDT(minBid)}
             </p>
           </div>
 
           {/* Quick Bid Buttons */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4" role="group" aria-label={t("yourBid")}>
             {quickBids.map((amount) => (
               <button
                 key={amount}
+                type="button"
                 onClick={() => setBidAmount(amount)}
-                className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                aria-pressed={bidAmount === amount}
+                aria-label={`${t("bidBtnPrefix")} ${formatBDT(amount)}`}
+                className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                   bidAmount === amount
                     ? "bg-primary-50 border-primary-200 text-primary-700"
                     : "border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -291,12 +304,17 @@ export function BidPanel({
           {/* Submit */}
           <VerificationGuard>
             <button
+              type="button"
               onClick={handleBid}
               disabled={isPending || bidAmount < minBid}
-              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+              aria-busy={isPending}
+              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
             >
               {isPending ? (
-                <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
+                <>
+                  <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" aria-hidden="true" />
+                  <span className="sr-only">{t("bidBtnPrefix")} {formatBDT(bidAmount)}</span>
+                </>
               ) : (
                 <>
                   {t("bidBtnPrefix")} {formatBDT(bidAmount)}
@@ -308,6 +326,8 @@ export function BidPanel({
           {/* Result */}
           {result && (
             <div
+              role={result.success ? "status" : "alert"}
+              aria-live={result.success ? "polite" : "assertive"}
               className={`mt-3 p-3 rounded-xl text-sm flex items-start gap-2 ${
                 result.success
                   ? "bg-green-50 text-green-700"
@@ -316,7 +336,7 @@ export function BidPanel({
             >
               {result.success ? (
                 <>
-                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
                   <div>
                     <p className="font-medium">{t("success")}</p>
                     {result.antiSnipeTriggered && (
@@ -328,7 +348,7 @@ export function BidPanel({
                 </>
               ) : (
                 <>
-                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
                   <p>
                     {result.error === "PHONE_NOT_VERIFIED"
                       ? t("phoneNotVerified")
@@ -341,7 +361,7 @@ export function BidPanel({
 
           {/* Trust indicator */}
           <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
-            <Shield className="w-3.5 h-3.5" />
+            <Shield className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{t("trustIndicator")}</span>
           </div>
         </>
@@ -360,24 +380,41 @@ export function BidPanel({
 
 function PhoneVerificationPrompt({ onClose }: { onClose: () => void }) {
   const t = useTranslations("BidPanel");
+  const locale = useLocale();
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl">
-        <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="phone-verify-title"
+      aria-describedby="phone-verify-desc"
+      onClick={onClose}
+    >
+      <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h3 id="phone-verify-title" className="font-heading font-semibold text-lg text-gray-900 mb-2">
           {t("verifyPhone")}
         </h3>
-        <p className="text-sm text-gray-500 mb-4">{t("verifyPhoneDesc")}</p>
+        <p id="phone-verify-desc" className="text-sm text-gray-500 mb-4">{t("verifyPhoneDesc")}</p>
         <div className="flex gap-3">
           <button
+            type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             {t("laterBtn")}
           </button>
           <Link
-            href="/profile"
-            className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700"
+            href={`/${locale}/profile`}
+            className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
           >
             {t("verifyNowBtn")}
           </Link>
@@ -389,24 +426,41 @@ function PhoneVerificationPrompt({ onClose }: { onClose: () => void }) {
 
 function MFSLinkagePrompt({ onClose }: { onClose: () => void }) {
   const t = useTranslations("BidPanel");
+  const locale = useLocale();
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl">
-        <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mfs-link-title"
+      aria-describedby="mfs-link-desc"
+      onClick={onClose}
+    >
+      <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h3 id="mfs-link-title" className="font-heading font-semibold text-lg text-gray-900 mb-2">
           {t("mfsLinkRequired")}
         </h3>
-        <p className="text-sm text-gray-500 mb-4">{t("mfsLinkDesc")}</p>
+        <p id="mfs-link-desc" className="text-sm text-gray-500 mb-4">{t("mfsLinkDesc")}</p>
         <div className="flex gap-3">
           <button
+            type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             {t("laterBtn")}
           </button>
           <Link
-            href="/profile"
-            className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700"
+            href={`/${locale}/profile`}
+            className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/30"
           >
             {t("linkMFSNowBtn")}
           </Link>
