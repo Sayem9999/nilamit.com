@@ -72,10 +72,18 @@ export default async function SellerSuccessPage({
           />
           <MetricCard
             title="Trust Score"
-            value={metrics.avgSalePrice}
+            value={
+              metrics.reviewCount > 0
+                ? `${metrics.averageRating.toFixed(1)} / 5`
+                : metrics.reputationScore.toString()
+            }
             icon={<Award className="w-6 h-6" />}
-            trend="Growing"
-            isPositive={true}
+            trend={
+              metrics.reviewCount > 0
+                ? `${metrics.reviewCount} review${metrics.reviewCount === 1 ? "" : "s"}`
+                : "No reviews yet"
+            }
+            isPositive={metrics.averageRating >= 4 || metrics.reputationScore > 0}
           />
         </div>
 

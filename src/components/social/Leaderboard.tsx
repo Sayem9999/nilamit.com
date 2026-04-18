@@ -11,31 +11,21 @@ async function userBadges(userId: string): Promise<{ badgeId: string }[]> {
 }
 
 export async function getLeaderboardData() {
-  // Top winning streaks
-  const streakSnap = await db.collection("users")
-    .where("winningStreak", ">", 0)
-    .orderBy("winningStreak", "desc")
-    .limit(5)
-    .get();
-
-  // Users who have won the most auctions: aggregate from auctions collection
-  const winnerSnap = await db.collection("auctions")
-    .where("winnerId", "!=", null)
-    .get();
-
-  const winCounts = new Map<string, number>();
-  for (const d of winnerSnap.docs) {
-    const w = d.data().winnerId as string | null | undefined;
-    if (!w) continue;
-    winCounts.set(w, (winCounts.get(w) ?? 0) + 1);
-  }
-  const topWinnerIds = [...winCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  const buyerSnaps = await Promise.all(
-    topWinnerIds.map(([uid]) => db.collection("users").doc(uid).get())
-  );
+  // Top winning streaks + top buyers are both bounded orderBy(...).limit(5)
+  // queries backed by a denormalized counter on the user doc. Cost and latency
+  // are independent of total auction volume.
+  const [streakSnap, buyerSnap] = await Promise.all([
+    db.collection("users")
+      .where("winningStreak", ">", 0)
+      .orderBy("winningStreak", "desc")
+      .limit(5)
+      .get(),
+    db.collection("users")
+      .where("auctionsWonCount", ">", 0)
+      .orderBy("auctionsWonCount", "desc")
+      .limit(5)
+      .get(),
+  ]);
 
   const [topStreaks, topBuyers] = await Promise.all([
     Promise.all(streakSnap.docs.map(async d => {
@@ -48,14 +38,14 @@ export async function getLeaderboardData() {
         badges:        await userBadges(d.id),
       };
     })),
-    Promise.all(buyerSnaps.map(async (s, i) => {
-      const u = s.data() ?? {};
+    Promise.all(buyerSnap.docs.map(async d => {
+      const u = d.data();
       return {
-        id:     s.id,
+        id:     d.id,
         name:   u.name  ?? null,
         image:  u.image ?? null,
-        badges: await userBadges(s.id),
-        _count: { auctionsAsWinner: topWinnerIds[i][1] },
+        badges: await userBadges(d.id),
+        _count: { auctionsAsWinner: u.auctionsWonCount ?? 0 },
       };
     })),
   ]);

@@ -1,5 +1,5 @@
 import 'server-only';
-import { db } from '@/lib/db';
+import { db, FieldValue } from '@/lib/db';
 import { sendAuctionWonEmail } from '@/lib/firebase-email';
 import type { AuctionStatus } from '@/types';
 
@@ -41,6 +41,16 @@ export async function processAuctionSale(
     commissionEarned: fee,
     updatedAt:       now,
   });
+
+  // Incrementally maintain the winner's auctions-won counter so the leaderboard
+  // can query top buyers in O(1) via an indexed orderBy, instead of scanning
+  // the full auctions collection on every request.
+  const winnerRef = db.collection('users').doc(winner.id);
+  transaction.set(
+    winnerRef,
+    { auctionsWonCount: FieldValue.increment(1), updatedAt: now },
+    { merge: true },
+  );
 
   // Escrow doc ID = auctionId for idempotent upsert
   const deliveryCharge = auction.deliveryCharge ?? 0;

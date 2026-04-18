@@ -8,15 +8,17 @@ export async function getSellerPerformance() {
   if (!session?.user?.id) return null;
   const userId = session.user.id;
 
-  const [allAuctionsSnap, soldSnap, activeSnap, bidsSnap] = await Promise.all([
+  const [allAuctionsSnap, soldSnap, activeSnap, userSnap] = await Promise.all([
     db.collection('auctions').where('sellerId', '==', userId).get(),
     db.collection('auctions').where('sellerId', '==', userId).where('status', '==', 'SOLD').get(),
     db.collection('auctions').where('sellerId', '==', userId).where('status', '==', 'ACTIVE').get(),
-    db.collection('bids').where('auctionId', 'in',
-      // Firestore 'in' limited to 30 items; fetch auction IDs first
-      ['placeholder'] // handled below
-    ).get(),
+    db.collection('users').doc(userId).get(),
   ]);
+
+  const userData = userSnap.data() ?? {};
+  const reputationScore = typeof userData.reputationScore === 'number' ? userData.reputationScore : 0;
+  const averageRating   = typeof userData.averageRating   === 'number' ? userData.averageRating   : 0;
+  const reviewCount     = typeof userData.reviewCount     === 'number' ? userData.reviewCount     : 0;
 
   const auctionIds = allAuctionsSnap.docs.map(d => d.id);
   const totalAuctions  = allAuctionsSnap.size;
@@ -71,6 +73,7 @@ export async function getSellerPerformance() {
   return {
     totalRevenue, totalAuctions, activeAuctions, soldCount, sellThroughRate,
     liquidityRate, avgBidsPerAuction, avgSalePrice,
+    reputationScore, averageRating, reviewCount,
     bidVelocity: 0, // placeholder
     revenueByDay: Object.entries(revenueByDay).map(([date, revenue]) => ({ date, revenue })),
     categoryPerformance: Object.entries(catMap).map(([category, v]) => ({ category, ...v })),
