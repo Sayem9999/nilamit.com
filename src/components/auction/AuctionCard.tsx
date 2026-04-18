@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Clock, Users, Zap, MapPin, AlertTriangle, ShieldCheck, Package, Star } from "lucide-react";
+import { Clock, Users, Zap, MapPin, AlertTriangle, Package, Star } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import { useSettings } from "@/context/SettingsContext";
 import { useTranslations } from "next-intl";
 import TrustBadge from "../social/TrustBadge";
+import { VerificationBadges } from "../social/VerificationBadges";
 
 export default function AuctionCard({
   auction,
@@ -98,11 +99,30 @@ export default function AuctionCard({
               <span className="text-xs font-semibold text-gray-600 truncate">
                 {auction.seller.name || t("seller")}
               </span>
-              {(auction.seller as { isPhoneVerified?: boolean; emailVerified?: Date | null }).isPhoneVerified || (auction.seller as { isPhoneVerified?: boolean; emailVerified?: Date | null }).emailVerified ? (
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10 flex-shrink-0" />
-              ) : (
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-              )}
+              {(() => {
+                const s = auction.seller as {
+                  isPhoneVerified?: boolean;
+                  emailVerified?: Date | null;
+                  isNIDVerified?: boolean;
+                  isVerifiedSeller?: boolean;
+                };
+                const hasAny =
+                  s.isPhoneVerified || s.emailVerified || s.isNIDVerified || s.isVerifiedSeller;
+                return hasAny ? (
+                  <VerificationBadges
+                    state={{
+                      isPhoneVerified: s.isPhoneVerified,
+                      emailVerified: s.emailVerified,
+                      isNIDVerified: s.isNIDVerified,
+                      isVerifiedSeller: s.isVerifiedSeller,
+                    }}
+                    variant="icon"
+                    size="xs"
+                  />
+                ) : (
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" aria-hidden="true" />
+                );
+              })()}
             </div>
             {auction.seller.reputationScore > 0 && (
               <TrustBadge

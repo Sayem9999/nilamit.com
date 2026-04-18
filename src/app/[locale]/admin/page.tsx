@@ -6,6 +6,7 @@ import { SystemTab } from "./tabs/SystemTab";
 import { ContentTab } from "./tabs/ContentTab";
 import { ModerationTab } from "./tabs/ModerationTab";
 import { UsersTab } from "./tabs/UsersTab";
+import { VerificationTab } from "./tabs/VerificationTab";
 import { MetricsTab } from "./tabs/MetricsTab";
 import { DisputesTab } from "./tabs/DisputesTab";
 import { TreasuryTab } from "./tabs/TreasuryTab";
@@ -157,6 +158,7 @@ export default async function AdminPage() {
       }
       system={<SystemTab />}
       users={<UsersTab />}
+      verification={<VerificationTab />}
       metrics={<MetricsTab />}
       treasury={<TreasuryTab />}
       disputes={<DisputesTab />}

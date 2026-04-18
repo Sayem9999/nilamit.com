@@ -2,17 +2,23 @@
  * POST /api/upload
  *
  * Replaces UploadThing. Accepts a multipart form upload, stores the file in
- * Firebase Storage, and returns the public download URL.
+ * Firebase Storage, and returns the public download URL — unless the upload
+ * type is `nid`, in which case the file goes to a private path and the
+ * response returns the storage path (signed URLs are minted on demand by
+ * admin review actions).
  *
  * Request: multipart/form-data
  *   - file      : File     — the image to upload (required)
- *   - type      : string   — 'auction' | 'chat' (optional, default: 'auction')
+ *   - type      : string   — 'auction' | 'chat' | 'nid' (optional, default: 'auction')
  *
- * Response: { url: string }
+ * Response:
+ *   - for public types: { url: string }
+ *   - for 'nid':        { path: string }   // private — signed URL fetched later
  *
  * Limits:
  *   - auction images: max 4 MB, images only
  *   - chat attachments: max 2 MB, images only
+ *   - nid images: max 3 MB, images only, private
  */
 
 import { auth } from '@/lib/auth';
@@ -23,6 +29,7 @@ import { v4 as uuidv4 } from 'uuid';
 const LIMITS = {
   auction: 4 * 1024 * 1024,  // 4 MB
   chat:    2 * 1024 * 1024,  // 2 MB
+  nid:     3 * 1024 * 1024,  // 3 MB
 } as const;
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -54,7 +61,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const maxSize = type === 'chat' ? LIMITS.chat : LIMITS.auction;
+  const maxSize =
+    type === 'chat' ? LIMITS.chat :
+    type === 'nid'  ? LIMITS.nid  :
+    LIMITS.auction;
   if (file.size > maxSize) {
     return NextResponse.json(
       { error: `File too large. Max ${maxSize / 1024 / 1024} MB for ${type} uploads.` },
@@ -63,8 +73,11 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const ext        = file.name.split('.').pop() ?? 'jpg';
-    const folder     = type === 'chat' ? 'chat' : 'auctions';
+    const ext        = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') ?? 'jpg';
+    const folder     =
+      type === 'chat' ? 'chat' :
+      type === 'nid'  ? 'nid'  :
+      'auctions';
     const filename   = `${folder}/${session.user.id}/${uuidv4()}.${ext}`;
     const buffer     = Buffer.from(await file.arrayBuffer());
     const bucket     = adminStorage.bucket();
@@ -73,17 +86,25 @@ export async function POST(req: NextRequest) {
     await fileRef.save(buffer, {
       metadata: {
         contentType:  file.type,
-        cacheControl: 'public, max-age=31536000, immutable',
+        // NID images must NOT be cached on public CDNs
+        cacheControl: type === 'nid'
+          ? 'private, no-store'
+          : 'public, max-age=31536000, immutable',
         metadata: {
-          uploadedBy: session.user.id,
+          uploadedBy:  session.user.id,
           originalName: file.name,
+          sensitivity: type === 'nid' ? 'restricted' : 'public',
         },
       },
     });
 
-    // Make the file publicly readable
-    await fileRef.makePublic();
+    if (type === 'nid') {
+      // Private: return the storage path only. Signed URLs are minted later.
+      return NextResponse.json({ path: filename });
+    }
 
+    // Public types: make the file publicly readable and return the URL.
+    await fileRef.makePublic();
     const url = `https://storage.googleapis.com/${bucket.name}/${filename}`;
     return NextResponse.json({ url });
   } catch (error) {

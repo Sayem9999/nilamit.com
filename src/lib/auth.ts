@@ -3,7 +3,7 @@ import type { Adapter, AdapterUser, AdapterAccount, VerificationToken } from 'ne
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import { db, FieldValue } from '@/lib/db';
+import { db } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
 
 // ─── Inline Firestore Adapter (JWT-strategy, minimal surface) ──
@@ -119,6 +119,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             image: user.image as string | null,
             isVerifiedSeller: user.isVerifiedSeller, reputationScore: user.reputationScore,
             isPhoneVerified: user.isPhoneVerified, emailVerified: user.emailVerified,
+            isNIDVerified: user.isNIDVerified, nidStatus: user.nidStatus,
             userLevel: user.userLevel, winningStreak: user.winningStreak } as any;
         } catch (e) {
           console.error('[Auth] credentials authorize error:', e);
@@ -148,6 +149,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: user.name as string, image: user.image as string | null,
             isVerifiedSeller: user.isVerifiedSeller, reputationScore: user.reputationScore,
             isPhoneVerified: user.isPhoneVerified, emailVerified: user.emailVerified,
+            isNIDVerified: user.isNIDVerified, nidStatus: user.nidStatus,
             userLevel: user.userLevel, winningStreak: user.winningStreak } as any;
         } catch (e) {
           console.error('[Auth-Phone] authorize error:', e);
@@ -167,6 +169,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.phone            = (user as unknown as Record<string, unknown>).phone            ?? null;
         token.reputationScore  = (user as unknown as Record<string, unknown>).reputationScore  ?? 0;
         token.isVerifiedSeller = (user as unknown as Record<string, unknown>).isVerifiedSeller ?? false;
+        token.isNIDVerified    = (user as unknown as Record<string, unknown>).isNIDVerified    ?? false;
+        token.nidStatus        = (user as unknown as Record<string, unknown>).nidStatus        ?? 'NONE';
         token.userLevel        = (user as unknown as Record<string, unknown>).userLevel        ?? 1;
         token.winningStreak    = (user as unknown as Record<string, unknown>).winningStreak    ?? 0;
         token.lastDbRefresh    = Date.now();
@@ -188,6 +192,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.phone            = u.phone           ?? null;
             token.reputationScore  = u.reputationScore ?? 0;
             token.isVerifiedSeller = u.isVerifiedSeller ?? false;
+            token.isNIDVerified    = u.isNIDVerified    ?? false;
+            token.nidStatus        = u.nidStatus        ?? 'NONE';
             token.userLevel        = u.userLevel        ?? 1;
             token.winningStreak    = u.winningStreak    ?? 0;
             token.lastDbRefresh    = Date.now();
@@ -212,6 +218,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         u.phone            = token.phone;
         u.reputationScore  = token.reputationScore;
         u.isVerifiedSeller = token.isVerifiedSeller;
+        u.isNIDVerified    = token.isNIDVerified;
+        u.nidStatus        = token.nidStatus;
         u.userLevel        = token.userLevel;
         u.winningStreak    = token.winningStreak;
         u.isAdmin          = token.isAdmin;

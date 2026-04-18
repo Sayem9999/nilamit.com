@@ -42,6 +42,14 @@ export const ReportStatus = {
 } as const;
 export type ReportStatus = typeof ReportStatus[keyof typeof ReportStatus];
 
+export const NIDStatus = {
+  NONE:     'NONE',
+  PENDING:  'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+} as const;
+export type NIDStatus = typeof NIDStatus[keyof typeof NIDStatus];
+
 export const AlertType = {
   PRICE_DROP:               'PRICE_DROP',
   ENDING_SOON:              'ENDING_SOON',
@@ -70,6 +78,16 @@ export interface User {
   nagadNumber?: string | null;
   winningStreak: number;
   userLevel: number;
+  // ─── Identity Hardening (Tier 2) ──────────────────────
+  nidStatus?: NIDStatus;
+  nidNumberHash?: string | null;
+  nidLast4?: string | null;
+  nidFrontPath?: string | null;
+  nidBackPath?: string | null;
+  nidSubmittedAt?: Date | null;
+  nidReviewedAt?: Date | null;
+  nidRejectionReason?: string | null;
+  isNIDVerified?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -179,7 +197,7 @@ export function actionError(error: string, code?: string): ActionResult<never> {
 }
 
 // ─── Composite Types ───────────────────────────────────────────────────────────
-export type SellerPublic = Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified' | 'winningStreak' | 'userLevel' | 'reviewCount' | 'averageRating'> & { phone?: string | null };
+export type SellerPublic = Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified' | 'winningStreak' | 'userLevel' | 'reviewCount' | 'averageRating' | 'isNIDVerified' | 'emailVerified'> & { phone?: string | null };
 
 export type AuctionWithSeller = Auction & {
   seller: SellerPublic;

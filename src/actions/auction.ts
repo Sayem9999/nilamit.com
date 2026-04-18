@@ -6,16 +6,16 @@ import { auth } from '@/lib/auth';
 import { closeAuctionIfEnded } from '@/lib/auction-logic';
 import { filterPII } from '@/lib/pii-filter';
 import { ERROR_CODES } from '@/lib/constants';
-import type { AuctionFilters, CreateAuctionInput, Auction, AuctionWithSeller, SellerPublic } from '@/types';
-
-const SELLER_SELECT_FIELDS = ['id','name','email','phone','image','reputationScore','isPhoneVerified','isVerifiedSeller','winningStreak','userLevel'];
+import type { AuctionFilters, CreateAuctionInput, Auction, SellerPublic } from '@/types';
 
 async function getSellerPublic(sellerId: string): Promise<SellerPublic> {
   const snap = await db.collection('users').doc(sellerId).get();
   const d = snap.data() ?? {};
   return { id: sellerId, name: d.name ?? null, email: d.email ?? null, phone: d.phone ?? null,
+    emailVerified: d.emailVerified?.toDate?.() ?? d.emailVerified ?? null,
     image: d.image ?? null, reputationScore: d.reputationScore ?? 0,
     isPhoneVerified: d.isPhoneVerified ?? false, isVerifiedSeller: d.isVerifiedSeller ?? false,
+    isNIDVerified: d.isNIDVerified ?? false,
     winningStreak: d.winningStreak ?? 0, userLevel: d.userLevel ?? 1,
     reviewCount: d.reviewCount ?? 0, averageRating: d.averageRating ?? 0 };
 }

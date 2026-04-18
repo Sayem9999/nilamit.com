@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
+import { EmailVerifyCard } from "@/components/profile/EmailVerifyCard";
+import { NIDVerifyCard } from "@/components/profile/NIDVerifyCard";
 import Image from "next/image";
 
 export default function ProfilePage() {
@@ -359,6 +361,10 @@ export default function ProfilePage() {
           {msg}
         </p>
       </div>
+
+      {/* Identity Hardening — Tier 2 */}
+      <EmailVerifyCard />
+      <NIDVerifyCard />
 
       {/* Reviews Section */}
       <div className="mb-8 border-t border-gray-100 pt-8">

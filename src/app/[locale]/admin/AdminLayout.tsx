@@ -11,6 +11,7 @@ import {
   Users,
   Scale,
   ShieldCheck,
+  FileCheck2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ type Tab =
   | "content"
   | "system"
   | "users"
+  | "verification"
   | "treasury"
   | "disputes";
 
@@ -31,6 +33,7 @@ interface AdminLayoutProps {
   content?: React.ReactNode;
   system: React.ReactNode;
   users?: React.ReactNode;
+  verification?: React.ReactNode;
   treasury?: React.ReactNode;
   disputes?: React.ReactNode;
 }
@@ -42,6 +45,7 @@ export function AdminLayout({
   content,
   system,
   users,
+  verification,
   treasury,
   disputes,
 }: AdminLayoutProps) {
@@ -52,6 +56,7 @@ export function AdminLayout({
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "moderation", label: "Moderation", icon: ShieldAlert },
     { id: "users", label: "Users", icon: Users },
+    { id: "verification", label: "Verification", icon: FileCheck2 },
     { id: "metrics", label: "Metrics", icon: Banknote },
     { id: "content", label: "Content", icon: PenTool },
     { id: "treasury", label: "Treasury", icon: ShieldCheck },
@@ -129,6 +134,7 @@ export function AdminLayout({
           {activeTab === "content" &&
             (content || <Placeholder tab="Content" />)}
           {activeTab === "users" && (users || <Placeholder tab="Users" />)}
+          {activeTab === "verification" && (verification || <Placeholder tab="Verification" />)}
           {activeTab === "treasury" && (treasury || <Placeholder tab="Treasury" />)}
           {activeTab === "disputes" && (disputes || <Placeholder tab="Disputes" />)}
           {activeTab === "system" && system}
