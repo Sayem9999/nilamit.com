@@ -2,8 +2,8 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { createAuction } from "@/actions/auction";
+import { getSmartPricingSuggestion, type SmartPricingResult } from "@/actions/pricing";
 import { CATEGORIES, LOCATIONS } from "@/types";
 import {
   ArrowLeft,
@@ -11,6 +11,7 @@ import {
   Check,
   AlertCircle,
   MapPin,
+  Zap,
 } from "lucide-react";
 import { ImageUpload } from "@/components/upload/ImageUpload";
 import { VerificationGuard } from "@/components/auth/VerificationGuard";
@@ -40,6 +41,19 @@ export default function CreateAuctionPage() {
     reservePrice: undefined as number | undefined,
     buyItNowPrice: undefined as number | undefined,
   });
+  const [suggestion, setSuggestion] = useState<SmartPricingResult | null>(null);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
+
+  useEffect(() => {
+    if (step === "pricing") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLoadingSuggestion(true);
+      getSmartPricingSuggestion(form.category).then((res) => {
+        setSuggestion(res);
+        setLoadingSuggestion(false);
+      });
+    }
+  }, [form.category, step]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -203,6 +217,48 @@ export default function CreateAuctionPage() {
             <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
               {t("pricing")}
             </h2>
+
+            {/* Smart Pricing Suggestion UI */}
+            {step === "pricing" && (
+              <div className="mb-6">
+                {loadingSuggestion ? (
+                  <div className="flex items-center gap-2 text-xs text-primary-600 bg-primary-50 p-3 rounded-xl animate-pulse">
+                    <span className="w-4 h-4 rounded-full border-2 border-primary-300 border-t-primary-600 animate-spin" />
+                    Analyzing market trends...
+                  </div>
+                ) : suggestion ? (
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-center gap-2 text-emerald-800 font-bold mb-2">
+                      <Zap className="w-4 h-4 text-emerald-500" />
+                      Smart Pricing Insights
+                    </div>
+                    <p className="text-xs text-emerald-700 mb-3 leading-relaxed">
+                      Based on {suggestion.dataPoints} recently sold {tCat(form.category).toLowerCase()}, here is what works best:
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => updateForm("startingPrice", suggestion.suggestedStart)}
+                        className="text-left bg-white p-2.5 rounded-lg border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all group"
+                      >
+                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Suggested Start</div>
+                        <div className="text-sm font-bold text-emerald-600 group-hover:text-emerald-700">৳{suggestion.suggestedStart}</div>
+                      </button>
+                      <button
+                        onClick={() => updateForm("buyItNowPrice", suggestion.suggestedBuyNow)}
+                        className="text-left bg-white p-2.5 rounded-lg border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all group"
+                      >
+                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Suggested Buy-Now</div>
+                        <div className="text-sm font-bold text-emerald-600 group-hover:text-emerald-700">৳{suggestion.suggestedBuyNow}</div>
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-emerald-600/70 mt-3 italic text-center">
+                      Expected final price: ~৳{suggestion.expectedFinal}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            )}
+
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">
                 {t("startPrice")}

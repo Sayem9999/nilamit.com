@@ -10,11 +10,11 @@
 
 ### Social & Reputational
 - [x] **Reputation Scores**: Weighted user ratings based on successful transaction closures.
-- [ ] **Verified Status**: Tiered badge system for sellers (Phone -> Email -> Business).
+- [x] **Verified Status**: Tiered badge system for sellers (Phone -> Email -> Business).
 
 ### Mobile & UX
-- [ ] **Bangla Localization (বাংলা)**: Comprehensive translation of the UI for non-technical users in rural regions.
-- [ ] **Image Optimization**: Auto-resize and compression for bulk-uploaded images to save bandwidth.
+- [x] **Bangla Localization (বাংলা)**: Comprehensive translation of the UI for non-technical users in rural regions.
+- [x] **Image Optimization**: Auto-resize and compression for bulk-uploaded images to save bandwidth.
 
 ## Completed Milestones
 - [x] **v1.3**: Admin Tabs (Moderation, System, Users) fully functional.
