@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "next-auth/react";
+import { compressImage } from "@/lib/image-optimization";
 
 interface ImageUploadProps {
   value: string[];
@@ -37,7 +38,10 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
 
       const newUrls: string[] = [...value];
 
-      for (const file of Array.from(files)) {
+      for (const rawFile of Array.from(files)) {
+        // Compress image on the client side before uploading to save bandwidth
+        const file = await compressImage(rawFile, { maxWidth: 1280, maxHeight: 1280, quality: 0.85 });
+        
         const fileExt = file.name.split(".").pop();
         const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
         const filePath = `auctions/${session.user.id}/${fileName}`;

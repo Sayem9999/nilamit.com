@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+
 import Image from "next/image";
-import { Clock, Users, Zap, MapPin, AlertTriangle, ShieldCheck, Package } from "lucide-react";
+import { Clock, Users, Zap, MapPin, Package } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -11,6 +12,7 @@ import { useSession } from "next-auth/react";
 import { useSettings } from "@/context/SettingsContext";
 import { useTranslations } from "next-intl";
 import TrustBadge from "../social/TrustBadge";
+import VerificationBadge from "../social/VerificationBadge";
 
 export default function AuctionCard({
   auction,
@@ -98,11 +100,13 @@ export default function AuctionCard({
               <span className="text-xs font-semibold text-gray-600 truncate">
                 {auction.seller.name || t("seller")}
               </span>
-              {(auction.seller as { isPhoneVerified?: boolean; emailVerified?: Date | null }).isPhoneVerified || (auction.seller as { isPhoneVerified?: boolean; emailVerified?: Date | null }).emailVerified ? (
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10 flex-shrink-0" />
-              ) : (
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-              )}
+              <VerificationBadge
+                isPhoneVerified={!!(auction.seller as { isPhoneVerified?: boolean }).isPhoneVerified}
+                emailVerified={(auction.seller as { emailVerified?: Date | string | null }).emailVerified}
+                isVerifiedSeller={!!auction.seller.isVerifiedSeller}
+                size="sm"
+                showText={false}
+              />
             </div>
             {auction.seller.reputationScore > 0 && (
               <TrustBadge 

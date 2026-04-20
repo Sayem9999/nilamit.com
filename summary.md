@@ -27,8 +27,8 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 
 ## 💻 Technology Stack
 - **Framework**: Next.js 15 (App Router).
-- **Database**: PostgreSQL via Supabase with **Prisma 7**.
-- **Real-time**: Pusher (WebSockets) for instant bid updates and alerts.
+- **Database**: Firebase Firestore (NoSQL).
+- **Real-time**: Firebase Realtime Database for instant bid updates and alerts.
 - **Localization**: English-First experience with Bengali support via `next-intl`.
 - **UI/UX**: Tailwind CSS 4, shadcn/ui, and Framer Motion for a premium, mobile-responsive aesthetic.
 

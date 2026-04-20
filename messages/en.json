@@ -323,7 +323,15 @@
     "tier_Trusted": "Trusted",
     "tier_New": "New Trader",
     "trustScore": "Trust Score",
-    "reputationDescription": "Reputation is built on verified successful sales and buyer reliability. Bayesian weighted for authenticity."
+    "reputationDescription": "Reputation is built on verified successful sales and buyer reliability. Bayesian weighted for authenticity.",
+    "verif_Business": "Business Verified",
+    "verif_Business_Desc": "Highest tier. NID and Business documents verified by Nilamit team.",
+    "verif_Email": "Email Verified",
+    "verif_Email_Desc": "User has verified both phone and email address.",
+    "verif_Phone": "Phone Verified",
+    "verif_Phone_Desc": "Basic level. User has verified a BD phone number via OTP.",
+    "verif_Unverified": "Unverified",
+    "verif_Unverified_Desc": "This user has not verified any contact details yet."
   },
   "FAQ": {
     "title": "Frequently Asked Questions",

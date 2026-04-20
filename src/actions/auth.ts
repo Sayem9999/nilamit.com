@@ -4,12 +4,19 @@ import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { verifyStandaloneOTP } from './phone';
 import { normalizePhone } from '@/lib/utils';
+import { headers } from 'next/headers';
+import { loginLimiter } from '@/lib/ratelimit';
+import * as Sentry from '@sentry/nextjs';
 
 export async function registerUser(data: { firstName: string; lastName: string; email: string; password: string }) {
   const { firstName, lastName, email, password } = data;
   if (!email || !password || !firstName || !lastName) {
     return { success: false, error: 'Missing required fields' };
   }
+
+  const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
+  const { success: rateLimitSuccess } = await loginLimiter.limit(`register_${ip}`);
+  if (!rateLimitSuccess) return { success: false, error: 'Too many requests. Try again later.' };
 
   try {
     const existing = await db.collection('users').where('email', '==', email).limit(1).get();
@@ -28,6 +35,7 @@ export async function registerUser(data: { firstName: string; lastName: string; 
     return { success: true };
   } catch (e) {
     console.error('[auth] registerUser:', e);
+    Sentry.captureException(e, { tags: { action: 'registerUser' } });
     return { success: false, error: 'Something went wrong. Please try again.' };
   }
 }
@@ -38,6 +46,10 @@ export async function signupWithPhone(data: { name: string; phone: string; otp: 
 
   const otpVerify = await verifyStandaloneOTP(normalizedPhone, otp);
   if (!otpVerify.success) return otpVerify;
+
+  const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
+  const { success: rateLimitSuccess } = await loginLimiter.limit(`signup_${ip}`);
+  if (!rateLimitSuccess) return { success: false, error: 'Too many requests. Try again later.' };
 
   const phoneExists = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
   if (!phoneExists.empty) return { success: false, error: 'Phone number already registered.' };
@@ -61,6 +73,7 @@ export async function signupWithPhone(data: { name: string; phone: string; otp: 
     return { success: true };
   } catch (e) {
     console.error('[auth] signupWithPhone:', e);
+    Sentry.captureException(e, { tags: { action: 'signupWithPhone' } });
     return { success: false, error: 'Failed to create account.' };
   }
 }
@@ -68,6 +81,10 @@ export async function signupWithPhone(data: { name: string; phone: string; otp: 
 export async function resetPasswordWithOTP(data: { phone?: string; email?: string; otp: string; password: string }) {
   const { phone, email, otp, password } = data;
   if (!phone && !email) return { success: false, error: 'Identifier required.' };
+
+  const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
+  const { success: rateLimitSuccess } = await loginLimiter.limit(`reset_${ip}`);
+  if (!rateLimitSuccess) return { success: false, error: 'Too many requests. Try again later.' };
 
   try {
     if (phone) {
@@ -96,6 +113,7 @@ export async function resetPasswordWithOTP(data: { phone?: string; email?: strin
     return { success: true };
   } catch (e) {
     console.error('[auth] resetPasswordWithOTP:', e);
+    Sentry.captureException(e, { tags: { action: 'resetPasswordWithOTP' } });
     return { success: false, error: 'Failed to reset password.' };
   }
 }

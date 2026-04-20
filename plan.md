@@ -4,17 +4,15 @@
 **Status**: In Progress 🏗️
 
 ### High Priority (Immediate)
-- [ ] **Real-time Bid Refresh**: Transition from 5s polling to Pusher-based event streaming for auction prices.
-- [ ] **Payment Integration**: Implement bKash/Nagad sandbox for escrow-style bid deposits.
-- [ ] **Advanced Moderation**: Automated flagging of suspicious bidding patterns (shill bidding detection).
+- [x] **Real-time Bid Refresh**: Transition from 5s polling to Firebase-based event streaming for auction prices.
+- [x] **Payment Integration**: Implement bKash/Nagad sandbox for escrow-style bid deposits.
+- [x] **Advanced Moderation**: Automated flagging of suspicious bidding patterns (shill bidding detection).
 
 ### Social & Reputational
-- [ ] **Auction Circles**: Allow users to create private groups for localized/exclusive auctions.
-- [ ] **Reputation Scores**: Weighted user ratings based on successful transaction closures.
+- [x] **Reputation Scores**: Weighted user ratings based on successful transaction closures.
 - [ ] **Verified Status**: Tiered badge system for sellers (Phone -> Email -> Business).
 
 ### Mobile & UX
-- [ ] **PWA Support**: Offline browsing of watched auctions and push notifications for outbid alerts.
 - [ ] **Bangla Localization (বাংলা)**: Comprehensive translation of the UI for non-technical users in rural regions.
 - [ ] **Image Optimization**: Auto-resize and compression for bulk-uploaded images to save bandwidth.
 

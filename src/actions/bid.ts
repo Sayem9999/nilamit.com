@@ -11,6 +11,10 @@ import { ERROR_CODES, SOFT_CLOSE_WINDOW_MS, SOFT_CLOSE_EXTENSION_MS } from '@/li
 import { checkAndAwardBadges } from './gamification';
 import { processAuctionSale } from '@/lib/auction-logic';
 import { log } from '@/lib/logger';
+import { headers } from 'next/headers';
+import { bidLimiter } from '@/lib/ratelimit';
+import * as Sentry from '@sentry/nextjs';
+import { detectShillBidding } from '@/lib/moderation';
 
 const PlaceBidSchema = z.object({
   auctionId: z.string().min(1),
@@ -24,6 +28,10 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
   const userId = session.user.id;
+
+  const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
+  const { success: rateLimitSuccess } = await bidLimiter.limit(`bid_${userId}_${ip}`);
+  if (!rateLimitSuccess) return { success: false, error: 'Too many bids placed rapidly. Please wait a moment.' };
 
   // User checks — done outside transaction for efficiency
   const userSnap = await db.collection('users').doc(userId).get();
@@ -116,6 +124,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         auctionStartTime: auction.startTime?.toDate ? auction.startTime.toDate() : new Date(auction.startTime),
         triggeredAlerts,
         timeUntilEnd,
+        sellerId: auction.sellerId,
       };
     });
 
@@ -168,6 +177,9 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
     checkAndAwardBadges(userId, auctionId, amount, result.antiSnipeTriggered, result.auctionStartTime)
       .catch(console.error);
 
+    // Moderation (async)
+    detectShillBidding(auctionId, userId, result.sellerId, amount).catch(console.error);
+
     return {
       success: true,
       bid: { id: result.bidId, amount, auctionId, bidderId: userId, createdAt: new Date() },
@@ -179,6 +191,10 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
     const known    = Object.values(ERROR_CODES) as string[];
     if (!known.some(c => message.startsWith(c))) {
       log.error('placeBid unexpected failure', error, { userId, auctionId, amount });
+      Sentry.captureException(error, {
+        tags: { action: 'placeBid' },
+        contexts: { auction: { auctionId, amount, userId } }
+      });
     }
     return { success: false, error: message };
   }
@@ -225,6 +241,7 @@ export async function executeBuyItNow(auctionId: string): Promise<PlaceBidResult
 
     return { success: true, bid: { id: result.bidId, amount: result.binAmount, auctionId, bidderId: userId, createdAt: new Date() } };
   } catch (e) {
+    Sentry.captureException(e, { tags: { action: 'executeBuyItNow' }, contexts: { auction: { auctionId, userId } } });
     return { success: false, error: e instanceof Error ? e.message : 'Failed.' };
   }
 }

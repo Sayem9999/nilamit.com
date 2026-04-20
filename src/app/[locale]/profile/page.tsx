@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
+import VerificationBadge from "@/components/social/VerificationBadge";
 import Image from "next/image";
 
 export default function ProfilePage() {
@@ -193,9 +194,17 @@ export default function ProfilePage() {
             )}
           </div>
           <div>
-            <p className="font-heading font-semibold text-lg text-gray-900">
-              {session.user?.name}
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="font-heading font-semibold text-lg text-gray-900">
+                {session.user?.name}
+              </p>
+              <VerificationBadge
+                isPhoneVerified={user.isPhoneVerified}
+                emailVerified={(session.user as { emailVerified?: Date | string | null }).emailVerified}
+                isVerifiedSeller={!!(user as { isVerifiedSeller?: boolean }).isVerifiedSeller}
+                size="md"
+              />
+            </div>
             <p className="text-sm text-gray-500">{session.user?.email}</p>
           </div>
         </div>
