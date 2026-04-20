@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { adminDB, rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recalculateUserReputation } from '@/lib/reputation';
+import { createLogisticsOrder } from './logistics';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
@@ -46,6 +47,12 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       verificationType: 'AUTOMATIC',
       updatedAt:        new Date(),
     });
+
+    // Integrated Fulfillment: Generate shipping label automatically
+    const logistics = await createLogisticsOrder(tx.auctionId, auction.sellerId, tx.buyerId, tx.amount);
+    if (!logistics.success) {
+      console.error('[escrow] Logistics integration failed:', logistics.error);
+    }
 
     // Open direct chat conversation
     const convId = tx.auctionId;

@@ -16,6 +16,14 @@
 - [x] **Bangla Localization (বাংলা)**: Comprehensive translation of the UI for non-technical users in rural regions.
 - [x] **Image Optimization**: Auto-resize and compression for bulk-uploaded images to save bandwidth.
 
+## Phase 4: AI & Ecosystem
+**Status**: In Progress 🏗️
+- [x] **Smart Pricing Engine**: Suggest AI-based optimal start and buy-now prices based on market trends.
+- [x] **Integrated Fulfillment**: Auto-generate RedX/Pathao shipping labels when escrow is funded.
+- [x] **FCM Outbid Alerts**: Real-time push notifications for outbids to drive FOMO and re-engagement.
+- [ ] **Auto-Moderator (AI)**: Use Gemini to flag counterfeit or prohibited listings based on images/text.
+- [ ] **Voice Commerce**: Bengali voice-to-listing module for rural accessibility.
+
 ## Completed Milestones
 - [x] **v1.3**: Admin Tabs (Moderation, System, Users) fully functional.
 - [x] **v1.2**: Bulk image upload and auction reporting system.

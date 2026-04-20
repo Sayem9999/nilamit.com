@@ -12,7 +12,15 @@ const intlMiddleware = createMiddleware({
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  const isApiRoute = req.nextUrl.pathname.startsWith('/api');
+  const pathname = req.nextUrl.pathname;
+  
+  // If NextAuth accidentally prepends the locale (e.g. /en/api/auth/error), strip it
+  const localeApiMatch = pathname.match(/^\/(en|bn)(\/api\/.*)/);
+  if (localeApiMatch) {
+    return Response.redirect(new URL(localeApiMatch[2], req.url));
+  }
+
+  const isApiRoute = pathname.startsWith('/api');
   
   if (isApiRoute) {
     return;

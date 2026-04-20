@@ -7,6 +7,7 @@ import type { PlaceBidResult } from '@/types';
 import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { sendOutbidEmail as firebaseSendOutbidEmail } from '@/lib/firebase-email';
+import { sendOutbidAlert } from '@/lib/fcm';
 import { ERROR_CODES, SOFT_CLOSE_WINDOW_MS, SOFT_CLOSE_EXTENSION_MS } from '@/lib/constants';
 import { checkAndAwardBadges } from './gamification';
 import { processAuctionSale } from '@/lib/auction-logic';
@@ -150,12 +151,15 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
       )).catch(console.error);
     }
 
-    // Outbid push notification
+    // Outbid push notification (RTDB + FCM)
     if (result.prevBidderId && result.prevBidderId !== userId) {
       rtdbPush(RTDB_PATHS.userNotifications(result.prevBidderId), {
         event: FIREBASE_EVENTS.OUTBID_ALERT, auctionId,
         auctionTitle: result.auctionTitle, amount, newBidderName: session.user.name ?? null,
       }).catch(console.error);
+
+      // Trigger actual mobile/web push notification
+      sendOutbidAlert(result.prevBidderId, result.auctionTitle, amount).catch(console.error);
     }
 
     // Real-time bid state
