@@ -10,13 +10,14 @@ interface VerificationGuardProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
   onVerifyClick?: () => void;
+  requiredLevel?: "phone" | "email";
 }
 
 /**
  * VerificationGuard wraps actions that require a verified account.
  * It checks if EITHER phone OR email is verified.
  */
-export function VerificationGuard({ children, fallback }: VerificationGuardProps) {
+export function VerificationGuard({ children }: VerificationGuardProps) {
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
   const t = useTranslations("Auth");

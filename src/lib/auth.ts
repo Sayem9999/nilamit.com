@@ -3,7 +3,7 @@ import type { Adapter, AdapterUser, AdapterAccount, VerificationToken } from 'ne
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import { db, FieldValue } from '@/lib/db';
+import { db } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
 
 // ─── Inline Firestore Adapter (JWT-strategy, minimal surface) ──

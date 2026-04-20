@@ -2,11 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { 
   ShieldCheck, 
   Lock, 
-  UserCheck, 
-  Search, 
-  AlertCircle,
-  Gavel,
-  MessageSquare
+  AlertCircle
 } from "lucide-react";
 
 export default async function SafetyPage() {

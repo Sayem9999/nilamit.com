@@ -20,6 +20,7 @@ const PROTECTED_PATHS = [
 ];
 
 export const authConfig: NextAuthConfig = {
+  basePath: '/api/auth',
   // JWT strategy — no DB needed for session reads; works on Edge + Cloud Run
   session: { strategy: 'jwt' },
 

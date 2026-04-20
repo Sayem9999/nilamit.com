@@ -8,7 +8,7 @@ import { Toaster } from "react-hot-toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
+    <SessionProvider basePath="/api/auth">
       <SettingsProvider>
         <NotificationProvider>
           {children}
