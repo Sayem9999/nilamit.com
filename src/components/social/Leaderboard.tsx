@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BadgeList } from "@/components/social/BadgeDisplay";
@@ -6,42 +6,38 @@ import { Trophy, Flame, TrendingUp } from "lucide-react";
 import { BadgeType } from "@/lib/gamification-config";
 
 export async function getLeaderboardData() {
-  const [topStreaks, topBuyers] = await Promise.all([
-    // Highest winning streaks
-    prisma.user.findMany({
-      where: { winningStreak: { gt: 0 } },
-      orderBy: { winningStreak: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        name: true,
-        image: true,
-        winningStreak: true,
-        badges: { select: { badgeId: true } },
-      },
-    }),
-    // Users who have won the most auctions
-    prisma.user.findMany({
-      where: {
-        auctionsAsWinner: {
-          some: {},
-        },
-      },
-      orderBy: {
-        auctionsAsWinner: {
-          _count: "desc",
-        },
-      },
-      take: 5,
-      select: {
-        id: true,
-        name: true,
-        image: true,
-        badges: { select: { badgeId: true } },
-        _count: { select: { auctionsAsWinner: true } },
-      },
-    }),
-  ]);
+  const streaksSnap = await db.collection('users')
+    .where('winningStreak', '>', 0)
+    .orderBy('winningStreak', 'desc')
+    .limit(5)
+    .get();
+
+  const topStreaks = streaksSnap.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      name: data.name,
+      image: data.image,
+      winningStreak: data.winningStreak || 0,
+      badges: data.badges || [],
+    };
+  });
+
+  const buyersSnap = await db.collection('users')
+    .orderBy('reputationScore', 'desc')
+    .limit(5)
+    .get();
+
+  const topBuyers = buyersSnap.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      name: data.name,
+      image: data.image,
+      badges: data.badges || [],
+      _count: { auctionsAsWinner: data.reputationScore || 0 }, // Using reputationScore as a proxy for wins for now
+    };
+  });
 
   return { topStreaks, topBuyers };
 }

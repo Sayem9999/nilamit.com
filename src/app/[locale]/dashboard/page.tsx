@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { Package, Heart, RefreshCw, LogOut, CheckCircle, MessageSquare } from "lucide-react";
 import Link from "next/link";
@@ -55,120 +55,131 @@ export default async function DashboardPage({
   let escrowTransactions: any[] = [];
 
   if (currentTab === "listings") {
-    const rawAuctions = await prisma.auction.findMany({
-      where: { sellerId: userId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        seller: {
-          select: {
-            name: true,
-            image: true,
-            isVerifiedSeller: true,
-            reputationScore: true,
-          },
-        },
-        _count: { select: { bids: true } },
-        watchlist: { where: { userId } },
-      },
-    });
-    watchlistAuctions = rawAuctions as unknown as AuctionWithSeller[];
+    const rawSnap = await db.collection('auctions')
+      .where('sellerId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    watchlistAuctions = await Promise.all(rawSnap.docs.map(async d => {
+      const a = d.data();
+      const bidsSnap = await db.collection('bids').where('auctionId', '==', d.id).get();
+      const wSnap = await db.collection('watchlist').where('auctionId', '==', d.id).where('userId', '==', userId).get();
+      const sellerSnap = await db.collection('users').doc(userId).get();
+      const seller = sellerSnap.data()!;
+      return {
+        ...a, id: d.id,
+        createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
+        endTime: a.endTime?.toDate?.() || new Date(a.endTime),
+        seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
+        _count: { bids: bidsSnap.size },
+        watchlist: wSnap.docs.map(w => w.data()),
+      };
+    })) as unknown as AuctionWithSeller[];
   } else if (currentTab === "watchlist") {
-    const watchlists = await prisma.watchlist.findMany({
-      where: { userId },
-      include: {
-        auction: {
-          include: {
-            seller: {
-              select: {
-                name: true,
-                image: true,
-                isVerifiedSeller: true,
-                reputationScore: true,
-              },
-            },
-            _count: { select: { bids: true } },
-            watchlist: { where: { userId } },
-          },
-        },
-      },
-    });
-    watchlistAuctions = watchlists.map(
-      (w) => w.auction,
-    ) as unknown as AuctionWithSeller[];
+    const watchSnap = await db.collection('watchlist').where('userId', '==', userId).get();
+    
+    const results = await Promise.all(watchSnap.docs.map(async d => {
+      const w = d.data();
+      const aSnap = await db.collection('auctions').doc(w.auctionId).get();
+      if (!aSnap.exists) return null;
+      const a = aSnap.data()!;
+      const bidsSnap = await db.collection('bids').where('auctionId', '==', w.auctionId).get();
+      const sellerSnap = await db.collection('users').doc(a.sellerId).get();
+      const seller = sellerSnap.exists ? sellerSnap.data()! : {};
+      return {
+        ...a, id: w.auctionId,
+        createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
+        endTime: a.endTime?.toDate?.() || new Date(a.endTime),
+        seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
+        _count: { bids: bidsSnap.size },
+        watchlist: [w],
+      };
+    }));
+    watchlistAuctions = results.filter(Boolean) as unknown as AuctionWithSeller[];
   } else if (currentTab === "bids") {
-    // get unique auctions where user has placed a bid and auction is active
-    const bids = await prisma.bid.findMany({
-      where: { bidderId: userId, auction: { status: "ACTIVE" } },
-      include: {
-        auction: {
-          include: {
-            seller: {
-              select: {
-                name: true,
-                image: true,
-                isVerifiedSeller: true,
-                reputationScore: true,
-              },
-            },
-            _count: { select: { bids: true } },
-            watchlist: { where: { userId } },
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      distinct: ["auctionId"],
-    });
-    activeBids = bids.map((b) => b.auction) as unknown as AuctionWithSeller[];
+    const bidsSnap = await db.collection('bids').where('bidderId', '==', userId).orderBy('createdAt', 'desc').get();
+    const uniqueAuctionIds = [...new Set(bidsSnap.docs.map(d => d.data().auctionId))];
+    
+    const results = await Promise.all(uniqueAuctionIds.map(async auctionId => {
+      const aSnap = await db.collection('auctions').doc(auctionId as string).get();
+      if (!aSnap.exists) return null;
+      const a = aSnap.data()!;
+      if (a.status !== 'ACTIVE') return null;
+      
+      const bSnap = await db.collection('bids').where('auctionId', '==', auctionId).get();
+      const wSnap = await db.collection('watchlist').where('auctionId', '==', auctionId).where('userId', '==', userId).get();
+      const sellerSnap = await db.collection('users').doc(a.sellerId).get();
+      const seller = sellerSnap.exists ? sellerSnap.data()! : {};
+      
+      return {
+        ...a, id: auctionId,
+        createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
+        endTime: a.endTime?.toDate?.() || new Date(a.endTime),
+        seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
+        _count: { bids: bSnap.size },
+        watchlist: wSnap.docs.map(w => w.data()),
+      };
+    }));
+    activeBids = results.filter(Boolean) as unknown as AuctionWithSeller[];
   } else if (currentTab === "escrow") {
-    // Phase 10: Escrow logic
-    escrowTransactions = await prisma.escrowTransaction.findMany({
-      where: { buyerId: userId },
-      include: {
-        auction: {
-          include: {
-            seller: { select: { name: true, image: true } },
-          },
-        },
-        dispute: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const escrowSnap = await db.collection('escrowTransactions').where('buyerId', '==', userId).orderBy('createdAt', 'desc').get();
+    
+    escrowTransactions = await Promise.all(escrowSnap.docs.map(async d => {
+      const e = d.data();
+      const aSnap = await db.collection('auctions').doc(e.auctionId).get();
+      const a = aSnap.exists ? aSnap.data()! : null;
+      let seller = {};
+      if (a) {
+        const sSnap = await db.collection('users').doc(a.sellerId).get();
+        seller = sSnap.exists ? sSnap.data()! : {};
+      }
+      const disputeSnap = await db.collection('disputes').where('transactionId', '==', d.id).limit(1).get();
+      
+      return {
+        ...e, id: d.id,
+        createdAt: e.createdAt?.toDate?.() || new Date(e.createdAt),
+        auction: a ? { ...a, id: e.auctionId, seller: { name: seller.name, image: seller.image } } : null,
+        dispute: disputeSnap.empty ? null : { ...disputeSnap.docs[0].data(), id: disputeSnap.docs[0].id },
+      };
+    }));
   } else if (currentTab === "coordination") {
     // Phase 11: Coordination Hub (Post-Advance Chat)
-    const conversations = await prisma.conversation.findMany({
-      where: {
-        OR: [{ buyerId: userId }, { sellerId: userId }],
-        auction: { escrowTransaction: { status: { in: ['HELD', 'DISPUTED'] } } }
-      },
-      include: {
+    // Firestore OR queries for buyerId == userId OR sellerId == userId
+    // Since Firestore doesn't easily do OR across fields, we do two queries and merge
+    const buyerConvSnap = await db.collection('conversations').where('buyerId', '==', userId).get();
+    const sellerConvSnap = await db.collection('conversations').where('sellerId', '==', userId).get();
+    
+    const convMap = new Map();
+    [...buyerConvSnap.docs, ...sellerConvSnap.docs].forEach(d => convMap.set(d.id, d));
+    
+    const allConvs = Array.from(convMap.values()).map(d => ({ ...d.data(), id: d.id }));
+    
+    const results = await Promise.all(allConvs.map(async conv => {
+      const aSnap = await db.collection('auctions').doc(conv.auctionId).get();
+      if (!aSnap.exists) return null;
+      const a = aSnap.data()!;
+      
+      const eSnap = await db.collection('escrowTransactions').doc(conv.auctionId).get();
+      const escrow = eSnap.exists ? eSnap.data()! : null;
+      
+      if (!escrow || (escrow.status !== 'HELD' && escrow.status !== 'DISPUTED')) return null;
+      
+      const mSnap = await db.collection('messages').where('conversationId', '==', conv.id).orderBy('createdAt', 'desc').limit(1).get();
+      
+      return {
+        ...conv,
         auction: {
-          select: {
-            title: true,
-            images: true,
-            id: true,
-            escrowTransaction: { 
-              select: { 
-                status: true, 
-                id: true,
-                dispute: true 
-              } 
-            }
-          }
+          title: a.title, images: a.images, id: conv.auctionId,
+          escrowTransaction: { status: escrow.status, id: eSnap.id }
         },
-        messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 1
-        }
-      },
-      orderBy: { lastMessageAt: 'desc' }
-    });
-    escrowTransactions = conversations; // Reusing the slot for simplicity in rendering
+        messages: mSnap.empty ? [] : [{ ...mSnap.docs[0].data(), id: mSnap.docs[0].id }]
+      };
+    }));
+    
+    escrowTransactions = results.filter(Boolean).sort((a, b) => b.lastMessageAt - a.lastMessageAt);
   } else if (currentTab === "performance") {
-    // Derived stats for the performance tab
-    const sellerAuctions = await prisma.auction.findMany({
-      where: { sellerId: userId },
-      select: { status: true, currentPrice: true }
-    });
+    const sellerAuctionsSnap = await db.collection('auctions').where('sellerId', '==', userId).get();
+    const sellerAuctions = sellerAuctionsSnap.docs.map(d => d.data());
     
     const stats = {
       totalSales: sellerAuctions.filter(a => a.status === 'SOLD').length,

@@ -17,24 +17,53 @@ async function requireAdmin() {
 export async function getAdminReports(status?: string) {
   await requireAdmin();
 
-  let query: FirebaseFirestore.Query = db.collection('reports').orderBy('createdAt', 'desc');
-  if (status) query = query.where('status', '==', status);
+  let query: FirebaseFirestore.Query = db.collection('reports');
+  if (status) {
+    query = query.where('status', '==', status);
+  }
+  
+  const snap = await query.orderBy('createdAt', 'desc').limit(100).get();
 
-  const snap = await query.limit(100).get();
-
-  return Promise.all(snap.docs.map(async d => {
+  const reports = await Promise.all(snap.docs.map(async d => {
     const r = d.data();
     const [aSnap, reporterSnap] = await Promise.all([
       db.collection('auctions').doc(r.auctionId).get(),
       db.collection('users').doc(r.reporterId).get(),
     ]);
+
+    if (!aSnap.exists) return null;
+
+    const auctionData = aSnap.data()!;
+    const sellerSnap = await db.collection('users').doc(auctionData.sellerId).get();
+    const sellerData = sellerSnap.data() || {};
+
     return {
-      ...r, id: d.id,
+      id: d.id,
+      reason: r.reason,
+      description: r.description || null,
+      status: r.status,
       createdAt: r.createdAt?.toDate?.() ?? new Date(r.createdAt),
-      auction:  aSnap.exists  ? { id: aSnap.id, title: aSnap.data()?.title ?? '' } : null,
-      reporter: reporterSnap.exists ? { id: reporterSnap.id, name: reporterSnap.data()?.name ?? '' } : null,
+      updatedAt: r.updatedAt?.toDate?.() ?? new Date(r.updatedAt),
+      auction: {
+        id: aSnap.id,
+        title: auctionData.title ?? 'Deleted Auction',
+        status: auctionData.status,
+        images: auctionData.images || [],
+        seller: {
+          name: sellerData.name || 'Unknown',
+          email: sellerData.email || '',
+        }
+      },
+      reporter: {
+        id: reporterSnap.id,
+        name: reporterSnap.data()?.name || 'Anonymous',
+        email: reporterSnap.data()?.email || '',
+        image: reporterSnap.data()?.image || null,
+      }
     };
   }));
+
+  return { success: true, reports: reports.filter(Boolean) };
 }
 
 export async function resolveReport(reportId: string, status: string) {

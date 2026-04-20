@@ -9,7 +9,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
@@ -27,12 +27,12 @@ interface ProcessResult {
 async function processExpiredAuctions(): Promise<ProcessResult> {
   const now = new Date();
 
-  const expiredAuctions = await prisma.auction.findMany({
-    where: { status: 'ACTIVE', endTime: { lte: now } },
-    include: {
-      bids: { orderBy: { amount: 'desc' }, take: 1 },
-    },
-  });
+  const expiredSnap = await db.collection('auctions')
+    .where('status', '==', 'ACTIVE')
+    .where('endTime', '<=', now)
+    .get();
+
+  const expiredAuctions = expiredSnap.docs.map(d => ({ ...d.data(), id: d.id }));
 
   const result: ProcessResult = {
     totalExpired: expiredAuctions.length,
@@ -44,42 +44,44 @@ async function processExpiredAuctions(): Promise<ProcessResult> {
 
   for (const auction of expiredAuctions) {
     const attemptResult = await withRetry(async () => {
-      const highestBid = auction.bids[0];
+      const bidsSnap = await db.collection('bids')
+        .where('auctionId', '==', auction.id)
+        .orderBy('amount', 'desc')
+        .limit(1)
+        .get();
+        
+      const highestBid = bidsSnap.empty ? null : { ...bidsSnap.docs[0].data(), id: bidsSnap.docs[0].id };
 
-      await prisma.$transaction(async (tx) => {
-        if (!highestBid) {
-          // No bids — expire gracefully
-          await tx.auction.update({
-            where: { id: auction.id },
-            data: { status: 'EXPIRED' },
-          });
-        } else {
-          // Has a winner — mark SOLD + create escrow
-          await tx.auction.update({
-            where: { id: auction.id },
-            data: { status: 'SOLD', winnerId: highestBid.bidderId },
-          });
+      // Firestore doesn't have multi-collection distributed transactions easily without batch
+      const batch = db.batch();
+      const auctionRef = db.collection('auctions').doc(auction.id);
 
-          // Only create escrow if one doesn't already exist (idempotent)
-          await tx.escrowTransaction.upsert({
-            where: { auctionId: auction.id },
-            create: {
-              auctionId: auction.id,
-              buyerId:   highestBid.bidderId,
-              amount:    highestBid.amount,
-              status:    'HELD',
-            },
-            update: {}, // Already exists — no-op
-          });
-        }
-      });
+      if (!highestBid) {
+        // No bids — expire gracefully
+        batch.update(auctionRef, { status: 'EXPIRED', updatedAt: new Date() });
+      } else {
+        // Has a winner — mark SOLD + create escrow
+        batch.update(auctionRef, { status: 'SOLD', winnerId: highestBid.bidderId, updatedAt: new Date() });
 
-      // Notify winner via Firebase RTDB (outside transaction so RTDB failure doesn't roll back)
+        const escrowRef = db.collection('escrowTransactions').doc(auction.id);
+        // Using set with merge for upsert-like behavior
+        batch.set(escrowRef, {
+          auctionId: auction.id,
+          buyerId:   highestBid.bidderId,
+          amount:    highestBid.amount,
+          status:    'HELD',
+          updatedAt: new Date(),
+        }, { merge: true });
+      }
+
+      await batch.commit();
+
+      // Notify winner via Firebase RTDB
       if (highestBid) {
-        await rtdbPush(RTDB_PATHS.userNotifications(highestBid.bidderId), {
+        await rtdbPush(RTDB_PATHS.userNotifications(highestBid.bidderId as string), {
           event:     FIREBASE_EVENTS.AUCTION_WON,
           auctionId: auction.id,
-          title:     auction.title,
+          title:     auction.title as string,
           amount:    highestBid.amount,
         }).catch(err => console.error(`[Cron] RTDB notify failed for auction ${auction.id}:`, err));
       }

@@ -5,8 +5,10 @@ import {
   getAdminUsers,
   grantVerifiedSeller,
   revokeVerifiedSeller,
+  banUser,
+  unbanUser,
 } from "@/actions/admin-users";
-import { Shield, ShieldOff, Users, CheckCircle, Search } from "lucide-react";
+import { Shield, ShieldOff, Users, CheckCircle, Search, Ban } from "lucide-react";
 import Image from "next/image";
 
 export function UsersTab() {
@@ -20,6 +22,7 @@ export function UsersTab() {
     reputationScore: number;
     createdAt: Date;
     _count: { bids: number };
+    isBanned: boolean;
   }
 
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -49,6 +52,21 @@ export function UsersTab() {
         setUsers((prev) =>
           prev.map((u) =>
             u.id === userId ? { ...u, isVerifiedSeller: !currentStatus } : u,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleToggleBan = (userId: string, isBanned: boolean) => {
+    if (!confirm(`Are you sure you want to ${isBanned ? 'unban' : 'ban'} this user?`)) return;
+    startTransition(async () => {
+      const action = isBanned ? unbanUser : banUser;
+      const result = await action(userId);
+      if (result.success) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === userId ? { ...u, isBanned: !isBanned } : u,
           ),
         );
       }
@@ -108,6 +126,9 @@ export function UsersTab() {
                 <th className="text-right px-4 py-3 font-medium text-gray-500">
                   Verified Seller
                 </th>
+                <th className="text-right px-4 py-3 font-medium text-gray-500">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -132,9 +153,16 @@ export function UsersTab() {
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">
-                          {user.name || "Unnamed"}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-gray-900">
+                            {user.name || "Unnamed"}
+                          </p>
+                          {user.isBanned && (
+                            <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wider">
+                              Banned
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-400">{user.email}</p>
                       </div>
                     </div>
@@ -177,6 +205,20 @@ export function UsersTab() {
                           <ShieldOff className="w-3.5 h-3.5" /> Grant
                         </>
                       )}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => handleToggleBan(user.id, user.isBanned)}
+                      disabled={isPending}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        user.isBanned
+                          ? "bg-red-600 text-white hover:bg-red-700"
+                          : "bg-red-50 text-red-700 hover:bg-red-100"
+                      }`}
+                    >
+                      <Ban className="w-3.5 h-3.5" />
+                      {user.isBanned ? "Unban" : "Ban"}
                     </button>
                   </td>
                 </tr>

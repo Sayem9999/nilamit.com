@@ -1,6 +1,6 @@
 
 import 'dotenv/config';
-import { prisma } from './src/lib/db';
+import { db } from './src/lib/db';
 
 async function main() {
   const email = process.argv[2];
@@ -12,16 +12,16 @@ async function main() {
   console.log(`Attempting to delete user: ${email}...`);
 
   try {
-    const user = await prisma.user.delete({
-      where: { email },
-    });
-    console.log(`✅ User deleted successfully: ${user.name} (${user.email})`);
-  } catch (error: unknown) {
-    if ((error as { code?: string }).code === 'P2025') {
+    const usersSnap = await db.collection('users').where('email', '==', email).limit(1).get();
+    if (usersSnap.empty) {
         console.log(`⚠️ User not found: ${email}`);
-    } else {
-        console.error('❌ Error deleting user:', error);
+        return;
     }
+    const user = usersSnap.docs[0];
+    await db.collection('users').doc(user.id).delete();
+    console.log(`✅ User deleted successfully: ${user.data().name} (${user.data().email})`);
+  } catch (error: unknown) {
+    console.error('❌ Error deleting user:', error);
   }
 }
 
@@ -29,7 +29,4 @@ main()
   .catch((e) => {
     console.error(e);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
   });

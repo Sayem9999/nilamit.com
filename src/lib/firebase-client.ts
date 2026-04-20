@@ -20,17 +20,17 @@ import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getDatabase, type Database } from 'firebase/database';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAuth, signInWithCustomToken, type Auth } from 'firebase/auth';
+import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain:        `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-  databaseURL:       process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL ??
-    `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com`,
-  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ??
-    `${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebasestorage.app`,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+  apiKey: "AIzaSyAOwypGtSAeCsZpHogZx7Jt_MPX2nh3GZM",
+  authDomain: "nilamit-52073.firebaseapp.com",
+  databaseURL: "https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "nilamit-52073",
+  storageBucket: "nilamit-52073.firebasestorage.app",
+  messagingSenderId: "884637735592",
+  appId: "1:884637735592:web:b817a744a54f15a663409d",
+  measurementId: "G-H9QW6DLWWJ"
 };
 
 function getClientApp(): FirebaseApp {
@@ -42,6 +42,18 @@ function getClientApp(): FirebaseApp {
 let _db:      Database        | null = null;
 let _storage: FirebaseStorage | null = null;
 let _auth:    Auth            | null = null;
+let _analytics: Analytics     | null = null;
+
+export async function getClientAnalytics(): Promise<Analytics | null> {
+  if (typeof window === 'undefined') return null; // Analytics only works in browser
+  if (!_analytics) {
+    const supported = await isSupported();
+    if (supported) {
+      _analytics = getAnalytics(getClientApp());
+    }
+  }
+  return _analytics;
+}
 
 export function getClientDB(): Database {
   if (!_db) _db = getDatabase(getClientApp());

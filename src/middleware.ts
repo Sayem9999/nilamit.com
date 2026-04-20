@@ -1,3 +1,4 @@
+import { NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import NextAuth from 'next-auth';
 import { authConfig } from './lib/auth.config';
@@ -11,10 +12,10 @@ const intlMiddleware = createMiddleware({
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+export default function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   
-  // If NextAuth accidentally prepends the locale (e.g. /en/api/auth/error), strip it or redirect
+  // 1. Strip locale from API routes BEFORE NextAuth or intl handles them
   const localeApiMatch = pathname.match(/^\/(en|bn)?(\/api\/.*)/);
   if (localeApiMatch) {
     const apiPath = localeApiMatch[2];
@@ -22,20 +23,26 @@ export default auth((req) => {
       const locale = localeApiMatch[1] || 'en';
       return Response.redirect(new URL(`/${locale}/login?error=AuthError`, req.url));
     }
-    // Only redirect if there was a locale prefix that we need to strip
+    // If there was a locale prefix, strip it and redirect to the raw /api/ path
     if (localeApiMatch[1]) {
       return Response.redirect(new URL(apiPath, req.url));
     }
   }
 
-  const isApiRoute = pathname.startsWith('/api');
-  
-  if (isApiRoute) {
+  // 2. If it's an API route, pass it directly to NextAuth (if it's /api/auth)
+  if (pathname.startsWith('/api')) {
+    // We must wrap the request with auth() so NextAuth handles /api/auth/*
+    if (pathname.startsWith('/api/auth')) {
+      return auth(() => {})(req);
+    }
     return;
   }
 
-  return intlMiddleware(req);
-});
+  // 3. For all other routes, let next-intl handle the locales, then auth handle protection
+  return auth((request) => {
+    return intlMiddleware(request);
+  })(req);
+}
 
 export const config = {
   // Match only internationalized pathnames, but exclude API, _next, etc.

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { Shield, Star, Calendar, Package, Gavel } from "lucide-react";
@@ -11,50 +11,67 @@ interface Props {
 export default async function SellerProfilePage({ params }: Props) {
   const { id } = await params;
 
-  const seller = await prisma.user.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      image: true,
-      isVerifiedSeller: true,
-      isPhoneVerified: true,
-      reputationScore: true,
-      createdAt: true,
-      winningStreak: true,
-      userLevel: true,
-      _count: { select: { bids: true } },
-    },
-  });
+  const sellerSnap = await db.collection('users').doc(id).get();
+  if (!sellerSnap.exists) return notFound();
+  const sellerData = sellerSnap.data()!;
+  
+  const bidsSnap = await db.collection('bids').where('bidderId', '==', id).get();
+  const seller = {
+    id: sellerSnap.id,
+    name: sellerData.name,
+    image: sellerData.image,
+    isVerifiedSeller: sellerData.isVerifiedSeller,
+    isPhoneVerified: sellerData.isPhoneVerified,
+    reputationScore: sellerData.reputationScore,
+    createdAt: sellerData.createdAt?.toDate?.() || new Date(sellerData.createdAt),
+    winningStreak: sellerData.winningStreak,
+    userLevel: sellerData.userLevel,
+    _count: { bids: bidsSnap.size },
+  };
 
-  if (!seller) return notFound();
+  const auctionsSnap = await db.collection('auctions')
+    .where('sellerId', '==', id)
+    .where('status', 'in', ['ACTIVE', 'SOLD'])
+    .orderBy('createdAt', 'desc')
+    .limit(20)
+    .get();
 
-  const auctions = await prisma.auction.findMany({
-    where: { sellerId: id, status: { in: ["ACTIVE", "SOLD"] } },
-    include: {
+  const auctions = await Promise.all(auctionsSnap.docs.map(async d => {
+    const a = d.data();
+    const abidsSnap = await db.collection('bids').where('auctionId', '==', d.id).get();
+    return {
+      ...a,
+      id: d.id,
+      createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
+      endTime: a.endTime?.toDate?.() || new Date(a.endTime),
       seller: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          isVerifiedSeller: true,
-          winningStreak: true,
-          userLevel: true,
-          reputationScore: true,
-        },
+        id: seller.id,
+        name: seller.name,
+        image: seller.image,
+        isVerifiedSeller: seller.isVerifiedSeller,
+        winningStreak: seller.winningStreak,
+        userLevel: seller.userLevel,
+        reputationScore: seller.reputationScore,
       },
-      _count: { select: { bids: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
+      _count: { bids: abidsSnap.size },
+    };
+  }));
 
-  const reviews = await prisma.review.findMany({
-    where: { toId: id },
-    include: { from: { select: { name: true, image: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 10,
-  });
+  const reviewsSnap = await db.collection('reviews')
+    .where('toId', '==', id)
+    .orderBy('createdAt', 'desc')
+    .limit(10)
+    .get();
+
+  const reviews = await Promise.all(reviewsSnap.docs.map(async d => {
+    const r = d.data();
+    const fromSnap = await db.collection('users').doc(r.fromId).get();
+    return {
+      ...r,
+      id: d.id,
+      from: { name: fromSnap.data()?.name, image: fromSnap.data()?.image },
+    };
+  }));
 
   const avgRating =
     reviews.length > 0

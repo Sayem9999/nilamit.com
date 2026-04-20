@@ -1,8 +1,7 @@
 'use server';
 
-import { prisma } from '@/lib/db';
+import { db, newId } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import type { AlertType } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -14,14 +13,18 @@ export async function createAlert(type: AlertType, auctionId?: string, threshold
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
 
   try {
-    const alert = await prisma.alert.create({
-      data: {
-        userId: session.user.id,
-        type,
-        auctionId,
-        thresholdPrice,
-      }
-    });
+    const id = newId();
+    const alert = {
+      id,
+      userId: session.user.id,
+      type,
+      auctionId,
+      thresholdPrice,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    await db.collection('alerts').doc(id).set(alert);
 
     revalidatePath('/');
     return { success: true, alert };
@@ -34,23 +37,32 @@ export async function getUserAlerts() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  return prisma.alert.findMany({
-    where: { userId: session.user.id, isActive: true },
-    include: {
-      auction: { select: { title: true, currentPrice: true, endTime: true } }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+  const snap = await db.collection('alerts')
+    .where('userId', '==', session.user.id)
+    .where('isActive', '==', true)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  const alerts = await Promise.all(snap.docs.map(async d => {
+    const a = d.data();
+    let auctionData = null;
+    if (a.auctionId) {
+      const auctSnap = await db.collection('auctions').doc(a.auctionId).get();
+      if (auctSnap.exists) {
+        const auct = auctSnap.data()!;
+        auctionData = { title: auct.title, currentPrice: auct.currentPrice, endTime: auct.endTime };
+      }
+    }
+    return { ...a, id: d.id, auction: auctionData };
+  }));
+  return alerts;
 }
 
 export async function toggleAlert(alertId: string, isActive: boolean) {
   const session = await auth();
   if (!session?.user?.id) return { success: false };
 
-  await prisma.alert.update({
-    where: { id: alertId, userId: session.user.id },
-    data: { isActive }
-  });
+  await db.collection('alerts').doc(alertId).update({ isActive, updatedAt: new Date() });
 
   return { success: true };
 }
@@ -60,15 +72,14 @@ export async function toggleAlert(alertId: string, isActive: boolean) {
  * This would normally run in the closeAuction/placeBid logic
  */
 export async function checkAndTriggerPriceAlerts(auctionId: string, currentPrice: number) {
-  const matchingAlerts = await prisma.alert.findMany({
-    where: {
-      auctionId,
-      type: "PRICE_DROP" as AlertType,
-      isActive: true,
-      thresholdPrice: { gte: currentPrice }
-    },
-    include: { user: { select: { email: true } } }
-  });
+  const snap = await db.collection('alerts')
+    .where('auctionId', '==', auctionId)
+    .where('type', '==', 'PRICE_DROP')
+    .where('isActive', '==', true)
+    .where('thresholdPrice', '>=', currentPrice)
+    .get();
+
+  const matchingAlerts = snap.docs.map(d => ({ ...d.data(), id: d.id }));
 
   // In a real app, this would send emails/push notifications
   return matchingAlerts;

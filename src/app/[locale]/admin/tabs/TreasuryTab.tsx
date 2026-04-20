@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getTreasuryAudit } from '@/actions/admin';
-import { ShieldCheck, Search, Download, ExternalLink, Smartphone, Clock } from 'lucide-react';
+import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute } from '@/actions/admin';
+import { ShieldCheck, Download, ExternalLink, Smartphone, Clock, Scale, RotateCcw } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
+import toast from 'react-hot-toast';
 
 interface TreasuryLog {
   id: string;
@@ -14,23 +15,56 @@ interface TreasuryLog {
   buyer: { name: string | null; email: string | null };
 }
 
+interface ActiveEscrow {
+  id: string;
+  amount: number;
+  createdAt: Date;
+  auction: { id: string; title: string; seller: { name: string | null } };
+  buyer: { name: string | null };
+}
+
 export function TreasuryTab() {
   const [logs, setLogs] = useState<TreasuryLog[]>([]);
+  const [activeEscrows, setActiveEscrows] = useState<ActiveEscrow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resolving, setResolving] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [auditData, escrowData] = await Promise.all([
+        getTreasuryAudit(),
+        getAdminActiveEscrows()
+      ]);
+      setLogs(auditData);
+      setActiveEscrows(escrowData as ActiveEscrow[]);
+    } catch (e: unknown) {
+      console.error(e);
+      toast.error("Failed to load treasury data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadLogs() {
-      try {
-        const data = await getTreasuryAudit();
-        setLogs(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadLogs();
+    loadData();
   }, []);
+
+  const handleManualResolve = async (id: string, resolution: 'RELEASE' | 'REFUND') => {
+    if (!confirm(`Are you sure you want to FORCE ${resolution} this escrow?`)) return;
+    setResolving(id);
+    try {
+      const res = await resolveAdminDispute(id, resolution);
+      if (res.success) {
+        toast.success(`Escrow ${resolution.toLowerCase()}ed successfully`);
+        setActiveEscrows(prev => prev.filter(e => e.id !== id));
+      }
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Resolution failed");
+    } finally {
+      setResolving(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -125,6 +159,55 @@ export function TreasuryTab() {
              <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Avg. Verification</h4>
              <p className="text-3xl font-black text-gray-900">2.4s <span className="text-xs font-bold uppercase text-amber-600 tracking-tighter">Response</span></p>
           </div>
+      </div>
+
+      {/* Active Escrow Resolution Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Active Escrow Control (HELD Status)</h4>
+            <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded uppercase">Manual Override</span>
+        </div>
+        
+        {activeEscrows.length === 0 ? (
+            <div className="bg-gray-50/50 border border-dashed border-gray-200 rounded-3xl p-8 text-center">
+                <p className="text-sm text-gray-400 italic">No funds currently held in escrow.</p>
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {activeEscrows.map((escrow) => (
+                    <div key={escrow.id} className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-center justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">ID: {escrow.id.slice(-8)}</p>
+                            <h5 className="font-bold text-gray-900 truncate">{escrow.auction.title}</h5>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] text-gray-500">Seller: <span className="font-bold">{escrow.auction.seller.name || 'Unknown'}</span></span>
+                                <span className="text-[10px] text-gray-300">|</span>
+                                <span className="text-[10px] text-gray-500">Buyer: <span className="font-bold">{escrow.buyer.name || 'Unknown'}</span></span>
+                            </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                            <p className="text-lg font-black text-emerald-600 mb-2">{formatBDT(escrow.amount)}</p>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => handleManualResolve(escrow.id, 'RELEASE')}
+                                    disabled={!!resolving}
+                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors title='Release to Seller'"
+                                >
+                                    <Scale className="w-4 h-4" />
+                                </button>
+                                <button 
+                                    onClick={() => handleManualResolve(escrow.id, 'REFUND')}
+                                    disabled={!!resolving}
+                                    className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors title='Refund Buyer'"
+                                >
+                                    <RotateCcw className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import ChatInterface from "@/components/social/ChatInterface";
 import { ChevronLeft, ShieldCheck, Info } from "lucide-react";
@@ -25,23 +25,42 @@ export default async function CoordinationPage({
 
   const userId = session.user.id;
 
-  const conversation = await prisma.conversation.findUnique({
-    where: { id },
-    include: {
-      auction: {
-        include: {
-          seller: { select: { id: true, name: true, image: true } },
-          winner: { select: { id: true, name: true, image: true } },
-          escrowTransaction: {
-            include: { dispute: true }
-          }
-        },
-      },
-      messages: {
-        orderBy: { createdAt: "asc" },
-      },
+  const convSnap = await db.collection('conversations').doc(id).get();
+  if (!convSnap.exists) {
+    notFound();
+  }
+  const convData = convSnap.data()!;
+
+  const auctionSnap = await db.collection('auctions').doc(convData.auctionId).get();
+  const auction = auctionSnap.data()!;
+
+  const sellerSnap = await db.collection('users').doc(auction.sellerId).get();
+  const seller = sellerSnap.data()!;
+
+  const winnerSnap = await db.collection('users').doc(auction.winnerId || 'unknown').get();
+  const winner = winnerSnap.exists ? winnerSnap.data()! : {};
+
+  const escrowSnap = await db.collection('escrowTransactions').doc(convData.auctionId).get();
+  const escrow = escrowSnap.exists ? escrowSnap.data()! : null;
+
+  const disputeSnap = await db.collection('disputes').where('transactionId', '==', escrowSnap.id).get();
+  const dispute = disputeSnap.empty ? null : disputeSnap.docs[0].data();
+
+  const messagesSnap = await db.collection('messages').where('conversationId', '==', id).orderBy('createdAt', 'asc').get();
+  const messages = messagesSnap.docs.map(d => ({ ...d.data(), id: d.id, createdAt: d.data().createdAt?.toDate?.() || new Date(d.data().createdAt) }));
+
+  const conversation = {
+    ...convData,
+    id: convSnap.id,
+    auction: {
+      ...auction,
+      id: auctionSnap.id,
+      seller: { id: auction.sellerId, name: seller.name, image: seller.image },
+      winner: { id: auction.winnerId, name: winner.name, image: winner.image },
+      escrowTransaction: escrow ? { ...escrow, id: escrowSnap.id, dispute } : null
     },
-  });
+    messages
+  };
 
   if (!conversation) {
     notFound();

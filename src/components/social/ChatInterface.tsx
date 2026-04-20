@@ -182,8 +182,14 @@ export default function ChatInterface({
                   isMe ? 'bg-gray-900 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none',
                 )}>
                   {msg.imageUrl && (
-                    <div className="mb-2 relative rounded-lg overflow-hidden border border-gray-100/10">
-                      <img src={msg.imageUrl} alt="Attachment" className="max-w-full h-auto" />
+                    <div className="mb-2 relative rounded-lg overflow-hidden border border-gray-100/10 bg-black/5">
+                      <Image 
+                        src={msg.imageUrl} 
+                        alt="Attachment" 
+                        width={400} 
+                        height={400} 
+                        style={{ width: '100%', height: 'auto', maxHeight: '300px', objectFit: 'contain' }}
+                      />
                     </div>
                   )}
                   <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>

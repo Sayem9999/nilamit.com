@@ -2,8 +2,7 @@ import { HomeContent } from "@/components/home/HomeContent";
 import ForYouFeed from "@/components/home/components/ForYouFeed";
 export const dynamic = "force-dynamic";
 import { getAuctions, getSpecializedFeeds } from "@/actions/auction";
-import { prisma } from "@/lib/db";
-import { AuctionStatus } from "@prisma/client";
+import { db } from "@/lib/db";
 
 export default async function HomePage({
   params,
@@ -16,19 +15,24 @@ export default async function HomePage({
     { auctions: trendingAuctions },
     { endingSoon, latestBids },
     { auctions: featuredAuctions },
-    totalUsers,
-    totalBids,
-    totalAuctions,
-    verifiedSellers,
+    totalUsersSnap,
+    totalBidsSnap,
+    totalAuctionsSnap,
+    verifiedSellersSnap,
   ] = await Promise.all([
     getAuctions({ sortBy: "bids", sortOrder: "desc", limit: 8 }),
     getSpecializedFeeds(),
     getAuctions({ limit: 4 }),
-    prisma.user.count(),
-    prisma.bid.count(),
-    prisma.auction.count({ where: { status: AuctionStatus.ACTIVE } }),
-    prisma.user.count({ where: { isVerifiedSeller: true } }),
+    db.collection('users').count().get(),
+    db.collection('bids').count().get(),
+    db.collection('auctions').where('status', '==', 'ACTIVE').count().get(),
+    db.collection('users').where('isVerifiedSeller', '==', true).count().get(),
   ]);
+
+  const totalUsers = totalUsersSnap.data().count;
+  const totalBids = totalBidsSnap.data().count;
+  const totalAuctions = totalAuctionsSnap.data().count;
+  const verifiedSellers = verifiedSellersSnap.data().count;
 
   return (
     <>

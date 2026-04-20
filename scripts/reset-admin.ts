@@ -1,19 +1,20 @@
-import { prisma } from '../src/lib/db';
+import { db } from '../src/lib/db';
 import bcrypt from 'bcryptjs';
 
 async function main() {
-  const user = await prisma.user.findUnique({ where: { email: 'sayemf21@gmail.com' } });
-  if (!user) {
+  const usersSnap = await db.collection('users').where('email', '==', 'sayemf21@gmail.com').limit(1).get();
+  if (usersSnap.empty) {
     console.log('User not found');
     return;
   }
-  console.log('Found user:', user.email);
+  const user = usersSnap.docs[0];
+  console.log('Found user:', user.data().email);
   const hashed = await bcrypt.hash('12345678', 10);
-  await prisma.user.update({
-    where: { email: 'sayemf21@gmail.com' },
-    data: { password: hashed, isPhoneVerified: true }
+  await db.collection('users').doc(user.id).update({
+    password: hashed,
+    isPhoneVerified: true
   });
   console.log('Password reset to 12345678 and phone verified');
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect());
+main().catch(console.error);

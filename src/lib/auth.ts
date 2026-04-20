@@ -161,14 +161,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, trigger }) {
       // First login — seed from freshly-authenticated user
       if (user) {
-        token.id              = user.id;
-        token.isPhoneVerified  = (user as Record<string, unknown>).isPhoneVerified  ?? false;
-        token.emailVerified    = (user as Record<string, unknown>).emailVerified    ?? null;
-        token.phone            = (user as Record<string, unknown>).phone            ?? null;
-        token.reputationScore  = (user as Record<string, unknown>).reputationScore  ?? 0;
-        token.isVerifiedSeller = (user as Record<string, unknown>).isVerifiedSeller ?? false;
-        token.userLevel        = (user as Record<string, unknown>).userLevel        ?? 1;
-        token.winningStreak    = (user as Record<string, unknown>).winningStreak    ?? 0;
+        token.id               = user.id;
+        token.isPhoneVerified  = (user as unknown as Record<string, unknown>).isPhoneVerified  ?? false;
+        token.emailVerified    = (user as unknown as Record<string, unknown>).emailVerified    ?? null;
+        token.phone            = (user as unknown as Record<string, unknown>).phone            ?? null;
+        token.reputationScore  = (user as unknown as Record<string, unknown>).reputationScore  ?? 0;
+        token.isVerifiedSeller = (user as unknown as Record<string, unknown>).isVerifiedSeller ?? false;
+        token.userLevel        = (user as unknown as Record<string, unknown>).userLevel        ?? 1;
+        token.winningStreak    = (user as unknown as Record<string, unknown>).winningStreak    ?? 0;
         token.lastDbRefresh    = Date.now();
       }
 
@@ -205,7 +205,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        const u = session.user as Record<string, unknown>;
+        const u = session.user as unknown as Record<string, unknown>;
         u.id              = token.id;
         u.isPhoneVerified  = token.isPhoneVerified;
         u.emailVerified    = token.emailVerified;

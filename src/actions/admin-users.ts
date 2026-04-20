@@ -29,6 +29,22 @@ export async function revokeVerifiedSeller(userId: string) {
   return { success: true };
 }
 
+export async function banUser(userId: string) {
+  await requireAdmin();
+  await db.collection('users').doc(userId).update({
+    isBanned: true, updatedAt: new Date(),
+  });
+  return { success: true };
+}
+
+export async function unbanUser(userId: string) {
+  await requireAdmin();
+  await db.collection('users').doc(userId).update({
+    isBanned: false, updatedAt: new Date(),
+  });
+  return { success: true };
+}
+
 export async function getAdminUsers() {
   await requireAdmin();
 
@@ -37,9 +53,18 @@ export async function getAdminUsers() {
     .limit(100)
     .get();
 
-  return snap.docs.map(d => ({
-    ...d.data(), id: d.id,
-    createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
-    password: undefined, // never expose hashed password
+  const users = await Promise.all(snap.docs.map(async d => {
+    const u = d.data();
+    // Count bids dynamically for UI instead of Prisma relation
+    const bidsSnap = await db.collection('bids').where('bidderId', '==', d.id).get();
+    return {
+      ...u, id: d.id,
+      createdAt: u.createdAt?.toDate?.() ?? new Date(u.createdAt),
+      password: undefined, // never expose hashed password
+      _count: { bids: bidsSnap.size },
+      isBanned: u.isBanned || false,
+    };
   }));
+
+  return { success: true, users };
 }

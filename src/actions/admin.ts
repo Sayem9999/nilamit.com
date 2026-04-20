@@ -356,3 +356,40 @@ export async function getTreasuryAudit() {
     },
   }));
 }
+export async function getAdminActiveEscrows() {
+  await requireAdmin();
+
+  const txSnap = await db.collection('escrowTransactions')
+    .where('status', '==', 'HELD')
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  return Promise.all(txSnap.docs.map(async (doc) => {
+    const tx = doc.data();
+    const [auctionSnap, buyerSnap] = await Promise.all([
+      db.collection('auctions').doc(tx.auctionId).get(),
+      db.collection('users').doc(tx.buyerId).get(),
+    ]);
+
+    const auction = auctionSnap.data() ?? {};
+    const sellerSnap = auction.sellerId
+      ? await db.collection('users').doc(auction.sellerId as string).get()
+      : null;
+
+    return {
+      ...tx,
+      id: doc.id,
+      createdAt: readDate(tx.createdAt) ?? new Date(),
+      auction: {
+        id: auctionSnap.id,
+        title: (auction.title as string) ?? '',
+        seller: {
+          name: (sellerSnap?.data()?.name as string | null) ?? null,
+        },
+      },
+      buyer: {
+        name: (buyerSnap.data()?.name as string | null) ?? null,
+      },
+    };
+  }));
+}
