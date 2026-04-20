@@ -3,14 +3,6 @@
 
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = [
-    "native",
-    "rhel-openssl-1.0.x",          // Vercel serverless
-    "rhel-openssl-3.0.x",          // Vercel / Cloud Run RHEL
-    "linux-musl-openssl-3.0.x",    // Alpine Docker
-    "debian-openssl-1.1.x",        // Firebase App Hosting (Cloud Run Debian)
-    "debian-openssl-3.0.x"         // Firebase App Hosting (Cloud Run Debian newer)
-  ]
 }
 
 datasource db {
