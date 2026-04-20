@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@auth/firebase-adapter": "^2.7.4",
-    "@google/genai": "^1.50.1",
     "@prisma/client": "^7.4.0",
     "@sentry/nextjs": "^10.49.0",
     "@supabase/supabase-js": "^2.95.3",
