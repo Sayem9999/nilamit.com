@@ -9,7 +9,6 @@
  */
 
 const REQUIRED: Record<string, string> = {
-  DATABASE_URL: 'PostgreSQL connection string (Cloud SQL or Supabase)',
   AUTH_SECRET:  'Auth.js secret — generate with: openssl rand -base64 32',
   ADMIN_EMAILS: 'Comma-separated admin email addresses',
 };
@@ -27,6 +26,10 @@ const REQUIRED_IN_PRODUCTION: Record<string, string> = {
   NEXT_PUBLIC_FIREBASE_APP_ID:             'Firebase app ID',
 
   CRON_SECRET: 'Cron job authorization secret (generate with: openssl rand -hex 32)',
+
+  // Rate Limiting (Upstash Redis)
+  UPSTASH_REDIS_REST_URL:   'Upstash Redis REST URL',
+  UPSTASH_REDIS_REST_TOKEN: 'Upstash Redis REST token',
 };
 
 const OPTIONAL: Record<string, string> = {
@@ -57,16 +60,30 @@ export function validateEnv(): void {
   const missing:  string[] = [];
   const warnings: string[] = [];
 
+  const isBuild = process.env.NEXT_PHASE === 'phase-production-build';
+
   for (const [key, description] of Object.entries(REQUIRED)) {
     if (!process.env[key]) {
-      missing.push(`  • ${key} — ${description}`);
+      if (isBuild) {
+        warnings.push(`  • ${key} (REQUIRED) — ${description}`);
+      } else {
+        missing.push(`  • ${key} — ${description}`);
+      }
     }
   }
 
   if (process.env.NODE_ENV === 'production') {
+    // During build phase, we don't always have secrets available.
+    // We log warnings instead of throwing to allow the build to complete.
+    // The check will still throw at runtime if variables are missing.
+    
     for (const [key, description] of Object.entries(REQUIRED_IN_PRODUCTION)) {
       if (!process.env[key]) {
-        missing.push(`  • ${key} — ${description}`);
+        if (isBuild) {
+          warnings.push(`  • ${key} (REQUIRED) — ${description}`);
+        } else {
+          missing.push(`  • ${key} — ${description}`);
+        }
       }
     }
   }

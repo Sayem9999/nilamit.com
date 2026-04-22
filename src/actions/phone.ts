@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { normalizePhone } from '@/lib/utils';
 import { smsGateway } from '@/lib/sms-gateway';
-import { Resend } from 'resend';
+
 import crypto from 'crypto';
 
 const OTP_EXPIRY_MS         = 5 * 60 * 1000;
@@ -76,17 +76,16 @@ async function internalSendOTP(phone: string, userId?: string, email?: string) {
   );
 
   let emailSent = false;
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (resendApiKey && email) {
+  if (email) {
     try {
-      const resend = new Resend(resendApiKey);
-      await resend.emails.send({
-        from: 'onboarding@resend.dev', to: email,
+      const { sendEmail } = await import('@/lib/firebase-email');
+      await sendEmail({
+        to: email,
         subject: 'Your Verification Code',
         html: `<p>Your verification code is: <strong>${otp}</strong></p><p>Verifies ${phone}. Valid 5 minutes.</p>`,
       });
       emailSent = true;
-    } catch (e) { console.error('[phone] Resend fallback failed:', e); }
+    } catch (e) { console.error('[phone] Firebase email fallback failed:', e); }
   }
 
   if (!smsResult.success && !emailSent) {
@@ -163,19 +162,13 @@ export async function sendEmailOTP(email: string) {
     identifier: email, token: otp, expires: new Date(Date.now() + OTP_EXPIRY_MS),
   });
 
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (!resendApiKey) {
-    console.warn('[WARN] RESEND_API_KEY missing — OTP not emailed.');
-    return { success: true };
-  }
   try {
-    const resend = new Resend(resendApiKey);
-    const { error } = await resend.emails.send({
-      from: 'onboarding@resend.dev', to: email,
+    const { sendEmail } = await import('@/lib/firebase-email');
+    await sendEmail({
+      to: email,
       subject: 'Your nilamit.com Login Code',
       html: `<p>Your code: <strong>${otp}</strong> — valid 5 minutes.</p>`,
     });
-    if (error) return { success: false, error: 'Failed to send email.' };
     return { success: true };
   } catch (e) {
     return { success: false, error: 'Failed to send email.' };

@@ -3,6 +3,7 @@
 import { db, newId } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { AlertType } from '@/types';
 
 /**
  * Smart Engagement Layer - Alerts

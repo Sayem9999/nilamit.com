@@ -103,8 +103,8 @@ export async function getOpenDisputes() {
   return Promise.all(snap.docs.map(async d => {
     const dispute = { ...d.data(), id: d.id };
     const [txSnap, openerSnap] = await Promise.all([
-      db.collection('escrowTransactions').doc(dispute.transactionId).get(),
-      db.collection('users').doc(dispute.openerId).get(),
+      db.collection('escrowTransactions').doc((dispute as any).transactionId).get(),
+      db.collection('users').doc((dispute as any).openerId).get(),
     ]);
     const tx     = txSnap.data() ?? {};
     const opener = openerSnap.data() ?? {};

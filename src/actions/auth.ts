@@ -14,7 +14,7 @@ export async function registerUser(data: { firstName: string; lastName: string; 
     return { success: false, error: 'Missing required fields' };
   }
 
-  const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
+  const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await loginLimiter.limit(`register_${ip}`);
   if (!rateLimitSuccess) return { success: false, error: 'Too many requests. Try again later.' };
 
@@ -47,7 +47,7 @@ export async function signupWithPhone(data: { name: string; phone: string; otp: 
   const otpVerify = await verifyStandaloneOTP(normalizedPhone, otp);
   if (!otpVerify.success) return otpVerify;
 
-  const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
+  const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await loginLimiter.limit(`signup_${ip}`);
   if (!rateLimitSuccess) return { success: false, error: 'Too many requests. Try again later.' };
 
@@ -82,7 +82,7 @@ export async function resetPasswordWithOTP(data: { phone?: string; email?: strin
   const { phone, email, otp, password } = data;
   if (!phone && !email) return { success: false, error: 'Identifier required.' };
 
-  const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
+  const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await loginLimiter.limit(`reset_${ip}`);
   if (!rateLimitSuccess) return { success: false, error: 'Too many requests. Try again later.' };
 

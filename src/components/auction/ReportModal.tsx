@@ -35,7 +35,7 @@ export function ReportModal({ auctionId }: ReportModalProps) {
     setError('');
 
     try {
-      const res = await reportAuction(auctionId, reason, description);
+      const res = await reportAuction({ auctionId, reason, description });
       if (res.success) {
         setIsSuccess(true);
         setTimeout(() => {

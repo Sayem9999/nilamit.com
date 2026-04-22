@@ -36,7 +36,7 @@ import { getAuctionChat } from "@/actions/chat";
 import ChatInterface from "@/components/social/ChatInterface";
 import { Metadata } from "next";
 import Script from "next/script";
-import { AuctionStatus } from "@prisma/client";
+import { AuctionStatus } from "@/types";
 import { getTranslations } from "next-intl/server";
 
 interface Props {
@@ -45,7 +45,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const auction = await getAuction(id);
+  const auction: any = await getAuction(id);
 
   if (!auction) return { title: "Auction Not Found" };
 
@@ -76,14 +76,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AuctionDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await auth();
-  const auction = await getAuction(id);
+  const auction: any = await getAuction(id);
   const t = await getTranslations("Auction");
   if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
 
   const [bids, watched, chat] = await Promise.all([
     getAuctionBids(id),
     isWatched(id),
-    getAuctionChat(id)
+    getAuctionChat(id) as Promise<any>
   ]);
 
   const jsonLd = {
@@ -185,7 +185,7 @@ export default async function AuctionDetailPage({ params }: Props) {
           {/* Bid History */}
           <BidHistory
             auctionId={id}
-            initialBids={bids.map((b) => ({
+            initialBids={bids.map((b: any) => ({
               id: b.id,
               amount: b.amount,
               createdAt: b.createdAt.toString(),
@@ -364,7 +364,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                     </span>
                     <span className="text-[9px] text-slate-400">{t("platformCommission")}</span>
                   </div>
-                  <span className="text-sm font-semibold text-primary-700">-{formatBDT(auction.commissionEarned || 0)}</span>
+                  <span className="text-sm font-semibold text-primary-700">-{formatBDT((auction as any).commissionEarned || 0)}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -374,19 +374,19 @@ export default async function AuctionDetailPage({ params }: Props) {
                     </span>
                     <span className="text-[9px] text-slate-400">{t("sellerProtection")}</span>
                   </div>
-                  <span className="text-sm font-semibold text-slate-700">{formatBDT(auction.deliveryCharge || 0)}</span>
+                  <span className="text-sm font-semibold text-slate-700">{formatBDT((auction as any).deliveryCharge || 0)}</span>
                 </div>
 
                 <div className="pt-2 border-t border-primary-100 flex justify-between items-center">
                    <span className="text-sm font-bold text-slate-900">{t("totalAdvance")}</span>
                    <span className="text-lg font-black text-blue-600">
-                     {formatBDT((auction.commissionEarned || 0) + (auction.deliveryCharge || 0))}
+                     {formatBDT(((auction as any).commissionEarned || 0) + ((auction as any).deliveryCharge || 0))}
                    </span>
                 </div>
                 
                 <div className="p-2 bg-blue-50 rounded text-[10px] text-blue-700 flex items-start gap-2">
                   <Info className="w-3 h-3 mt-0.5" />
-                  <p>{t("advanceUnlockNote", { amount: formatBDT(auction.currentPrice - (auction.commissionEarned || 0)) })}</p>
+                  <p>{t("advanceUnlockNote", { amount: formatBDT(auction.currentPrice - ((auction as any).commissionEarned || 0)) })}</p>
                 </div>
               </CardContent>
             </Card>

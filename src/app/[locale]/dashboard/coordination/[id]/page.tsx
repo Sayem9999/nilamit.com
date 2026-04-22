@@ -49,7 +49,7 @@ export default async function CoordinationPage({
   const messagesSnap = await db.collection('messages').where('conversationId', '==', id).orderBy('createdAt', 'asc').get();
   const messages = messagesSnap.docs.map(d => ({ ...d.data(), id: d.id, createdAt: d.data().createdAt?.toDate?.() || new Date(d.data().createdAt) }));
 
-  const conversation = {
+  const conversation: any = {
     ...convData,
     id: convSnap.id,
     auction: {
@@ -105,12 +105,12 @@ export default async function CoordinationPage({
             <ChatInterface
               auctionId={conversation.auctionId}
               conversationId={conversation.id}
-              initialMessages={conversation.messages.map((m) => ({
+              initialMessages={conversation.messages.map((m: any) => ({
                 ...m,
                 createdAt: m.createdAt.toISOString(),
               }))}
               recipientName={recipient?.name || "User"}
-              recipientImage={recipient?.image}
+              recipientImage={recipient?.image || null}
             />
             
             <div className="mt-4 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3 text-amber-800">
@@ -140,8 +140,8 @@ export default async function CoordinationPage({
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any} 
                 treasuryNumbers={{
-                  bkash: systemConfig.treasuryBkash,
-                  nagad: systemConfig.treasuryNagad
+                  bkash: systemConfig?.treasuryBkash || "017XXXXXXXX",
+                  nagad: systemConfig?.treasuryNagad || "018XXXXXXXX"
                 }}
               />
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { getAdminDisputes, resolveAdminDispute } from "@/actions/admin";
+import { getAdminDisputes, resolveAdminDispute, getAdminCoordinationLog } from "@/actions/admin";
 import { ShieldCheck, AlertTriangle, Scale, RefreshCw, CheckCircle, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -20,12 +20,30 @@ export function DisputesTab() {
   const [disputes, setDisputes] = useState<DisputeTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const [logModalOpen, setLogModalOpen] = useState(false);
+  const [logLoading, setLogLoading] = useState(false);
+  const [activeLog, setActiveLog] = useState<any[]>([]);
+  const [activeAuctionTitle, setActiveAuctionTitle] = useState("");
+
+  const handleViewLog = async (auctionId: string, title: string) => {
+    setLogModalOpen(true);
+    setLogLoading(true);
+    setActiveAuctionTitle(title);
+    try {
+      const logs = await getAdminCoordinationLog(auctionId);
+      setActiveLog(logs);
+    } catch {
+      toast.error("Failed to fetch coordination log.");
+    } finally {
+      setLogLoading(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
     try {
       const res = await getAdminDisputes();
-      setDisputes(res as DisputeTransaction[]);
+      setDisputes(res as any);
     } catch {
       toast.error("Failed to load disputes");
     } finally {
@@ -135,16 +153,74 @@ export function DisputesTab() {
                        <RefreshCw className="w-4 h-4" /> Full Refund to Buyer
                     </button>
 
-                    {/* TODO: Add link to the coordination chat for admin to review context */}
                     <div className="pt-2">
-                       <button className="w-full py-2 text-[10px] text-gray-400 uppercase font-bold border border-dashed border-gray-200 rounded-lg opacity-50 cursor-not-allowed">
-                          View Coordination Log (Soon)
+                       <button
+                          onClick={() => handleViewLog(tx.auction.id, tx.auction.title)}
+                          className="w-full py-2 text-[10px] text-gray-700 uppercase font-bold border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                       >
+                          View Coordination Log
                        </button>
                     </div>
                  </div>
                </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {logModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <div>
+                <h3 className="font-bold text-gray-900">Coordination Log</h3>
+                <p className="text-xs text-gray-500">{activeAuctionTitle}</p>
+              </div>
+              <button onClick={() => setLogModalOpen(false)} className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-500 hover:bg-gray-50">
+                &times;
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/30">
+              {logLoading ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" />
+                </div>
+              ) : activeLog.length === 0 ? (
+                <div className="text-center text-gray-500 text-sm py-8">
+                  No messages found in this coordination hub.
+                </div>
+              ) : (
+                activeLog.map((msg: any) => (
+                  <div key={msg.id} className={`flex flex-col max-w-[80%] ${msg.isSystemMessage ? 'mx-auto text-center' : 'bg-white border border-gray-100 p-3 rounded-2xl shadow-sm'}`}>
+                    {msg.isSystemMessage ? (
+                      <span className="px-3 py-1 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-widest mx-auto">
+                        {msg.content}
+                      </span>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase">{msg.senderId === 'system' ? 'System' : msg.senderId.substring(0,6)}</span>
+                        </div>
+                        {msg.imageUrl && (
+                          <img src={msg.imageUrl} alt="Attachment" className="max-w-full h-auto rounded-lg mb-2" />
+                        )}
+                        <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.content}</p>
+                        <p className="text-[9px] text-gray-400 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-white">
+              <button
+                onClick={() => setLogModalOpen(false)}
+                className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition"
+              >
+                Close Log
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

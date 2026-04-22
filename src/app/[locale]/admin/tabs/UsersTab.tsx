@@ -35,7 +35,7 @@ export function UsersTab() {
     const load = async () => {
       setLoading(true);
       const res = await getAdminUsers();
-      if (mounted && res.success) setUsers(res.users || []);
+      if (mounted && res.success) setUsers((res.users as any) || []);
       if (mounted) setLoading(false);
     };
     load();

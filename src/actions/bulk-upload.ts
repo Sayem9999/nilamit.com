@@ -42,7 +42,7 @@ export async function processBulkUpload(fileName: string, rows: BulkUploadRow[])
   for (const [i, row] of rows.entries()) {
     const validation = BulkRowSchema.safeParse(row);
     if (!validation.success) {
-      errors.push(`Row ${i + 1}: ${validation.error.errors[0]?.message}`);
+      errors.push(`Row ${i + 1}: ${validation.error.issues[0]?.message}`);
       continue;
     }
 

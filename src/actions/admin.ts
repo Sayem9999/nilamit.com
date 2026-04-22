@@ -57,7 +57,7 @@ export async function getAdminStats() {
   const recentUsers = users
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
     .slice(0, 10)
-    .map((user) => ({
+    .map((user: any) => ({
       id: user.id,
       name: (user.name as string | null) ?? null,
       email: (user.email as string | null) ?? null,
@@ -67,16 +67,16 @@ export async function getAdminStats() {
       createdAt: user.createdAt ?? new Date(0),
     }));
 
-  const totalRevenue = auctions.reduce((sum, auction) => {
+  const totalRevenue = auctions.reduce((sum, auction: any) => {
     if (auction.status !== AuctionStatus.SOLD) return sum;
     return sum + Number(auction.commissionEarned ?? 0);
   }, 0);
 
   return {
     totalUsers: users.length,
-    verifiedUsers: users.filter((user) => Boolean(user.isPhoneVerified)).length,
+    verifiedUsers: users.filter((user: any) => Boolean(user.isPhoneVerified)).length,
     totalAuctions: auctions.length,
-    activeAuctions: auctions.filter((auction) => auction.status === AuctionStatus.ACTIVE).length,
+    activeAuctions: auctions.filter((auction: any) => auction.status === AuctionStatus.ACTIVE).length,
     totalBids: bidsSnap.size,
     totalRevenue,
     recentUsers,
@@ -111,7 +111,7 @@ export async function getAdminUsers(page = 1, limit = 20, search?: string) {
       ...(doc.data() as Record<string, unknown>),
       createdAt: readDate(doc.data().createdAt),
     }))
-    .filter((user) => {
+    .filter((user: any) => {
       if (!normalizedSearch) return true;
       const haystack = [user.name, user.email, user.phone]
         .filter((value): value is string => typeof value === 'string')
@@ -121,7 +121,7 @@ export async function getAdminUsers(page = 1, limit = 20, search?: string) {
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
 
   const total = users.length;
-  const pagedUsers = users.slice((page - 1) * limit, page * limit).map((user) => ({
+  const pagedUsers = users.slice((page - 1) * limit, page * limit).map((user: any) => ({
     id: user.id,
     name: (user.name as string | null) ?? null,
     email: (user.email as string | null) ?? null,
@@ -150,18 +150,18 @@ export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
       ...(doc.data() as Record<string, unknown>),
       createdAt: readDate(doc.data().createdAt),
     }))
-    .filter((auction) => !status || auction.status === status)
+    .filter((auction: any) => !status || auction.status === status)
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
 
   const total = filteredAuctions.length;
   const pagedAuctions = filteredAuctions.slice((page - 1) * limit, page * limit);
   const sellerMap = await getUserMap(
     pagedAuctions
-      .map((auction) => auction.sellerId)
+      .map((auction: any) => auction.sellerId)
       .filter((sellerId): sellerId is string => typeof sellerId === 'string')
   );
 
-  const auctions = pagedAuctions.map((auction) => ({
+  const auctions = pagedAuctions.map((auction: any) => ({
     ...auction,
     seller: {
       name: (sellerMap.get(auction.sellerId as string)?.name as string | null) ?? null,
@@ -391,5 +391,21 @@ export async function getAdminActiveEscrows() {
         name: (buyerSnap.data()?.name as string | null) ?? null,
       },
     };
+  }));
+}
+
+export async function getAdminCoordinationLog(auctionId: string) {
+  await requireAdmin();
+
+  const messagesSnap = await db.collection('messages')
+    .where('conversationId', '==', auctionId)
+    .orderBy('createdAt', 'asc')
+    .limit(200)
+    .get();
+
+  return messagesSnap.docs.map(d => ({
+    ...d.data(),
+    id: d.id,
+    createdAt: readDate(d.data().createdAt) ?? new Date(),
   }));
 }

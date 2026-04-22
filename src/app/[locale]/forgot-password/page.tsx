@@ -71,10 +71,9 @@ export default function ForgotPasswordPage() {
   };
 
   useEffect(() => {
-    if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
-    }
+    if (resendTimer <= 0) return;
+    const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    return () => clearTimeout(timer);
   }, [resendTimer]);
 
   if (success) {

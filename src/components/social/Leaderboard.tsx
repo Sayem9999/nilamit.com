@@ -72,7 +72,7 @@ export default async function Leaderboard() {
                       {user.name || "Anonymous"}
                     </span>
                     <BadgeList
-                      badges={user.badges.map((b) => (b as { badgeId: string }).badgeId as BadgeType)}
+                      badges={user.badges.map((b: any) => (b as { badgeId: string }).badgeId as BadgeType)}
                       className="mt-0.5"
                     />
                   </div>
@@ -117,7 +117,7 @@ export default async function Leaderboard() {
                       {user.name || "Anonymous"}
                     </span>
                     <BadgeList
-                      badges={user.badges.map((b) => (b as { badgeId: string }).badgeId as BadgeType)}
+                      badges={user.badges.map((b: any) => (b as { badgeId: string }).badgeId as BadgeType)}
                       className="mt-0.5"
                     />
                   </div>

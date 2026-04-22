@@ -37,10 +37,10 @@ export default async function HomePage({
   return (
     <>
       <HomeContent
-        trendingAuctions={trendingAuctions}
-        endingSoon={endingSoon}
-        latestActivity={latestBids}
-        featuredAuctions={featuredAuctions}
+        trendingAuctions={trendingAuctions as any}
+        endingSoon={endingSoon as any}
+        latestActivity={latestBids as any}
+        featuredAuctions={featuredAuctions as any}
         stats={{ totalUsers, totalBids, totalAuctions, verifiedSellers }}
         locale={locale}
       />

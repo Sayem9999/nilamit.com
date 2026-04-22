@@ -30,7 +30,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
   if (!session?.user?.id) return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
   const userId = session.user.id;
 
-  const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
+  const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await bidLimiter.limit(`bid_${userId}_${ip}`);
   if (!rateLimitSuccess) return { success: false, error: 'Too many bids placed rapidly. Please wait a moment.' };
 
@@ -107,15 +107,15 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
 
       const triggeredAlerts = alertsSnap.docs
         .map(d => ({ ...d.data(), id: d.id }))
-        .filter(a =>
+        .filter((a: any) =>
           a.userId !== userId &&
           (a.type === 'OUTBID' || (a.type === 'TARGET_REACHED' && (a.thresholdPrice ?? 0) <= amount))
         );
 
       // Deactivate one-time TARGET_REACHED alerts
       triggeredAlerts
-        .filter(a => a.type === 'TARGET_REACHED')
-        .forEach(a => tx.update(db.collection('alerts').doc(a.id), { isActive: false }));
+        .filter((a: any) => a.type === 'TARGET_REACHED')
+        .forEach((a: any) => tx.update(db.collection('alerts').doc(a.id), { isActive: false }));
 
       return {
         bidId, newEndTime, antiSnipeTriggered,
@@ -143,7 +143,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
 
     // Alert notifications
     if (result.triggeredAlerts.length > 0) {
-      await Promise.all(result.triggeredAlerts.map(alert =>
+      await Promise.all(result.triggeredAlerts.map((alert: any) =>
         rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
           event: FIREBASE_EVENTS.PRICE_ALERT, auctionId,
           auctionTitle: result.auctionTitle, amount, type: alert.type, threshold: alert.thresholdPrice,

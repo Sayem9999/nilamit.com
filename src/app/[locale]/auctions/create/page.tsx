@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { createAuction } from "@/actions/auction";
 import { getSmartPricingSuggestion, type SmartPricingResult } from "@/actions/pricing";

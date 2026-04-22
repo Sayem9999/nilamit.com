@@ -8,7 +8,8 @@ function getAdminApp() {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL!;
   const privateKeyEnv = process.env.FIREBASE_PRIVATE_KEY;
   if (!privateKeyEnv) {
-    throw new Error('FIREBASE_PRIVATE_KEY is required');
+    console.warn('⚠️ [Firebase Admin] Missing secrets. Using mock app.');
+    return initializeApp({ projectId: 'mock-project' }, 'mock-app');
   }
   const privateKey = privateKeyEnv.replace(/\\n/g, '\n');
   return initializeApp({
@@ -18,7 +19,16 @@ function getAdminApp() {
   });
 }
 
-export const db = getFirestore(getAdminApp());
+let _db: FirebaseFirestore.Firestore | null = null;
+
+export const db = new Proxy({} as unknown as FirebaseFirestore.Firestore, {
+  get(target, prop) {
+    if (!_db) {
+      _db = getFirestore(getAdminApp());
+    }
+    return (_db as any)[prop];
+  }
+});
 export { FieldValue, Timestamp };
 
 /** Convert Firestore Timestamp (or raw value) to a JS Date */

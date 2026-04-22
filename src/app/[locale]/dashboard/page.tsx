@@ -128,7 +128,7 @@ export default async function DashboardPage({
       const e = d.data();
       const aSnap = await db.collection('auctions').doc(e.auctionId).get();
       const a = aSnap.exists ? aSnap.data()! : null;
-      let seller = {};
+      let seller: any = {};
       if (a) {
         const sSnap = await db.collection('users').doc(a.sellerId).get();
         seller = sSnap.exists ? sSnap.data()! : {};

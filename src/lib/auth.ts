@@ -1,5 +1,5 @@
 import NextAuth from 'next-auth';
-import type { Adapter, AdapterUser, AdapterAccount, VerificationToken } from 'next-auth/adapters';
+import type { Adapter, AdapterUser, AdapterAccount, VerificationToken, AdapterSession } from 'next-auth/adapters';
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
@@ -59,9 +59,9 @@ function FirestoreAdapter(): Adapter {
       if (!snap.empty) await snap.docs[0].ref.delete();
     },
     // JWT strategy — sessions not stored in DB
-    async createSession(session) { return session; },
+    async createSession(session) { return session as unknown as AdapterSession; },
     async getSessionAndUser() { return null; },
-    async updateSession(session) { return session; },
+    async updateSession(session) { return session as unknown as AdapterSession; },
     async deleteSession() {},
     async createVerificationToken(token: VerificationToken) {
       const id = `${token.identifier}__${token.token}`;
@@ -117,9 +117,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (!valid) return null;
           return { id: user.id as string, email: user.email as string, name: user.name as string,
             image: user.image as string | null,
-            isVerifiedSeller: user.isVerifiedSeller, reputationScore: user.reputationScore,
-            isPhoneVerified: user.isPhoneVerified, emailVerified: user.emailVerified,
-            userLevel: user.userLevel, winningStreak: user.winningStreak };
+            isVerifiedSeller: Boolean(user.isVerifiedSeller), reputationScore: Number(user.reputationScore || 0),
+            isPhoneVerified: Boolean(user.isPhoneVerified), emailVerified: user.emailVerified as Date | null,
+            userLevel: Number(user.userLevel || 1), winningStreak: Number(user.winningStreak || 0),
+            isBanned: Boolean(user.isBanned) };
         } catch (e) {
           console.error('[Auth] credentials authorize error:', e);
           return null;
@@ -146,9 +147,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (!valid) return null;
           return { id: user.id as string, email: user.email as string | null,
             name: user.name as string, image: user.image as string | null,
-            isVerifiedSeller: user.isVerifiedSeller, reputationScore: user.reputationScore,
-            isPhoneVerified: user.isPhoneVerified, emailVerified: user.emailVerified,
-            userLevel: user.userLevel, winningStreak: user.winningStreak };
+            isVerifiedSeller: Boolean(user.isVerifiedSeller), reputationScore: Number(user.reputationScore || 0),
+            isPhoneVerified: Boolean(user.isPhoneVerified), emailVerified: user.emailVerified as Date | null,
+            userLevel: Number(user.userLevel || 1), winningStreak: Number(user.winningStreak || 0),
+            isBanned: Boolean(user.isBanned) };
         } catch (e) {
           console.error('[Auth-Phone] authorize error:', e);
           return null;
@@ -169,6 +171,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isVerifiedSeller = (user as unknown as Record<string, unknown>).isVerifiedSeller ?? false;
         token.userLevel        = (user as unknown as Record<string, unknown>).userLevel        ?? 1;
         token.winningStreak    = (user as unknown as Record<string, unknown>).winningStreak    ?? 0;
+        token.isBanned         = (user as unknown as Record<string, unknown>).isBanned         ?? false;
         token.lastDbRefresh    = Date.now();
       }
 
@@ -190,6 +193,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.isVerifiedSeller = u.isVerifiedSeller ?? false;
             token.userLevel        = u.userLevel        ?? 1;
             token.winningStreak    = u.winningStreak    ?? 0;
+            token.isBanned         = u.isBanned         ?? false;
             token.lastDbRefresh    = Date.now();
           }
         } catch (e) {
@@ -215,6 +219,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         u.userLevel        = token.userLevel;
         u.winningStreak    = token.winningStreak;
         u.isAdmin          = token.isAdmin;
+        u.isBanned         = token.isBanned;
       }
       return session;
     },

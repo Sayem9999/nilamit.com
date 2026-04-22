@@ -200,7 +200,7 @@ export default function ProfilePage() {
               </p>
               <VerificationBadge
                 isPhoneVerified={user.isPhoneVerified}
-                emailVerified={(session.user as { emailVerified?: Date | string | null }).emailVerified}
+                emailVerified={(session.user as { emailVerified?: Date | string | null }).emailVerified || null}
                 isVerifiedSeller={!!(user as { isVerifiedSeller?: boolean }).isVerifiedSeller}
                 size="md"
               />

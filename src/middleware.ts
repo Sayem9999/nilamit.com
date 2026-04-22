@@ -12,7 +12,7 @@ const intlMiddleware = createMiddleware({
 
 const { auth } = NextAuth(authConfig);
 
-export default function middleware(req: NextRequest) {
+export default auth((req) => {
   const pathname = req.nextUrl.pathname;
   
   // 1. Strip locale from API routes BEFORE NextAuth or intl handles them
@@ -29,20 +29,14 @@ export default function middleware(req: NextRequest) {
     }
   }
 
-  // 2. If it's an API route, pass it directly to NextAuth (if it's /api/auth)
+  // 2. If it's an API route, let NextAuth or Next handle it natively
   if (pathname.startsWith('/api')) {
-    // We must wrap the request with auth() so NextAuth handles /api/auth/*
-    if (pathname.startsWith('/api/auth')) {
-      return auth(() => {})(req);
-    }
     return;
   }
 
-  // 3. For all other routes, let next-intl handle the locales, then auth handle protection
-  return auth((request) => {
-    return intlMiddleware(request);
-  })(req);
-}
+  // 3. For all other routes, let next-intl handle the locales
+  return intlMiddleware(req);
+});
 
 export const config = {
   // Match only internationalized pathnames, but exclude API, _next, etc.

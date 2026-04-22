@@ -39,7 +39,7 @@ export function ModerationTab() {
       setLoading(true);
       const res = await getAdminReports(filter);
       if (mounted && res.success) {
-        setReports(res.reports || []);
+        setReports((res.reports as any) || []);
       }
       if (mounted) setLoading(false);
     };

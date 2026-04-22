@@ -30,7 +30,7 @@ export async function GET(req: Request) {
       .where('endTime', '<=', oneHourFromNow)
       .get();
 
-    const auctions = auctionsSnap.docs.map(d => ({ ...d.data(), id: d.id }));
+    const auctions = auctionsSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
 
     let emailsQueued = 0;
     let rtdbEvents   = 0;
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
         const userSnap = await db.collection('users').doc(userId).get();
         if (!userSnap.exists) continue;
         
-        const user = { id: userSnap.id, ...userSnap.data() };
+        const user = { id: userSnap.id, ...userSnap.data() } as any;
         notifiedUserIds.add(user.id);
 
         if (user.email) {

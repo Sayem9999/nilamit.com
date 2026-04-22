@@ -12,7 +12,6 @@
   "dependencies": {
     "@auth/firebase-adapter": "^2.7.4",
     "@sentry/nextjs": "^10.49.0",
-    "@supabase/supabase-js": "^2.95.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/canvas-confetti": "^1.9.0",
     "@types/d3": "^7.4.3",

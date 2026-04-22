@@ -531,5 +531,17 @@
     "title": "nilamit.com — Bangladesh's Trusted Auction Marketplace",
     "description": "Buy and sell through transparent auctions. Verified sellers, anti-sniping protection, and real-time bidding. Bangladesh's #1 C2C auction platform.",
     "keywords": "nilam,auction,bangladesh,bidding,marketplace,নিলাম"
+  },
+  "Banned": {
+    "title": "Account Suspended",
+    "description": "Your account has been suspended for violating our platform's community guidelines or fair-play rules.",
+    "subtext": "This action is taken to maintain the integrity and safety of the Nilamit marketplace.",
+    "reasonTitle": "Common Reasons for Suspension:",
+    "reason1": "Shill bidding or price manipulation.",
+    "reason2": "Failed to honor a winning bid or delivery commitment.",
+    "reason3": "Harassment or inappropriate behavior in the Coordination Hub.",
+    "reason4": "Fraudulent listing or identity misrepresentation.",
+    "contactSupport": "If you believe this was a mistake, you can contact our support team at support@nilamit.com.",
+    "backHome": "Back to Home"
   }
 }

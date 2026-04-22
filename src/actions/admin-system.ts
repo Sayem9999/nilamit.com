@@ -85,7 +85,7 @@ export async function exportTransactionsCSV() {
       .sort((a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0));
 
     const userIds = new Set<string>();
-    auctions.forEach((auction) => {
+    auctions.forEach((auction: any) => {
       if (typeof auction.winnerId === 'string' && auction.winnerId) userIds.add(auction.winnerId);
       if (typeof auction.sellerId === 'string' && auction.sellerId) userIds.add(auction.sellerId);
     });
@@ -99,7 +99,7 @@ export async function exportTransactionsCSV() {
 
     let csv = 'Auction ID,Title,Final Price,Winner Name,Winner Phone,Commission (à§³),Date\n';
 
-    for (const auction of auctions) {
+    for (const auction of auctions as any[]) {
       const winner = typeof auction.winnerId === 'string' ? users.get(auction.winnerId) : null;
       const seller = typeof auction.sellerId === 'string' ? users.get(auction.sellerId) : null;
       const commission = Number(auction.commissionEarned ?? Number(auction.currentPrice ?? 0) * 0.1);

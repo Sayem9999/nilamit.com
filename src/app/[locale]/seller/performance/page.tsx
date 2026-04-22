@@ -72,7 +72,7 @@ export default async function SellerSuccessPage({
           />
           <MetricCard
             title="Trust Score"
-            value={metrics.reputationGrowth}
+            value={(metrics as any).reputationGrowth || "Stable"}
             icon={<Award className="w-6 h-6" />}
             trend="Growing"
             isPositive={true}
@@ -101,11 +101,11 @@ export default async function SellerSuccessPage({
                   <div
                     className="bg-primary-500/10 group-hover:bg-primary-500 rounded-t-lg transition-all duration-300"
                     style={{
-                      height: `${Math.max(10, (day.amount / (Math.max(...metrics.revenueByDay.map((d) => d.amount)) || 1)) * 100)}%`,
+                      height: `${Math.max(10, (day.revenue / (Math.max(...metrics.revenueByDay.map((d) => d.revenue)) || 1)) * 100)}%`,
                     }}
                   />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    ৳{day.amount.toLocaleString()}
+                    ৳{day.revenue.toLocaleString()}
                   </div>
                 </div>
               ))}

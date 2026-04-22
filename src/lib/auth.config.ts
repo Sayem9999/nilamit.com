@@ -39,7 +39,14 @@ export const authConfig: NextAuthConfig = {
      */
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+      const isBanned = (auth?.user as any)?.isBanned;
       const { pathname } = nextUrl;
+
+      // 1. If banned, force them to the /banned page (unless they are already there or logging out)
+      if (isBanned && !pathname.includes('/banned') && !pathname.includes('/api/auth')) {
+        const locale = pathname.match(/^\/(en|bn)/)?.[1] ?? 'en';
+        return Response.redirect(new URL(`/${locale}/banned`, nextUrl));
+      }
 
       // Strip locale prefix (e.g. /en, /bn) before matching
       const path = pathname.replace(/^\/(en|bn)/, '') || '/';

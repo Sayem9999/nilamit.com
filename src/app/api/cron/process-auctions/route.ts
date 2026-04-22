@@ -32,7 +32,7 @@ async function processExpiredAuctions(): Promise<ProcessResult> {
     .where('endTime', '<=', now)
     .get();
 
-  const expiredAuctions = expiredSnap.docs.map(d => ({ ...d.data(), id: d.id }));
+  const expiredAuctions = expiredSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
 
   const result: ProcessResult = {
     totalExpired: expiredAuctions.length,
@@ -50,7 +50,7 @@ async function processExpiredAuctions(): Promise<ProcessResult> {
         .limit(1)
         .get();
         
-      const highestBid = bidsSnap.empty ? null : { ...bidsSnap.docs[0].data(), id: bidsSnap.docs[0].id };
+      const highestBid = bidsSnap.empty ? null : ({ ...bidsSnap.docs[0].data(), id: bidsSnap.docs[0].id } as any);
 
       // Firestore doesn't have multi-collection distributed transactions easily without batch
       const batch = db.batch();

@@ -93,14 +93,14 @@ export async function getKeyMetrics(): Promise<KeyMetrics> {
 
   const totalUsers = users.length;
   const totalAuctions = auctions.length;
-  const activeAuctions = auctions.filter((auction) => auction.status === AuctionStatus.ACTIVE).length;
-  const soldAuctions = auctions.filter((auction) => auction.status === AuctionStatus.SOLD);
+  const activeAuctions = auctions.filter((auction: any) => auction.status === AuctionStatus.ACTIVE).length;
+  const soldAuctions = auctions.filter((auction: any) => auction.status === AuctionStatus.SOLD);
   const completedAuctions = soldAuctions.length;
   const totalBids = bids.length;
 
   const auctionsWithBidIds = new Set(
     bids
-      .map((bid) => bid.auctionId)
+      .map((bid: any) => bid.auctionId)
       .filter((auctionId): auctionId is string => typeof auctionId === 'string' && auctionId.length > 0)
   );
   const auctionsWithBids = auctionsWithBidIds.size;
@@ -109,7 +109,7 @@ export async function getKeyMetrics(): Promise<KeyMetrics> {
   const categoryCounts = new Map<string, number>();
   let totalGMV = 0;
 
-  for (const auction of auctions) {
+  for (const auction of auctions as any[]) {
     if (typeof auction.sellerId === 'string' && auction.sellerId) {
       sellerCounts.set(auction.sellerId, (sellerCounts.get(auction.sellerId) ?? 0) + 1);
     }
@@ -134,7 +134,7 @@ export async function getKeyMetrics(): Promise<KeyMetrics> {
   const avgAuctionValue = completedAuctions > 0 ? Math.round(totalGMV / completedAuctions) : 0;
 
   const firstBidByAuction = new Map<string, Date>();
-  for (const bid of bids) {
+  for (const bid of bids as any[]) {
     if (!bid.createdAt || typeof bid.auctionId !== 'string') continue;
     const existing = firstBidByAuction.get(bid.auctionId);
     if (!existing || bid.createdAt < existing) {
@@ -143,7 +143,7 @@ export async function getKeyMetrics(): Promise<KeyMetrics> {
   }
 
   let avgTimeToFirstBidHours = 0;
-  const auctionsForTTFB = auctions
+  const auctionsForTTFB = (auctions as any[])
     .filter((auction) => auction.createdAt && firstBidByAuction.has(auction.id))
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
     .slice(0, 50);

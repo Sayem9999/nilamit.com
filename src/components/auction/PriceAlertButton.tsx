@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createAlert } from "@/actions/alert";
 import { Bell, Loader2, Target, Zap } from "lucide-react";
-import { AlertType } from "@prisma/client";
+type AlertType = "OUTBID" | "TARGET_REACHED";
 import { toast } from "react-hot-toast";
 
 interface PriceAlertButtonProps {
@@ -23,7 +23,7 @@ export default function PriceAlertButton({
   const handleSetAlert = async () => {
     setIsLoading(true);
     const result = await createAlert({
-      type: mode as AlertType,
+      type: mode,
       auctionId,
       thresholdPrice: mode === "TARGET_REACHED" ? threshold : undefined,
     });

@@ -21,7 +21,6 @@ function isAllowedImageUrl(value: string): boolean {
     const host = url.hostname.toLowerCase();
     return (
       ALLOWED_IMAGE_HOSTS.includes(host as (typeof ALLOWED_IMAGE_HOSTS)[number]) ||
-      host.endsWith('.supabase.co') ||
       host.endsWith('.uploadthing.com')
     );
   } catch {

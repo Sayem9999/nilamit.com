@@ -76,7 +76,7 @@ export default async function SellerProfilePage({ params }: Props) {
   const avgRating =
     reviews.length > 0
       ? (
-          reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+          reviews.reduce((sum, r) => sum + (r as any).rating, 0) / reviews.length
         ).toFixed(1)
       : null;
 
@@ -167,7 +167,7 @@ export default async function SellerProfilePage({ params }: Props) {
                     {[1, 2, 3, 4, 5].map((s) => (
                       <Star
                         key={s}
-                        className={`w-3.5 h-3.5 ${s <= review.rating ? "text-amber-400 fill-amber-400" : "text-gray-200"}`}
+                        className={`w-3.5 h-3.5 ${s <= (review as any).rating ? "text-amber-400 fill-amber-400" : "text-gray-200"}`}
                       />
                     ))}
                   </div>
@@ -175,8 +175,8 @@ export default async function SellerProfilePage({ params }: Props) {
                     by {review.from.name || "Anonymous"}
                   </span>
                 </div>
-                {review.comment && (
-                  <p className="text-sm text-gray-600">{review.comment}</p>
+                {(review as any).comment && (
+                  <p className="text-sm text-gray-600">{(review as any).comment}</p>
                 )}
               </div>
             ))}
@@ -193,7 +193,7 @@ export default async function SellerProfilePage({ params }: Props) {
           {auctions.map((auction) => (
             <AuctionCard
               key={auction.id}
-              auction={auction as Parameters<typeof AuctionCard>[0]["auction"]}
+              auction={auction as any}
             />
           ))}
         </div>

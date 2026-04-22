@@ -151,8 +151,8 @@ export default async function AdminPage() {
       moderation={<ModerationTab />}
       content={
         <ContentTab
-          initialConfig={systemConfig}
-          featuredAuctions={featuredAuctions}
+          initialConfig={systemConfig as any}
+          featuredAuctions={featuredAuctions as any}
         />
       }
       system={<SystemTab />}

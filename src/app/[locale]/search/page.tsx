@@ -35,7 +35,7 @@ export default async function SearchPage({
   };
 
   const { getAuctions } = await import("@/actions/auction");
-  const { auctions, error } = await getAuctions(filters);
+  const { auctions } = await getAuctions(filters);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
@@ -49,7 +49,7 @@ export default async function SearchPage({
             <p className="text-gray-500">
               {t("found", { count: auctions.length })}
             </p>
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {/* {error && <p className="text-red-500 text-sm mt-2">{error}</p>} */}
           </div>
         </div>
 

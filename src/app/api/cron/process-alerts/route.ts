@@ -26,7 +26,7 @@ export async function GET(req: Request) {
       .get();
 
     const activeAlerts = alertsSnap.docs
-      .map(d => ({ ...d.data(), id: d.id }))
+      .map(d => ({ ...d.data(), id: d.id } as any))
       .filter(a => !!a.auctionId);
 
     let triggered = 0;

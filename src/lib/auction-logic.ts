@@ -60,7 +60,9 @@ export async function processAuctionSale(
   }, { merge: true });
 
   // Non-blocking winner email
-  sendAuctionWonEmail(winner.email, winner.name, auction.title, finalPrice, auction.id).catch(console.error);
+  if (winner.email) {
+    sendAuctionWonEmail(winner.email, auction.title, finalPrice, auction.id).catch(console.error);
+  }
 }
 
 // ─── closeAuctionIfEnded ─────────────────────────────────────────────────────

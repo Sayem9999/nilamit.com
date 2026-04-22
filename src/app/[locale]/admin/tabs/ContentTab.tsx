@@ -40,11 +40,11 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
 
   const handleToggleFeatured = async (id: string) => {
     try {
-        const res = await toggleFeaturedAuction(id);
+        const isCurrentlyFeatured = auctions.some(a => a.id === id);
+        const res = await toggleFeaturedAuction(id, !isCurrentlyFeatured);
         if (res.success) {
-            if (res.isFeatured) {
-                // It was added (we need to refresh list ideally, but for now simple alert or reload)
-                // Since we don't return the full auction object, simplest is to reload or just optimistically update if we had the object
+            if (!isCurrentlyFeatured) {
+                // It was added
                 window.location.reload(); 
             } else {
                 setAuctions(prev => prev.filter(a => a.id !== id));

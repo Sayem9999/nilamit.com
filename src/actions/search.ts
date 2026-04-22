@@ -15,12 +15,12 @@ export async function getSmartSearchResults(query: string) {
 
   const results = snap.docs
     .map(d => ({ ...d.data(), id: d.id }))
-    .filter(a => {
+    .filter((a: any) => {
       const title = (a.title ?? '').toLowerCase();
       const desc  = (a.description ?? '').toLowerCase();
       return title.includes(q) || desc.includes(q);
     })
-    .map(a => {
+    .map((a: any) => {
       const titleScore = (a.title ?? '').toLowerCase().includes(q) ? 100 : 0;
       const descScore  = (a.description ?? '').toLowerCase().includes(q) ? 50 : 0;
       const bidScore   = (a.bidCount ?? 0) * 5;
@@ -30,12 +30,12 @@ export async function getSmartSearchResults(query: string) {
     .slice(0, 20);
 
   // Fetch seller data for results
-  const sellerIds = [...new Set(results.map(a => a.sellerId as string))];
+  const sellerIds = [...new Set(results.map((a: any) => a.sellerId as string))];
   const sellerSnaps = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
   const sellersMap  = new Map(sellerSnaps.map(s => [s.id, s.data() ?? {}]));
 
-  return results.map(a => {
-    const s = sellersMap.get(a.sellerId) ?? {};
+  return results.map((a: any) => {
+    const s: any = sellersMap.get(a.sellerId) ?? {};
     return {
       ...a,
       endTime: a.endTime?.toDate?.() ?? new Date(a.endTime),

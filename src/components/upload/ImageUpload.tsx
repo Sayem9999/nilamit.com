@@ -4,7 +4,8 @@ import { X, Loader2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
-import { supabase } from "@/lib/supabase";
+import { getClientStorage, ensureFirebaseAuth } from "@/lib/firebase-client";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useSession } from "next-auth/react";
 import { compressImage } from "@/lib/image-optimization";
 
@@ -38,6 +39,10 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
 
       const newUrls: string[] = [...value];
 
+      // Ensure Firebase client is authenticated with the custom token from NextAuth
+      await ensureFirebaseAuth();
+      const storage = getClientStorage();
+
       for (const rawFile of Array.from(files)) {
         // Compress image on the client side before uploading to save bandwidth
         const file = await compressImage(rawFile, { maxWidth: 1280, maxHeight: 1280, quality: 0.85 });
@@ -46,18 +51,14 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
         const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
         const filePath = `auctions/${session.user.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("auction-images")
-          .upload(filePath, file);
+        const storageRef = ref(storage, filePath);
+        
+        // Upload to Firebase Storage
+        const uploadResult = await uploadBytes(storageRef, file, {
+          contentType: file.type,
+        });
 
-        if (uploadError) {
-          throw uploadError;
-        }
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("auction-images").getPublicUrl(filePath);
-
+        const publicUrl = await getDownloadURL(uploadResult.ref);
         newUrls.push(publicUrl);
       }
 
