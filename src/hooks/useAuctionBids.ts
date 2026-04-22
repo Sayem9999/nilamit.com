@@ -31,7 +31,8 @@ export function useAuctionBids(auctionId: string) {
           endTime:    data.endTime,
           bidderName: data.bidderName ?? 'Someone',
         };
-        setNewBids(prev => [bid, ...prev]);
+        // Production: Keep only the last 10 bids to avoid memory bloat on active pages
+        setNewBids(prev => [bid, ...prev].slice(0, 10));
         if (data.endTime) setCurrentEndTime(data.endTime);
       } else if (
         data.event === FIREBASE_EVENTS.AUCTION_SOLD ||

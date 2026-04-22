@@ -1,42 +1,62 @@
 'use server';
 
-import { db, docData, snapDocs } from '@/lib/db';
+import { db, snapDocs } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
 import { User } from '@/types';
 import { revalidatePath } from 'next/cache';
 
 export async function grantVerifiedSeller(userId: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
   await db.collection('users').doc(userId).update({
     isVerifiedSeller: true, updatedAt: new Date(),
   });
+  
+  await db.collection('admin_logs').add({
+    adminId: session.user.id, action: 'GRANT_SELLER', targetId: userId, createdAt: new Date()
+  });
+
   revalidatePath('/admin');
   return { success: true };
 }
 
 export async function revokeVerifiedSeller(userId: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
   await db.collection('users').doc(userId).update({
     isVerifiedSeller: false, updatedAt: new Date(),
   });
+
+  await db.collection('admin_logs').add({
+    adminId: session.user.id, action: 'REVOKE_SELLER', targetId: userId, createdAt: new Date()
+  });
+
   revalidatePath('/admin');
   return { success: true };
 }
 
 export async function banUser(userId: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
   await db.collection('users').doc(userId).update({
     isBanned: true, updatedAt: new Date(),
   });
+
+  await db.collection('admin_logs').add({
+    adminId: session.user.id, action: 'BAN_USER', targetId: userId, createdAt: new Date()
+  });
+
   revalidatePath('/admin');
   return { success: true };
 }
 
 export async function unbanUser(userId: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
   await db.collection('users').doc(userId).update({
     isBanned: false, updatedAt: new Date(),
   });
+
+  await db.collection('admin_logs').add({
+    adminId: session.user.id, action: 'UNBAN_USER', targetId: userId, createdAt: new Date()
+  });
+
   revalidatePath('/admin');
   return { success: true };
 }

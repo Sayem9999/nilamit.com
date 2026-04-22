@@ -4,10 +4,14 @@
  * in public descriptions and reviews.
  */
 
-const BANGLADESH_PHONE_REGEX = /(?:\+?88)?01[3-9](?:[\s-]?\d){8}/g;
+// Includes English (0-9) and Bangla (০-৯) digits, handling common 01... prefix
+const BANGLADESH_PHONE_REGEX = /(?:\+?88)?(?:0|০)(?:1|১)[3-9৩-৯](?:[\s-]?[0-9০-৯]){8}/g;
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
-// Circumvention keywords often used to move transactions off-platform
+// Phonetic and word-based bypasses common in Bangladesh
+const DIGIT_WORDS = ["zero","shunno","one","ek","two","dui","three","tin","four","char","five","pach","six","choy","seven","saat","eight","aat","nine","noy"];
+const WORD_DIGIT_REGEX = new RegExp(`\\b(${DIGIT_WORDS.join("|")})\\b`, "gi");
+
 const BYPASS_KEYWORDS = [
   /\bwhatsapp\b/gi,
   /\bviber\b/gi,
@@ -15,28 +19,29 @@ const BYPASS_KEYWORDS = [
   /\binbox\b/gi,
   /\bcall me\b/gi,
   /\bcontact\b/gi,
+  /\bmessage me\b/gi,
   /\bমোবাইল\b/g,
   /\bফোন\b/g,
+  /\bনম্বর\b/g,
 ];
 
 const REPLACEMENT_TEXT = "[নিরাপত্তার স্বার্থে লুকানো]";
 
-/**
- * Sweeps text for phone numbers, emails, and bypass keywords.
- * Replaces them with a safety placeholder.
- */
 export function filterPII(text: string | null | undefined): string {
   if (!text) return "";
 
   let sanitized = text;
 
-  // 1. Filter Phone Numbers
+  // 1. Filter Phone Numbers (English & Bangla digits)
   sanitized = sanitized.replace(BANGLADESH_PHONE_REGEX, REPLACEMENT_TEXT);
 
   // 2. Filter Emails
   sanitized = sanitized.replace(EMAIL_REGEX, REPLACEMENT_TEXT);
 
-  // 3. Filter Keywords
+  // 3. Filter Word-Digits (Phonetic bypass)
+  sanitized = sanitized.replace(WORD_DIGIT_REGEX, REPLACEMENT_TEXT);
+
+  // 4. Filter Keywords
   BYPASS_KEYWORDS.forEach((regex) => {
     sanitized = sanitized.replace(regex, REPLACEMENT_TEXT);
   });

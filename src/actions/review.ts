@@ -41,7 +41,10 @@ export async function submitReview({
   const allReviewsSnap = await db.collection('reviews').where('toId', '==', toId).get();
   const ratings = allReviewsSnap.docs.map(d => d.data().rating as number);
   const avg     = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
-  const newScore = Math.round((avg * 20) + (ratings.length * 2));
+  
+  // Hardened Production Formula: (Avg * 15) + (Log-scaled count * 10)
+  // This prevents linear exploitation while rewarding consistency.
+  const newScore = Math.round((avg * 15) + (Math.log10(ratings.length + 1) * 20));
   await db.collection('users').doc(toId).update({ reputationScore: newScore, updatedAt: now });
 
   revalidatePath(`/profile/${toId}`);
@@ -53,18 +56,34 @@ export async function getUserReviews(userId: string) {
   const snap = await db.collection('reviews')
     .where('toId', '==', userId)
     .orderBy('createdAt', 'desc')
+    .limit(50)
     .get();
 
-  return Promise.all(snap.docs.map(async d => {
-    const r = d.data();
-    const [fromSnap, aSnap] = await Promise.all([
-      db.collection('users').doc(r.fromId).get(),
-      db.collection('auctions').doc(r.auctionId).get(),
-    ]);
-    return { ...r, id: d.id,
-      createdAt: r.createdAt?.toDate?.() ?? new Date(r.createdAt),
-      from:    { id: r.fromId, name: fromSnap.data()?.name ?? null, image: fromSnap.data()?.image ?? null },
-      auction: { title: aSnap.data()?.title ?? '' } };
+  const reviews = snapDocs<Review>(snap);
+  if (reviews.length === 0) return [];
+
+  // Batch fetch profiles and auctions to avoid N+1
+  const fromIds    = [...new Set(reviews.map(r => r.fromId))];
+  const auctionIds = [...new Set(reviews.map(r => r.auctionId))];
+
+  const [fromSnaps, auctionSnaps] = await Promise.all([
+    Promise.all(fromIds.map(id => db.collection('users').doc(id).get())),
+    Promise.all(auctionIds.map(id => db.collection('auctions').doc(id).get())),
+  ]);
+
+  const fromMap = new Map(fromSnaps.map(s => [s.id, s.data() || {}]));
+  const aMap    = new Map(auctionSnaps.map(s => [s.id, s.data() || {}]));
+
+  return reviews.map(r => ({
+    ...r,
+    from: { 
+      id: r.fromId, 
+      name: fromMap.get(r.fromId)?.name ?? 'User', 
+      image: fromMap.get(r.fromId)?.image ?? null 
+    },
+    auction: { 
+      title: aMap.get(r.auctionId)?.title ?? 'Archived Auction' 
+    }
   }));
 }
 

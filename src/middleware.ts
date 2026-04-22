@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import NextAuth from 'next-auth';
 import { authConfig } from './lib/auth.config';
@@ -15,6 +14,13 @@ const { auth } = NextAuth(authConfig);
 export default auth((req) => {
   const pathname = req.nextUrl.pathname;
   
+  // 0. Global Security: Redirect banned users
+  const isBanned = (req.auth?.user as { isBanned?: boolean })?.isBanned;
+  if (isBanned && !pathname.includes('/banned') && !pathname.startsWith('/api')) {
+    const locale = pathname.split('/')[1] || 'en';
+    return Response.redirect(new URL(`/${locale}/banned`, req.url));
+  }
+
   // 1. Strip locale from API routes BEFORE NextAuth or intl handles them
   const localeApiMatch = pathname.match(/^\/(en|bn)?(\/api\/.*)/);
   if (localeApiMatch) {

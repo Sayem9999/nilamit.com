@@ -44,7 +44,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!auction) return { title: "Auction Not Found" };
 
-  const ogUrl = new URL(`${process.env.NEXTAUTH_URL}/api/og`);
+  const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://nilamit.com";
+  const ogUrl = new URL(`${baseUrl}/api/og`);
   ogUrl.searchParams.set("title", auction.title);
   ogUrl.searchParams.set("price", auction.currentPrice.toString());
   if (auction.images[0]) ogUrl.searchParams.set("image", auction.images[0]);
@@ -53,6 +54,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${auction.title} | Nilamit Auction`,
     description: auction.description.substring(0, 160),
+    alternates: {
+      canonical: `${baseUrl}/auctions/${id}`,
+    },
     openGraph: {
       title: auction.title,
       description: auction.description.substring(0, 160),
@@ -91,6 +95,8 @@ export default async function AuctionDetailPage({ params }: Props) {
       "@type": "Offer",
       price: auction.currentPrice,
       priceCurrency: "BDT",
+      priceValidUntil: auction.endTime.toISOString(),
+      itemCondition: "https://schema.org/UsedCondition",
       availability:
         auction.status === "ACTIVE"
           ? "https://schema.org/InStock"

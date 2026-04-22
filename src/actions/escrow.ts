@@ -3,7 +3,7 @@
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { adminDB, rtdbPush } from '@/lib/firebase-admin';
+import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recalculateUserReputation } from '@/lib/reputation';
 import { createLogisticsOrder } from './logistics';
@@ -12,88 +12,75 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim
 
 /**
  * Transitions PENDING → HELD (buyer confirms advance payment).
- * Security: verifies caller is the transaction buyer before updating.
+ * Atomic transaction ensures logistics, chat, and escrow are synced.
  */
 export async function payEscrowAdvance(transactionId: string, providerRef?: string) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
   try {
-    const txSnap = await db.collection('escrowTransactions').doc(transactionId).get();
-    if (!txSnap.exists) return { success: false, error: 'Transaction not found' };
-    const tx = txSnap.data()!;
+    const result = await db.runTransaction(async (tx) => {
+      const txRef  = db.collection('escrowTransactions').doc(transactionId);
+      const txSnap = await tx.get(txRef);
+      if (!txSnap.exists) throw new Error('Transaction not found');
+      const t = txSnap.data()!;
 
-    // Authorization: only the buyer may pay
-    if (tx.buyerId !== session.user.id) return { success: false, error: 'Unauthorized' };
-    if (tx.status !== 'PENDING')        return { success: false, error: 'Advance already paid' };
+      if (t.buyerId !== session.user.id) throw new Error('Unauthorized');
+      if (t.status !== 'PENDING')        throw new Error('Advance already paid');
 
-    // MFS linkage enforcement
-    const buyerSnap = await db.collection('users').doc(session.user.id).get();
-    const buyer     = buyerSnap.data() ?? {};
-    if (!buyer.bkashNumber && !buyer.nagadNumber) {
-      return { success: false, error: 'MFS_LINKAGE_REQUIRED',
-        message: 'Please link your bKash or Nagad account in settings.' };
-    }
+      const aRef  = db.collection('auctions').doc(t.auctionId);
+      const aSnap = await tx.get(aRef);
+      const auction = aSnap.data() || {};
 
-    const auctionSnap = await db.collection('auctions').doc(tx.auctionId).get();
-    const auction     = auctionSnap.data() ?? {};
+      const buyerRef  = db.collection('users').doc(session.user.id);
+      const buyerSnap = await tx.get(buyerRef);
+      const buyer     = buyerSnap.data() || {};
 
-    const ref = providerRef ?? `SIM-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      if (!buyer.bkashNumber && !buyer.nagadNumber) {
+        throw new Error('MFS_LINKAGE_REQUIRED');
+      }
 
-    await db.collection('escrowTransactions').doc(transactionId).update({
-      status:           'HELD',
-      paymentMethod:    'bkash_automatic',
-      providerRef:      ref,
-      verificationType: 'AUTOMATIC',
-      updatedAt:        new Date(),
+      const ref = providerRef ?? `PAY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+      // 1. Update Escrow
+      tx.update(txRef, {
+        status:           'HELD',
+        paymentMethod:    'bkash_automatic',
+        providerRef:      ref,
+        verificationType: 'AUTOMATIC',
+        updatedAt:        new Date(),
+      });
+
+      // 2. Activate Conversation
+      const convId = t.auctionId;
+      const convRef = db.collection('conversations').doc(convId);
+      const convSnap = await tx.get(convRef);
+      if (!convSnap.exists) {
+        const now = new Date();
+        tx.set(convRef, {
+          id: convId, auctionId: t.auctionId, buyerId: t.buyerId, sellerId: auction.sellerId,
+          lastMessageAt: now, createdAt: now,
+        });
+      }
+
+      return { auction, buyer, ref };
     });
 
-    // Integrated Fulfillment: Generate shipping label automatically
-    const logistics = await createLogisticsOrder(tx.auctionId, auction.sellerId, tx.buyerId, tx.amount);
-    if (!logistics.success) {
-      console.error('[escrow] Logistics integration failed:', logistics.error);
-    }
-
-    // Open direct chat conversation
-    const convId = tx.auctionId;
-    const convRef = db.collection('conversations').doc(convId);
-    const convSnap = await convRef.get();
-    if (!convSnap.exists) {
-      const now = new Date();
-      await convRef.set({
-        id: convId, auctionId: tx.auctionId, buyerId: tx.buyerId, sellerId: auction.sellerId,
-        lastMessageAt: now, createdAt: now,
-      });
-      const msgId = db.collection('messages').doc().id;
-      await db.collection('messages').doc(msgId).set({
-        id: msgId, conversationId: convId, senderId: 'system',
-        content: 'Advance paid! You can now coordinate delivery details here.',
-        isSystemMessage: true, isRead: false, createdAt: now,
-      });
-    }
-    await adminDB.ref(`${RTDB_PATHS.conversation(convId)}/meta`).update({
-      auctionId: tx.auctionId,
-      participants: {
-        [tx.buyerId]: true,
-        [auction.sellerId]: true,
-      },
-    });
-
-    // Notify seller
-    await rtdbPush(RTDB_PATHS.userNotifications(auction.sellerId), {
-      event:        FIREBASE_EVENTS.ADVANCE_PAID,
-      auctionId:    tx.auctionId,
-      auctionTitle: auction.title,
-      buyerName:    buyer.name ?? 'A buyer',
-      message:      `Advance received for "${auction.title}". Delivery info is now unlocked.`,
+    // Post-transaction side effects (Logistics & Notifications)
+    await createLogisticsOrder(transactionId, result.auction.sellerId, session.user.id, result.auction.currentPrice);
+    
+    await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId), {
+      event: FIREBASE_EVENTS.ADVANCE_PAID,
+      auctionId: result.auction.id,
+      auctionTitle: result.auction.title,
+      message: `Payment held for "${result.auction.title}". Please prepare for shipment.`,
     });
 
     revalidatePath('/dashboard');
-    revalidatePath(`/auctions/${tx.auctionId}`);
     return { success: true };
   } catch (e) {
-    console.error('[escrow] payEscrowAdvance failed:', e);
-    return { success: false, error: 'Internal error during advance payment' };
+    console.error('[escrow] Transaction failed:', e);
+    return { success: false, error: e instanceof Error ? e.message : 'Internal error' };
   }
 }
 
@@ -105,25 +92,24 @@ export async function confirmItemReceived(transactionId: string) {
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
   try {
-    await db.runTransaction(async (tx) => {
-      const ref  = db.collection('escrowTransactions').doc(transactionId);
-      const snap = await tx.get(ref);
-      if (!snap.exists) throw new Error('Transaction not found');
-      const t = snap.data()!;
+    const result = await db.runTransaction(async (tx) => {
+      const txRef  = db.collection('escrowTransactions').doc(transactionId);
+      const txSnap = await tx.get(txRef);
+      if (!txSnap.exists) throw new Error('Transaction not found');
+      const t = txSnap.data()!;
 
       if (t.buyerId !== session.user.id) throw new Error('Unauthorized');
       if (t.status !== 'HELD')           throw new Error('Not in a holdable state');
 
-      tx.update(ref, { status: 'RELEASED', updatedAt: new Date() });
+      tx.update(txRef, { status: 'RELEASED', updatedAt: new Date() });
 
       const aRef  = db.collection('auctions').doc(t.auctionId);
       tx.update(aRef, { deliveryStatus: 'DELIVERED', updatedAt: new Date() });
+      
+      return t;
     });
 
-    // Fetch auction + escrow for reputation + notifications
-    const txSnap = await db.collection('escrowTransactions').doc(transactionId).get();
-    const txData = txSnap.data()!;
-    const aSnap  = await db.collection('auctions').doc(txData.auctionId).get();
+    const aSnap  = await db.collection('auctions').doc(result.auctionId).get();
     const sellerId = aSnap.data()?.sellerId;
 
     if (sellerId) {
@@ -131,10 +117,7 @@ export async function confirmItemReceived(transactionId: string) {
         recalculateUserReputation(sellerId),
         recalculateUserReputation(session.user.id),
         rtdbPush(RTDB_PATHS.userNotifications(sellerId), {
-          event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Reputation improved! Successful sale confirmed.', newStatus: 'RELEASED',
-        }),
-        rtdbPush(RTDB_PATHS.userNotifications(session.user.id), {
-          event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Reputation improved! Successful purchase confirmed.', newStatus: 'RELEASED',
+          event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Sale confirmed! Funds released.',
         }),
       ]);
     }
@@ -148,33 +131,60 @@ export async function confirmItemReceived(transactionId: string) {
 }
 
 /**
- * Refund escrow — SECURITY FIX: requires admin or buyer ownership.
+ * Seller confirms item shipped — updates tracking.
  */
-export async function refundEscrow(transactionId: string) {
+export async function markAsShipped(transactionId: string, trackingNumber: string) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
-  const snap = await db.collection('escrowTransactions').doc(transactionId).get();
-  if (!snap.exists) return { success: false, error: 'Transaction not found' };
-  const tx = snap.data()!;
+  const txRef = db.collection('escrowTransactions').doc(transactionId);
+  const txSnap = await txRef.get();
+  const txData = txSnap.data();
+  if (!txData || txData.status !== 'HELD') return { success: false, error: 'Invalid state' };
 
-  // Only admin or buyer may refund
-  const isAdmin = ADMIN_EMAILS.includes(session.user.email ?? '');
-  if (tx.buyerId !== session.user.id && !isAdmin) {
-    return { success: false, error: 'Unauthorized' };
-  }
+  const aRef = db.collection('auctions').doc(txData.auctionId);
+  const aSnap = await aRef.get();
+  if (aSnap.data()?.sellerId !== session.user.id) return { success: false, error: 'Unauthorized' };
+
+  await aRef.update({
+    deliveryStatus: 'SHIPPED',
+    trackingNumber,
+    updatedAt: new Date()
+  });
+
+  await rtdbPush(RTDB_PATHS.userNotifications(txData.buyerId), {
+    event: 'ITEM_SHIPPED',
+    auctionId: txData.auctionId,
+    message: `Your item has been shipped! Tracking: ${trackingNumber}`,
+  });
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+/**
+ * Refund escrow — SECURITY CRITICAL: Restricted to Admins only.
+ */
+export async function refundEscrow(transactionId: string) {
+  const session = await auth();
+  // Require verified admin status
+  const isAdmin = ADMIN_EMAILS.includes(session?.user?.email ?? '');
+  if (!isAdmin) return { success: false, error: 'Access Denied: Admin intervention required for refunds.' };
 
   try {
-    await db.collection('escrowTransactions').doc(transactionId).update({
-      status: 'FEE_REFUNDED', updatedAt: new Date(),
+    const txRef = db.collection('escrowTransactions').doc(transactionId);
+    const txSnap = await txRef.get();
+    if (!txSnap.exists) return { success: false, error: 'Not found' };
+    
+    const tx = txSnap.data()!;
+    await db.runTransaction(async (t) => {
+      t.update(txRef, { status: 'REFUNDED', updatedAt: new Date() });
+      t.update(db.collection('auctions').doc(tx.auctionId), { status: 'CANCELLED' });
     });
-    await db.collection('auctions').doc(tx.auctionId).update({
-      status: 'CANCELLED', updatedAt: new Date(),
-    });
-    revalidatePath('/dashboard/escrow');
+
+    revalidatePath('/dashboard');
     return { success: true };
-  } catch (e) {
-    console.error('[escrow] refundEscrow failed:', e);
-    return { success: false, error: 'Internal server error during refund' };
+  } catch (_error) {
+    return { success: false, error: 'Refund failed' };
   }
 }

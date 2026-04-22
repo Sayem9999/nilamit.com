@@ -3,15 +3,13 @@
 import { db, snapDocs } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
-import { Auction, User } from '@/types';
+import { Auction, User, Report } from '@/types';
 
 export async function getAdminReports(status?: string, page = 1, limit = 20) {
   await requireAdmin();
 
   let query: FirebaseFirestore.Query = db.collection('reports');
-  if (status) {
-    query = query.where('status', '==', status);
-  }
+  if (status) query = query.where('status', '==', status);
   
   const totalSnap = await query.count().get();
   const total = totalSnap.data().count;
@@ -22,52 +20,48 @@ export async function getAdminReports(status?: string, page = 1, limit = 20) {
     .offset((page - 1) * limit)
     .get();
 
-  const reports = await Promise.all(snap.docs.map(async d => {
-    const r = d.data();
-    // Targeted lookups
-    const [aSnap, reporterSnap] = await Promise.all([
-      db.collection('auctions').doc(r.auctionId).get(),
-      db.collection('users').doc(r.reporterId).get(),
-    ]);
+  const reportDocs = snapDocs<Report>(snap);
+  if (reportDocs.length === 0) return { success: true, reports: [], total, pages: 0 };
 
-    if (!aSnap.exists) return null;
+  // 1. Batch fetch primary related entities
+  const auctionIds  = [...new Set(reportDocs.map(r => r.auctionId))];
+  const reporterIds = [...new Set(reportDocs.map(r => r.reporterId))];
 
-    const auctionData = aSnap.data()!;
-    const sellerSnap = await db.collection('users').doc(auctionData.sellerId).get();
-    const sellerData = sellerSnap.data() || {};
+  const [aSnaps, uSnaps] = await Promise.all([
+    Promise.all(auctionIds.map(id => db.collection('auctions').doc(id).get())),
+    Promise.all(reporterIds.map(id => db.collection('users').doc(id).get()))
+  ]);
+
+  const aMap = new Map(aSnaps.map(s => [s.id, s.data() || {}]));
+  const uMap = new Map(uSnaps.map(s => [s.id, s.data() || {}]));
+
+  // 2. Fetch Sellers (second-degree batch)
+  const sellerIds = [...new Set(aSnaps.map(s => s.data()?.sellerId).filter(Boolean))];
+  const sSnaps    = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
+  const sMap      = new Map(sSnaps.map(s => [s.id, s.data() || {}]));
+
+  const reports = reportDocs.map(r => {
+    const auction  = aMap.get(r.auctionId) || {};
+    const reporter = uMap.get(r.reporterId) || {};
+    const seller   = sMap.get(auction.sellerId) || {};
 
     return {
-      id: d.id,
-      reason: r.reason,
-      description: r.description || null,
-      status: r.status,
-      createdAt: r.createdAt?.toDate?.() ?? new Date(r.createdAt),
-      updatedAt: r.updatedAt?.toDate?.() ?? new Date(r.updatedAt),
+      ...r,
       auction: {
-        id: aSnap.id,
-        title: auctionData.title ?? 'Deleted Auction',
-        status: auctionData.status,
-        images: auctionData.images || [],
-        seller: {
-          name: sellerData.name || 'Unknown',
-          email: sellerData.email || '',
-        }
+        id: r.auctionId,
+        title: auction.title ?? 'Deleted Auction',
+        status: auction.status,
+        seller: { name: seller.name || 'Unknown', email: seller.email || '' }
       },
       reporter: {
-        id: reporterSnap.id,
-        name: reporterSnap.data()?.name || 'Anonymous',
-        email: reporterSnap.data()?.email || '',
-        image: reporterSnap.data()?.image || null,
+        id: r.reporterId,
+        name: reporter.name || 'Anonymous',
+        email: reporter.email || ''
       }
     };
-  }));
+  });
 
-  return { 
-    success: true, 
-    reports: reports.filter(Boolean), 
-    total, 
-    pages: Math.ceil(total / limit) 
-  };
+  return { success: true, reports, total, pages: Math.ceil(total / limit) };
 }
 
 async function getUserMap(userIds: string[]) {
@@ -117,26 +111,48 @@ export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
 }
 
 export async function resolveReport(reportId: string, status: string) {
-  await requireAdmin();
+  const session = await requireAdmin();
   await db.collection('reports').doc(reportId).update({
     status, updatedAt: new Date(),
   });
+
+  // Audit Log
+  await db.collection('admin_logs').add({
+    adminId: session.user.id,
+    action: 'RESOLVE_REPORT',
+    targetId: reportId,
+    details: { status },
+    createdAt: new Date()
+  });
+
   revalidatePath('/admin');
   return { success: true };
 }
 
-export async function suspendAuction(auctionId: string, reportId: string) {
-  await requireAdmin();
+export async function suspendAuction(auctionId: string, reportId: string, reason: string) {
+  const session = await requireAdmin();
 
   const batch = db.batch();
   batch.update(db.collection('auctions').doc(auctionId), {
     status: 'CANCELLED', updatedAt: new Date(),
   });
+
   if (reportId) {
     batch.update(db.collection('reports').doc(reportId), {
       status: 'RESOLVED', updatedAt: new Date(),
     });
   }
+
+  // Mandatory Audit Log
+  const logRef = db.collection('admin_logs').doc();
+  batch.set(logRef, {
+    adminId: session.user.id,
+    action: 'SUSPEND_AUCTION',
+    targetId: auctionId,
+    details: { reportId, reason },
+    createdAt: new Date()
+  });
+
   await batch.commit();
   revalidatePath('/admin');
   return { success: true };
