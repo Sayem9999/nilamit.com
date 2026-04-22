@@ -6,15 +6,8 @@ import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { recalculateUserReputation } from '@/lib/reputation';
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
-    throw new Error('Unauthorized: Admin access required');
-  }
-  return session;
-}
+import { requireAdmin, isAdminEmail } from '@/lib/admin-guard';
+import { log } from '@/lib/logger';
 
 export async function raiseDispute(transactionId: string, reason: string) {
   const session = await auth();
@@ -90,14 +83,14 @@ export async function adminRefundEscrow(transactionId: string, reason: string) {
   await db.collection('escrowTransactions').doc(transactionId).update({
     status: 'REFUNDED', updatedAt: new Date(),
   });
-  console.log(`[Admin] Transaction ${transactionId} refunded. Reason: ${reason}`);
+  log.info(`[Admin] Transaction ${transactionId} refunded. Reason: ${reason}`);
   revalidatePath('/admin/escrow');
   return { success: true };
 }
 
 export async function getOpenDisputes() {
   const session = await auth();
-  if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) return [];
+  if (!isAdminEmail(session?.user?.email)) return [];
 
   const snap = await db.collection('disputes').where('status', '==', 'OPEN').orderBy('createdAt', 'desc').get();
 

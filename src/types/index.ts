@@ -73,7 +73,6 @@ export interface User {
   userLevel: number;
   createdAt: Date;
   updatedAt: Date;
-  badges?: { badgeId: string; unlockedAt: Date }[];
 }
 
 export interface Auction {

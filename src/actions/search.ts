@@ -3,6 +3,10 @@
 import { db, snapDocs } from '@/lib/db';
 import { Auction, User } from '@/types';
 
+interface AuctionWithScore extends Auction {
+  _score: number;
+}
+
 export async function getSmartSearchResults(query: string) {
   if (!query?.trim()) return [];
 
@@ -16,7 +20,7 @@ export async function getSmartSearchResults(query: string) {
 
   const auctions = snapDocs<Auction>(snap);
 
-  const results = auctions
+  const results: AuctionWithScore[] = auctions
     .filter((a) => {
       const title = (a.title ?? '').toLowerCase();
       const desc  = (a.description ?? '').toLowerCase();
@@ -31,24 +35,25 @@ export async function getSmartSearchResults(query: string) {
     .sort((a, b) => b._score - a._score)
     .slice(0, 20);
 
-  // Fetch seller data for results
+  // 1. Batch Fetch Sellers
   const sellerIds = [...new Set(results.map((a) => a.sellerId))];
   const sellerSnaps = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
-  const sellersMap  = new Map(sellerSnaps.map(s => [s.id, s.data() as User ?? {}]));
+  const sellersMap  = new Map(sellerSnaps.map(s => [s.id, s.data() as User]));
 
+  // 2. Map results to public format
   return results.map((a) => {
-    const s = sellersMap.get(a.sellerId) as User ?? {};
+    const s = sellersMap.get(a.sellerId);
     return {
       ...a,
       seller: {
         id: a.sellerId, 
-        name: s.name ?? null, 
-        image: s.image ?? null,
-        reputationScore: s.reputationScore ?? 0, 
-        isVerifiedSeller: s.isVerifiedSeller ?? false,
-        isPhoneVerified: s.isPhoneVerified ?? false, 
-        winningStreak: s.winningStreak ?? 0,
-        userLevel: s.userLevel ?? 1,
+        name: s?.name ?? null, 
+        image: s?.image ?? null,
+        reputationScore: s?.reputationScore ?? 0, 
+        isVerifiedSeller: s?.isVerifiedSeller ?? false,
+        isPhoneVerified: s?.isPhoneVerified ?? false, 
+        winningStreak: s?.winningStreak ?? 0,
+        userLevel: s?.userLevel ?? 1,
       },
       _count: { bids: a.bidCount ?? 0 },
     };
