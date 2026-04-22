@@ -64,6 +64,7 @@ export interface User {
   isVerifiedSeller: boolean;
   reputationScore: number;
   isBanned: boolean;
+  isMinor: boolean;
   isAdmin: boolean;
   googleId?: string | null;
   bkashNumber?: string | null;

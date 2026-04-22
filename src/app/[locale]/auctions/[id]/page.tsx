@@ -390,6 +390,12 @@ export default async function AuctionDetailPage({ params }: Props) {
           <div className="flex justify-center border-t border-gray-50 pt-2">
             <ReportModal auctionId={id} />
           </div>
+
+          <div className="mt-8 p-4 bg-gray-50/50 rounded-xl border border-gray-100/50">
+            <p className="text-[10px] text-gray-400 leading-tight text-center italic">
+              Nilamit is a marketplace facilitator. By bidding or listing, you agree to our 18+ eligibility rule and the binding nature of bids under the ICT Act 2006.
+            </p>
+          </div>
         </div>
       </div>
     </div>

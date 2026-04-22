@@ -56,3 +56,23 @@ The following items are strictly forbidden from the platform:
 
 ## 7. Direct Pickup & Area Filtering
 Nilamit facilitates hyper-local (Areas) and community (Circles) trading. While the platform provides the digital venue, users are responsible for their safety during physical handovers. We recommend meeting in well-lit, public locations for "Local Pickup" transactions.
+
+---
+
+## 8. Intellectual Property & Counterfeits
+- **Zero Tolerance**: The sale of counterfeit, pirated, or unauthorized replica goods is strictly prohibited.
+- **Takedown Policy**: Nilamit will remove any listing upon receipt of a valid IPR infringement notice from a brand owner or authorized representative.
+- **Reporting**: Users are encouraged to report suspicious items using the "IPR Infringement" category in the report tool.
+
+---
+
+## 9. Platform Role & Liability (Section 79)
+- **Intermediary Status**: Nilamit acts solely as an intermediary facilitator (marketplace). We do not take ownership of items, nor do we guarantee the quality or legality of user-generated listings.
+- **ICT Act Compliance**: In accordance with Section 79 of the ICT Act 2006, Nilamit is not liable for third-party content provided it remains within the boundaries of a passive host.
+- **User Accountability**: Every user is legally liable for their own listings, bids, and communications.
+
+---
+
+## 10. Eligibility & Contracts
+- **Minimum Age**: Users must be at least **18 years of age** to register, bid, or list items. This ensures all bids are enforceable as binding contracts.
+- **VAT on Commission**: All platform service fees are subject to 5% or 15% VAT (as applicable by NBR), which will be automatically deducted from the escrow settlement.

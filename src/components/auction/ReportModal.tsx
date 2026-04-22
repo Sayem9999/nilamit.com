@@ -11,6 +11,7 @@ interface ReportModalProps {
 
 const REASONS = [
   'Prohibited items',
+  'IPR Infringement / Counterfeit',
   'Incorrect category',
   'Suspicious or fraudulent',
   'Misleading description',

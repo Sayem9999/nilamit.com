@@ -40,6 +40,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
   const user = userSnap.data()!;
 
   if (!user.isPhoneVerified) return { success: false, error: ERROR_CODES.PHONE_NOT_VERIFIED };
+  if (user.isMinor) return { success: false, error: 'Users under 18 are not eligible to place binding bids on Nilamit.' };
 
   if (amount >= 100000 && !user.isVerifiedSeller) {
     const depositSnap = await db.collection('bidDeposits')
@@ -208,6 +209,9 @@ export async function executeBuyItNow(auctionId: string): Promise<PlaceBidResult
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
   const userId = session.user.id;
+  
+  const userSnap = await db.collection('users').doc(userId).get();
+  if (userSnap.data()?.isMinor) return { success: false, error: 'Users under 18 are not eligible for binding purchases.' };
 
   try {
     const result = await db.runTransaction(async (tx) => {

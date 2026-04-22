@@ -51,7 +51,9 @@ export async function createAuction(input: CreateAuctionInput) {
   if (!session?.user?.id) return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
 
   const userSnap = await db.collection('users').doc(session.user.id).get();
-  if (!userSnap.data()?.isPhoneVerified) return { success: false, error: ERROR_CODES.PHONE_NOT_VERIFIED };
+  const userData = userSnap.data();
+  if (!userData?.isPhoneVerified) return { success: false, error: ERROR_CODES.PHONE_NOT_VERIFIED };
+  if (userData?.isMinor) return { success: false, error: 'Users under 18 are not eligible to list auctions on Nilamit.' };
 
   try {
     const filteredTitle       = filterPII(input.title);
