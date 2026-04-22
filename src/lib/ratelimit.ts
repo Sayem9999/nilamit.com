@@ -16,12 +16,25 @@ function createLimiter(prefix: string, limit: number, window: string) {
   if (!isConfigured || !redis) {
     return { limit: async () => ({ success: true, remaining: 999, limit: 999, reset: 0 }) };
   }
-  return new Ratelimit({
+  
+  const limiter = new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(limit, window as `${number} ${string}`),
     analytics: true,
     prefix,
   });
+
+  // Wrap the limiter to provide runtime fail-open resilience
+  return {
+    limit: async (identifier: string) => {
+      try {
+        return await limiter.limit(identifier);
+      } catch (error) {
+        console.error(`[RateLimit] Runtime failure for ${prefix}:`, error);
+        return { success: true, remaining: 1, limit: 1, reset: 0 }; // Fail-open
+      }
+    }
+  };
 }
 
 /** Specialized rate limiters for different traffic patterns */

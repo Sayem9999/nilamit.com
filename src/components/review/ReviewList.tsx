@@ -10,9 +10,22 @@ interface ReviewListProps {
   userId: string;
 }
 
+interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  createdAt: Date;
+  from: {
+    name: string | null;
+    image: string | null;
+  };
+  auction: {
+    title: string;
+  };
+}
+
 export function ReviewList({ userId }: ReviewListProps) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

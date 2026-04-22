@@ -1,12 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-// Import the props type from the original component if possible,
-// or just re-declare if it's not exported.
-// Since I can't easily see if it's exported without another read, I'll allow any props to be passed through.
-// Actually, I saw the file content in Step 456, and BidPanelProps interface is NOT exported.
-// So I will just use any for now to avoid TS errors, or redefine a subset.
-// Better: Redefine the props interface here to be safe.
+/**
+ * Client-side wrapper for BidPanel to handle dynamic loading and SSR exclusion.
+ */
 
 interface BidPanelProps {
   auctionId: string;

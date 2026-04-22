@@ -27,22 +27,26 @@ export function newId(): string {
   return db.collection('_').doc().id;
 }
 
+import { SellerPublic } from '@/types';
+
 /** Map a raw User document to the SellerPublic interface */
-export function toSellerPublic(id: string, data: Record<string, unknown> | undefined): Record<string, unknown> | null {
-  if (!data) return null;
+export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
+  if (!data || typeof data !== 'object') return null;
+  const d = data as Record<string, unknown>;
+  
   return {
     id,
-    name: data.name ?? null,
-    email: data.email ?? null,
-    phone: data.phone ?? null,
-    image: data.image ?? null,
-    reputationScore: data.reputationScore ?? 0,
-    isPhoneVerified: !!data.isPhoneVerified,
-    emailVerified: data.emailVerified instanceof Timestamp ? data.emailVerified.toDate() : (data.emailVerified ? new Date(data.emailVerified) : null),
-    isVerifiedSeller: !!data.isVerifiedSeller,
-    winningStreak: data.winningStreak ?? 0,
-    userLevel: data.userLevel ?? 1,
-    isBanned: !!data.isBanned
+    name: (d.name as string) ?? null,
+    email: (d.email as string) ?? null,
+    phone: (d.phone as string) ?? null,
+    image: (d.image as string) ?? null,
+    reputationScore: (d.reputationScore as number) ?? 0,
+    isPhoneVerified: !!d.isPhoneVerified,
+    emailVerified: d.emailVerified instanceof Timestamp ? d.emailVerified.toDate() : (d.emailVerified ? new Date(d.emailVerified as string) : null),
+    isVerifiedSeller: !!d.isVerifiedSeller,
+    winningStreak: (d.winningStreak as number) ?? 0,
+    userLevel: (d.userLevel as number) ?? 1,
+    isBanned: !!d.isBanned
   };
 }
 

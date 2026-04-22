@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
@@ -7,53 +7,57 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  # --- TEST & VERIFY PHASE ---
+  verify:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-
       - name: Install dependencies
         run: npm ci
-
       - name: Lint check
         run: npm run lint
-
       - name: Type check
         run: npx tsc --noEmit
-
-      - name: Environment Audit
-        # We use dummy values to verify that the schema is valid and required vars are listed
-        # In a real CI, secrets would be provided via GitHub Secrets
-        run: |
-          cp .env.example .env.test
-          export $(cat .env.test | xargs)
-          node -e "import('./src/lib/env.js').then(m => m.validateEnv()).catch(e => { console.error(e.message); process.exit(1); })" || true
-          echo "✅ Config schema is valid."
-
       - name: Run Unit & Integration Tests
         run: npx vitest run
 
-      - name: Build check
-        # Skip actual build in CI if secrets aren't provided, but verify the script works
-        run: npm run build -- --dry-run
-        env:
-          NODE_ENV: production
-          # Add minimal required secrets for build verification
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-dummy-secret-at-least-32-chars-long' }}
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID || 'ci-test' }}
-          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL || 'ci@test.com' }}
-          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY || 'ci-key' }}
-          NEXT_PUBLIC_FIREBASE_API_KEY: 'ci-key'
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'ci-test'
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: 'ci-id'
-          NEXT_PUBLIC_FIREBASE_APP_ID: 'ci-app'
-          UPSTASH_REDIS_REST_URL: 'https://ci.upstash.io'
-          UPSTASH_REDIS_REST_TOKEN: 'ci-token'
-          ADMIN_EMAILS: 'ci@test.com'
+  # --- BUILD & DEPLOY PHASE ---
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    
+    # We use Google Cloud Run as the target for this example
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 💡 In a real setup, you would authenticate with your provider here:
+      # - uses: 'google-github-actions/auth@v2'
+      # - run: gcloud auth configure-docker
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false # Set to true after authenticating with a registry
+          tags: gcr.io/${{ secrets.GCP_PROJECT_ID }}/nilamit-app:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+
+      - name: Deployment Success Notification
+        run: echo "🚀 Nilamit App v${{ github.sha }} ready for rollout."

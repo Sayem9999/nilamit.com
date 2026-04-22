@@ -6,7 +6,6 @@ import { headers } from 'next/headers';
 import { bidLimiter } from '@/lib/ratelimit';
 import { ERROR_CODES } from '@/lib/constants';
 import { BiddingService } from '@/services/bidding/bidding-service';
-import * as Sentry from '@sentry/nextjs';
 import { log } from '@/lib/logger';
 
 /**
@@ -40,11 +39,36 @@ export async function placeBid(auctionId: string, amount: number) {
       if (depositSnap.empty) return { success: false, error: ERROR_CODES.ELITE_DEPOSIT_REQUIRED };
     }
 
-    return await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
+    // Execute with high-level retry logic for contention handling
+    let attempts = 0;
+    const MAX_ATTEMPTS = 3;
+
+    while (attempts < MAX_ATTEMPTS) {
+      try {
+        return await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
+      } catch (error) {
+        attempts++;
+        const message = error instanceof Error ? error.message : '';
+        
+        // Only retry on transient contention/transaction errors
+        const isContention = message.includes('too much contention') || message.includes('transaction failed');
+        
+        if (isContention && attempts < MAX_ATTEMPTS) {
+          const delay = Math.pow(2, attempts) * 100 + Math.random() * 50;
+          log.warn(`[Contention] Retrying bid ${attempts}/${MAX_ATTEMPTS}`, { auctionId, userId, delay });
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+
+        log.error('placeBid failed', error, { userId, auctionId, amount, attempts });
+        return { success: false, error: message || 'Failed to place bid.' };
+      }
+    }
+    
+    return { success: false, error: 'The bidding system is currently very busy. Please try again in a moment.' };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to place bid.';
-    log.error('placeBid failed', error, { userId, auctionId, amount });
-    return { success: false, error: message };
+    log.error('placeBid outer failed', error, { userId, auctionId, amount });
+    return { success: false, error: 'An unexpected error occurred.' };
   }
 }
 
