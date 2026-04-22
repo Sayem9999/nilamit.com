@@ -1,5 +1,11 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from 'next-intl/plugin';
+import { validateEnv } from "./src/lib/env";
+
+// 🛡️ Validate environment variables on startup/build
+if (process.env.NODE_ENV !== 'test') {
+  validateEnv();
+}
 
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 

@@ -7,6 +7,7 @@ import { sendOutbidAlert } from '@/lib/fcm';
 import { ERROR_CODES, SOFT_CLOSE_WINDOW_MS, SOFT_CLOSE_EXTENSION_MS } from '@/lib/constants';
 import { checkAndAwardBadges } from '@/actions/gamification';
 import { detectShillBidding } from '@/lib/moderation';
+import { log } from '@/lib/logger';
 
 interface BidSideEffectParams {
   bidId: string;
@@ -24,87 +25,89 @@ export class BiddingService {
    * Execute an atomic bid transaction
    */
   static async placeBid(auctionId: string, amount: number, userId: string, userName: string, userEmail: string): Promise<PlaceBidResult> {
-    const result = await db.runTransaction(async (tx) => {
-      const aRef  = db.collection('auctions').doc(auctionId);
-      const aSnap = await tx.get(aRef);
-      if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
+    return log.time('BiddingService.placeBid', async () => {
+      const result = await db.runTransaction(async (tx) => {
+        const aRef  = db.collection('auctions').doc(auctionId);
+        const aSnap = await tx.get(aRef);
+        if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
 
-      const auction = aSnap.data()!;
-      if (auction.status !== 'ACTIVE')    throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
-      const now     = new Date();
-      const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
-      if (now >= endTime)                  throw new Error(ERROR_CODES.AUCTION_ENDED);
-      if (auction.sellerId === userId)     throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
+        const auction = aSnap.data()!;
+        if (auction.status !== 'ACTIVE')    throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
+        const now     = new Date();
+        const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
+        if (now >= endTime)                  throw new Error(ERROR_CODES.AUCTION_ENDED);
+        if (auction.sellerId === userId)     throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
 
-      const minRequired = (auction.currentPrice ?? auction.startingPrice) + (auction.minBidIncrement ?? 10);
-      if (amount < minRequired) throw new Error(`${ERROR_CODES.BID_TOO_LOW}: ৳${minRequired.toLocaleString()}`);
+        const minRequired = (auction.currentPrice ?? auction.startingPrice) + (auction.minBidIncrement ?? 10);
+        if (amount < minRequired) throw new Error(`${ERROR_CODES.BID_TOO_LOW}: ৳${minRequired.toLocaleString()}`);
 
-      // Previous top bid
-      const prevBidsSnap = await db.collection('bids')
-        .where('auctionId', '==', auctionId)
-        .orderBy('amount', 'desc')
-        .limit(1)
-        .get();
-      const prevBid = prevBidsSnap.empty ? null : prevBidsSnap.docs[0].data();
+        // Previous top bid
+        const prevBidsSnap = await db.collection('bids')
+          .where('auctionId', '==', auctionId)
+          .orderBy('amount', 'desc')
+          .limit(1)
+          .get();
+        const prevBid = prevBidsSnap.empty ? null : prevBidsSnap.docs[0].data();
 
-      // Create bid
-      const bidId  = newId();
-      const bidRef = db.collection('bids').doc(bidId);
-      tx.set(bidRef, { id: bidId, amount, auctionId, bidderId: userId, createdAt: now });
+        // Create bid
+        const bidId  = newId();
+        const bidRef = db.collection('bids').doc(bidId);
+        tx.set(bidRef, { id: bidId, amount, auctionId, bidderId: userId, createdAt: now });
 
-      // Anti-sniping
-      const timeUntilEnd     = endTime.getTime() - now.getTime();
-      let newEndTime         = endTime;
-      let antiSnipeTriggered = false;
+        // Anti-sniping
+        const timeUntilEnd     = endTime.getTime() - now.getTime();
+        let newEndTime         = endTime;
+        let antiSnipeTriggered = false;
 
-      if (!auction.wasExtended && timeUntilEnd <= SOFT_CLOSE_WINDOW_MS) {
-        newEndTime         = new Date(endTime.getTime() + SOFT_CLOSE_EXTENSION_MS);
-        antiSnipeTriggered = true;
-      }
+        if (!auction.wasExtended && timeUntilEnd <= SOFT_CLOSE_WINDOW_MS) {
+          newEndTime         = new Date(endTime.getTime() + SOFT_CLOSE_EXTENSION_MS);
+          antiSnipeTriggered = true;
+        }
 
-      tx.update(aRef, {
-        currentPrice: amount,
-        endTime:      newEndTime,
-        wasExtended:  antiSnipeTriggered ? true : auction.wasExtended,
-        bidCount:     (auction.bidCount ?? 0) + 1,
-        updatedAt:    now,
+        tx.update(aRef, {
+          currentPrice: amount,
+          endTime:      newEndTime,
+          wasExtended:  antiSnipeTriggered ? true : auction.wasExtended,
+          bidCount:     (auction.bidCount ?? 0) + 1,
+          updatedAt:    now,
+        });
+
+        // Active alerts
+        const alertsSnap = await db.collection('alerts')
+          .where('auctionId', '==', auctionId)
+          .where('isActive', '==', true)
+          .get();
+
+        const alerts = snapDocs<Alert>(alertsSnap);
+        const triggeredAlerts = alerts.filter((a) =>
+          a.userId !== userId &&
+          (a.type === 'OUTBID' || (a.type === 'TARGET_REACHED' && (a.thresholdPrice ?? 0) <= amount))
+        );
+
+        triggeredAlerts
+          .filter((a) => a.type === 'TARGET_REACHED')
+          .forEach((a) => tx.update(db.collection('alerts').doc(a.id), { isActive: false }));
+
+        return {
+          bidId, newEndTime, antiSnipeTriggered,
+          prevBidderId:  prevBid?.bidderId ?? null,
+          auctionTitle:  auction.title,
+          auctionStartTime: auction.startTime?.toDate ? auction.startTime.toDate() : new Date(auction.startTime),
+          triggeredAlerts,
+          sellerId: auction.sellerId,
+        };
       });
 
-      // Active alerts
-      const alertsSnap = await db.collection('alerts')
-        .where('auctionId', '==', auctionId)
-        .where('isActive', '==', true)
-        .get();
-
-      const alerts = snapDocs<Alert>(alertsSnap);
-      const triggeredAlerts = alerts.filter((a) =>
-        a.userId !== userId &&
-        (a.type === 'OUTBID' || (a.type === 'TARGET_REACHED' && (a.thresholdPrice ?? 0) <= amount))
-      );
-
-      triggeredAlerts
-        .filter((a) => a.type === 'TARGET_REACHED')
-        .forEach((a) => tx.update(db.collection('alerts').doc(a.id), { isActive: false }));
+      // Trigger Side Effects (Async)
+      this.handleBidSideEffects(result, auctionId, userId, userName, userEmail, amount);
 
       return {
-        bidId, newEndTime, antiSnipeTriggered,
-        prevBidderId:  prevBid?.bidderId ?? null,
-        auctionTitle:  auction.title,
-        auctionStartTime: auction.startTime?.toDate ? auction.startTime.toDate() : new Date(auction.startTime),
-        triggeredAlerts,
-        sellerId: auction.sellerId,
+        success: true,
+        bid: { id: result.bidId, amount, auctionId, bidderId: userId, createdAt: new Date() },
+        newEndTime: result.newEndTime,
+        antiSnipeTriggered: result.antiSnipeTriggered,
       };
-    });
-
-    // Trigger Side Effects (Async)
-    this.handleBidSideEffects(result, auctionId, userId, userName, userEmail, amount);
-
-    return {
-      success: true,
-      bid: { id: result.bidId, amount, auctionId, bidderId: userId, createdAt: new Date() },
-      newEndTime: result.newEndTime,
-      antiSnipeTriggered: result.antiSnipeTriggered,
-    };
+    }, { auctionId, userId, amount });
   }
 
   /**

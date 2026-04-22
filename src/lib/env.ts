@@ -1,121 +1,81 @@
+import { z } from 'zod';
+
 /**
- * Environment Variable Validation
- *
- * Called once at server startup (or build time) to detect missing
- * configuration early — before any request is served.
- *
- * ❌ Any missing REQUIRED variable throws immediately with a clear message.
- * ⚠️  Any missing OPTIONAL variable logs a warning.
+ * Nilamit Environment Schema
+ * Defines the shape and constraints of all configuration variables.
  */
+const envSchema = z.object({
+  // --- CORE ---
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
+  ADMIN_EMAILS: z.string().transform((val) => val.split(',').map(e => e.trim().toLowerCase())),
+  
+  // --- FIREBASE (Server-Side) ---
+  FIREBASE_PROJECT_ID: z.string(),
+  FIREBASE_CLIENT_EMAIL: z.string().email(),
+  FIREBASE_PRIVATE_KEY: z.string().transform(v => v.replace(/\\n/g, '\n')),
+  FIREBASE_DATABASE_URL: z.string().url().optional(),
+  
+  // --- FIREBASE (Client-Side) ---
+  NEXT_PUBLIC_FIREBASE_API_KEY: z.string(),
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string(),
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string(),
+  NEXT_PUBLIC_FIREBASE_APP_ID: z.string(),
+  
+  // --- INFRASTRUCTURE ---
+  UPSTASH_REDIS_REST_URL: z.string().url(),
+  UPSTASH_REDIS_REST_TOKEN: z.string(),
+  CRON_SECRET: z.string().min(16).optional(),
+  
+  // --- OPTIONAL / EXTERNAL ---
+  NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  SENTRY_DSN: z.string().url().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  SMS_PROVIDER: z.enum(['console', 'greenweb']).default('console'),
+  GREENWEB_TOKEN: z.string().optional(),
+});
 
-const REQUIRED: Record<string, string> = {
-  AUTH_SECRET:  'Auth.js secret — generate with: openssl rand -base64 32',
-  ADMIN_EMAILS: 'Comma-separated admin email addresses',
-};
+type Env = z.infer<typeof envSchema>;
 
-const REQUIRED_IN_PRODUCTION: Record<string, string> = {
-  // Firebase Admin SDK (server-side)
-  FIREBASE_PROJECT_ID:    'Firebase project ID',
-  FIREBASE_CLIENT_EMAIL:  'Firebase service account client email',
-  FIREBASE_PRIVATE_KEY:   'Firebase service account private key',
+let _env: Env | null = null;
 
-  // Firebase Client SDK (browser)
-  NEXT_PUBLIC_FIREBASE_API_KEY:            'Firebase Web API key',
-  NEXT_PUBLIC_FIREBASE_PROJECT_ID:         'Firebase project ID (public)',
-  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID:'Firebase messaging sender ID',
-  NEXT_PUBLIC_FIREBASE_APP_ID:             'Firebase app ID',
+/**
+ * Validates the environment variables and returns the typed object.
+ * Throws immediately if the configuration is invalid.
+ */
+export function validateEnv(): Env {
+  if (_env) return _env;
 
-  CRON_SECRET: 'Cron job authorization secret (generate with: openssl rand -hex 32)',
-
-  // Rate Limiting (Upstash Redis)
-  UPSTASH_REDIS_REST_URL:   'Upstash Redis REST URL',
-  UPSTASH_REDIS_REST_TOKEN: 'Upstash Redis REST token',
-};
-
-const OPTIONAL: Record<string, string> = {
-  // Firebase Storage / RTDB (have sensible defaults from project ID)
-  FIREBASE_DATABASE_URL:               'Firebase RTDB URL (defaults to https://{project}-default-rtdb.firebaseio.com)',
-  FIREBASE_STORAGE_BUCKET:             'Firebase Storage bucket (defaults to {project}.firebasestorage.app)',
-  NEXT_PUBLIC_FIREBASE_DATABASE_URL:   'Firebase RTDB URL (public, for client SDK)',
-  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'Firebase Storage bucket (public)',
-
-  // Auth
-  GOOGLE_CLIENT_ID:     'Google OAuth (sign-in with Google will be disabled)',
-  GOOGLE_CLIENT_SECRET: 'Google OAuth secret',
-
-  // App URL
-  NEXT_PUBLIC_APP_URL: 'Public app URL (used in email links)',
-
-  // Error tracking
-  SENTRY_DSN: 'Sentry error tracking (errors will not be captured)',
-
-  // SMS
-  SMS_PROVIDER:    'SMS gateway (defaults to "console")',
-  GREENWEB_TOKEN:  'GreenWeb SMS API token',
-};
-
-export function validateEnv(): void {
-  if (process.env.NODE_ENV === 'test') return;
-
-  const missing:  string[] = [];
-  const warnings: string[] = [];
-
-  const isBuild = process.env.NEXT_PHASE === 'phase-production-build';
-
-  for (const [key, description] of Object.entries(REQUIRED)) {
-    if (!process.env[key]) {
-      if (isBuild) {
-        warnings.push(`  • ${key} (REQUIRED) — ${description}`);
-      } else {
-        missing.push(`  • ${key} — ${description}`);
-      }
-    }
+  // We only validate in Node.js environment
+  if (typeof window !== 'undefined') {
+    return {} as Env; // Browser access should use NEXT_PUBLIC directly
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    // During build phase, we don't always have secrets available.
-    // We log warnings instead of throwing to allow the build to complete.
-    // The check will still throw at runtime if variables are missing.
-    
-    for (const [key, description] of Object.entries(REQUIRED_IN_PRODUCTION)) {
-      if (!process.env[key]) {
-        if (isBuild) {
-          warnings.push(`  • ${key} (REQUIRED) — ${description}`);
-        } else {
-          missing.push(`  • ${key} — ${description}`);
-        }
-      }
-    }
+  const result = envSchema.safeParse(process.env);
+
+  if (!result.success) {
+    const errors = result.error.flatten().fieldErrors;
+    const errorMessages = Object.entries(errors)
+      .map(([key, messages]) => `  • ${key}: ${messages?.join(', ')}`)
+      .join('\n');
+
+    console.error(`\n[Env] ❌  Invalid environment configuration:\n${errorMessages}\n`);
+    throw new Error('Invalid environment configuration');
   }
 
-  for (const [key, description] of Object.entries(OPTIONAL)) {
-    if (!process.env[key]) {
-      warnings.push(`  • ${key} — ${description}`);
-    }
-  }
-
-  if (warnings.length > 0) {
-    console.warn(
-      `\n[Env] ⚠️  Optional variables not set (features may be degraded):\n${warnings.join('\n')}\n`
-    );
-  }
-
-  if (missing.length > 0) {
-    throw new Error(
-      `\n[Env] ❌  Missing required environment variables:\n\n${missing.join('\n')}\n\n` +
-      `  → Copy .env.example to .env.local and fill in the missing values.\n`
-    );
-  }
-
-  console.log('[Env] ✅  All required environment variables are set.');
+  _env = result.data;
+  console.log(`[Env] ✅  Configuration validated for: ${result.data.NODE_ENV}`);
+  return result.data;
 }
 
-export function requireEnv(key: string): string {
-  const value = process.env[key];
-  if (!value) throw new Error(`[Env] Required environment variable "${key}" is not set.`);
-  return value;
-}
-
-export function optionalEnv(key: string, fallback = ''): string {
-  return process.env[key] ?? fallback;
-}
+/**
+ * Typed environment accessor for server-side code
+ */
+export const env = new Proxy({} as Env, {
+  get(_, prop: string) {
+    const validated = validateEnv();
+    return (validated as unknown as Record<string, unknown>)[prop];
+  }
+});
