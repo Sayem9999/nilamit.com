@@ -211,9 +211,8 @@ git push origin main
 
 Firebase App Hosting will automatically trigger a Cloud Build that:
 1. Installs dependencies (`npm ci`)
-2. Runs Prisma migrations (`npm run migrate` via `cloudbuild.yaml`)
-3. Runs `npm run build` (Prisma generate + Next.js build)
-4. Deploys the standalone container to Cloud Run
+2. Runs `npm run build` (Next.js build)
+3. Deploys the standalone container to Cloud Run
 
 Watch the build in the [Firebase Console](https://console.firebase.google.com) → your project → **App Hosting**.
 

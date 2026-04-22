@@ -21,10 +21,6 @@ env:
   - variable: NODE_ENV
     value: production
 
-  # ─── Database (Cloud SQL PostgreSQL) ─────────────────────────
-  - variable: DATABASE_URL
-    secret: DATABASE_URL    # postgresql://user:pass@/dbname?host=/cloudsql/project:region:instance
-
   # ─── Auth.js ─────────────────────────────────────────────────
   - variable: AUTH_SECRET
     secret: AUTH_SECRET     # openssl rand -base64 32
