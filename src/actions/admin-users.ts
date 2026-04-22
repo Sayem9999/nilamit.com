@@ -92,16 +92,7 @@ export async function getAdminUsers(page = 1, limit = 20, search?: string) {
     ]);
 
     return {
-      id: user.id,
-      name: user.name ?? null,
-      email: user.email ?? null,
-      phone: user.phone ?? null,
-      image: user.image ?? null,
-      isPhoneVerified: Boolean(user.isPhoneVerified),
-      isVerifiedSeller: Boolean(user.isVerifiedSeller),
-      reputationScore: Number(user.reputationScore ?? 0),
-      createdAt: user.createdAt,
-      isBanned: Boolean(user.isBanned),
+      ...user,
       _count: {
         bids: bidCountSnap.data().count,
         auctionsAsSeller: auctionCountSnap.data().count,

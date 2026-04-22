@@ -1,19 +1,29 @@
 'use server';
 
-import { db } from '@/lib/db';
+import { db, docData, toSellerPublic } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { User } from '@/types';
+
+import { apiLimiter } from '@/lib/ratelimit';
+import { sanitizeObject } from '@/lib/sanitizer';
+import { headers } from 'next/headers';
 
 export async function updateProfile(data: { name?: string; image?: string }) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Not authenticated.' };
 
+  const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
+  const { success } = await apiLimiter.limit(`user_update_${session.user.id}_${ip}`);
+  if (!success) return { success: false, error: 'Too many requests. Please wait.' };
+
+  const sanitized = sanitizeObject(data);
   const update: Record<string, unknown> = { updatedAt: new Date() };
-  if (data.name)  update.name  = data.name;
-  if (data.image) update.image = data.image;
+  if (sanitized.name)  update.name  = sanitized.name;
+  if (sanitized.image) update.image = sanitized.image;
 
   await db.collection('users').doc(session.user.id).update(update);
   const snap = await db.collection('users').doc(session.user.id).get();
-  return { success: true, user: { ...snap.data(), id: snap.id } };
+  return { success: true, user: docData<User>(snap) };
 }
 
 export async function getPublicProfile(userId: string) {
@@ -24,11 +34,9 @@ export async function getPublicProfile(userId: string) {
   ]);
 
   if (!userSnap.exists) return null;
-  const u = userSnap.data()!;
+  
   return {
-    id: userId, name: u.name ?? null, image: u.image ?? null,
-    reputationScore: u.reputationScore ?? 0, isPhoneVerified: u.isPhoneVerified ?? false,
-    createdAt: u.createdAt?.toDate?.() ?? new Date(u.createdAt),
+    ...toSellerPublic(userId, userSnap.data()),
     _count: { auctionsAsSeller: auctionsSnap.size, bids: bidsSnap.size },
   };
 }
@@ -36,6 +44,10 @@ export async function getPublicProfile(userId: string) {
 export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Not authenticated.' };
+
+  const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
+  const { success } = await apiLimiter.limit(`mfs_link_${session.user.id}_${ip}`);
+  if (!success) return { success: false, error: 'Too many requests. Please wait.' };
 
   const phoneRegex = /^01[3-9]\d{8}$/;
   if (!phoneRegex.test(number)) return { success: false, error: 'Invalid Bangladeshi mobile number.' };

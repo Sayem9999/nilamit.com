@@ -23,21 +23,41 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { canReviewAuction } from "@/actions/review";
-import { ReviewForm } from "@/components/review/ReviewForm";
+import dynamic from "next/dynamic";
+
+const BidHistory = dynamic(() => import("@/components/auction/BidHistory").then(mod => mod.BidHistory), {
+  loading: () => <div className="h-20 animate-pulse bg-gray-50 rounded-xl" />,
+  ssr: false
+});
+
+const ReviewForm = dynamic(() => import("@/components/review/ReviewForm").then(mod => mod.ReviewForm), {
+  ssr: false
+});
+
+const ReportModal = dynamic(() => import("@/components/auction/ReportModal").then(mod => mod.ReportModal), {
+  ssr: false
+});
+
+const ChatInterface = dynamic(() => import("@/components/social/ChatInterface"), {
+  loading: () => <div className="h-40 animate-pulse bg-gray-50 rounded-xl" />,
+  ssr: false
+});
+
+import { AuctionWithBids, AuctionStatus } from "@/types";
 import { auth } from "@/lib/auth";
 import { WatchlistButton } from "@/components/auction/WatchlistButton";
 import { isWatched } from "@/actions/watchlist";
-import { ReportModal } from "@/components/auction/ReportModal";
 import { ShareButton } from "@/components/auction/ShareButton";
-import { BidHistory } from "@/components/auction/BidHistory";
 import UserBadge from "@/components/social/UserBadge";
 import { GatedContactInfo } from "@/components/ui/GatedContactInfo";
 import { getAuctionChat } from "@/actions/chat";
-import ChatInterface from "@/components/social/ChatInterface";
 import { Metadata } from "next";
 import Script from "next/script";
-import { AuctionWithBids, AuctionStatus } from "@/types";
+import { getTranslations } from "next-intl/server";
 
+interface Props {
+  params: Promise<{ id: string; locale: string }>;
+}
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const auction = await getAuction(id) as AuctionWithBids | null;

@@ -12,15 +12,17 @@ import {
   Shield,
   Clock,
   Users,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { CountdownTimer } from "./CountdownTimer";
 import { useSettings } from "@/context/SettingsContext";
 import { useAuctionBids } from "@/hooks/useAuctionBids";
 import { useSound } from "@/hooks/useSound";
-import { Volume2, VolumeX } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { ERROR_CODES } from "@/lib/constants";
 import { VerificationGuard } from "../auth/VerificationGuard";
+import { PhoneVerificationPrompt, MFSLinkagePrompt } from "./components/BidPrompts";
 
 interface BidPanelProps {
   auctionId: string;
@@ -63,18 +65,15 @@ export function BidPanel({
 
   const { newBids, currentEndTime, viewers } = useAuctionBids(auctionId);
 
-  // Sync real-time data from hook directly to display without setting state
   const displayPrice = newBids.length > 0 ? newBids[0].amount : latestPrice;
-  const displayEndTime = currentEndTime
-    ? new Date(currentEndTime)
-    : latestEndTime;
+  const displayEndTime = currentEndTime ? new Date(currentEndTime) : latestEndTime;
 
-  // Track new bids for sound effect using previous length
   useEffect(() => {
     if (newBids.length > 0) {
       playGavel();
     }
   }, [newBids.length, playGavel]);
+
   const minBid = displayPrice + minBidIncrement;
   const quickBids = [
     minBid,
@@ -94,8 +93,6 @@ export function BidPanel({
       const res = await placeBid(auctionId, bidAmount);
       setResult(res);
       if (res.success) {
-        // Sound Effect handled by setLatestPrice if we want it to triggers
-        // or manually here for faster feedback
         playGavel();
         confetti({
           particleCount: 150,
@@ -104,18 +101,16 @@ export function BidPanel({
           colors: ['#6366f1', '#a855f7', '#ec4899']
         });
 
-        // Price will update via next poll or immediately here for better UX
         const newPrice = bidAmount;
         setLatestPrice(newPrice);
         setBidAmount(newPrice + minBidIncrement);
         onBidPlaced?.();
       }
-      if (res.error === "PHONE_NOT_VERIFIED") {
+      if (res.error === ERROR_CODES.PHONE_NOT_VERIFIED) {
         setShowPhoneModal(true);
       }
       
-      // Elite Auction Check: Trigger MFS Modal if linkage is missing for 100k+ bids
-      if (res.error === "MFS_LINKAGE_REQUIRED" || res.error === "BID_DEPOSIT_REQUIRED_FOR_ELITE_AUCTION") {
+      if (res.error === "MFS_LINKAGE_REQUIRED" || res.error === "ELITE_DEPOSIT_REQUIRED") {
         setShowMFSModal(true);
       }
     });
@@ -129,11 +124,7 @@ export function BidPanel({
       return;
     }
 
-    if (
-      !confirm(
-        `Are you sure you want to buy this item now for ${formatBDT(buyItNowPrice as number)}?`,
-      )
-    ) {
+    if (!confirm(`Are you sure you want to buy this item now for ${formatBDT(buyItNowPrice as number)}?`)) {
       return;
     }
 
@@ -164,10 +155,7 @@ export function BidPanel({
         </h3>
         <div className="flex items-center gap-2">
           {viewers > 0 && (
-            <div
-              className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-medium animate-pulse"
-              title={`${viewers} person(s) currently viewing this auction`}
-            >
+            <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-medium animate-pulse">
               <Users className="w-3.5 h-3.5" />
               {viewers} {t("viewing", { fallback: "viewing" })}
             </div>
@@ -175,17 +163,10 @@ export function BidPanel({
           <button
             onClick={toggleSoundEffects}
             className={`p-1.5 rounded-lg transition-colors ${
-              soundEffectsEnabled
-                ? "text-primary-600 bg-primary-50"
-                : "text-gray-400 bg-gray-50"
+              soundEffectsEnabled ? "text-primary-600 bg-primary-50" : "text-gray-400 bg-gray-50"
             }`}
-            title={soundEffectsEnabled ? "Mute" : "Unmute"}
           >
-            {soundEffectsEnabled ? (
-              <Volume2 className="w-4 h-4" />
-            ) : (
-              <VolumeX className="w-4 h-4" />
-            )}
+            {soundEffectsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
           <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg">
             <Clock className="w-4 h-4" />
@@ -204,27 +185,18 @@ export function BidPanel({
         </div>
       ) : (
         <>
-          {/* Current Price */}
           <div className="bg-primary-50 rounded-xl p-4 mb-4 transition-all duration-300">
-            <p className="text-xs text-primary-600 font-medium mb-1">
-              {t("currentPrice")}
-            </p>
-            <p className="price text-2xl text-primary-700">
-              {formatBDT(displayPrice)}
-            </p>
-            {reservePrice && displayPrice < reservePrice && (
-              <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter mt-1 bg-amber-50 px-2 py-0.5 rounded inline-block">
-                Reserve not met
-              </p>
-            )}
-            {reservePrice && displayPrice >= reservePrice && (
-              <p className="text-[10px] text-green-600 font-bold uppercase tracking-tighter mt-1 bg-green-50 px-2 py-0.5 rounded inline-block">
-                Reserve met
+            <p className="text-xs text-primary-600 font-medium mb-1">{t("currentPrice")}</p>
+            <p className="price text-2xl text-primary-700">{formatBDT(displayPrice)}</p>
+            {reservePrice && (
+              <p className={`text-[10px] font-bold uppercase tracking-tighter mt-1 px-2 py-0.5 rounded inline-block ${
+                displayPrice < reservePrice ? "text-amber-600 bg-amber-50" : "text-green-600 bg-green-50"
+              }`}>
+                {displayPrice < reservePrice ? "Reserve not met" : "Reserve met"}
               </p>
             )}
           </div>
 
-          {/* Buy It Now option */}
           {buyItNowPrice && (
             <div className="mb-4">
               <VerificationGuard>
@@ -237,27 +209,15 @@ export function BidPanel({
                     <span>BUY IT NOW</span>
                     <span className="w-1.5 h-1.5 bg-accent-400 rounded-full animate-ping" />
                   </div>
-                  <div className="price text-lg relative z-10">
-                    {formatBDT(buyItNowPrice)}
-                  </div>
+                  <div className="price text-lg relative z-10">{formatBDT(buyItNowPrice)}</div>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 </button>
               </VerificationGuard>
-              <div className="flex items-center justify-center gap-4 mt-2">
-                <div className="h-px bg-gray-100 flex-1" />
-                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                  OR PLACE A BID
-                </span>
-                <div className="h-px bg-gray-100 flex-1" />
-              </div>
             </div>
           )}
 
-          {/* Bid Input */}
           <div className="mb-3">
-            <label className="text-xs font-medium text-gray-500 mb-1 block">
-              {t("yourBid")}
-            </label>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">{t("yourBid")}</label>
             <input
               type="number"
               value={bidAmount}
@@ -266,21 +226,16 @@ export function BidPanel({
               step={minBidIncrement}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 price text-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
             />
-            <p className="text-xs text-gray-400 mt-1">
-              {t("minimumBid")} {formatBDT(minBid)}
-            </p>
+            <p className="text-xs text-gray-400 mt-1">{t("minimumBid")} {formatBDT(minBid)}</p>
           </div>
 
-          {/* Quick Bid Buttons */}
           <div className="flex gap-2 mb-4">
             {quickBids.map((amount) => (
               <button
                 key={amount}
                 onClick={() => setBidAmount(amount)}
                 className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
-                  bidAmount === amount
-                    ? "bg-primary-50 border-primary-200 text-primary-700"
-                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  bidAmount === amount ? "bg-primary-50 border-primary-200 text-primary-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {formatBDT(amount)}
@@ -288,7 +243,6 @@ export function BidPanel({
             ))}
           </div>
 
-          {/* Submit */}
           <VerificationGuard>
             <button
               onClick={handleBid}
@@ -298,48 +252,23 @@ export function BidPanel({
               {isPending ? (
                 <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
               ) : (
-                <>
-                  {t("bidBtnPrefix")} {formatBDT(bidAmount)}
-                </>
+                <>{t("bidBtnPrefix")} {formatBDT(bidAmount)}</>
               )}
             </button>
           </VerificationGuard>
 
-          {/* Result */}
           {result && (
-            <div
-              className={`mt-3 p-3 rounded-xl text-sm flex items-start gap-2 ${
-                result.success
-                  ? "bg-green-50 text-green-700"
-                  : "bg-red-50 text-red-600"
-              }`}
-            >
-              {result.success ? (
-                <>
-                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">{t("success")}</p>
-                    {result.antiSnipeTriggered && (
-                      <p className="text-xs mt-1 text-green-600">
-                        {t("antiSnipe")}
-                      </p>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <p>
-                    {result.error === "PHONE_NOT_VERIFIED"
-                      ? t("phoneNotVerified")
-                      : result.error}
-                  </p>
-                </>
-              )}
+            <div className={`mt-3 p-3 rounded-xl text-sm flex items-start gap-2 ${
+              result.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
+            }`}>
+              {result.success ? <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" /> : <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />}
+              <div>
+                <p className="font-medium">{result.success ? t("success") : (result.error === "PHONE_NOT_VERIFIED" ? t("phoneNotVerified") : result.error)}</p>
+                {result.success && result.antiSnipeTriggered && <p className="text-xs mt-1 text-green-600">{t("antiSnipe")}</p>}
+              </div>
             </div>
           )}
 
-          {/* Trust indicator */}
           <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
             <Shield className="w-3.5 h-3.5" />
             <span>{t("trustIndicator")}</span>
@@ -347,71 +276,8 @@ export function BidPanel({
         </>
       )}
 
-      {showPhoneModal && (
-        <PhoneVerificationPrompt onClose={() => setShowPhoneModal(false)} />
-      )}
-
-      {showMFSModal && (
-        <MFSLinkagePrompt onClose={() => setShowMFSModal(false)} />
-      )}
-    </div>
-  );
-}
-
-function PhoneVerificationPrompt({ onClose }: { onClose: () => void }) {
-  const t = useTranslations("BidPanel");
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl">
-        <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">
-          {t("verifyPhone")}
-        </h3>
-        <p className="text-sm text-gray-500 mb-4">{t("verifyPhoneDesc")}</p>
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            {t("laterBtn")}
-          </button>
-          <Link
-            href="/profile"
-            className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700"
-          >
-            {t("verifyNowBtn")}
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MFSLinkagePrompt({ onClose }: { onClose: () => void }) {
-  const t = useTranslations("BidPanel");
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl p-6 max-w-sm mx-4 shadow-xl">
-        <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">
-          {t("mfsLinkRequired")}
-        </h3>
-        <p className="text-sm text-gray-500 mb-4">{t("mfsLinkDesc")}</p>
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
-          >
-            {t("laterBtn")}
-          </button>
-          <Link
-            href="/profile"
-            className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-primary-700"
-          >
-            {t("linkMFSNowBtn")}
-          </Link>
-        </div>
-      </div>
+      {showPhoneModal && <PhoneVerificationPrompt onClose={() => setShowPhoneModal(false)} />}
+      {showMFSModal && <MFSLinkagePrompt onClose={() => setShowMFSModal(false)} />}
     </div>
   );
 }

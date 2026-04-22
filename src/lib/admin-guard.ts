@@ -10,7 +10,7 @@ import { auth } from '@/lib/auth';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
   .split(',')
-  .map((e) => e.trim())
+  .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
 
 /**
@@ -19,7 +19,9 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
  */
 export async function requireAdmin() {
   const session = await auth();
-  if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
+  const userEmail = session?.user?.email?.toLowerCase();
+
+  if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
     throw new Error('Unauthorized: Admin access required.');
   }
   return session;
@@ -27,5 +29,6 @@ export async function requireAdmin() {
 
 /** True if the given email has admin privileges (useful for read-only guards) */
 export function isAdminEmail(email: string | null | undefined): boolean {
-  return Boolean(email && ADMIN_EMAILS.includes(email));
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase());
 }

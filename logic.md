@@ -1,41 +1,57 @@
-# ⚙️ Nilamit Business Logic
+# Nilamit Business Logic: The Firebase-Native Engine
 
-## 1. Atomic Bidding Engine
-The heart of Nilamit is the atomic bidding engine in `src/actions/bid.ts`.
+## 1. Atomic Bidding Logic
+The bidding engine is encapsulated within `BiddingService.placeBid` using **Firestore Transactions**.
 
-### Race-Condition Prevention
-To handle 100+ users bidding at the exact same millisecond:
-- **Locking**: We use a `FOR UPDATE` raw query within a Prisma transaction. This locks the specific auction row at the database level.
-- **Isolation**: The transaction isolation level is set to `Serializable` to ensure maximum consistency.
-- **Validation**: We re-verify `currentPrice` and `status` *after* the lock is acquired but before the new bid is written.
+### Race-Condition & Integrity
+To handle high-concurrency bidding:
+- **Transaction Wrap**: The entire bidding process (Price check → Previous bidder lookup → Bid creation → Price update → Extension logic) is wrapped in a single Firestore Transaction.
+- **Optimistic Locking**: Firestore ensures that if the auction document is modified by another user during processing, the transaction automatically retries to maintain consistency.
+- **Validation**: We verify `auction.status == 'ACTIVE'`, `now < auction.endTime`, and `amount >= minRequired` inside the atomic block.
 
 ### Anti-Sniping (Soft Close)
-- **Window**: 2 minutes.
-- **Logic**: If a bid is placed within the last 2 minutes of an auction, the `endTime` is automatically extended by another 2 minutes. 
-- **Limit**: To prevent indefinite bidding loops, this extension happens **exactly once per auction**.
+- **Trigger Window**: 2 minutes (SOFT_CLOSE_WINDOW_MS).
+- **Extension**: If a bid is placed within this window, `endTime` is extended by 2 minutes (SOFT_CLOSE_EXTENSION_MS).
+- **Hard Limit**: This extension currently happens **exactly once** per auction to prevent infinite bidding loops.
 
-## 2. Trust & Reputation System
-### Tiered Gated Identity (Activity Gate)
-Nilamit balances speed and safety through a 3-tier gating hierarchy enforced by the `VerificationGuard`:
-1. **Level 0 (Visitor)**: Authentication is **not required** for exploring the platform or viewing listings.
-2. **Level 1 (Authenticated)**: Authentication via Email, Google, or Phone. Allows access to basic profile settings and navigation.
-3. **Level 2 (Verified)**: Requires active **OTP Verification (Phone or Email)**. This is the **Active Participation Gate**: It allows **Bidding, Listing, and Coordination Chat**. Unverified users are blocked with an "Identity Required" modal.
-4. **Level 3 (Trusted)**: Requires **MFS Linkage (bKash/Nagad)**. Mandatory for paying Escrow Advances or bidding on "Elite" items (৳100,000+).
+---
 
-### Win-First Privacy
-- **Contact Release**: A seller's phone number and contact details are **NEVER** released to a potential buyer during the active auction phase, regardless of the seller's verified status.
-- **Unlock**: Contact information is only visible to the **Winning Bidder** after the auction has successfully closed as SOLD.
+## 2. Secure Identity & Moderation
+### Multi-Stage Verification Gating
+Nilamit uses a 4-tier verification system enforced at both the UI (VerificationGuard) and Action (Server Guard) layers:
+1. **Level 0 (Guest)**: Read-only access to public auctions.
+2. **Level 1 (Authenticated)**: User can edit profile and watchlist.
+3. **Level 2 (Phone Verified)**: The **Active Gate**. Required for placing bids and creating auctions. Enforced via OTP.
+4. **Level 3 (Trusted)**: Requires MFS linkage (bKash/Nagad). Required for high-value "Elite" auctions (৳100,000+).
 
-## 3. Financial & Coordination Logic
-### Coordination Engine (COD Optimized)
-Nilamit provides the **Trust Layer** for Bangladesh's Cash on Delivery (COD) economy:
-1. **MFS Linkage**: To participate in escrow (paying the Advance), users must link a verified **bKash** or **Nagad** account.
-2. **The Hold**: The platform holds an **Advance** (Success Fee + Delivery Fee) for unverified sellers via linked MFS.
-2. **The Coordination**: Once the advance is held, a private channel is opened for the buyer and seller to coordinate their own delivery (RedX, Pathao, or manual handoff).
-3. **The Finalization**: "Release Escrow" indicates that the COD transaction was successful, triggering reputation gains and finalizing the platform fee.
+### Ban Enforcement
+- **Middleware Lock**: Banned users are instantly redirected away from protected paths.
+- **Action Lockdown**: Every critical Server Action (`placeBid`, `createAuction`, `updateProfile`) performs a fresh database check for `isBanned` status before execution, closing the gap for stale session tokens.
 
-## 4. Real-time Synchronization & Alerts
-- **Bidding**: Pusher presence channels broadcast live bids to all viewers.
-- **Proactive Alerts**: 
-    - **Target Reach**: One-time trigger for user-set price goals. Mark `isActive: false` after firing.
-    - **Outbid Follow**: Repeated triggers for users tracking auction heat without an active bid.
+---
+
+## 3. High-Performance Data Fetching
+### Parallelized List Engine
+To ensure sub-100ms LCP on listing pages:
+- **Parallel Fetching**: We fetch the "Total Count" and the "Paginated Data" in parallel using `Promise.all`.
+- **Batch Identity Lookup**: To resolve the N+1 problem (showing seller/bidder info), we extract unique IDs from the result set and perform a single batch lookup for user metadata.
+
+---
+
+## 4. Real-time Synchronization
+### Event Broadcasting (RTDB)
+Firestore serves as the "Source of Truth," while the **Firebase Realtime Database (RTDB)** serves as the high-frequency event bus:
+- **Live Bids**: Every successful bid transaction broadcasts the new price and bidder info to the auction's RTDB path.
+- **Presence**: Tracks active viewers via RTDB's dedicated presence listeners.
+- **In-App Alerts**: Private notification channels for outbid alerts and price-reaches.
+
+---
+
+## 5. Security & Sanitization Pipeline
+### The Defensive Chain
+1. **Rate Limiting**: Request throttled at the network edge via Upstash Redis.
+2. **Authentication**: Identity verified via NextAuth.js.
+3. **Authorization**: Ban and permission status checked against Firestore.
+4. **XSS Sanitization**: User input recursively cleaned using DOMPurify (`src/lib/sanitizer.ts`).
+5. **PII Filtering**: Sensitive information (phone numbers, addresses) masked using regex patterns.
+6. **Persistence**: Clean, safe data written to the database.

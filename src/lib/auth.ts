@@ -5,6 +5,7 @@ import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
+import { isAdminEmail } from '@/lib/admin-guard';
 
 // ─── Inline Firestore Adapter (JWT-strategy, minimal surface) ──
 function FirestoreAdapter(): Adapter {
@@ -202,8 +203,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       // Admin check — derived from env var, NOT from user-supplied token data
-      const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
-      token.isAdmin = Boolean(token.email && adminEmails.includes(token.email as string));
+      token.isAdmin = isAdminEmail(token.email as string);
 
       return token;
     },

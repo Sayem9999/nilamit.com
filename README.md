@@ -34,29 +34,21 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Project Structure
-
-```
 src/
-├── actions/          # Server Actions (bid, auction, escrow, moderation)
-├── app/
-│   ├── [locale]/     # Internationalized routes (bn/en)
-│   │   ├── admin/    # Admin panel (Users, Moderation, Disputes)
-│   │   ├── auctions/ # Listing, detail, create
-│   │   └── dashboard/# User persona dashboards
-├── components/
-│   ├── auction/      # BidPanel, Countdown, Real-time Price
-│   └── upload/       # Firebase-native Image Upload
-├── lib/              # Logic, Firebase (Admin/Client), i18n
+├── actions/          # Thin Controllers (Auth validation, revalidation)
+├── services/         # Core Business Logic (DB transactions, side effects)
+├── app/              # Routing & SEO (App Router, [locale])
+├── components/       # Domain-driven UI (Sharded & Memoized)
+├── lib/              # Infrastructure (Firebase, Auth, Sanitization)
 └── types/            # Shared TypeScript types
 ```
 
-## 💎 Key Features (**v1.5.0: Hardened Security**)
-- **Firebase-Native Architecture**: Fully serverless stack using Firestore and RTDB for zero-latency bidding.
-- **Automated Platform Escrow**: Secure payment gateway integration with real-time status tracking.
-- **Moderation Engine**: Built-in banning system with middleware-level enforcement.
-- **Coordination Hub**: Post-auction logistics layer with PII shielding and integrated chat.
-- **Admin Audit Trail**: High-fidelity dashboard for user management and dispute resolution.
+## 💎 Key Features (**v2.0.0: Enterprise Scale**)
+- **SOA Architecture**: Decoupled service layer for high testability and platform reuse.
+- **Hardened Security**: Edge-level rate limiting, XSS sanitization, and Zero-Trust Firestore rules.
+- **Performance Optimized**: Parallelized data fetching and component-level sharding for low TTI.
+- **Real-time Bidding**: Firestore-native transactions with anti-sniping (soft-close) logic.
+- **Integrated Trust**: Phone-verification gates and automated reputation scoring.
 
 ## Environment Variables
 

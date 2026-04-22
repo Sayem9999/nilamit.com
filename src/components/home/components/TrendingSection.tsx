@@ -63,9 +63,9 @@ export function TrendingSection({
             viewport={{ once: true }}
             className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8"
           >
-            {trendingAuctions.slice(0, 4).map((auction) => (
+            {trendingAuctions.slice(0, 4).map((auction, idx) => (
               <motion.div key={auction.id} variants={itemVariants}>
-                <AuctionCard auction={auction} />
+                <AuctionCard auction={auction} priority={idx < 2} />
               </motion.div>
             ))}
           </motion.div>

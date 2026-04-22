@@ -24,5 +24,8 @@ function createLimiter(prefix: string, limit: number, window: string) {
   });
 }
 
-export const loginLimiter = createLimiter("@upstash/ratelimit/login", 10, "5 m");
-export const bidLimiter   = createLimiter("@upstash/ratelimit/bid", 100, "1 m");
+/** Specialized rate limiters for different traffic patterns */
+export const apiLimiter   = createLimiter('rl_api', 50, '60s');
+export const authLimiter  = createLimiter('rl_auth', 5, '15m');
+export const bidLimiter   = createLimiter('rl_bid', 20, '60s');
+export const loginLimiter = createLimiter('rl_login', 10, '5m');

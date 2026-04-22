@@ -107,8 +107,8 @@ export function HomeContent({
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredAuctions.map((auction) => (
-                <AuctionCard key={auction.id} auction={auction} />
+              {featuredAuctions.map((auction, idx) => (
+                <AuctionCard key={auction.id} auction={auction} priority={idx < 4} />
               ))}
             </div>
           </div>

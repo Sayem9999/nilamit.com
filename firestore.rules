@@ -1,6 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ─── AUTH HELPERS ───
     function signedIn() {
       return request.auth != null;
     }
@@ -13,47 +14,31 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
-    function conversationParticipant(conversationId) {
-      return signedIn() && (
-        isAdmin() ||
-        get(/databases/$(database)/documents/conversations/$(conversationId)).data.buyerId == request.auth.uid ||
-        get(/databases/$(database)/documents/conversations/$(conversationId)).data.sellerId == request.auth.uid
-      );
-    }
-
-    function auctionParticipant(auctionId) {
-      return signedIn() && (
-        isAdmin() ||
-        get(/databases/$(database)/documents/auctions/$(auctionId)).data.sellerId == request.auth.uid ||
-        get(/databases/$(database)/documents/auctions/$(auctionId)).data.winnerId == request.auth.uid
-      );
-    }
-
-    match /mail/{docId} {
-      allow read, write: if false;
-    }
-
-    match /systemConfig/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
+    // ─── COLLECTION RULES ───
+    
+    // NOTE: All WRITES are handled via Server Actions (Firebase Admin SDK).
+    // Client-side writes are strictly forbidden to ensure logic, sanitization, 
+    // and rate-limiting integrity.
 
     match /users/{userId} {
-      allow read, update: if isSelf(userId) || isAdmin();
-      allow create: if isSelf(userId) || isAdmin();
-      allow delete: if false;
+      // Users can read their own profile; admins can read all.
+      allow read: if isSelf(userId) || isAdmin();
+      // Only Server Actions can create/update users.
+      allow write: if false;
     }
 
     match /auctions/{auctionId} {
+      // Publicly readable.
       allow read: if true;
-      allow create: if signedIn() && request.resource.data.sellerId == request.auth.uid;
-      allow update, delete: if isAdmin() || (signedIn() && resource.data.sellerId == request.auth.uid);
+      // Mutations only via Server Actions.
+      allow write: if false;
     }
 
     match /bids/{bidId} {
+      // Publicly readable (limited).
       allow read: if true;
-      allow create: if signedIn() && request.resource.data.bidderId == request.auth.uid;
-      allow update, delete: if false;
+      // Mutations only via Server Actions to prevent shill bidding and ensure transactions.
+      allow write: if false;
     }
 
     match /reviews/{reviewId} {
@@ -62,36 +47,35 @@ service cloud.firestore {
     }
 
     match /reports/{reportId} {
-      allow read, update, delete: if isAdmin();
-      allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid;
+      allow read: if isAdmin();
+      // Reports can only be submitted via Server Actions to ensure sanitization.
+      allow write: if false;
     }
 
     match /conversations/{conversationId} {
-      allow read: if conversationParticipant(conversationId);
+      allow read: if signedIn() && (
+        isAdmin() || 
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid
+      );
       allow write: if false;
     }
 
     match /messages/{messageId} {
-      allow read: if signedIn() && conversationParticipant(resource.data.conversationId);
+      allow read: if signedIn() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.buyerId == request.auth.uid ||
+        get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.sellerId == request.auth.uid
+      );
       allow write: if false;
     }
 
-    match /escrowTransactions/{transactionId} {
-      allow read: if isAdmin() || (signedIn() && (
-        resource.data.buyerId == request.auth.uid ||
-        auctionParticipant(resource.data.auctionId)
-      ));
+    match /systemConfig/{docId} {
+      allow read: if true;
       allow write: if false;
     }
 
-    match /disputes/{disputeId} {
-      allow read: if isAdmin() || (signedIn() && (
-        resource.data.openerId == request.auth.uid ||
-        auctionParticipant(get(/databases/$(database)/documents/escrowTransactions/$(resource.data.transactionId)).data.auctionId)
-      ));
-      allow write: if false;
-    }
-
+    // ─── CATCH-ALL ───
     match /{document=**} {
       allow read, write: if false;
     }

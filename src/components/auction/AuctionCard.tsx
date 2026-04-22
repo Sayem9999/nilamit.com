@@ -14,11 +14,15 @@ import { useTranslations } from "next-intl";
 import TrustBadge from "../social/TrustBadge";
 import VerificationBadge from "../social/VerificationBadge";
 
-export default function AuctionCard({
+import React, { memo } from "react";
+
+export const AuctionCard = memo(({
   auction,
+  priority = false,
 }: {
   auction: AuctionWithSeller;
-}) {
+  priority?: boolean;
+}) => {
   const { data: session } = useSession();
   const { lightweightMode } = useSettings();
   const t = useTranslations("Auction");
@@ -50,6 +54,7 @@ export default function AuctionCard({
                   src={auction.images[0]}
                   alt={auction.title}
                   fill
+                  priority={priority}
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                   className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
                 />
@@ -172,4 +177,7 @@ export default function AuctionCard({
       </div>
     </Link>
   );
-}
+});
+
+AuctionCard.displayName = "AuctionCard";
+export default AuctionCard;
