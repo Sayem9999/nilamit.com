@@ -67,7 +67,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
     });
 
     // Post-transaction side effects (Logistics & Notifications)
-    await createLogisticsOrder(transactionId, result.auction.sellerId, session.user.id, result.auction.currentPrice);
+    await createLogisticsOrder(result.auction.id, result.auction.sellerId, session.user.id);
     
     await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId), {
       event: FIREBASE_EVENTS.ADVANCE_PAID,

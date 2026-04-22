@@ -14,38 +14,42 @@ interface LogisticsResponse {
  * Mocks an integration with a local Bangladeshi courier API (e.g., Pathao or RedX).
  * In a real scenario, this would POST to their API with seller/buyer addresses and item details.
  */
-export async function createLogisticsOrder(auctionId: string, _sellerId: string, _buyerId: string, _finalPrice: number): Promise<LogisticsResponse> {
+export async function createLogisticsOrder(auctionId: string, sellerId: string, buyerId: string): Promise<LogisticsResponse> {
   try {
-    const auctionSnap = await db.collection('auctions').doc(auctionId).get();
-    if (!auctionSnap.exists) {
-      return { success: false, error: 'Auction not found' };
+    const [sellerSnap, buyerSnap] = await Promise.all([
+      db.collection('users').doc(sellerId).get(),
+      db.collection('users').doc(buyerId).get()
+    ]);
+
+    const seller = sellerSnap.data();
+    const buyer  = buyerSnap.data();
+
+    if (!buyer?.address || !seller?.address) {
+      log.warn(`Logistics deferred for ${auctionId}: Missing addresses`);
+      return { success: false, error: 'ADDRESS_REQUIRED' };
     }
     
-    // Simulate API call to Pathao/RedX
-    const mockTrackingId = `REDX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const mockLabelUrl = `https://nilamit.com/labels/${mockTrackingId}.pdf`;
+    const trackingId = `NLM-${Date.now().toString(36).toUpperCase()}`;
+    const labelUrl = `https://nilamit.com/labels/${trackingId}.pdf`;
 
-    // Save logistics info to the auction document
     await db.collection('auctions').doc(auctionId).update({
       logistics: {
-        provider: 'RedX',
-        trackingId: mockTrackingId,
-        labelUrl: mockLabelUrl,
-        status: 'PENDING_PICKUP',
-        createdAt: new Date()
+        provider: 'NILAMIT_STANDARD',
+        trackingId,
+        labelUrl,
+        status: 'READY_FOR_PICKUP',
+        pickupAddress: seller.address,
+        deliveryAddress: buyer.address,
+        updatedAt: new Date()
       }
     });
 
-    log.info(`Logistics order created for auction ${auctionId}`, { trackingId: mockTrackingId });
+    log.info(`Logistics order created for auction ${auctionId}`, { trackingId });
 
-    return {
-      success: true,
-      trackingId: mockTrackingId,
-      labelUrl: mockLabelUrl
-    };
+    return { success: true, trackingId, labelUrl };
   } catch (error) {
     const e = error as Error;
-    log.error('Logistics API error:', e);
+    log.error('Logistics initialization error:', e);
     return { success: false, error: e.message };
   }
 }
