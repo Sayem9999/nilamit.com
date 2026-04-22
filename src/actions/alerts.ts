@@ -1,36 +1,47 @@
 'use server';
 
-import { db, newId } from '@/lib/db';
+import { db, newId, docData, snapDocs } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { AlertType } from '@/types';
+import { AlertType, Alert } from '@/types';
 
 /**
  * Smart Engagement Layer - Alerts
  */
 
-export async function createAlert(type: AlertType, auctionId?: string, thresholdPrice?: number) {
-  const session = await auth();
-  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+export interface CreateAlertData {
+  type: string;
+  auctionId?: string;
+  thresholdPrice?: number;
+}
 
+export async function createAlert(data: CreateAlertData) {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+  // Use a composite ID to prevent duplicate alerts for the same user/auction/type
+  const docId = `${session.user.id}_${data.auctionId ?? data.type}`;
+  const now = new Date();
+  
   try {
-    const id = newId();
     const alert = {
-      id,
+      id: docId,
       userId: session.user.id,
-      type,
-      auctionId,
-      thresholdPrice,
+      type: data.type,
+      auctionId: data.auctionId ?? null,
+      thresholdPrice: data.thresholdPrice ?? null,
       isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     };
-    await db.collection('alerts').doc(id).set(alert);
+
+    await db.collection('alerts').doc(docId).set(alert, { merge: true });
 
     revalidatePath('/');
     return { success: true, alert };
-  } catch {
-    return { success: false, error: "Failed to create alert" };
+  } catch (error) {
+    console.error('[alerts] createAlert failed:', error);
+    return { success: false, error: 'Failed to create alert' };
   }
 }
 
@@ -44,33 +55,70 @@ export async function getUserAlerts() {
     .orderBy('createdAt', 'desc')
     .get();
 
-  const alerts = await Promise.all(snap.docs.map(async d => {
+  return Promise.all(snap.docs.map(async d => {
     const a = d.data();
-    let auctionData = null;
-    if (a.auctionId) {
-      const auctSnap = await db.collection('auctions').doc(a.auctionId).get();
-      if (auctSnap.exists) {
-        const auct = auctSnap.data()!;
-        auctionData = { title: auct.title, currentPrice: auct.currentPrice, endTime: auct.endTime };
+    const auctionId = a.auctionId;
+    let auction = null;
+    
+    if (auctionId) {
+      const aSnap = await db.collection('auctions').doc(auctionId).get();
+      if (aSnap.exists) {
+        const auct = aSnap.data()!;
+        auction = {
+          id: aSnap.id,
+          title: auct.title,
+          currentPrice: auct.currentPrice,
+          endTime: auct.endTime?.toDate?.() ?? new Date(auct.endTime),
+          status: auct.status,
+        };
       }
     }
-    return { ...a, id: d.id, auction: auctionData };
+    
+    return {
+      ...a,
+      id: d.id,
+      createdAt: a.createdAt?.toDate?.() ?? new Date(a.createdAt),
+      updatedAt: a.updatedAt?.toDate?.() ?? new Date(a.updatedAt),
+      auction,
+    };
   }));
-  return alerts;
 }
 
 export async function toggleAlert(alertId: string, isActive: boolean) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false };
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
-  await db.collection('alerts').doc(alertId).update({ isActive, updatedAt: new Date() });
+  try {
+    await db.collection('alerts').doc(alertId).update({ 
+      isActive, 
+      updatedAt: new Date() 
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Failed to toggle alert' };
+  }
+}
 
-  return { success: true };
+export async function deleteAlert(alertId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+  try {
+    const snap = await db.collection('alerts').doc(alertId).get();
+    if (!snap.exists) return { success: false, error: 'Alert not found' };
+    if (snap.data()!.userId !== session.user.id) return { success: false, error: 'Unauthorized' };
+
+    await db.collection('alerts').doc(alertId).delete();
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Failed to delete alert' };
+  }
 }
 
 /**
  * Trigger Check (Logic for Price Drop alerts)
- * This would normally run in the closeAuction/placeBid logic
+ * Used in background tasks or triggers.
  */
 export async function checkAndTriggerPriceAlerts(auctionId: string, currentPrice: number) {
   const snap = await db.collection('alerts')
@@ -80,8 +128,5 @@ export async function checkAndTriggerPriceAlerts(auctionId: string, currentPrice
     .where('thresholdPrice', '>=', currentPrice)
     .get();
 
-  const matchingAlerts = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-
-  // In a real app, this would send emails/push notifications
-  return matchingAlerts;
+  return snapDocs<Alert>(snap);
 }

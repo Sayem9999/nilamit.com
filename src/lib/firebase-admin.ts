@@ -18,17 +18,21 @@ import { getStorage, type Storage } from 'firebase-admin/storage';
 import { getAuth, type Auth } from 'firebase-admin/auth';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
-function getAdminApp(): App {
-  if (getApps().length > 0) return getApps()[0]!;
+/** Single source of truth for Firebase Admin initialization */
+export function getAdminApp(): App {
+  const apps = getApps();
+  if (apps.length > 0) return apps[0]!;
 
   const projectId   = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey  = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
 
-  if (!projectId || !clientEmail || !privateKey) {
+  if (!projectId || !clientEmail || !privateKeyRaw) {
     console.warn('⚠️ [Firebase Admin] Missing secrets. Using mock app.');
     return initializeApp({ projectId: 'mock-project' }, 'mock-app');
   }
+
+  const privateKey = privateKeyRaw.replace(/\\n/g, '\n');
 
   return initializeApp({
     credential: cert({ projectId, clientEmail, privateKey }),

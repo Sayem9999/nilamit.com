@@ -24,7 +24,7 @@ export default function AuctionCard({
   const t = useTranslations("Auction");
   const tCat = useTranslations("Categories");
   const tLoc = useTranslations("Locations");
-  const bidCount = (auction as any)._count?.bids ?? auction.bidCount ?? 0;
+  const bidCount = auction._count?.bids ?? auction.bidCount ?? 0;
 
   const isWatchlisted =
     auction.watchlist?.some(
@@ -101,8 +101,8 @@ export default function AuctionCard({
                 {auction.seller.name || t("seller")}
               </span>
               <VerificationBadge
-                isPhoneVerified={!!(auction.seller as { isPhoneVerified?: boolean }).isPhoneVerified}
-                emailVerified={(auction.seller as { emailVerified?: Date | string | null }).emailVerified as Date | string | null}
+                isPhoneVerified={!!auction.seller.isPhoneVerified}
+                emailVerified={auction.seller.emailVerified}
                 isVerifiedSeller={!!auction.seller.isVerifiedSeller}
                 size="sm"
                 showText={false}

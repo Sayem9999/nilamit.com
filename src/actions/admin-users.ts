@@ -1,23 +1,16 @@
 'use server';
 
-import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
-    throw new Error('Unauthorized: Admin access required.');
-  }
-  return session;
-}
+import { db, docData, snapDocs } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin-guard';
+import { User } from '@/types';
+import { revalidatePath } from 'next/cache';
 
 export async function grantVerifiedSeller(userId: string) {
   await requireAdmin();
   await db.collection('users').doc(userId).update({
     isVerifiedSeller: true, updatedAt: new Date(),
   });
+  revalidatePath('/admin');
   return { success: true };
 }
 
@@ -26,6 +19,7 @@ export async function revokeVerifiedSeller(userId: string) {
   await db.collection('users').doc(userId).update({
     isVerifiedSeller: false, updatedAt: new Date(),
   });
+  revalidatePath('/admin');
   return { success: true };
 }
 
@@ -34,6 +28,7 @@ export async function banUser(userId: string) {
   await db.collection('users').doc(userId).update({
     isBanned: true, updatedAt: new Date(),
   });
+  revalidatePath('/admin');
   return { success: true };
 }
 
@@ -42,29 +37,58 @@ export async function unbanUser(userId: string) {
   await db.collection('users').doc(userId).update({
     isBanned: false, updatedAt: new Date(),
   });
+  revalidatePath('/admin');
   return { success: true };
 }
 
-export async function getAdminUsers() {
+export async function getAdminUsers(page = 1, limit = 20, search?: string) {
   await requireAdmin();
 
-  const snap = await db.collection('users')
+  let query: FirebaseFirestore.Query = db.collection('users');
+
+  if (search?.trim()) {
+    const s = search.trim();
+    // Case-insensitive prefix search is hard in Firestore. 
+    // This is a simple prefix search (case-sensitive).
+    query = query.where('name', '>=', s).where('name', '<=', s + '\uf8ff');
+  }
+
+  const totalSnap = await query.count().get();
+  const total = totalSnap.data().count;
+
+  const usersSnap = await query
     .orderBy('createdAt', 'desc')
-    .limit(100)
+    .limit(limit)
+    .offset((page - 1) * limit)
     .get();
 
-  const users = await Promise.all(snap.docs.map(async d => {
-    const u = d.data();
-    // Count bids dynamically for UI instead of Prisma relation
-    const bidsSnap = await db.collection('bids').where('bidderId', '==', d.id).get();
+  const users = snapDocs<User>(usersSnap);
+
+  // Fetch counts ONLY for the users on this page (targeted sub-queries)
+  const pagedUsers = await Promise.all(users.map(async (user) => {
+    const [bidCountSnap, auctionCountSnap] = await Promise.all([
+      db.collection('bids').where('bidderId', '==', user.id).count().get(),
+      db.collection('auctions').where('sellerId', '==', user.id).count().get(),
+    ]);
+
     return {
-      ...u, id: d.id,
-      createdAt: u.createdAt?.toDate?.() ?? new Date(u.createdAt),
-      password: undefined, // never expose hashed password
-      _count: { bids: bidsSnap.size },
-      isBanned: u.isBanned || false,
+      id: user.id,
+      name: user.name ?? null,
+      email: user.email ?? null,
+      phone: user.phone ?? null,
+      image: user.image ?? null,
+      isPhoneVerified: Boolean(user.isPhoneVerified),
+      isVerifiedSeller: Boolean(user.isVerifiedSeller),
+      reputationScore: Number(user.reputationScore ?? 0),
+      createdAt: user.createdAt,
+      isBanned: Boolean(user.isBanned),
+      _count: {
+        bids: bidCountSnap.data().count,
+        auctionsAsSeller: auctionCountSnap.data().count,
+      },
+      password: undefined,
     };
   }));
 
-  return { success: true, users };
+  return { success: true, users: pagedUsers, total, pages: Math.ceil(total / limit) };
 }

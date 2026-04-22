@@ -3,7 +3,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BadgeList } from "@/components/social/BadgeDisplay";
 import { Trophy, Flame, TrendingUp } from "lucide-react";
-import { BadgeType } from "@/lib/gamification-config";
+import { type BadgeType } from "@/lib/gamification-config";
+import { type User } from "@/types";
 
 export async function getLeaderboardData() {
   const streaksSnap = await db.collection('users')
@@ -13,7 +14,7 @@ export async function getLeaderboardData() {
     .get();
 
   const topStreaks = streaksSnap.docs.map(doc => {
-    const data = doc.data();
+    const data = doc.data() as User;
     return {
       id: doc.id,
       name: data.name,
@@ -29,13 +30,13 @@ export async function getLeaderboardData() {
     .get();
 
   const topBuyers = buyersSnap.docs.map(doc => {
-    const data = doc.data();
+    const data = doc.data() as User;
     return {
       id: doc.id,
       name: data.name,
       image: data.image,
       badges: data.badges || [],
-      _count: { auctionsAsWinner: data.reputationScore || 0 }, // Using reputationScore as a proxy for wins for now
+      _count: { auctionsAsWinner: data.reputationScore || 0 },
     };
   });
 
@@ -72,7 +73,7 @@ export default async function Leaderboard() {
                       {user.name || "Anonymous"}
                     </span>
                     <BadgeList
-                      badges={user.badges.map((b: any) => (b as { badgeId: string }).badgeId as BadgeType)}
+                      badges={user.badges.map((b: { badgeId: string }) => b.badgeId as BadgeType)}
                       className="mt-0.5"
                     />
                   </div>
@@ -117,7 +118,7 @@ export default async function Leaderboard() {
                       {user.name || "Anonymous"}
                     </span>
                     <BadgeList
-                      badges={user.badges.map((b: any) => (b as { badgeId: string }).badgeId as BadgeType)}
+                      badges={user.badges.map((b: { badgeId: string }) => b.badgeId as BadgeType)}
                       className="mt-0.5"
                     />
                   </div>

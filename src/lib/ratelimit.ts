@@ -2,12 +2,18 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
 // Allow creation even if env vars are missing during build, but operations will fail later.
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL ?? "https://dummy-redis-url.upstash.io";
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN ?? "dummy_token";
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+const isConfigured = Boolean(redisUrl && redisToken);
+
+if (!isConfigured) {
+  console.warn("⚠️ [RateLimit] UPSTASH_REDIS_REST_URL/TOKEN missing. Rate limiting is DISABLED.");
+}
 
 const redis = new Redis({
-  url: redisUrl,
-  token: redisToken,
+  url: redisUrl ?? "https://dummy-redis-url.upstash.io",
+  token: redisToken ?? "dummy_token",
 });
 
 export const loginLimiter = new Ratelimit({

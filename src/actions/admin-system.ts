@@ -1,28 +1,9 @@
 'use server';
 
-import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { db, snapDocs } from '@/lib/db';
+import { Auction } from '@/types';
+import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
-    throw new Error('Unauthorized: Admin access required.');
-  }
-}
-
-function readDate(value: unknown): Date | null {
-  if (!value) return null;
-  if (value instanceof Date) return value;
-  if (typeof value === 'object' && value !== null && 'toDate' in value && typeof (value as { toDate: () => Date }).toDate === 'function') {
-    return (value as { toDate: () => Date }).toDate();
-  }
-
-  const parsed = new Date(value as string | number);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
 
 async function deleteCollection(name: string, batchSize = 100) {
   while (true) {
@@ -76,18 +57,13 @@ export async function exportTransactionsCSV() {
       .where('status', '==', 'SOLD')
       .get();
 
-    const auctions = soldSnap.docs
-      .map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Record<string, unknown>),
-        updatedAt: readDate(doc.data().updatedAt),
-      }))
+    const auctions = snapDocs<Auction>(soldSnap)
       .sort((a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0));
 
     const userIds = new Set<string>();
-    auctions.forEach((auction: any) => {
-      if (typeof auction.winnerId === 'string' && auction.winnerId) userIds.add(auction.winnerId);
-      if (typeof auction.sellerId === 'string' && auction.sellerId) userIds.add(auction.sellerId);
+    auctions.forEach((auction) => {
+      if (auction.winnerId) userIds.add(auction.winnerId);
+      if (auction.sellerId) userIds.add(auction.sellerId);
     });
 
     const userSnaps = await Promise.all([...userIds].map((userId) => db.collection('users').doc(userId).get()));
@@ -99,7 +75,7 @@ export async function exportTransactionsCSV() {
 
     let csv = 'Auction ID,Title,Final Price,Winner Name,Winner Phone,Commission (à§³),Date\n';
 
-    for (const auction of auctions as any[]) {
+    for (const auction of auctions) {
       const winner = typeof auction.winnerId === 'string' ? users.get(auction.winnerId) : null;
       const seller = typeof auction.sellerId === 'string' ? users.get(auction.sellerId) : null;
       const commission = Number(auction.commissionEarned ?? Number(auction.currentPrice ?? 0) * 0.1);

@@ -32,14 +32,17 @@ export function ModerationTab() {
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = useState<"PENDING" | "RESOLVED">("PENDING");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       setLoading(true);
-      const res = await getAdminReports(filter);
+      const res = await getAdminReports(filter, page);
       if (mounted && res.success) {
-        setReports((res.reports as any) || []);
+        setReports((res.reports as unknown as AdminReport[]) || []);
+        setTotalPages(res.pages || 1);
       }
       if (mounted) setLoading(false);
     };
@@ -47,7 +50,7 @@ export function ModerationTab() {
     return () => {
       mounted = false;
     };
-  }, [filter]);
+  }, [filter, page]);
 
   const handleDismiss = (id: string) => {
     if (!confirm("Dismiss this report?")) return;
@@ -83,13 +86,13 @@ export function ModerationTab() {
         </div>
         <div className="flex bg-gray-100 p-1 rounded-lg">
           <button
-            onClick={() => setFilter("PENDING")}
+            onClick={() => { setFilter("PENDING"); setPage(1); }}
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === "PENDING" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
           >
             Pending
           </button>
           <button
-            onClick={() => setFilter("RESOLVED")}
+            onClick={() => { setFilter("RESOLVED"); setPage(1); }}
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${filter === "RESOLVED" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
           >
             Resolved
@@ -194,6 +197,31 @@ export function ModerationTab() {
               </div>
             </div>
           ))}
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between py-4 border-t border-gray-100">
+              <p className="text-xs text-gray-500">
+                Page {page} of {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-1.5 rounded-lg border border-gray-200 text-sm font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-1.5 rounded-lg border border-gray-200 text-sm font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

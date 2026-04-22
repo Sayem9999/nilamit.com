@@ -7,6 +7,7 @@ import Link from "next/link";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 import { getTranslations } from "next-intl/server";
 import { getSystemConfig } from "@/actions/admin-content";
+import { type Conversation, type Auction, type User, type EscrowTransaction, type Message, type Dispute } from "@/types";
 
 export default async function CoordinationPage({
   params,
@@ -29,27 +30,30 @@ export default async function CoordinationPage({
   if (!convSnap.exists) {
     notFound();
   }
-  const convData = convSnap.data()!;
+  const convData = convSnap.data() as Conversation;
 
   const auctionSnap = await db.collection('auctions').doc(convData.auctionId).get();
-  const auction = auctionSnap.data()!;
+  const auction = auctionSnap.data() as Auction;
 
   const sellerSnap = await db.collection('users').doc(auction.sellerId).get();
-  const seller = sellerSnap.data()!;
+  const seller = sellerSnap.data() as User;
 
   const winnerSnap = await db.collection('users').doc(auction.winnerId || 'unknown').get();
-  const winner = winnerSnap.exists ? winnerSnap.data()! : {};
+  const winner = (winnerSnap.exists ? winnerSnap.data() : {}) as User;
 
   const escrowSnap = await db.collection('escrowTransactions').doc(convData.auctionId).get();
-  const escrow = escrowSnap.exists ? escrowSnap.data()! : null;
+  const escrow = (escrowSnap.exists ? escrowSnap.data() : null) as EscrowTransaction | null;
 
   const disputeSnap = await db.collection('disputes').where('transactionId', '==', escrowSnap.id).get();
-  const dispute = disputeSnap.empty ? null : disputeSnap.docs[0].data();
+  const dispute = (disputeSnap.empty ? null : disputeSnap.docs[0].data()) as Dispute | null;
 
   const messagesSnap = await db.collection('messages').where('conversationId', '==', id).orderBy('createdAt', 'asc').get();
-  const messages = messagesSnap.docs.map(d => ({ ...d.data(), id: d.id, createdAt: d.data().createdAt?.toDate?.() || new Date(d.data().createdAt) }));
+  const messages = messagesSnap.docs.map(d => {
+    const m = d.data() as Message;
+    return { ...m, id: d.id };
+  });
 
-  const conversation: any = {
+  const conversation = {
     ...convData,
     id: convSnap.id,
     auction: {
@@ -105,7 +109,7 @@ export default async function CoordinationPage({
             <ChatInterface
               auctionId={conversation.auctionId}
               conversationId={conversation.id}
-              initialMessages={conversation.messages.map((m: any) => ({
+              initialMessages={conversation.messages.map((m) => ({
                 ...m,
                 createdAt: m.createdAt.toISOString(),
               }))}
@@ -131,14 +135,13 @@ export default async function CoordinationPage({
               
               <EscrowActionCard 
                 transaction={{
-                  ...(conversation.auction.escrowTransaction as object),
+                  ...conversation.auction.escrowTransaction!,
                   auction: {
                     title: conversation.auction.title,
                     seller: { name: conversation.auction.seller.name },
                     endTime: conversation.auction.endTime
                   }
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } as any} 
+                }} 
                 treasuryNumbers={{
                   bkash: systemConfig?.treasuryBkash || "017XXXXXXXX",
                   nagad: systemConfig?.treasuryNagad || "018XXXXXXXX"

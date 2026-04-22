@@ -1,18 +1,11 @@
 'use server';
 
-import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { db, snapDocs } from '@/lib/db';
+import { Auction } from '@/types';
+import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
-    throw new Error('Unauthorized: Admin access required.');
-  }
-  return session;
-}
 
 export async function getSystemConfig() {
   try {
@@ -65,8 +58,6 @@ export async function getFeaturedAuctions() {
     .orderBy('endTime', 'asc')
     .get();
 
-  return snap.docs.map(d => ({
-    ...d.data(), id: d.id,
-    endTime: d.data().endTime?.toDate?.() ?? new Date(d.data().endTime),
-  }));
+  return snapDocs<Auction>(snap);
 }
+

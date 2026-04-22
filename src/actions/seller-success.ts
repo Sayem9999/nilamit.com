@@ -71,7 +71,8 @@ export async function getSellerPerformance() {
   return {
     totalRevenue, totalAuctions, activeAuctions, soldCount, sellThroughRate,
     liquidityRate, avgBidsPerAuction, avgSalePrice,
-    bidVelocity: 0, // placeholder
+    bidVelocity: 0, 
+    reputationGrowth: 'Stable',
     revenueByDay: Object.entries(revenueByDay).map(([date, revenue]) => ({ date, revenue })),
     categoryPerformance: Object.entries(catMap).map(([category, v]) => ({ category, ...v })),
   };

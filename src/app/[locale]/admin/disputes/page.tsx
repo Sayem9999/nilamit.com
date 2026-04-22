@@ -28,14 +28,14 @@ interface Dispute {
 }
 
 export default function AdminDisputesPage() {
-  const [disputes, setDisputes] = useState<any[]>([]);
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   const fetchDisputes = async () => {
     setLoading(true);
     const data = await getOpenDisputes();
-    setDisputes(data as any);
+    setDisputes(data as Dispute[]);
     setLoading(false);
   };
 
@@ -44,7 +44,7 @@ export default function AdminDisputesPage() {
     const load = async () => {
       const data = await getOpenDisputes();
       if (mounted) {
-        setDisputes(data as any);
+        setDisputes(data as Dispute[]);
         setLoading(false);
       }
     };

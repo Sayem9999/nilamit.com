@@ -1,22 +1,32 @@
 'use server';
 
 import { z } from 'zod';
-import { db, newId } from '@/lib/db';
+import { db, newId, snapDocs, docData } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { closeAuctionIfEnded } from '@/lib/auction-logic';
 import { filterPII } from '@/lib/pii-filter';
 import { ERROR_CODES } from '@/lib/constants';
-import type { AuctionFilters, CreateAuctionInput, Auction, AuctionWithSeller, SellerPublic } from '@/types';
+import type { AuctionFilters, CreateAuctionInput, Auction, AuctionWithSeller, SellerPublic, Bid } from '@/types';
 
 const SELLER_SELECT_FIELDS = ['id','name','email','phone','image','reputationScore','isPhoneVerified','isVerifiedSeller','winningStreak','userLevel'];
 
 async function getSellerPublic(sellerId: string): Promise<SellerPublic> {
   const snap = await db.collection('users').doc(sellerId).get();
   const d = snap.data() ?? {};
-  return { id: sellerId, name: d.name ?? null, email: d.email ?? null, phone: d.phone ?? null,
-    image: d.image ?? null, reputationScore: d.reputationScore ?? 0,
-    isPhoneVerified: d.isPhoneVerified ?? false, isVerifiedSeller: d.isVerifiedSeller ?? false,
-    winningStreak: d.winningStreak ?? 0, userLevel: d.userLevel ?? 1 };
+  return { 
+    id: sellerId, 
+    name: d.name ?? null, 
+    email: d.email ?? null, 
+    phone: d.phone ?? null,
+    image: d.image ?? null, 
+    reputationScore: d.reputationScore ?? 0,
+    isPhoneVerified: d.isPhoneVerified ?? false, 
+    emailVerified: d.emailVerified?.toDate?.() ?? null,
+    isVerifiedSeller: d.isVerifiedSeller ?? false,
+    winningStreak: d.winningStreak ?? 0, 
+    userLevel: d.userLevel ?? 1,
+    isBanned: d.isBanned ?? false
+  };
 }
 
 const CreateAuctionSchema = z.object({
@@ -163,38 +173,61 @@ export async function getAuctions(filters: AuctionFilters = {}) {
     if (category)        query = query.where('category', '==', category);
     if (filters.location) query = query.where('location', '==', filters.location);
 
-    // Firestore can only order by one field without composite indexes for most combos
+    // Total count for pagination
+    const totalSnap = await query.count().get();
+    const total = totalSnap.data().count;
+
+    // Sorting and Pagination
     const orderField = sortBy === 'bids' ? 'bidCount' : (sortBy || 'endTime');
-    query = query.orderBy(orderField, sortOrder as 'asc' | 'desc');
-
-    const allSnap = await query.get();
-    let docs = allSnap.docs;
-
-    // Client-side search filter (Firestore lacks full-text search)
+    
+    // Note: If filters.search is present, Firestore native filtering is limited.
+    // For now, we still slice paged results if searching, but optimize the rest.
+    let docs: FirebaseFirestore.DocumentSnapshot[] = [];
+    
     if (filters.search) {
+      // Search still requires a scan because Firestore doesn't support 'contains'
+      const allSnap = await query.orderBy(orderField, sortOrder as 'asc' | 'desc').get();
       const q = filters.search.toLowerCase();
-      docs = docs.filter(d => {
+      const filteredDocs = allSnap.docs.filter(d => {
         const a = d.data();
         return (a.title?.toLowerCase().includes(q) || a.description?.toLowerCase().includes(q));
       });
+      docs = filteredDocs.slice((page - 1) * limit, page * limit);
+    } else {
+      const pagedSnap = await query
+        .orderBy(orderField, sortOrder as 'asc' | 'desc')
+        .limit(limit)
+        .offset((page - 1) * limit)
+        .get();
+      docs = pagedSnap.docs;
     }
 
-    const total  = docs.length;
-    const start  = (page - 1) * limit;
-    const paged  = docs.slice(start, start + limit);
+    const sellerIds = [...new Set(docs.map(d => d.data().sellerId as string))];
+    const sellerSnaps = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
+    const sellerMap = new Map(sellerSnaps.map(s => [s.id, s.data() || {}]));
 
-    const auctionsWithSellers = await Promise.all(paged.map(async d => {
-      const a = d.data();
-      const seller = await getSellerPublic(a.sellerId);
+    const auctionsWithSellers: AuctionWithSeller[] = docs.map(d => {
+      const a = docData<Auction>(d)!;
+      const s = sellerMap.get(a.sellerId) || {};
       return {
-        ...a, id: d.id,
-        startTime: a.startTime?.toDate?.() ?? new Date(a.startTime),
-        endTime:   a.endTime?.toDate?.()   ?? new Date(a.endTime),
-        createdAt: a.createdAt?.toDate?.() ?? new Date(a.createdAt),
-        seller,
+        ...a,
+        seller: {
+          id: a.sellerId,
+          name: s.name ?? null,
+          email: s.email ?? null,
+          phone: s.phone ?? null,
+          image: s.image ?? null,
+          reputationScore: s.reputationScore ?? 0,
+          isPhoneVerified: s.isPhoneVerified ?? false,
+          emailVerified: s.emailVerified?.toDate?.() ?? null,
+          isVerifiedSeller: s.isVerifiedSeller ?? false,
+          winningStreak: s.winningStreak ?? 0,
+          userLevel: s.userLevel ?? 1,
+          isBanned: s.isBanned ?? false
+        },
         _count: { bids: a.bidCount ?? 0 },
       };
-    }));
+    });
 
     return { auctions: auctionsWithSellers, total, pages: Math.ceil(total / limit), page };
   } catch (e) {
@@ -212,12 +245,9 @@ export async function getMyAuctions() {
     .orderBy('createdAt', 'desc')
     .get();
 
-  return snap.docs.map(d => ({
-    ...d.data(), id: d.id,
-    startTime: d.data().startTime?.toDate?.() ?? new Date(d.data().startTime),
-    endTime:   d.data().endTime?.toDate?.()   ?? new Date(d.data().endTime),
-    createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
-    _count: { bids: d.data().bidCount ?? 0 },
+  return snapDocs<Auction>(snap).map(a => ({
+    ...a,
+    _count: { bids: a.bidCount ?? 0 },
   }));
 }
 
@@ -240,24 +270,25 @@ export async function getSpecializedFeeds() {
         .get(),
     ]);
 
-    const endingSoon = await Promise.all(endingSoonSnap.docs.map(async d => {
-      const a = d.data();
-      return { ...a, id: d.id,
-        endTime: a.endTime?.toDate?.() ?? new Date(a.endTime),
+    const endingSoon: AuctionWithSeller[] = await Promise.all(snapDocs<Auction>(endingSoonSnap).map(async a => {
+      return { 
+        ...a,
         seller: await getSellerPublic(a.sellerId),
-        _count: { bids: a.bidCount ?? 0 } };
+        _count: { bids: a.bidCount ?? 0 } 
+      };
     }));
 
     const latestBids = await Promise.all(latestBidsSnap.docs.map(async d => {
-      const b = d.data();
+      const b = docData<Bid>(d)!;
       const [bidderSnap, auctionSnap] = await Promise.all([
         db.collection('users').doc(b.bidderId).get(),
         db.collection('auctions').doc(b.auctionId).get(),
       ]);
-      return { ...b, id: d.id,
-        createdAt: b.createdAt?.toDate?.() ?? new Date(b.createdAt),
+      return { 
+        ...b,
         bidder: { name: bidderSnap.data()?.name ?? null },
-        auction: { id: b.auctionId, title: auctionSnap.data()?.title ?? '' } };
+        auction: { id: b.auctionId, title: auctionSnap.data()?.title ?? '' } 
+      };
     }));
 
     return { endingSoon, latestBids };

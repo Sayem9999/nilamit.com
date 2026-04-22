@@ -2,7 +2,7 @@
  * GET /api/cron/process-alerts
  *
  * Checks all active PRICE_DROP and TARGET_REACHED alerts.
- * Triggers Pusher notification + deactivates alert (one-time trigger).
+ * Triggers Realtime notification (RTDB) + deactivates alert (one-time trigger).
  *
  * Called every 2 minutes by Vercel Cron.
  */
@@ -12,6 +12,7 @@ import { db } from '@/lib/db';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
+import { Alert, Auction } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ export async function GET(req: Request) {
       .get();
 
     const activeAlerts = alertsSnap.docs
-      .map(d => ({ ...d.data(), id: d.id } as any))
+      .map(d => ({ ...d.data(), id: d.id } as Alert))
       .filter(a => !!a.auctionId);
 
     let triggered = 0;
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
 
       const auctionSnap = await db.collection('auctions').doc(alert.auctionId as string).get();
       if (!auctionSnap.exists) continue;
-      const auction = auctionSnap.data()!;
+      const auction = auctionSnap.data() as Auction;
 
       const currentPrice = auction.currentPrice as number;
       const threshold    = alert.thresholdPrice as number;

@@ -70,7 +70,7 @@ export default async function SocialDashboardPage() {
           {/* Right: Coordination Hub */}
           <div className="flex-1">
             <ChatList 
-              conversations={conversations as any} 
+              conversations={conversations} 
               currentUserId={session?.user?.id || ""} 
             />
           </div>

@@ -1,6 +1,7 @@
 'use server';
 
-import { db } from '@/lib/db';
+import { db, docData, snapDocs } from '@/lib/db';
+import { Dispute, EscrowTransaction, Auction, User } from '@/types';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { recalculateUserReputation } from '@/lib/reputation';
@@ -100,26 +101,39 @@ export async function getOpenDisputes() {
 
   const snap = await db.collection('disputes').where('status', '==', 'OPEN').orderBy('createdAt', 'desc').get();
 
-  return Promise.all(snap.docs.map(async d => {
-    const dispute = { ...d.data(), id: d.id };
+  return Promise.all(snapDocs<Dispute>(snap).map(async dispute => {
     const [txSnap, openerSnap] = await Promise.all([
-      db.collection('escrowTransactions').doc((dispute as any).transactionId).get(),
-      db.collection('users').doc((dispute as any).openerId).get(),
+      db.collection('escrowTransactions').doc(dispute.transactionId).get(),
+      db.collection('users').doc(dispute.openerId).get(),
     ]);
-    const tx     = txSnap.data() ?? {};
-    const opener = openerSnap.data() ?? {};
-    const aSnap  = await db.collection('auctions').doc(tx.auctionId).get();
-    const buyer  = await db.collection('users').doc(tx.buyerId ?? '').get();
-    const a      = aSnap.data() ?? {};
-    const seller = await db.collection('users').doc(a.sellerId ?? '').get();
+    const tx = docData<EscrowTransaction>(txSnap);
+    const opener = docData<User>(openerSnap);
+    const aSnap = tx ? await db.collection('auctions').doc(tx.auctionId).get() : null;
+    const a = aSnap ? docData<Auction>(aSnap) : null;
+    const buyerSnap = tx ? await db.collection('users').doc(tx.buyerId).get() : null;
+    const buyer = buyerSnap ? docData<User>(buyerSnap) : null;
+    const sellerSnap = a ? await db.collection('users').doc(a.sellerId).get() : null;
+    const seller = sellerSnap ? docData<User>(sellerSnap) : null;
+
     return {
       ...dispute,
       transaction: {
-        ...tx, id: txSnap.id,
-        auction: { title: a.title ?? '', seller: { name: seller.data()?.name ?? '' } },
-        buyer:   { name: buyer.data()?.name ?? '', email: buyer.data()?.email ?? '' },
+        id: tx?.id ?? '',
+        amount: tx?.amount ?? 0,
+        auctionId: tx?.auctionId ?? '',
+        auction: { 
+          title: a?.title ?? '', 
+          seller: { name: seller?.name ?? null } 
+        },
+        buyer: { 
+          name: buyer?.name ?? null, 
+          email: buyer?.email ?? null 
+        },
       },
-      opener: { name: opener.name ?? '', email: opener.email ?? '' },
+      opener: { 
+        name: opener?.name ?? null, 
+        email: opener?.email ?? null 
+      },
     };
   }));
 }

@@ -15,6 +15,7 @@ import {
   ChevronRight, 
   Trophy
 } from "lucide-react";
+import type { User } from "@/types";
 
 export default async function DashboardPage({
   params,
@@ -51,8 +52,7 @@ export default async function DashboardPage({
   // Fetch relevant data based on tab
   let watchlistAuctions: AuctionWithSeller[] = [];
   let activeBids: AuctionWithSeller[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let escrowTransactions: any[] = [];
+  let escrowTransactions: unknown[] = [];
 
   if (currentTab === "listings") {
     const rawSnap = await db.collection('auctions')
@@ -128,7 +128,7 @@ export default async function DashboardPage({
       const e = d.data();
       const aSnap = await db.collection('auctions').doc(e.auctionId).get();
       const a = aSnap.exists ? aSnap.data()! : null;
-      let seller: any = {};
+      let seller: Partial<User> = {};
       if (a) {
         const sSnap = await db.collection('users').doc(a.sellerId).get();
         seller = sSnap.exists ? sSnap.data()! : {};

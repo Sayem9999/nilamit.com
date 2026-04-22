@@ -63,6 +63,8 @@ export interface User {
   isPhoneVerified: boolean;
   isVerifiedSeller: boolean;
   reputationScore: number;
+  isBanned: boolean;
+  isAdmin: boolean;
   googleId?: string | null;
   bkashNumber?: string | null;
   nagadNumber?: string | null;
@@ -70,6 +72,7 @@ export interface User {
   userLevel: number;
   createdAt: Date;
   updatedAt: Date;
+  badges?: { badgeId: string; unlockedAt: Date }[];
 }
 
 export interface Auction {
@@ -99,6 +102,24 @@ export interface Auction {
   bidCount?: number;
   createdAt: Date;
   updatedAt: Date;
+  _count?: {
+    bids: number;
+  };
+}
+
+export interface SellerPublic {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  image: string | null;
+  reputationScore: number;
+  isPhoneVerified: boolean;
+  emailVerified: Date | null;
+  isVerifiedSeller: boolean;
+  winningStreak: number;
+  userLevel: number;
+  isBanned: boolean;
 }
 
 export interface Bid {
@@ -141,6 +162,7 @@ export interface Conversation {
   sellerId: string;
   lastMessageAt: Date;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Message {
@@ -154,6 +176,18 @@ export interface Message {
   createdAt: Date;
 }
 
+export interface Alert {
+  id: string;
+  userId: string;
+  auctionId: string | null;
+  category: string | null;
+  type: AlertType;
+  thresholdPrice: number | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Review {
   id: string;
   auctionId: string;
@@ -162,6 +196,21 @@ export interface Review {
   rating: number;
   comment?: string | null;
   createdAt: Date;
+}
+
+export interface SellerPerformance {
+  totalRevenue: number;
+  totalAuctions: number;
+  activeAuctions: number;
+  soldCount: number;
+  sellThroughRate: number;
+  liquidityRate: number;
+  avgBidsPerAuction: number;
+  avgSalePrice: number;
+  bidVelocity: number;
+  reputationGrowth: string;
+  revenueByDay: { date: string; revenue: number }[];
+  categoryPerformance: { category: string; revenue: number; count: number }[];
 }
 
 // ─── Standardized Server Action Result ────────────────────────────────────────
@@ -176,8 +225,18 @@ export function actionError(error: string, code?: string): ActionResult<never> {
   return { success: false, error, code };
 }
 
-// ─── Composite Types ───────────────────────────────────────────────────────────
-export type SellerPublic = Pick<User, 'id' | 'name' | 'email' | 'image' | 'isVerifiedSeller' | 'reputationScore' | 'isPhoneVerified' | 'winningStreak' | 'userLevel'> & { phone?: string | null };
+export interface SystemConfig {
+  id: string;
+  heroTitle: string | null;
+  heroSubtitle: string | null;
+  heroImage: string | null;
+  announcement: string | null;
+  showAnnouncement: boolean;
+  treasuryBkash?: string | null;
+  treasuryNagad?: string | null;
+  updatedAt: Date;
+}
+
 
 export type AuctionWithSeller = Auction & {
   seller: SellerPublic;

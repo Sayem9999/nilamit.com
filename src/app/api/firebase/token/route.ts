@@ -22,8 +22,7 @@ export async function GET() {
 
   try {
     const customClaims: Record<string, unknown> = {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((session.user as any).isAdmin) {
+    if ('isAdmin' in session.user && session.user.isAdmin) {
       customClaims.isAdmin = true;
     }
 

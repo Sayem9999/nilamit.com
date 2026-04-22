@@ -1,7 +1,8 @@
 'use server';
 
-import { db } from '@/lib/db';
+import { db, snapDocs, docData } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { Conversation, Auction, User, Message } from '@/types';
 
 export async function getUserReputation(userId?: string) {
   const session = await auth();
@@ -24,7 +25,7 @@ export async function getUserReputation(userId?: string) {
     winningStreak: u.winningStreak ?? 0,
     userLevel: u.userLevel ?? 1,
     isVerifiedSeller: u.isVerifiedSeller ?? false,
-    badges: badgesSnap.docs.map(d => ({ badgeId: d.data().badgeId, earnedAt: d.data().earnedAt?.toDate?.() ?? new Date() })),
+    badges: snapDocs<{ badgeId: string, earnedAt: Date }>(badgesSnap),
   };
 }
 
@@ -46,28 +47,31 @@ export async function getUserConversations() {
     });
 
   return Promise.all(allConvs.map(async d => {
-    const c = d.data();
+    const c = docData<Conversation>(d)!;
     const otherId = userId === c.buyerId ? c.sellerId : c.buyerId;
 
     const [aSnap, otherSnap, lastMsgSnap] = await Promise.all([
       db.collection('auctions').doc(c.auctionId).get(),
       db.collection('users').doc(otherId).get(),
       db.collection('messages')
-        .where('conversationId', '==', d.id)
+        .where('conversationId', '==', c.id)
         .orderBy('createdAt', 'desc')
         .limit(1).get(),
     ]);
 
+    const auction = docData<Auction>(aSnap);
+    const otherUser = docData<User>(otherSnap);
+    const lastMsg = lastMsgSnap.empty ? null : docData<Message>(lastMsgSnap.docs[0]);
+
     return {
-      ...c, id: d.id,
-      lastMessageAt: c.lastMessageAt?.toDate?.() ?? new Date(),
-      auction: aSnap.exists ? { id: aSnap.id, title: aSnap.data()?.title ?? '', images: aSnap.data()?.images ?? [] } : null,
-      otherUser: { id: otherId, name: otherSnap.data()?.name ?? null, image: otherSnap.data()?.image ?? null },
-      lastMessage: lastMsgSnap.empty ? null : {
-        content: lastMsgSnap.docs[0].data().content,
-        createdAt: lastMsgSnap.docs[0].data().createdAt?.toDate?.() ?? new Date(),
-        isRead: lastMsgSnap.docs[0].data().isRead,
-      },
+      ...c,
+      auction: auction ? { id: auction.id, title: auction.title, images: auction.images } : null,
+      otherUser: { id: otherId, name: otherUser?.name ?? null, image: otherUser?.image ?? null },
+      lastMessage: lastMsg ? {
+        content: lastMsg.content,
+        createdAt: lastMsg.createdAt,
+        isRead: lastMsg.isRead,
+      } : null,
     };
   }));
 }

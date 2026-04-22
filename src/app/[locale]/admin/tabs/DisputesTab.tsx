@@ -22,7 +22,7 @@ export function DisputesTab() {
   const [isPending, startTransition] = useTransition();
   const [logModalOpen, setLogModalOpen] = useState(false);
   const [logLoading, setLogLoading] = useState(false);
-  const [activeLog, setActiveLog] = useState<any[]>([]);
+  const [activeLog, setActiveLog] = useState<{ id: string, content: string, senderId: string, isSystemMessage: boolean, createdAt: Date, imageUrl?: string | null }[]>([]);
   const [activeAuctionTitle, setActiveAuctionTitle] = useState("");
 
   const handleViewLog = async (auctionId: string, title: string) => {
@@ -43,7 +43,7 @@ export function DisputesTab() {
     setLoading(true);
     try {
       const res = await getAdminDisputes();
-      setDisputes(res as any);
+      setDisputes(res as DisputeTransaction[]);
     } catch {
       toast.error("Failed to load disputes");
     } finally {
@@ -190,7 +190,7 @@ export function DisputesTab() {
                   No messages found in this coordination hub.
                 </div>
               ) : (
-                activeLog.map((msg: any) => (
+                activeLog.map((msg: { id: string, content: string, senderId: string, isSystemMessage: boolean, createdAt: Date, imageUrl?: string | null }) => (
                   <div key={msg.id} className={`flex flex-col max-w-[80%] ${msg.isSystemMessage ? 'mx-auto text-center' : 'bg-white border border-gray-100 p-3 rounded-2xl shadow-sm'}`}>
                     {msg.isSystemMessage ? (
                       <span className="px-3 py-1 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-widest mx-auto">

@@ -36,7 +36,7 @@ export function TreasuryTab() {
         getTreasuryAudit(),
         getAdminActiveEscrows()
       ]);
-      setLogs(auditData as any);
+      setLogs(auditData as TreasuryLog[]);
       setActiveEscrows(escrowData as ActiveEscrow[]);
     } catch (e: unknown) {
       console.error(e);

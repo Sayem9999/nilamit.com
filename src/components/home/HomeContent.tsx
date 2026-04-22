@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Variants } from "framer-motion";
 import { Megaphone, Star } from "lucide-react";
 import { AuctionWithSeller } from "@/types";
-import { SystemConfig } from "@/types/home";
+import { SystemConfig } from "@/types";
 import AuctionCard from "@/components/auction/AuctionCard";
 
 // Sub-components

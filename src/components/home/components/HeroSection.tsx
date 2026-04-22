@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { SystemConfig } from "@/types/home";
+import { SystemConfig } from "@/types";
 import { useTranslations } from "next-intl";
 
 interface HeroSectionProps {

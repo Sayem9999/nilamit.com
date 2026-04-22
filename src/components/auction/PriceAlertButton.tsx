@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createAlert } from "@/actions/alert";
+import { createAlert } from "@/actions/alerts";
 import { Bell, Loader2, Target, Zap } from "lucide-react";
-type AlertType = "OUTBID" | "TARGET_REACHED";
 import { toast } from "react-hot-toast";
 
 interface PriceAlertButtonProps {

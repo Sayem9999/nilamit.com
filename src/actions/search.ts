@@ -1,6 +1,7 @@
 'use server';
 
-import { db } from '@/lib/db';
+import { db, snapDocs } from '@/lib/db';
+import { Auction, User } from '@/types';
 
 export async function getSmartSearchResults(query: string) {
   if (!query?.trim()) return [];
@@ -13,14 +14,15 @@ export async function getSmartSearchResults(query: string) {
     .limit(200)
     .get();
 
-  const results = snap.docs
-    .map(d => ({ ...d.data(), id: d.id }))
-    .filter((a: any) => {
+  const auctions = snapDocs<Auction>(snap);
+
+  const results = auctions
+    .filter((a) => {
       const title = (a.title ?? '').toLowerCase();
       const desc  = (a.description ?? '').toLowerCase();
       return title.includes(q) || desc.includes(q);
     })
-    .map((a: any) => {
+    .map((a) => {
       const titleScore = (a.title ?? '').toLowerCase().includes(q) ? 100 : 0;
       const descScore  = (a.description ?? '').toLowerCase().includes(q) ? 50 : 0;
       const bidScore   = (a.bidCount ?? 0) * 5;
@@ -30,20 +32,22 @@ export async function getSmartSearchResults(query: string) {
     .slice(0, 20);
 
   // Fetch seller data for results
-  const sellerIds = [...new Set(results.map((a: any) => a.sellerId as string))];
+  const sellerIds = [...new Set(results.map((a) => a.sellerId))];
   const sellerSnaps = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
-  const sellersMap  = new Map(sellerSnaps.map(s => [s.id, s.data() ?? {}]));
+  const sellersMap  = new Map(sellerSnaps.map(s => [s.id, s.data() as User ?? {}]));
 
-  return results.map((a: any) => {
-    const s: any = sellersMap.get(a.sellerId) ?? {};
+  return results.map((a) => {
+    const s = sellersMap.get(a.sellerId) as User ?? {};
     return {
       ...a,
-      endTime: a.endTime?.toDate?.() ?? new Date(a.endTime),
-      createdAt: a.createdAt?.toDate?.() ?? new Date(a.createdAt),
       seller: {
-        id: a.sellerId, name: s.name ?? null, image: s.image ?? null,
-        reputationScore: s.reputationScore ?? 0, isVerifiedSeller: s.isVerifiedSeller ?? false,
-        isPhoneVerified: s.isPhoneVerified ?? false, winningStreak: s.winningStreak ?? 0,
+        id: a.sellerId, 
+        name: s.name ?? null, 
+        image: s.image ?? null,
+        reputationScore: s.reputationScore ?? 0, 
+        isVerifiedSeller: s.isVerifiedSeller ?? false,
+        isPhoneVerified: s.isPhoneVerified ?? false, 
+        winningStreak: s.winningStreak ?? 0,
         userLevel: s.userLevel ?? 1,
       },
       _count: { bids: a.bidCount ?? 0 },

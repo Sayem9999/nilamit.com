@@ -13,6 +13,7 @@ import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { sendEndingSoonEmail } from '@/lib/firebase-email';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
+import { Auction, User } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,7 @@ export async function GET(req: Request) {
       .where('endTime', '<=', oneHourFromNow)
       .get();
 
-    const auctions = auctionsSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
+    const auctions = auctionsSnap.docs.map(d => ({ ...d.data(), id: d.id } as Auction));
 
     let emailsQueued = 0;
     let rtdbEvents   = 0;
@@ -45,7 +46,7 @@ export async function GET(req: Request) {
         const userSnap = await db.collection('users').doc(userId).get();
         if (!userSnap.exists) continue;
         
-        const user = { id: userSnap.id, ...userSnap.data() } as any;
+        const user = { id: userSnap.id, ...userSnap.data() } as User;
         notifiedUserIds.add(user.id);
 
         if (user.email) {

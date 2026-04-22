@@ -5,7 +5,7 @@ import { updateSystemConfig, toggleFeaturedAuction } from '@/actions/admin-conte
 import { Loader2, Trash2, Save, Image as ImageIcon } from 'lucide-react';
 import { ImageUpload } from '@/components/upload/ImageUpload';
 import Image from 'next/image';
-import { SystemConfig } from '@/types/home';
+import { SystemConfig } from '@/types';
 
 interface ContentTabProps {
   initialConfig: SystemConfig;

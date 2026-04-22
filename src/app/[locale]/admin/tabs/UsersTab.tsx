@@ -29,20 +29,31 @@ export function UsersTab() {
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       setLoading(true);
-      const res = await getAdminUsers();
-      if (mounted && res.success) setUsers((res.users as any) || []);
+      const res = await getAdminUsers(page, 20, debouncedSearch);
+      if (mounted && res.success) {
+        setUsers((res.users as unknown as AdminUser[]) || []);
+        setTotalPages(res.pages || 1);
+      }
       if (mounted) setLoading(false);
     };
     load();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [page, debouncedSearch]);
 
   const handleToggleVerified = (userId: string, currentStatus: boolean) => {
     startTransition(async () => {
@@ -73,12 +84,6 @@ export function UsersTab() {
     });
   };
 
-  const filtered = users.filter(
-    (u) =>
-      !search ||
-      (u.name || u.email || "").toLowerCase().includes(search.toLowerCase()),
-  );
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -87,7 +92,7 @@ export function UsersTab() {
             User Management
           </h2>
           <p className="text-sm text-gray-500">
-            {users.length} registered users
+            Page {page} of {totalPages}
           </p>
         </div>
         <div className="relative">
@@ -95,7 +100,10 @@ export function UsersTab() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             placeholder="Search users..."
             className="bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
           />
@@ -132,7 +140,7 @@ export function UsersTab() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((user) => (
+              {users.map((user) => (
                 <tr
                   key={user.id}
                   className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
@@ -192,8 +200,8 @@ export function UsersTab() {
                       disabled={isPending}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                         user.isVerifiedSeller
-                          ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                          : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                           ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                           : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                       }`}
                     >
                       {user.isVerifiedSeller ? (
@@ -225,6 +233,31 @@ export function UsersTab() {
               ))}
             </tbody>
           </table>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="px-4 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <p className="text-xs text-gray-500">
+                Showing page {page} of {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 rounded-lg border border-gray-200 text-xs font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 rounded-lg border border-gray-200 text-xs font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -10,6 +10,7 @@ import { MetricsTab } from "./tabs/MetricsTab";
 import { DisputesTab } from "./tabs/DisputesTab";
 import { TreasuryTab } from "./tabs/TreasuryTab";
 import { Users, Package, TrendingUp, DollarSign } from "lucide-react";
+import { SystemConfig, Auction } from "@/types";
 
 function OverviewTab({
   stats,
@@ -151,8 +152,8 @@ export default async function AdminPage() {
       moderation={<ModerationTab />}
       content={
         <ContentTab
-          initialConfig={systemConfig as any}
-          featuredAuctions={featuredAuctions as any}
+          initialConfig={systemConfig as SystemConfig}
+          featuredAuctions={featuredAuctions as Auction[]}
         />
       }
       system={<SystemTab />}

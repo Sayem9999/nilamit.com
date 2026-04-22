@@ -72,7 +72,7 @@ export default async function SellerSuccessPage({
           />
           <MetricCard
             title="Trust Score"
-            value={(metrics as any).reputationGrowth || "Stable"}
+            value={metrics.reputationGrowth || "Stable"}
             icon={<Award className="w-6 h-6" />}
             trend="Growing"
             isPositive={true}

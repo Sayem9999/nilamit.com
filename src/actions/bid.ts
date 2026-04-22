@@ -1,9 +1,9 @@
 'use server';
 
 import { z } from 'zod';
-import { db, newId } from '@/lib/db';
+import { db, newId, snapDocs } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import type { PlaceBidResult } from '@/types';
+import type { PlaceBidResult, Alert } from '@/types';
 import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { sendOutbidEmail as firebaseSendOutbidEmail } from '@/lib/firebase-email';
@@ -105,17 +105,17 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
         .where('isActive', '==', true)
         .get();
 
-      const triggeredAlerts = alertsSnap.docs
-        .map(d => ({ ...d.data(), id: d.id }))
-        .filter((a: any) =>
-          a.userId !== userId &&
-          (a.type === 'OUTBID' || (a.type === 'TARGET_REACHED' && (a.thresholdPrice ?? 0) <= amount))
-        );
+      const alerts = snapDocs<Alert>(alertsSnap);
+
+      const triggeredAlerts = alerts.filter((a) =>
+        a.userId !== userId &&
+        (a.type === 'OUTBID' || (a.type === 'TARGET_REACHED' && (a.thresholdPrice ?? 0) <= amount))
+      );
 
       // Deactivate one-time TARGET_REACHED alerts
       triggeredAlerts
-        .filter((a: any) => a.type === 'TARGET_REACHED')
-        .forEach((a: any) => tx.update(db.collection('alerts').doc(a.id), { isActive: false }));
+        .filter((a) => a.type === 'TARGET_REACHED')
+        .forEach((a) => tx.update(db.collection('alerts').doc(a.id), { isActive: false }));
 
       return {
         bidId, newEndTime, antiSnipeTriggered,
@@ -143,7 +143,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
 
     // Alert notifications
     if (result.triggeredAlerts.length > 0) {
-      await Promise.all(result.triggeredAlerts.map((alert: any) =>
+      await Promise.all(result.triggeredAlerts.map((alert: Alert) =>
         rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
           event: FIREBASE_EVENTS.PRICE_ALERT, auctionId,
           auctionTitle: result.auctionTitle, amount, type: alert.type, threshold: alert.thresholdPrice,

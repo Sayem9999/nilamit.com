@@ -3,7 +3,7 @@
  *
  * Finds ACTIVE auctions whose endTime has passed and transitions them:
  *   - No bids  → EXPIRED
- *   - Has bids → SOLD + creates EscrowTransaction + notifies winner via Pusher
+ *   - Has bids → SOLD + creates EscrowTransaction + notifies winner via RTDB
  *
  * Called every minute by Vercel Cron.
  */
@@ -13,6 +13,7 @@ import { db } from '@/lib/db';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
+import { Auction, Bid } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,7 @@ async function processExpiredAuctions(): Promise<ProcessResult> {
     .where('endTime', '<=', now)
     .get();
 
-  const expiredAuctions = expiredSnap.docs.map(d => ({ ...d.data(), id: d.id } as any));
+  const expiredAuctions = expiredSnap.docs.map(d => ({ ...d.data(), id: d.id } as Auction));
 
   const result: ProcessResult = {
     totalExpired: expiredAuctions.length,
@@ -50,7 +51,7 @@ async function processExpiredAuctions(): Promise<ProcessResult> {
         .limit(1)
         .get();
         
-      const highestBid = bidsSnap.empty ? null : ({ ...bidsSnap.docs[0].data(), id: bidsSnap.docs[0].id } as any);
+      const highestBid = bidsSnap.empty ? null : ({ ...bidsSnap.docs[0].data(), id: bidsSnap.docs[0].id } as Bid);
 
       // Firestore doesn't have multi-collection distributed transactions easily without batch
       const batch = db.batch();

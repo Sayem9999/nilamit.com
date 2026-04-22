@@ -12,25 +12,29 @@ interface ConversationWithMeta {
   auctionId: string;
   buyerId: string;
   sellerId: string;
+  lastMessageAt: Date;
   auction: {
+    id: string;
     title: string;
     images: string[];
-    seller: { name: string | null; image: string | null };
-    winner: { name: string | null; image: string | null } | null;
-  };
-  messages: {
+  } | null;
+  otherUser: {
     id: string;
+    name: string | null;
+    image: string | null;
+  };
+  lastMessage: {
     content: string;
     createdAt: Date;
-  }[];
+    isRead: boolean;
+  } | null;
 }
 
 interface ChatListProps {
   conversations: ConversationWithMeta[];
-  currentUserId: string;
 }
 
-export default function ChatList({ conversations, currentUserId }: ChatListProps) {
+export default function ChatList({ conversations }: ChatListProps) {
   const t = useTranslations('Social');
 
   if (!conversations || conversations.length === 0) {
@@ -59,9 +63,8 @@ export default function ChatList({ conversations, currentUserId }: ChatListProps
 
       <div className="space-y-4">
         {conversations.map((convo) => {
-          const isBuyer = convo.buyerId === currentUserId;
-          const recipient = isBuyer ? convo.auction.seller : convo.auction.winner;
-          const lastMsg = convo.messages[0];
+          const recipient = convo.otherUser;
+          const lastMsg = convo.lastMessage;
 
           return (
             <Link 
@@ -70,7 +73,7 @@ export default function ChatList({ conversations, currentUserId }: ChatListProps
               className="flex items-start gap-4 p-4 rounded-3xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100 group"
             >
               <div className="w-14 h-14 rounded-2xl bg-gray-100 relative overflow-hidden flex-shrink-0">
-                {convo.auction.images?.[0] ? (
+                {convo.auction?.images?.[0] ? (
                   <Image src={convo.auction.images[0]} alt={convo.auction.title} fill className="object-cover" />
                 ) : (
                   <ShoppingBag className="w-6 h-6 text-gray-300 m-auto mt-4" />
@@ -80,7 +83,7 @@ export default function ChatList({ conversations, currentUserId }: ChatListProps
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="text-sm font-bold text-gray-900 truncate pr-4">
-                    {convo.auction.title}
+                    {convo.auction?.title || "Auction Coordination"}
                   </h4>
                   {lastMsg && (
                     <span className="text-[10px] text-gray-400 font-medium">
@@ -98,7 +101,7 @@ export default function ChatList({ conversations, currentUserId }: ChatListProps
                     )}
                   </div>
                   <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                    {recipient?.name}
+                    {recipient?.name || "Anonymous User"}
                   </span>
                 </div>
 

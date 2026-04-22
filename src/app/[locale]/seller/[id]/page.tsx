@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { Shield, Star, Calendar, Package, Gavel } from "lucide-react";
 import Image from "next/image";
+import { type User, type Auction, type Review, type AuctionWithSeller } from "@/types";
 
 interface Props {
   params: Promise<{ locale: string; id: string }>;
@@ -13,7 +14,7 @@ export default async function SellerProfilePage({ params }: Props) {
 
   const sellerSnap = await db.collection('users').doc(id).get();
   if (!sellerSnap.exists) return notFound();
-  const sellerData = sellerSnap.data()!;
+  const sellerData = sellerSnap.data() as User;
   
   const bidsSnap = await db.collection('bids').where('bidderId', '==', id).get();
   const seller = {
@@ -23,9 +24,11 @@ export default async function SellerProfilePage({ params }: Props) {
     isVerifiedSeller: sellerData.isVerifiedSeller,
     isPhoneVerified: sellerData.isPhoneVerified,
     reputationScore: sellerData.reputationScore,
-    createdAt: sellerData.createdAt?.toDate?.() || new Date(sellerData.createdAt),
+    createdAt: sellerData.createdAt,
     winningStreak: sellerData.winningStreak,
     userLevel: sellerData.userLevel,
+    emailVerified: sellerData.emailVerified,
+    isBanned: sellerData.isBanned,
     _count: { bids: bidsSnap.size },
   };
 
@@ -37,24 +40,28 @@ export default async function SellerProfilePage({ params }: Props) {
     .get();
 
   const auctions = await Promise.all(auctionsSnap.docs.map(async d => {
-    const a = d.data();
+    const a = d.data() as Auction;
     const abidsSnap = await db.collection('bids').where('auctionId', '==', d.id).get();
-    return {
+    const result: AuctionWithSeller = {
       ...a,
       id: d.id,
-      createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
-      endTime: a.endTime?.toDate?.() || new Date(a.endTime),
       seller: {
         id: seller.id,
         name: seller.name,
+        email: sellerData.email ?? null,
+        phone: sellerData.phone ?? null,
         image: seller.image,
         isVerifiedSeller: seller.isVerifiedSeller,
         winningStreak: seller.winningStreak,
         userLevel: seller.userLevel,
         reputationScore: seller.reputationScore,
+        isPhoneVerified: seller.isPhoneVerified,
+        emailVerified: seller.emailVerified,
+        isBanned: seller.isBanned,
       },
       _count: { bids: abidsSnap.size },
     };
+    return result;
   }));
 
   const reviewsSnap = await db.collection('reviews')
@@ -64,19 +71,22 @@ export default async function SellerProfilePage({ params }: Props) {
     .get();
 
   const reviews = await Promise.all(reviewsSnap.docs.map(async d => {
-    const r = d.data();
+    const r = d.data() as Review;
     const fromSnap = await db.collection('users').doc(r.fromId).get();
     return {
       ...r,
       id: d.id,
-      from: { name: fromSnap.data()?.name, image: fromSnap.data()?.image },
+      from: { 
+        name: (fromSnap.data() as User)?.name ?? null, 
+        image: (fromSnap.data() as User)?.image ?? null 
+      },
     };
   }));
 
   const avgRating =
     reviews.length > 0
       ? (
-          reviews.reduce((sum, r) => sum + (r as any).rating, 0) / reviews.length
+          reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
         ).toFixed(1)
       : null;
 
@@ -167,7 +177,7 @@ export default async function SellerProfilePage({ params }: Props) {
                     {[1, 2, 3, 4, 5].map((s) => (
                       <Star
                         key={s}
-                        className={`w-3.5 h-3.5 ${s <= (review as any).rating ? "text-amber-400 fill-amber-400" : "text-gray-200"}`}
+                        className={`w-3.5 h-3.5 ${s <= review.rating ? "text-amber-400 fill-amber-400" : "text-gray-200"}`}
                       />
                     ))}
                   </div>
@@ -175,8 +185,8 @@ export default async function SellerProfilePage({ params }: Props) {
                     by {review.from.name || "Anonymous"}
                   </span>
                 </div>
-                {(review as any).comment && (
-                  <p className="text-sm text-gray-600">{(review as any).comment}</p>
+                {review.comment && (
+                  <p className="text-sm text-gray-600">{review.comment}</p>
                 )}
               </div>
             ))}
@@ -193,7 +203,7 @@ export default async function SellerProfilePage({ params }: Props) {
           {auctions.map((auction) => (
             <AuctionCard
               key={auction.id}
-              auction={auction as any}
+              auction={auction}
             />
           ))}
         </div>
