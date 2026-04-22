@@ -38,7 +38,7 @@ function createLimiter(prefix: string, limit: number, window: string) {
 }
 
 /** Specialized rate limiters for different traffic patterns */
-export const apiLimiter   = createLimiter('rl_api', 50, '60s');
-export const authLimiter  = createLimiter('rl_auth', 5, '15m');
-export const bidLimiter   = createLimiter('rl_bid', 20, '60s');
-export const loginLimiter = createLimiter('rl_login', 10, '5m');
+export const apiLimiter   = createLimiter('rl_api', 100, '60s');
+export const authLimiter  = createLimiter('rl_auth', 10, '15m');
+export const bidLimiter   = createLimiter('rl_bid', 60, '60s');
+export const loginLimiter = createLimiter('rl_login', 20, '5m');

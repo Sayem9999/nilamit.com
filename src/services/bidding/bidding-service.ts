@@ -54,12 +54,14 @@ export class BiddingService {
         const bidRef = db.collection('bids').doc(bidId);
         tx.set(bidRef, { id: bidId, amount, auctionId, bidderId: userId, createdAt: now });
 
-        // Anti-sniping
+        // Anti-sniping: Extend if bid is placed in the final window
         const timeUntilEnd     = endTime.getTime() - now.getTime();
         let newEndTime         = endTime;
         let antiSnipeTriggered = false;
-
-        if (!auction.wasExtended && timeUntilEnd <= SOFT_CLOSE_WINDOW_MS) {
+        
+        if (timeUntilEnd <= SOFT_CLOSE_WINDOW_MS) {
+          // New end time is now + extension, or current end + extension
+          // We use current end + extension to prevent users from 'reducing' the time by bidding early in the window
           newEndTime         = new Date(endTime.getTime() + SOFT_CLOSE_EXTENSION_MS);
           antiSnipeTriggered = true;
         }
