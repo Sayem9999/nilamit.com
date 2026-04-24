@@ -33,7 +33,7 @@ export default function LoadMore({
           ...(result.auctions as unknown as AuctionWithSeller[]),
         ]);
         setPage((prev) => prev + 1);
-        if (result.page >= result.pages) {
+        if (result.currentPage >= result.pages) {
           setHasMore(false);
         }
       } else {

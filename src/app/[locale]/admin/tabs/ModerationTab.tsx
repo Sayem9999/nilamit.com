@@ -68,7 +68,7 @@ export function ModerationTab() {
     )
       return;
     startTransition(async () => {
-      await suspendAuction(auctionId, reportId);
+      await suspendAuction(auctionId, reportId, "Moderator action");
       setReports((prev) => prev.filter((r) => r.id !== reportId));
     });
   };

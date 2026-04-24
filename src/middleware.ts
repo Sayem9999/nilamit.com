@@ -13,12 +13,15 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const pathname = req.nextUrl.pathname;
-  
+  // Trust NEXTAUTH_URL as the canonical origin in deployed environments;
+  // fall through to req.url locally so dev with arbitrary host:port works.
+  const redirectBase = process.env.NEXTAUTH_URL ?? req.url;
+
   // 0. Global Security: Redirect banned users
   const isBanned = (req.auth?.user as { isBanned?: boolean })?.isBanned;
   if (isBanned && !pathname.includes('/banned') && !pathname.startsWith('/api')) {
     const locale = pathname.split('/')[1] || 'en';
-    return Response.redirect(new URL(`/${locale}/banned`, req.url));
+    return Response.redirect(new URL(`/${locale}/banned`, redirectBase), 308);
   }
 
   // 1. Strip locale from API routes BEFORE NextAuth or intl handles them
@@ -27,11 +30,11 @@ export default auth((req) => {
     const apiPath = localeApiMatch[2];
     if (apiPath.includes('/auth/error')) {
       const locale = localeApiMatch[1] || 'en';
-      return Response.redirect(new URL(`/${locale}/login?error=AuthError`, req.url));
+      return Response.redirect(new URL(`/${locale}/login?error=AuthError`, redirectBase), 308);
     }
     // If there was a locale prefix, strip it and redirect to the raw /api/ path
     if (localeApiMatch[1]) {
-      return Response.redirect(new URL(apiPath, req.url));
+      return Response.redirect(new URL(apiPath, redirectBase), 308);
     }
   }
 

@@ -17,11 +17,13 @@ export function useAuctionBids(auctionId: string) {
   const [viewers,        setViewers]        = useState<number>(0);
 
   useEffect(() => {
+    let mounted = true;
     const db = getClientDB();
 
     // Subscribe to latest bid state (server uses rtdbSet → overwrites on each bid)
     const bidRef = ref(db, RTDB_PATHS.auctionBid(auctionId));
     const unsubBid = onValue(bidRef, (snapshot) => {
+      if (!mounted) return;
       const data = snapshot.val();
       if (!data) return;
 
@@ -43,16 +45,25 @@ export function useAuctionBids(auctionId: string) {
       }
     });
 
-    // Viewer presence — write our own presence node; remove on disconnect
+    // Viewer presence — write our own presence node; remove on disconnect.
+    // ensureFirebaseAuth() can resolve after unmount; bail out if so to avoid
+    // writing a presence node we never clean up (and to skip onDisconnect on
+    // a torn-down component).
     void (async () => {
       try {
         await ensureFirebaseAuth();
+        if (!mounted) return;
         const auth   = getClientAuth();
         const uid    = auth.currentUser?.uid;
         if (!uid) return;
 
         const presenceRef = ref(db, RTDB_PATHS.presence(auctionId, uid));
         await set(presenceRef, { online: true, joinedAt: Date.now() });
+        if (!mounted) {
+          // Unmounted while writing — clean up immediately.
+          remove(presenceRef).catch(() => {});
+          return;
+        }
         onDisconnect(presenceRef).remove();
       } catch {
         // Presence is optional — don't crash on auth failure
@@ -62,10 +73,12 @@ export function useAuctionBids(auctionId: string) {
     // Count viewers by watching the presence parent node
     const presenceParent = ref(db, RTDB_PATHS.presenceAuction(auctionId));
     const unsubPresence  = onValue(presenceParent, (snapshot) => {
+      if (!mounted) return;
       setViewers(snapshot.exists() ? Object.keys(snapshot.val()).length : 0);
     });
 
     return () => {
+      mounted = false;
       unsubBid();
       unsubPresence();
 

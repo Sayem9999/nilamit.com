@@ -84,8 +84,8 @@ export default function CreateAuctionPage() {
         ...form,
         images: form.images.filter(Boolean),
       });
-      if (result.success && result.auction) {
-        router.push(`/auctions/${result.auction.id}`);
+      if (result.success && result.auctionId) {
+        router.push(`/auctions/${result.auctionId}`);
       } else {
         setError(result.error || t("createAuctionFailed"));
         if (result.error === "PHONE_NOT_VERIFIED") {
@@ -95,7 +95,7 @@ export default function CreateAuctionPage() {
     });
   };
 
-  const updateForm = (field: string, value: string | number | string[]) => {
+  const updateForm = (field: string, value: string | number | string[] | undefined) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -309,7 +309,7 @@ export default function CreateAuctionPage() {
                         "reservePrice",
                         e.target.value
                           ? Number(e.target.value)
-                          : (undefined as unknown as number),
+                          : undefined,
                       )
                     }
                     placeholder={t("reservePricePlaceholder")}
@@ -331,7 +331,7 @@ export default function CreateAuctionPage() {
                         "buyItNowPrice",
                         e.target.value
                           ? Number(e.target.value)
-                          : (undefined as unknown as number),
+                          : undefined,
                       )
                     }
                     placeholder={t("buyNowPricePlaceholder")}

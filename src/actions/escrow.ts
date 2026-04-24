@@ -7,6 +7,7 @@ import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recalculateUserReputation } from '@/lib/reputation';
 import { createLogisticsOrder } from './logistics';
+import { log } from '@/lib/logger';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
 
@@ -79,7 +80,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
     revalidatePath('/dashboard');
     return { success: true };
   } catch (e) {
-    console.error('[escrow] Transaction failed:', e);
+    log.error('[escrow] Transaction failed', e);
     return { success: false, error: e instanceof Error ? e.message : 'Internal error' };
   }
 }
@@ -125,7 +126,7 @@ export async function confirmItemReceived(transactionId: string) {
     revalidatePath('/dashboard');
     return { success: true };
   } catch (e) {
-    console.error('[escrow] confirmItemReceived failed:', e);
+    log.error('[escrow] confirmItemReceived failed', e);
     return { success: false, error: 'Internal error' };
   }
 }

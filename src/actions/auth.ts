@@ -7,12 +7,13 @@ import { normalizePhone } from '@/lib/utils';
 import { headers } from 'next/headers';
 import { loginLimiter } from '@/lib/ratelimit';
 import * as Sentry from '@sentry/nextjs';
+import { registerSchema, phoneSignupSchema, passwordResetSchema, formatZodError } from '@/lib/schemas';
+import { log } from '@/lib/logger';
 
-export async function registerUser(data: { firstName: string; lastName: string; email: string; password: string }) {
-  const { firstName, lastName, email, password } = data;
-  if (!email || !password || !firstName || !lastName) {
-    return { success: false, error: 'Missing required fields' };
-  }
+export async function registerUser(data: unknown) {
+  const parsed = registerSchema.safeParse(data);
+  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+  const { firstName, lastName, email, password } = parsed.data;
 
   const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await loginLimiter.limit(`register_${ip}`);
@@ -34,14 +35,16 @@ export async function registerUser(data: { firstName: string; lastName: string; 
 
     return { success: true };
   } catch (e) {
-    console.error('[auth] registerUser:', e);
+    log.error('[auth] registerUser', e);
     Sentry.captureException(e, { tags: { action: 'registerUser' } });
     return { success: false, error: 'Something went wrong. Please try again.' };
   }
 }
 
-export async function signupWithPhone(data: { name: string; phone: string; otp: string; password: string; email?: string }) {
-  const { name, phone, otp, password, email } = data;
+export async function signupWithPhone(data: unknown) {
+  const parsed = phoneSignupSchema.safeParse(data);
+  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+  const { name, phone, otp, password, email } = parsed.data;
   const normalizedPhone = normalizePhone(phone);
 
   const otpVerify = await verifyStandaloneOTP(normalizedPhone, otp);
@@ -72,15 +75,16 @@ export async function signupWithPhone(data: { name: string; phone: string; otp: 
     });
     return { success: true };
   } catch (e) {
-    console.error('[auth] signupWithPhone:', e);
+    log.error('[auth] signupWithPhone', e);
     Sentry.captureException(e, { tags: { action: 'signupWithPhone' } });
     return { success: false, error: 'Failed to create account.' };
   }
 }
 
-export async function resetPasswordWithOTP(data: { phone?: string; email?: string; otp: string; password: string }) {
-  const { phone, email, otp, password } = data;
-  if (!phone && !email) return { success: false, error: 'Identifier required.' };
+export async function resetPasswordWithOTP(data: unknown) {
+  const parsed = passwordResetSchema.safeParse(data);
+  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+  const { phone, email, otp, password } = parsed.data;
 
   const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await loginLimiter.limit(`reset_${ip}`);
@@ -112,7 +116,7 @@ export async function resetPasswordWithOTP(data: { phone?: string; email?: strin
 
     return { success: true };
   } catch (e) {
-    console.error('[auth] resetPasswordWithOTP:', e);
+    log.error('[auth] resetPasswordWithOTP', e);
     Sentry.captureException(e, { tags: { action: 'resetPasswordWithOTP' } });
     return { success: false, error: 'Failed to reset password.' };
   }

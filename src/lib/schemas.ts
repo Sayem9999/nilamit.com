@@ -1,0 +1,159 @@
+/**
+ * Centralised Zod schemas for inputs that cross trust boundaries.
+ *
+ * Every Server Action that accepts caller-supplied data must `safeParse`
+ * through one of these. Defining them in one place ensures consistent bounds
+ * (string lengths, price ceilings, etc.) and makes it impossible for one
+ * action to accept input the rest of the system would reject.
+ */
+
+import { z } from 'zod';
+
+// ─── Primitives ────────────────────────────────────────────────────────────
+
+/** RFC-5321 max length for an email is 254 octets. */
+export const emailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(3, 'Email is too short')
+  .max(254, 'Email is too long')
+  .email('Invalid email address');
+
+/**
+ * Password rule: 8–128 chars. We deliberately don't enforce character classes —
+ * length is a stronger signal for password strength and class rules push users
+ * toward predictable patterns. We DO cap length so bcrypt's 72-byte truncation
+ * isn't surprising and so an attacker can't OOM the worker by submitting a 1MB
+ * password.
+ */
+export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters').max(128, 'Password is too long');
+
+/** Bangladesh mobile in E.164 form, e.g. +8801712345678 */
+export const bdPhoneSchema = z
+  .string()
+  .trim()
+  .regex(/^\+8801\d{9}$/, 'Invalid Bangladesh phone number');
+
+/** 6-digit numeric OTP. */
+export const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be 6 digits');
+
+/** Person name: 2–80 chars, no leading/trailing whitespace, no control chars. */
+const nameSchema = z
+  .string()
+  .trim()
+  .min(2, 'Too short')
+  .max(80, 'Too long')
+   
+  .refine((v) => !/[\x00-\x1f\x7f]/.test(v), 'Invalid characters');
+
+// ─── Auth ──────────────────────────────────────────────────────────────────
+
+export const registerSchema = z.object({
+  firstName: nameSchema,
+  lastName:  nameSchema,
+  email:     emailSchema,
+  password:  passwordSchema,
+});
+export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const phoneSignupSchema = z.object({
+  name:     nameSchema,
+  phone:    bdPhoneSchema,
+  otp:      otpSchema,
+  password: passwordSchema,
+  email:    emailSchema.optional(),
+});
+export type PhoneSignupInput = z.infer<typeof phoneSignupSchema>;
+
+export const passwordResetSchema = z
+  .object({
+    phone:    bdPhoneSchema.optional(),
+    email:    emailSchema.optional(),
+    otp:      otpSchema,
+    password: passwordSchema,
+  })
+  .refine((d) => d.phone || d.email, {
+    message: 'Either phone or email is required',
+    path:    ['phone'],
+  });
+export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
+
+// ─── Auctions ──────────────────────────────────────────────────────────────
+
+/** Hard ceiling on auction prices. ৳10M is well above any realistic listing
+ *  on the platform; treating it as the universal cap blocks user-typo / abuse
+ *  inputs (e.g. ৳999999999) before they reach Firestore. */
+export const MAX_AUCTION_PRICE_BDT = 10_000_000;
+const MIN_AUCTION_PRICE_BDT        = 1;
+
+const priceSchema = z
+  .number()
+  .int('Price must be a whole number of taka')
+  .min(MIN_AUCTION_PRICE_BDT, 'Price must be positive')
+  .max(MAX_AUCTION_PRICE_BDT, `Price exceeds the ৳${MAX_AUCTION_PRICE_BDT.toLocaleString()} cap`);
+
+const imageUrlSchema = z
+  .string()
+  .url('Invalid image URL')
+  .max(2048, 'Image URL is too long');
+
+/**
+ * ISO-8601 datetime string. We accept the string form (cheap to send from the
+ * client) and validate parseability at the boundary.
+ */
+const isoDatetime = z
+  .string()
+  .refine((v) => !Number.isNaN(Date.parse(v)), 'Invalid date');
+
+export const createAuctionSchema = z
+  .object({
+    title:           z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
+    description:     z.string().trim().min(10, 'Description is too short').max(5000, 'Description is too long'),
+    images:          z.array(imageUrlSchema).min(1, 'At least one image is required').max(10, 'Maximum 10 images per listing'),
+    category:        z.string().trim().min(1).max(60),
+    startingPrice:   priceSchema,
+    minBidIncrement: priceSchema.optional(),
+    startTime:       isoDatetime,
+    endTime:         isoDatetime,
+    reservePrice:    priceSchema.optional(),
+    buyItNowPrice:   priceSchema.optional(),
+    location:        z.string().trim().max(120).optional(),
+  })
+  .superRefine((d, ctx) => {
+    const start = new Date(d.startTime);
+    const end   = new Date(d.endTime);
+    const now   = Date.now();
+
+    if (end.getTime() <= start.getTime()) {
+      ctx.addIssue({ code: 'custom', message: 'End time must be after start time', path: ['endTime'] });
+    }
+    // Disallow listings that end in the past (modulo 60s clock skew).
+    if (end.getTime() < now - 60_000) {
+      ctx.addIssue({ code: 'custom', message: 'End time must be in the future', path: ['endTime'] });
+    }
+    if (d.reservePrice !== undefined && d.reservePrice < d.startingPrice) {
+      ctx.addIssue({ code: 'custom', message: 'Reserve price must be at least the starting price', path: ['reservePrice'] });
+    }
+    if (d.buyItNowPrice !== undefined && d.buyItNowPrice <= d.startingPrice) {
+      ctx.addIssue({ code: 'custom', message: 'Buy-it-now price must exceed the starting price', path: ['buyItNowPrice'] });
+    }
+  });
+export type CreateAuctionInputValidated = z.infer<typeof createAuctionSchema>;
+
+// ─── Bids ──────────────────────────────────────────────────────────────────
+
+export const placeBidSchema = z.object({
+  auctionId: z.string().trim().min(1).max(128),
+  amount:    priceSchema,
+});
+export type PlaceBidInput = z.infer<typeof placeBidSchema>;
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+/** Flatten a ZodError into a single human-readable line for action responses. */
+export function formatZodError(err: z.ZodError): string {
+  const first = err.issues[0];
+  if (!first) return 'Invalid input';
+  return first.path.length > 0 ? `${first.path.join('.')}: ${first.message}` : first.message;
+}

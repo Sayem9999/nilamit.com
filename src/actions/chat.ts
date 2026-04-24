@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 import { filterPII } from '@/lib/pii-filter';
 import { adminDB, rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { log } from '@/lib/logger';
 
 export async function sendMessage(conversationId: string, content: string, imageUrl?: string) {
   const session = await auth();
@@ -56,7 +57,7 @@ export async function sendMessage(conversationId: string, content: string, image
   rtdbPush(RTDB_PATHS.userNotifications(recipientId), {
     event: FIREBASE_EVENTS.NEW_MESSAGE, conversationId, auctionId: conv.auctionId,
     senderName: session.user.name ?? 'Someone', preview: filtered.slice(0, 60),
-  }).catch(console.error);
+  }).catch((e) => log.error('chat: recipient notification push failed', e));
 
   return { success: true, message: { id: msgId, content: filtered, createdAt: now } };
 }
@@ -87,26 +88,64 @@ export async function getAuctionChat(auctionId: string) {
 
   const convSnap = await db.collection('conversations').doc(auctionId).get();
   if (!convSnap.exists) return null;
-  const conv = convSnap.data()!;
+  const conv = convSnap.data()! as { buyerId: string; sellerId: string; auctionId: string; lastMessageAt: { toDate?: () => Date } | Date; createdAt: { toDate?: () => Date } | Date };
 
   // SECURITY FIX: authorize BEFORE fetching messages
   if (conv.buyerId !== session.user.id && conv.sellerId !== session.user.id) return null;
 
-  const messagesSnap = await db.collection('messages')
-    .where('conversationId', '==', auctionId)
-    .orderBy('createdAt', 'asc')
-    .limit(100)
-    .get();
+  const [messagesSnap, aSnap] = await Promise.all([
+    db.collection('messages')
+      .where('conversationId', '==', auctionId)
+      .orderBy('createdAt', 'asc')
+      .limit(100)
+      .get(),
+    db.collection('auctions').doc(conv.auctionId).get(),
+  ]);
 
-  const messages = messagesSnap.docs.map(d => ({
-    ...d.data(), id: d.id,
-    createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
-  }));
+  const messages = messagesSnap.docs.map((d) => {
+    const m = d.data() as { content?: string; senderId: string; imageUrl?: string | null; isSystemMessage?: boolean; isRead?: boolean; createdAt: { toDate?: () => Date } | Date };
+    const createdAt = m.createdAt instanceof Date ? m.createdAt : m.createdAt?.toDate?.() ?? new Date();
+    return {
+      id: d.id,
+      content: m.content ?? '',
+      senderId: m.senderId,
+      imageUrl: m.imageUrl ?? null,
+      isSystemMessage: Boolean(m.isSystemMessage),
+      isRead: Boolean(m.isRead),
+      createdAt,
+    };
+  });
+
+  // Hydrate seller + winner for the recipient display in ChatInterface.
+  const auction = aSnap.data() ?? {};
+  const [sellerSnap, winnerSnap] = await Promise.all([
+    auction.sellerId ? db.collection('users').doc(auction.sellerId).get() : Promise.resolve(null),
+    auction.winnerId ? db.collection('users').doc(auction.winnerId).get() : Promise.resolve(null),
+  ]);
+  const seller = sellerSnap?.data() ?? {};
+  const winner = winnerSnap?.data() ?? null;
+
+  const lastMessageAt = conv.lastMessageAt instanceof Date ? conv.lastMessageAt : conv.lastMessageAt?.toDate?.() ?? new Date();
+  const createdAt = conv.createdAt instanceof Date ? conv.createdAt : conv.createdAt?.toDate?.() ?? new Date();
 
   return {
-    ...conv, id: convSnap.id,
-    lastMessageAt: conv.lastMessageAt?.toDate?.() ?? new Date(conv.lastMessageAt),
-    createdAt:     conv.createdAt?.toDate?.()     ?? new Date(conv.createdAt),
+    id: convSnap.id,
+    auctionId: conv.auctionId,
+    buyerId: conv.buyerId,
+    sellerId: conv.sellerId,
+    lastMessageAt,
+    createdAt,
     messages,
+    auction: {
+      id: conv.auctionId,
+      title: (auction.title as string) ?? '',
+      seller: {
+        name: (seller.name as string | null) ?? null,
+        image: (seller.image as string | null) ?? null,
+      },
+      winner: winner
+        ? { name: (winner.name as string | null) ?? null, image: (winner.image as string | null) ?? null }
+        : null,
+    },
   };
 }

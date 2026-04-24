@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { rtdbPush } from "@/lib/firebase-admin";
 import { RTDB_PATHS, FIREBASE_EVENTS } from "@/lib/firebase-events";
 import { SOFT_CLOSE_WINDOW_MS } from "@/lib/constants";
+import { log } from "@/lib/logger";
 
 export async function checkAndAwardBadges(
   userId: string,
@@ -52,6 +53,6 @@ export async function checkAndAwardBadges(
       event:   FIREBASE_EVENTS.TRUST_UPDATE,
       message: `You earned ${badgesAwarded.length} new badge(s): ${badgesAwarded.join(', ')}!`,
       badges:  badgesAwarded,
-    }).catch(console.error);
+    }).catch((e) => log.error('gamification: badge notification push failed', e));
   }
 }

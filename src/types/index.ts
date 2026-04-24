@@ -84,22 +84,25 @@ export interface Auction {
   location?: string | null;
   startingPrice: number;
   currentPrice: number;
+  /** Top bidder, denormalised so the bid transaction can read the previous winner via tx.get(). */
+  currentBidderId?: string | null;
   reservePrice?: number | null;
   buyItNowPrice?: number | null;
   minBidIncrement: number;
   startTime: Date;
   endTime: Date;
   status: AuctionStatus;
-  isFeatured: boolean;
-  wasExtended: boolean;
-  commissionRate: number;
+  isFeatured?: boolean;
+  wasExtended?: boolean;
+  commissionRate?: number;
   commissionEarned?: number | null;
-  deliveryCharge: number;
-  deliveryStatus: OrderStatus;
+  deliveryCharge?: number;
+  deliveryStatus?: OrderStatus;
   trackingNumber?: string | null;
   sellerId: string;
   winnerId?: string | null;
   bidCount?: number;
+  piiDetected?: boolean;
   createdAt: Date;
   updatedAt: Date;
   _count?: {
@@ -151,6 +154,17 @@ export interface Dispute {
   reason: string;
   status: DisputeStatus;
   resolution?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Report {
+  id: string;
+  auctionId: string;
+  reporterId: string;
+  reason: string;
+  description?: string | null;
+  status: ReportStatus;
   createdAt: Date;
   updatedAt: Date;
 }

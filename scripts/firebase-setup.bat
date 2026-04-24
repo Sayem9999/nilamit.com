@@ -2,9 +2,9 @@
 REM ═══════════════════════════════════════════════════════════════
 REM  Nilamit — Firebase Full Setup Script
 REM  Run this ONCE from the project root to configure Firebase.
-REM  Double-click this file or run: firebase-setup.bat
+REM  Double-click this file or run: scripts\firebase-setup.bat
 REM ═══════════════════════════════════════════════════════════════
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 
 echo.
 echo ╔════════════════════════════════════════╗
@@ -107,7 +107,7 @@ echo ║                                                           ║
 echo ║  NEXT STEPS:                                              ║
 echo ║                                                           ║
 echo ║  1. Add all secrets to Google Secret Manager:            ║
-echo ║     See DEPLOY_FIREBASE.md → Step 4                      ║
+echo ║     See docs\DEPLOY_FIREBASE.md → Step 4                 ║
 echo ║                                                           ║
 echo ║  2. Get Firebase service account credentials:            ║
 echo ║     Firebase Console → Project Settings → Service Accts  ║

@@ -8,6 +8,7 @@
  */
 
 import type { NextAuthConfig } from 'next-auth';
+import { isSafeRedirectPath } from './url-safety';
 
 // Pages that require an authenticated session
 const PROTECTED_PATHS = [
@@ -56,7 +57,12 @@ export const authConfig: NextAuthConfig = {
       if (isProtected && !isLoggedIn) {
         const locale = pathname.match(/^\/(en|bn)/)?.[1] ?? 'en';
         const loginUrl = new URL(`/${locale}/login`, nextUrl);
-        loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
+        // Only round-trip the original path if it is a safe same-origin path.
+        // nextUrl.pathname should always be safe, but we validate so a future
+        // change to use nextUrl.href or similar can't introduce an open redirect.
+        if (isSafeRedirectPath(nextUrl.pathname)) {
+          loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
+        }
         return Response.redirect(loginUrl);
       }
 

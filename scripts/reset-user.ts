@@ -1,6 +1,6 @@
 
 import 'dotenv/config';
-import { db } from './src/lib/db';
+import { db } from '../src/lib/db';
 
 async function main() {
   const email = process.argv[2];

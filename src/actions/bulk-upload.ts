@@ -18,9 +18,15 @@ const BulkRowSchema = z.object({
 
 type BulkUploadRow = z.infer<typeof BulkRowSchema>;
 
+const MAX_BULK_ROWS = 1000;
+
 export async function processBulkUpload(fileName: string, rows: BulkUploadRow[]) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+  if (rows.length > MAX_BULK_ROWS) {
+    return { success: false, error: `Bulk upload limited to ${MAX_BULK_ROWS} rows per file.` };
+  }
 
   const userSnap = await db.collection('users').doc(session.user.id).get();
   if (!userSnap.data()?.isVerifiedSeller) {

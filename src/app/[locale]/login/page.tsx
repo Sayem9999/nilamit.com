@@ -9,12 +9,14 @@ import { useTranslations } from "next-intl";
 import { Loader2, Mail, Lock, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { sanitizeRedirect } from "@/lib/url-safety";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  // sanitizeRedirect blocks open-redirect attacks via ?callbackUrl=https://evil.com
+  const callbackUrl = sanitizeRedirect(searchParams.get("callbackUrl"), "/dashboard");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

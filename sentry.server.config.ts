@@ -8,6 +8,7 @@
  */
 
 import * as Sentry from '@sentry/nextjs';
+import { scrubEvent, scrubBreadcrumb } from './src/lib/sentry-scrub';
 
 const SENTRY_DSN = process.env.SENTRY_DSN;
 
@@ -22,6 +23,10 @@ if (SENTRY_DSN) {
     // Only enable in production (avoids Sentry quota during local dev)
     enabled: process.env.NODE_ENV === 'production',
 
+    // Don't send IPs / cookies / etc. by default; the scrubber below assumes
+    // this is off, but we belt-and-brace.
+    sendDefaultPii: false,
+
     // Ignore known noisy errors
     ignoreErrors: [
       'NEXT_NOT_FOUND',      // Next.js notFound() — not a real error
@@ -29,14 +34,8 @@ if (SENTRY_DSN) {
       'AbortError',          // Client navigated away mid-request
     ],
 
-    beforeSend(event) {
-      // Strip PII from error contexts
-      if (event.user) {
-        delete event.user.email;
-        delete event.user.ip_address;
-      }
-      return event;
-    },
+    beforeSend: scrubEvent,
+    beforeBreadcrumb: scrubBreadcrumb,
   });
 } else if (process.env.NODE_ENV === 'production') {
   console.warn('[Sentry] SENTRY_DSN is not set — errors will not be captured.');

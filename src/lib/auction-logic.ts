@@ -2,6 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { sendAuctionWonEmail } from '@/lib/firebase-email';
 import type { AuctionStatus } from '@/types';
+import { log } from '@/lib/logger';
 
 // ─── Commission Tiers ────────────────────────────────────────────────────────
 export function calculateSuccessFee(finalPrice: number): { fee: number; rate: number } {
@@ -61,7 +62,7 @@ export async function processAuctionSale(
 
   // Non-blocking winner email
   if (winner.email) {
-    sendAuctionWonEmail(winner.email, auction.title, finalPrice, auction.id).catch(console.error);
+    sendAuctionWonEmail(winner.email, auction.title, finalPrice, auction.id).catch((e) => log.error('auction-logic: winner email failed', e, { auctionId: auction.id }));
   }
 }
 
@@ -118,7 +119,7 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
       );
     });
   } catch (e) {
-    console.error('[auction-logic] closeAuctionIfEnded failed:', auctionId, e);
+    log.error('[auction-logic] closeAuctionIfEnded failed', e, { auctionId });
   }
 }
 

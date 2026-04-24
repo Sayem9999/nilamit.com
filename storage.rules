@@ -11,9 +11,13 @@ service firebase.storage {
                    && request.resource.contentType.matches('image/.*');
     }
 
-    // Chat attachments — authenticated users can read, only sender can write
+    // Chat attachments — only the uploader can read directly. Other
+    // conversation participants receive a short-lived signed URL minted by
+    // /api/upload (which performs an app-level conversation-membership check).
+    // Without this restriction any authenticated user could enumerate every
+    // chat upload across the whole platform.
     match /chat/{userId}/{allPaths=**} {
-      allow read:  if request.auth != null;
+      allow read:  if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null
                    && request.auth.uid == userId
                    && request.resource.size  < 2 * 1024 * 1024

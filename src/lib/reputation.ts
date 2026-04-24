@@ -1,6 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
+import { log } from '@/lib/logger';
 
 /**
  * Recalculate a user's reputation score using:
@@ -49,7 +50,7 @@ export async function recalculateUserReputation(userId: string): Promise<number>
 
     return finalScore;
   } catch (e) {
-    console.error('[reputation] recalculate failed for', userId, e);
+    log.error('[reputation] recalculate failed', e, { userId });
     return 0;
   }
 }

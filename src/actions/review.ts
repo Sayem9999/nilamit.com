@@ -1,9 +1,10 @@
 'use server';
 
-import { db } from '@/lib/db';
+import { db, snapDocs } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { filterPII } from '@/lib/pii-filter';
+import type { Review } from '@/types';
 
 export async function submitReview({
   auctionId, toId, rating, comment,

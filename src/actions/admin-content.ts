@@ -4,6 +4,7 @@ import { db, snapDocs } from '@/lib/db';
 import { Auction } from '@/types';
 import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
+import { log } from '@/lib/logger';
 
 
 
@@ -19,7 +20,7 @@ export async function getSystemConfig() {
     }
     return { ...snap.data(), id: snap.id };
   } catch (e) {
-    console.error('[admin-content] getSystemConfig failed:', e);
+    log.error('[admin-content] getSystemConfig failed', e);
     return {
       id: 'default', heroTitle: '', heroSubtitle: '', heroImage: null,
       announcement: null, showAnnouncement: false,
