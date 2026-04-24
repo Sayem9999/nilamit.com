@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { placeBid, executeBuyItNow } from "@/actions/bid";
 import confetti from "canvas-confetti";
@@ -68,10 +68,15 @@ export function BidPanel({
   const displayPrice = newBids.length > 0 ? newBids[0].amount : latestPrice;
   const displayEndTime = currentEndTime ? new Date(currentEndTime) : latestEndTime;
 
+  // Track previous bid count via ref so we only fire the gavel on an actual
+  // increase. Depending on `playGavel` would re-fire whenever useSound returns
+  // a fresh function reference, double-playing on unrelated re-renders.
+  const prevBidCountRef = useRef(newBids.length);
   useEffect(() => {
-    if (newBids.length > 0) {
+    if (newBids.length > prevBidCountRef.current) {
       playGavel();
     }
+    prevBidCountRef.current = newBids.length;
   }, [newBids.length, playGavel]);
 
   const minBid = displayPrice + minBidIncrement;

@@ -163,7 +163,10 @@ async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
     return { success: false, error: 'Invalid or expired OTP.' };
   }
 
-  await snap.docs[0].ref.update({ verified: true });
+  // Delete on consumption — `users.isPhoneVerified` is the durable record;
+  // keeping spent OTP docs around bloats Firestore reads on the rate-limit
+  // window query above and provides no audit value.
+  await snap.docs[0].ref.delete();
   return { success: true };
 }
 

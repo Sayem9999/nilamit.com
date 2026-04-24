@@ -74,13 +74,34 @@ class BulksmsBDGateway implements SMSGateway {
 // ---- Factory ----
 export function createSMSGateway(): SMSGateway {
   const provider = process.env.SMS_PROVIDER || 'console';
+  const isProd = process.env.NODE_ENV === 'production';
 
   switch (provider) {
-    case 'greenweb':
-      return new GreenWebGateway(process.env.GREENWEB_TOKEN!);
-    case 'bulksmsbd':
-      return new BulksmsBDGateway(process.env.BULKSMS_API_KEY!, process.env.BULKSMS_SENDER_ID!);
+    case 'greenweb': {
+      const token = process.env.GREENWEB_TOKEN;
+      if (!token) {
+        if (isProd) throw new Error('[SMS] GREENWEB_TOKEN is required when SMS_PROVIDER=greenweb');
+        console.warn('[SMS] GREENWEB_TOKEN missing — falling back to console gateway in non-production');
+        return new ConsoleGateway();
+      }
+      return new GreenWebGateway(token);
+    }
+    case 'bulksmsbd': {
+      const apiKey = process.env.BULKSMS_API_KEY;
+      const senderId = process.env.BULKSMS_SENDER_ID;
+      if (!apiKey || !senderId) {
+        if (isProd) throw new Error('[SMS] BULKSMS_API_KEY and BULKSMS_SENDER_ID are required when SMS_PROVIDER=bulksmsbd');
+        console.warn('[SMS] BulksmsBD credentials missing — falling back to console gateway in non-production');
+        return new ConsoleGateway();
+      }
+      return new BulksmsBDGateway(apiKey, senderId);
+    }
     default:
+      // Refuse to log OTPs to stdout in production — that would leak secrets
+      // to the host logs and silently bypass real SMS delivery.
+      if (isProd) {
+        throw new Error('[SMS] SMS_PROVIDER must be set to a real gateway (e.g. "greenweb" or "bulksmsbd") in production');
+      }
       return new ConsoleGateway();
   }
 }

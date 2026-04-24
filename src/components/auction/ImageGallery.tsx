@@ -51,7 +51,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
           src={images[currentIndex]}
           alt={`${title} - Image ${currentIndex + 1}`}
           fill
-          priority
+          priority={currentIndex === 0}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className={`object-cover transition-transform duration-500 ${"group-hover:scale-105"}`}
         />

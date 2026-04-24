@@ -95,7 +95,7 @@ export default function CreateAuctionPage() {
     });
   };
 
-  const updateForm = (field: string, value: string | number | string[]) => {
+  const updateForm = (field: string, value: string | number | string[] | undefined) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -309,7 +309,7 @@ export default function CreateAuctionPage() {
                         "reservePrice",
                         e.target.value
                           ? Number(e.target.value)
-                          : (undefined as unknown as number),
+                          : undefined,
                       )
                     }
                     placeholder={t("reservePricePlaceholder")}
@@ -331,7 +331,7 @@ export default function CreateAuctionPage() {
                         "buyItNowPrice",
                         e.target.value
                           ? Number(e.target.value)
-                          : (undefined as unknown as number),
+                          : undefined,
                       )
                     }
                     placeholder={t("buyNowPricePlaceholder")}

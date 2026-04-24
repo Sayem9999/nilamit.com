@@ -55,6 +55,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "react-hot-toast";
+import Script from "next/script";
 
 export default async function RootLayout({
   children,
@@ -89,21 +90,7 @@ export default async function RootLayout({
             <Footer />
           </Providers>
         </NextIntlClientProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('SW registered');
-                  }, function(err) {
-                    console.log('SW failed: ', err);
-                  });
-                });
-              }
-            `,
-          }}
-        />
+        <Script src="/sw-register.js" strategy="afterInteractive" />
       </body>
     </html>
   );
