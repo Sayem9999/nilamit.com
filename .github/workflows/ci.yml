@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # --- TEST & VERIFY PHASE ---
   verify:
@@ -25,6 +29,23 @@ jobs:
         run: npx tsc --noEmit
       - name: Run Unit & Integration Tests
         run: npx vitest run
+      - name: Production build smoke test
+        run: npm run build
+        env:
+          # Placeholders sufficient to satisfy env.ts zod schema. None reach
+          # runtime — the deploy job injects real secrets via Secret Manager.
+          NODE_ENV: production
+          AUTH_SECRET: ci-placeholder-secret-at-least-32-characters-long
+          ADMIN_EMAILS: ci@example.com
+          FIREBASE_PROJECT_ID: ci-placeholder
+          FIREBASE_CLIENT_EMAIL: ci@ci-placeholder.iam.gserviceaccount.com
+          FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nci\n-----END PRIVATE KEY-----"
+          NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "0"
+          NEXT_PUBLIC_FIREBASE_APP_ID: ci-placeholder
+          UPSTASH_REDIS_REST_URL: https://ci-placeholder.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: ci-placeholder
 
   # --- BUILD & DEPLOY PHASE ---
   deploy:
