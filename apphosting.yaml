@@ -82,16 +82,6 @@ env:
   - variable: NEXT_PUBLIC_APP_URL
     value: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
 
-  # ─── Supabase Storage (keep if still using Supabase for existing images) ─
-  - variable: NEXT_PUBLIC_SUPABASE_URL
-    secret: SUPABASE_URL
-
-  - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
-    secret: SUPABASE_ANON_KEY
-
-  - variable: SUPABASE_SERVICE_ROLE_KEY
-    secret: SUPABASE_SERVICE_ROLE_KEY
-
   # ─── SMS Gateway ─────────────────────────────────────────────
   - variable: SMS_PROVIDER
     value: greenweb           # greenweb | bulksmsbd | console
