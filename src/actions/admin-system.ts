@@ -4,6 +4,7 @@ import { db, snapDocs } from '@/lib/db';
 import { Auction } from '@/types';
 import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
+import { log } from '@/lib/logger';
 
 async function deleteCollection(name: string, batchSize = 100) {
   while (true) {
@@ -44,7 +45,7 @@ export async function adminWipeTestData() {
     return { success: true, message: 'All auction data wiped successfully.' };
   } catch (error: unknown) {
     const err = error as Error;
-    console.error('Wipe Error:', err);
+    log.error('Wipe Error', err);
     return { success: false, error: 'Failed to wipe data: ' + err.message };
   }
 }
@@ -97,7 +98,7 @@ export async function exportTransactionsCSV() {
     return { success: true, data: csv };
   } catch (error: unknown) {
     const err = error as Error;
-    console.error('CSV Export Error:', err);
+    log.error('CSV Export Error', err);
     return { success: false, error: 'Failed to generate CSV: ' + err.message };
   }
 }

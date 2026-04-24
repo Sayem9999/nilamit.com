@@ -8,6 +8,7 @@ import { headers } from 'next/headers';
 import { loginLimiter } from '@/lib/ratelimit';
 import * as Sentry from '@sentry/nextjs';
 import { registerSchema, phoneSignupSchema, passwordResetSchema, formatZodError } from '@/lib/schemas';
+import { log } from '@/lib/logger';
 
 export async function registerUser(data: unknown) {
   const parsed = registerSchema.safeParse(data);
@@ -34,7 +35,7 @@ export async function registerUser(data: unknown) {
 
     return { success: true };
   } catch (e) {
-    console.error('[auth] registerUser:', e);
+    log.error('[auth] registerUser', e);
     Sentry.captureException(e, { tags: { action: 'registerUser' } });
     return { success: false, error: 'Something went wrong. Please try again.' };
   }
@@ -74,7 +75,7 @@ export async function signupWithPhone(data: unknown) {
     });
     return { success: true };
   } catch (e) {
-    console.error('[auth] signupWithPhone:', e);
+    log.error('[auth] signupWithPhone', e);
     Sentry.captureException(e, { tags: { action: 'signupWithPhone' } });
     return { success: false, error: 'Failed to create account.' };
   }
@@ -115,7 +116,7 @@ export async function resetPasswordWithOTP(data: unknown) {
 
     return { success: true };
   } catch (e) {
-    console.error('[auth] resetPasswordWithOTP:', e);
+    log.error('[auth] resetPasswordWithOTP', e);
     Sentry.captureException(e, { tags: { action: 'resetPasswordWithOTP' } });
     return { success: false, error: 'Failed to reset password.' };
   }

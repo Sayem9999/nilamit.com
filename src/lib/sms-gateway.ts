@@ -3,6 +3,8 @@
  * Supports: GreenWeb, BulksmsBD, or console (dev mode)
  */
 
+import { log } from '@/lib/logger';
+
 export interface SMSGateway {
   sendSMS(phone: string, message: string): Promise<{ success: boolean; messageId?: string }>;
 }
@@ -81,7 +83,7 @@ export function createSMSGateway(): SMSGateway {
       const token = process.env.GREENWEB_TOKEN;
       if (!token) {
         if (isProd) throw new Error('[SMS] GREENWEB_TOKEN is required when SMS_PROVIDER=greenweb');
-        console.warn('[SMS] GREENWEB_TOKEN missing — falling back to console gateway in non-production');
+        log.warn('[SMS] GREENWEB_TOKEN missing — falling back to console gateway in non-production');
         return new ConsoleGateway();
       }
       return new GreenWebGateway(token);
@@ -91,7 +93,7 @@ export function createSMSGateway(): SMSGateway {
       const senderId = process.env.BULKSMS_SENDER_ID;
       if (!apiKey || !senderId) {
         if (isProd) throw new Error('[SMS] BULKSMS_API_KEY and BULKSMS_SENDER_ID are required when SMS_PROVIDER=bulksmsbd');
-        console.warn('[SMS] BulksmsBD credentials missing — falling back to console gateway in non-production');
+        log.warn('[SMS] BulksmsBD credentials missing — falling back to console gateway in non-production');
         return new ConsoleGateway();
       }
       return new BulksmsBDGateway(apiKey, senderId);

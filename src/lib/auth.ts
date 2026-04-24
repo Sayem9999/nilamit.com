@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
 import { isAdminEmail } from '@/lib/admin-guard';
+import { log } from '@/lib/logger';
 
 // ─── Inline Firestore Adapter (JWT-strategy, minimal surface) ──
 function FirestoreAdapter(): Adapter {
@@ -86,7 +87,7 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const googleEnabled      = Boolean(googleClientId && googleClientSecret);
 
 if (!googleEnabled && process.env.NODE_ENV === 'production') {
-  console.error('[Auth-WARN] Google OAuth disabled — missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET');
+  log.error('[Auth-WARN] Google OAuth disabled — missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET');
 }
 
 const TOKEN_REFRESH_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
@@ -123,7 +124,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             userLevel: Number(user.userLevel || 1), winningStreak: Number(user.winningStreak || 0),
             isBanned: Boolean(user.isBanned) };
         } catch (e) {
-          console.error('[Auth] credentials authorize error:', e);
+          log.error('[Auth] credentials authorize error', e);
           return null;
         }
       },
@@ -153,7 +154,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             userLevel: Number(user.userLevel || 1), winningStreak: Number(user.winningStreak || 0),
             isBanned: Boolean(user.isBanned) };
         } catch (e) {
-          console.error('[Auth-Phone] authorize error:', e);
+          log.error('[Auth-Phone] authorize error', e);
           return null;
         }
       },
@@ -198,7 +199,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.lastDbRefresh    = Date.now();
           }
         } catch (e) {
-          console.error('[Auth] JWT Firestore refresh failed:', e);
+          log.error('[Auth] JWT Firestore refresh failed', e);
         }
       }
 

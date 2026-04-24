@@ -8,6 +8,7 @@ import { ERROR_CODES } from '@/lib/constants';
 import type { Auction, AuctionFilters, AuctionWithSeller } from '@/types';
 import { AuctionStatus } from '@/types';
 import { createAuctionSchema, formatZodError } from '@/lib/schemas';
+import { log } from '@/lib/logger';
 
 /**
  * Server Action: Fetch auctions with optional filtering
@@ -60,7 +61,7 @@ export async function createAuction(input: unknown) {
     
     return { success: true, auctionId: response.data!.id };
   } catch (error) {
-    console.error('[Action] createAuction failed:', error);
+    log.error('[Action] createAuction failed', error);
     return { success: false, error: 'An unexpected error occurred.' };
   }
 }
@@ -129,7 +130,7 @@ export async function getSpecializedFeeds() {
 
     return { endingSoon, latestBids };
   } catch (error) {
-    console.error('[Action] getSpecializedFeeds failed:', error);
+    log.error('[Action] getSpecializedFeeds failed', error);
     return { endingSoon: [] as AuctionWithSeller[], latestBids: [] as Array<{ id: string; amount: number; createdAt: Date; bidder: { name: string | null }; auction: { id: string; title: string } }> };
   }
 }

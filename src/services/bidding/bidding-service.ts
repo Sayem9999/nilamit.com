@@ -165,7 +165,7 @@ export class BiddingService {
 
     // 2. Notifications
     if (prevBidderEmail && prevBidderEmail !== userEmail) {
-      firebaseSendOutbidEmail(prevBidderEmail, result.auctionTitle, amount, auctionId).catch(console.error);
+      firebaseSendOutbidEmail(prevBidderEmail, result.auctionTitle, amount, auctionId).catch((e) => log.error('bidding: outbid email failed', e, { auctionId }));
     }
 
     if (result.triggeredAlerts.length > 0) {
@@ -174,31 +174,31 @@ export class BiddingService {
           event: FIREBASE_EVENTS.PRICE_ALERT, auctionId,
           auctionTitle: result.auctionTitle, amount, type: alert.type, threshold: alert.thresholdPrice,
         })
-      )).catch(console.error);
+      )).catch((e) => log.error('bidding: price alert notifications failed', e, { auctionId }));
     }
 
     if (result.prevBidderId && result.prevBidderId !== userId) {
       rtdbPush(RTDB_PATHS.userNotifications(result.prevBidderId), {
         event: FIREBASE_EVENTS.OUTBID_ALERT, auctionId,
         auctionTitle: result.auctionTitle, amount, newBidderName: userName ?? null,
-      }).catch(console.error);
+      }).catch((e) => log.error('bidding: outbid RTDB notification failed', e, { auctionId }));
 
-      sendOutbidAlert(result.prevBidderId, result.auctionTitle, amount).catch(console.error);
+      sendOutbidAlert(result.prevBidderId, result.auctionTitle, amount).catch((e) => log.error('bidding: outbid FCM push failed', e, { auctionId }));
     }
 
     // 3. RTDB State
     rtdbSet(RTDB_PATHS.auctionBid(auctionId), {
       event: FIREBASE_EVENTS.NEW_BID, amount,
       endTime: result.newEndTime.toISOString(), bidderName: userName ?? 'Someone',
-    }).catch(console.error);
+    }).catch((e) => log.error('bidding: auction bid RTDB set failed', e, { auctionId }));
 
     rtdbPush(RTDB_PATHS.auctionActivity(auctionId), {
       event: FIREBASE_EVENTS.NEW_BID, amount, bidderName: userName ?? 'Someone',
-    }).catch(console.error);
+    }).catch((e) => log.error('bidding: auction activity push failed', e, { auctionId }));
 
     // 4. Async background tasks
-    checkAndAwardBadges(userId, auctionId, amount, result.antiSnipeTriggered, result.auctionStartTime).catch(console.error);
-    detectShillBidding(auctionId, userId, result.sellerId, amount).catch(console.error);
+    checkAndAwardBadges(userId, auctionId, amount, result.antiSnipeTriggered, result.auctionStartTime).catch((e) => log.error('bidding: badge check failed', e, { auctionId, userId }));
+    detectShillBidding(auctionId, userId, result.sellerId, amount).catch((e) => log.error('bidding: shill detection failed', e, { auctionId, userId }));
   }
 
   static async getAuctionBids(auctionId: string) {

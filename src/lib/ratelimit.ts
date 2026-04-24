@@ -1,6 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import * as Sentry from "@sentry/nextjs";
+import { log } from "@/lib/logger";
 
 /**
  * Rate limiting layer.
@@ -21,11 +22,11 @@ const isProduction = process.env.NODE_ENV === "production";
 
 if (!isConfigured) {
   if (isProduction) {
-    console.error(
+    log.error(
       "[RateLimit] CRITICAL: UPSTASH_REDIS_REST_URL/TOKEN missing in production. All rate-limited endpoints will REJECT requests.",
     );
   } else {
-    console.warn(
+    log.warn(
       "[RateLimit] UPSTASH_REDIS_REST_URL/TOKEN missing. Rate limiting is DISABLED for local development.",
     );
   }
@@ -97,7 +98,7 @@ function createLimiter(prefix: string, limit: number, window: string): Limiter {
       } catch (error) {
         // Upstash hiccup. In production we MUST reject — silently letting
         // requests through would defeat the purpose of having rate limits.
-        console.error(`[RateLimit:${prefix}] Upstash failure:`, error);
+        log.error(`[RateLimit:${prefix}] Upstash failure`, error);
         Sentry.captureException(error, {
           tags: { component: "ratelimit", prefix },
         });

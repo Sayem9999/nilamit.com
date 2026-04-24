@@ -9,6 +9,7 @@ import {
   phoneOtpVerifyLimiter,
   emailOtpSendLimiter,
 } from '@/lib/ratelimit';
+import { log } from '@/lib/logger';
 
 import crypto from 'crypto';
 
@@ -99,7 +100,7 @@ async function internalSendOTP(phone: string, userId?: string, email?: string) {
         html: `<p>Your verification code is: <strong>${otp}</strong></p><p>Verifies ${phone}. Valid 5 minutes.</p>`,
       });
       emailSent = true;
-    } catch (e) { console.error('[phone] Firebase email fallback failed:', e); }
+    } catch (e) { log.error('[phone] Firebase email fallback failed', e); }
   }
 
   if (!smsResult.success && !emailSent) {
@@ -204,7 +205,7 @@ export async function sendEmailOTP(email: string) {
     });
     return { success: true };
   } catch (e) {
-    console.error('[sendEmailOTP] failed:', e);
+    log.error('[sendEmailOTP] failed', e);
     return { success: false, error: 'Failed to send email.' };
   }
 }

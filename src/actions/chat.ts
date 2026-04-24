@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 import { filterPII } from '@/lib/pii-filter';
 import { adminDB, rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { log } from '@/lib/logger';
 
 export async function sendMessage(conversationId: string, content: string, imageUrl?: string) {
   const session = await auth();
@@ -56,7 +57,7 @@ export async function sendMessage(conversationId: string, content: string, image
   rtdbPush(RTDB_PATHS.userNotifications(recipientId), {
     event: FIREBASE_EVENTS.NEW_MESSAGE, conversationId, auctionId: conv.auctionId,
     senderName: session.user.name ?? 'Someone', preview: filtered.slice(0, 60),
-  }).catch(console.error);
+  }).catch((e) => log.error('chat: recipient notification push failed', e));
 
   return { success: true, message: { id: msgId, content: filtered, createdAt: now } };
 }

@@ -1,8 +1,10 @@
 'use client';
 
+import { log } from '@/lib/logger';
+
 export const requestNotificationPermission = async () => {
   if (!('Notification' in window)) {
-    console.log('This browser does not support desktop notification');
+    log.info('This browser does not support desktop notification');
     return false;
   }
 

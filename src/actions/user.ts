@@ -7,6 +7,7 @@ import { User } from '@/types';
 import { apiLimiter } from '@/lib/ratelimit';
 import { sanitizeObject } from '@/lib/sanitizer';
 import { headers } from 'next/headers';
+import { log } from '@/lib/logger';
 
 export async function updateProfile(data: { name?: string; image?: string }) {
   const session = await auth();
@@ -66,7 +67,7 @@ export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string) {
     });
     return { success: true };
   } catch (e) {
-    console.error(`[user] linkMFSAccount ${type}:`, e);
+    log.error(`[user] linkMFSAccount ${type}`, e);
     return { success: false, error: `Failed to link ${type}.` };
   }
 }

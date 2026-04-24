@@ -151,7 +151,7 @@ export async function getAuctionBids(auctionId: string) {
   try {
     return await BiddingService.getAuctionBids(auctionId);
   } catch (error) {
-    console.error('[Action] getAuctionBids failed:', error);
+    log.error('[Action] getAuctionBids failed', error);
     return [];
   }
 }

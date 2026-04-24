@@ -4,6 +4,7 @@ import { db, newId, docData, snapDocs } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { AlertType, Alert } from '@/types';
+import { log } from '@/lib/logger';
 
 /**
  * Smart Engagement Layer - Alerts
@@ -40,7 +41,7 @@ export async function createAlert(data: CreateAlertData) {
     revalidatePath('/');
     return { success: true, alert };
   } catch (error) {
-    console.error('[alerts] createAlert failed:', error);
+    log.error('[alerts] createAlert failed', error);
     return { success: false, error: 'Failed to create alert' };
   }
 }

@@ -8,6 +8,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { log } from '@/lib/logger';
 
 // ─── Auth ─────────────────────────────────────────────────────
 /**
@@ -24,7 +25,7 @@ export function verifyCronSecret(req: Request): Response | null {
 
   // Production MUST have a secret configured. Refuse to serve otherwise.
   if (isProduction && !cronSecret) {
-    console.error('[Cron] CRON_SECRET env var is not set — blocking all cron requests in production');
+    log.error('[Cron] CRON_SECRET env var is not set — blocking all cron requests in production');
     return new Response('Service misconfigured', { status: 500 });
   }
 
@@ -82,7 +83,7 @@ export async function withRetry<T>(
       return { data, attempts: attempt };
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
-      console.error(`[Cron Retry ${attempt}/${maxAttempts}] ${lastError.message}`);
+      log.error(`[Cron Retry ${attempt}/${maxAttempts}] ${lastError.message}`, lastError);
 
       if (attempt < maxAttempts) {
         await sleep(delay);
@@ -100,7 +101,7 @@ export function cronSuccess(data: Record<string, unknown>) {
 }
 
 export function cronError(message: string, status = 500) {
-  console.error(`[Cron] Error: ${message}`);
+  log.error(`[Cron] Error: ${message}`);
   return NextResponse.json({ success: false, error: message }, { status });
 }
 

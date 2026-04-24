@@ -21,6 +21,7 @@ import { getDatabase, type Database } from 'firebase/database';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAuth, signInWithCustomToken, type Auth } from 'firebase/auth';
 import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
+import { log } from '@/lib/logger';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAOwypGtSAeCsZpHogZx7Jt_MPX2nh3GZM",
@@ -89,7 +90,7 @@ export async function ensureFirebaseAuth(): Promise<void> {
 
     const res = await fetch('/api/firebase/token');
     if (!res.ok) {
-      console.warn('[Firebase Client] Could not get custom token — private RTDB access unavailable.');
+      log.warn('[Firebase Client] Could not get custom token — private RTDB access unavailable.');
       return;
     }
     const { token } = await res.json() as { token: string };
