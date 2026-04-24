@@ -1,10 +1,11 @@
 import { db, snapDocs, newId } from '@/lib/db';
-import { Auction, AuctionFilters, AuctionWithSeller, CreateAuctionInput } from '@/types';
+import { Auction, AuctionFilters, AuctionWithSeller } from '@/types';
 import { toSellerPublic } from '@/lib/db';
 import { sanitizeObject } from '@/lib/sanitizer';
 import { filterPII } from '@/lib/pii-filter';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
+import type { CreateAuctionInputValidated } from '@/lib/schemas';
 
 export class AuctionService {
   /**
@@ -71,11 +72,18 @@ export class AuctionService {
       const sellerSnaps = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
       const sellerMap = new Map(sellerSnaps.map(s => [s.id, toSellerPublic(s.id, s.data())]));
 
-      const auctions = auctionDocs.map(a => ({
-        ...a,
-        seller: sellerMap.get(a.sellerId)!,
-        endTime: a.endTime?.toDate ? a.endTime.toDate() : new Date(a.endTime),
-      })) as AuctionWithSeller[];
+      const auctions = auctionDocs.map(a => {
+        const rawEnd = a.endTime as unknown as { toDate?: () => Date } | Date | string | number;
+        const endTime =
+          rawEnd && typeof (rawEnd as { toDate?: () => Date }).toDate === 'function'
+            ? (rawEnd as { toDate: () => Date }).toDate()
+            : new Date(rawEnd as Date | string | number);
+        return {
+          ...a,
+          seller: sellerMap.get(a.sellerId)!,
+          endTime,
+        };
+      }) as AuctionWithSeller[];
 
       return successResponse({
         auctions,
@@ -92,7 +100,7 @@ export class AuctionService {
   /**
    * Create a new auction listing
    */
-  static async create(input: CreateAuctionInput, userId: string): Promise<ServiceResponse<Auction>> {
+  static async create(input: CreateAuctionInputValidated, userId: string): Promise<ServiceResponse<Auction>> {
     try {
       const sanitizedInput = sanitizeObject(input);
       const filteredTitle = filterPII(sanitizedInput.title);
@@ -109,6 +117,9 @@ export class AuctionService {
         category: sanitizedInput.category,
         startingPrice: sanitizedInput.startingPrice,
         currentPrice: sanitizedInput.startingPrice,
+        // Denormalised so the bid transaction can read the previous top bidder
+        // via tx.get(auctionRef) rather than a non-transactional query.
+        currentBidderId: null,
         minBidIncrement: sanitizedInput.minBidIncrement ?? 10,
         startTime: new Date(sanitizedInput.startTime),
         endTime: new Date(sanitizedInput.endTime),

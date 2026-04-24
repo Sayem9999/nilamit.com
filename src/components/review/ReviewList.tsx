@@ -13,7 +13,7 @@ interface ReviewListProps {
 interface Review {
   id: string;
   rating: number;
-  comment?: string;
+  comment?: string | null;
   createdAt: Date;
   from: {
     name: string | null;

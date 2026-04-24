@@ -30,8 +30,12 @@ export function UsersTab() {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  // Cursor stack: index 0 is page 1 (null cursor). Index N is the cursor that
+  // produced page N+1. Push on Next, pop on Previous.
+  const [cursorStack, setCursorStack] = useState<(string | null)[]>([null]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+
+  const pageNumber = cursorStack.length;
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -40,12 +44,13 @@ export function UsersTab() {
 
   useEffect(() => {
     let mounted = true;
+    const currentCursor = cursorStack[cursorStack.length - 1] ?? null;
     const load = async () => {
       setLoading(true);
-      const res = await getAdminUsers(page, 20, debouncedSearch);
+      const res = await getAdminUsers({ cursor: currentCursor, limit: 20, search: debouncedSearch });
       if (mounted && res.success) {
         setUsers((res.users as unknown as AdminUser[]) || []);
-        setTotalPages(res.pages || 1);
+        setNextCursor(res.nextCursor ?? null);
       }
       if (mounted) setLoading(false);
     };
@@ -53,7 +58,7 @@ export function UsersTab() {
     return () => {
       mounted = false;
     };
-  }, [page, debouncedSearch]);
+  }, [cursorStack, debouncedSearch]);
 
   const handleToggleVerified = (userId: string, currentStatus: boolean) => {
     startTransition(async () => {
@@ -92,7 +97,7 @@ export function UsersTab() {
             User Management
           </h2>
           <p className="text-sm text-gray-500">
-            Page {page} of {totalPages}
+            Page {pageNumber}
           </p>
         </div>
         <div className="relative">
@@ -102,7 +107,7 @@ export function UsersTab() {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setPage(1);
+              setCursorStack([null]);
             }}
             placeholder="Search users..."
             className="bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
@@ -235,22 +240,22 @@ export function UsersTab() {
           </table>
           
           {/* Pagination Controls */}
-          {totalPages > 1 && (
+          {(pageNumber > 1 || nextCursor) && (
             <div className="px-4 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
               <p className="text-xs text-gray-500">
-                Showing page {page} of {totalPages}
+                Showing page {pageNumber}
               </p>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
+                  onClick={() => setCursorStack((s) => (s.length > 1 ? s.slice(0, -1) : s))}
+                  disabled={pageNumber === 1}
                   className="px-3 py-1 rounded-lg border border-gray-200 text-xs font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Previous
                 </button>
                 <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
+                  onClick={() => nextCursor && setCursorStack((s) => [...s, nextCursor])}
+                  disabled={!nextCursor}
                   className="px-3 py-1 rounded-lg border border-gray-200 text-xs font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Next

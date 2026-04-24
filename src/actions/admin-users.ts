@@ -1,6 +1,6 @@
 'use server';
 
-import { db, snapDocs } from '@/lib/db';
+import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
 import { User } from '@/types';
 import { revalidatePath } from 'next/cache';
@@ -61,28 +61,51 @@ export async function unbanUser(userId: string) {
   return { success: true };
 }
 
-export async function getAdminUsers(page = 1, limit = 20, search?: string) {
+/**
+ * Cursor-paginated admin user listing.
+ *
+ * Why cursor instead of offset: Firestore's `.offset(n)` reads (and bills for)
+ * every skipped document. On a `users` collection that grows without bound,
+ * page 50 means scanning 1000 docs server-side just to throw them away. Using
+ * `startAfter(cursor)` is O(1) per page regardless of position.
+ *
+ * Cursor = the previous page's last user `id`. We reconstruct the doc snapshot
+ * with `db.collection('users').doc(cursor).get()`.
+ */
+export async function getAdminUsers(opts: {
+  cursor?: string | null;
+  limit?: number;
+  search?: string;
+} = {}) {
   await requireAdmin();
+  const limit = opts.limit ?? 20;
 
   let query: FirebaseFirestore.Query = db.collection('users');
 
-  if (search?.trim()) {
-    const s = search.trim();
-    // Case-insensitive prefix search is hard in Firestore. 
-    // This is a simple prefix search (case-sensitive).
+  if (opts.search?.trim()) {
+    const s = opts.search.trim();
+    // Case-sensitive prefix search. The composite index for this is
+    // (name ASC, createdAt DESC) — see firestore.indexes.json.
     query = query.where('name', '>=', s).where('name', '<=', s + '\uf8ff');
   }
 
-  const totalSnap = await query.count().get();
-  const total = totalSnap.data().count;
+  query = query.orderBy('createdAt', 'desc');
 
-  const usersSnap = await query
-    .orderBy('createdAt', 'desc')
-    .limit(limit)
-    .offset((page - 1) * limit)
-    .get();
+  if (opts.cursor) {
+    const cursorSnap = await db.collection('users').doc(opts.cursor).get();
+    if (cursorSnap.exists) {
+      query = query.startAfter(cursorSnap);
+    }
+  }
 
-  const users = snapDocs<User>(usersSnap);
+  // Fetch one extra to know if there's another page.
+  const usersSnap = await query.limit(limit + 1).get();
+  const allDocs = usersSnap.docs;
+  const hasMore = allDocs.length > limit;
+  const pageDocs = hasMore ? allDocs.slice(0, limit) : allDocs;
+  const nextCursor = hasMore ? pageDocs[pageDocs.length - 1].id : null;
+
+  const users = pageDocs.map((d) => ({ ...(d.data() as Record<string, unknown>), id: d.id })) as unknown as User[];
 
   // Fetch counts ONLY for the users on this page (targeted sub-queries)
   const pagedUsers = await Promise.all(users.map(async (user) => {
@@ -101,5 +124,5 @@ export async function getAdminUsers(page = 1, limit = 20, search?: string) {
     };
   }));
 
-  return { success: true, users: pagedUsers, total, pages: Math.ceil(total / limit) };
+  return { success: true, users: pagedUsers, nextCursor, hasMore };
 }

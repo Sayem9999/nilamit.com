@@ -82,12 +82,14 @@ export function BidPanel({
   ];
 
   const handleBid = () => {
+    if (isPending) return;
     if (!session) {
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }
       return;
     }
+    if (bidAmount < minBid) return;
 
     startTransition(async () => {
       const res = await placeBid(auctionId, bidAmount);
@@ -117,6 +119,7 @@ export function BidPanel({
   };
 
   const handleBuyItNow = () => {
+    if (isPending) return;
     if (!session) {
       if (typeof window !== "undefined") {
         window.location.href = "/login";

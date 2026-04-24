@@ -14,7 +14,7 @@ export async function getLeaderboardData() {
     .get();
 
   const topStreaks = streaksSnap.docs.map(doc => {
-    const data = doc.data() as User;
+    const data = doc.data() as User & { badges?: { badgeId: string }[] };
     return {
       id: doc.id,
       name: data.name,
@@ -30,7 +30,7 @@ export async function getLeaderboardData() {
     .get();
 
   const topBuyers = buyersSnap.docs.map(doc => {
-    const data = doc.data() as User;
+    const data = doc.data() as User & { badges?: { badgeId: string }[] };
     return {
       id: doc.id,
       name: data.name,

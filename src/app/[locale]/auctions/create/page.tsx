@@ -84,8 +84,8 @@ export default function CreateAuctionPage() {
         ...form,
         images: form.images.filter(Boolean),
       });
-      if (result.success && result.auction) {
-        router.push(`/auctions/${result.auction.id}`);
+      if (result.success && result.auctionId) {
+        router.push(`/auctions/${result.auctionId}`);
       } else {
         setError(result.error || t("createAuctionFailed"));
         if (result.error === "PHONE_NOT_VERIFIED") {

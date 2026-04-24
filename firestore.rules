@@ -75,6 +75,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Admin audit log — admins can read; only Server Actions write.
+    match /admin_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Cron failure log — admins can read; only Server Actions / cron handlers write.
+    match /cronFailures/{failureId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ─── CATCH-ALL ───
     match /{document=**} {
       allow read, write: if false;

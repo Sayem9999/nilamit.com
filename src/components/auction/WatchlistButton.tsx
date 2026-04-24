@@ -34,13 +34,18 @@ export function WatchlistButton({
       return;
     }
 
-    // Optimistic update
-    setIsWatchlisted(!isWatchlisted);
+    if (isPending) return;
+
+    // Snapshot the pre-toggle state OUTSIDE startTransition so rollback uses
+    // the real previous value, not whatever closure `isWatchlisted` has at
+    // the time the server responds.
+    const previous = isWatchlisted;
+    setIsWatchlisted(!previous);
 
     startTransition(async () => {
       const result = await toggleWatchlist(auctionId);
       if (!result.success) {
-        setIsWatchlisted(isWatchlisted);
+        setIsWatchlisted(previous);
         if (result.error !== "Unauthorized") {
           toast.error(result.error || "Failed to update watchlist");
         }

@@ -9,6 +9,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
@@ -17,12 +18,40 @@ import { Auction, Bid } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
+interface CronFailure {
+  auctionId: string;
+  attempts: number;
+  error: string;
+}
+
 interface ProcessResult {
   totalExpired: number;
   sold: number;
   expired: number;
   failed: number;
   failedIds: string[];
+  failures: CronFailure[];
+}
+
+/**
+ * Persist a cron failure so it survives the request lifecycle. Vercel logs
+ * roll over and Sentry events can be sampled / dropped — Firestore is the
+ * authoritative record an operator can query later to retry by hand.
+ */
+async function recordCronFailure(failure: CronFailure & { job: string }) {
+  try {
+    await db.collection('cronFailures').add({
+      ...failure,
+      createdAt: new Date(),
+    });
+  } catch (err) {
+    // If we can't even write the failure record, we still need the operator
+    // to find out — surface to Sentry directly.
+    Sentry.captureException(err, {
+      tags: { component: 'cron', job: failure.job, secondary: 'failure-write' },
+      extra: failure as unknown as Record<string, unknown>,
+    });
+  }
 }
 
 async function processExpiredAuctions(): Promise<ProcessResult> {
@@ -41,6 +70,7 @@ async function processExpiredAuctions(): Promise<ProcessResult> {
     expired: 0,
     failed: 0,
     failedIds: [],
+    failures: [],
   };
 
   for (const auction of expiredAuctions) {
@@ -94,6 +124,11 @@ async function processExpiredAuctions(): Promise<ProcessResult> {
       console.error(`[Cron:process-auctions] Auction ${auction.id} failed after ${attemptResult.attempts} attempts:`, attemptResult.error);
       result.failed++;
       result.failedIds.push(auction.id);
+      result.failures.push({
+        auctionId: auction.id,
+        attempts:  attemptResult.attempts,
+        error:     attemptResult.error.message,
+      });
     } else if (attemptResult.data === true) {
       result.sold++;
     } else {
@@ -118,6 +153,12 @@ export async function GET(req: Request) {
 
   if (r.failed > 0) {
     console.error(`[Cron:process-auctions] ${r.failed} auctions failed to process:`, r.failedIds);
+    Sentry.captureMessage(
+      `[Cron:process-auctions] ${r.failed}/${r.totalExpired} auctions failed`,
+      { level: 'error', tags: { component: 'cron', job: 'process-auctions' }, extra: { failedIds: r.failedIds } },
+    );
+    // Persist each failure so an operator can find and re-drive them later.
+    await Promise.all(r.failures.map((f) => recordCronFailure({ ...f, job: 'process-auctions' })));
   }
 
   return NextResponse.json({

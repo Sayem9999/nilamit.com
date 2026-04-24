@@ -61,7 +61,11 @@ export function validateEnv(): Env {
       .map(([key, messages]) => `  • ${key}: ${messages?.join(', ')}`)
       .join('\n');
 
-    const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build' || process.env.CI === 'true';
+    const isBuildPhase =
+      process.env.NEXT_PHASE === 'phase-production-build' ||
+      process.env.CI === 'true' ||
+      process.env.npm_lifecycle_event === 'build' ||
+      process.env.NEXT_BUILD === 'true';
     
     if (isBuildPhase) {
       console.warn(`\n[Env] ⚠️  Missing/Invalid environment variables during BUILD:\n${errorMessages}\nContinuing build anyway...\n`);

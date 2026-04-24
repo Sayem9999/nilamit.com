@@ -23,25 +23,13 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { canReviewAuction } from "@/actions/review";
-import dynamic from "next/dynamic";
-
-const BidHistory = dynamic(() => import("@/components/auction/BidHistory").then(mod => mod.BidHistory), {
-  loading: () => <div className="h-20 animate-pulse bg-gray-50 rounded-xl" />,
-  ssr: false
-});
-
-const ReviewForm = dynamic(() => import("@/components/review/ReviewForm").then(mod => mod.ReviewForm), {
-  ssr: false
-});
-
-const ReportModal = dynamic(() => import("@/components/auction/ReportModal").then(mod => mod.ReportModal), {
-  ssr: false
-});
-
-const ChatInterface = dynamic(() => import("@/components/social/ChatInterface"), {
-  loading: () => <div className="h-40 animate-pulse bg-gray-50 rounded-xl" />,
-  ssr: false
-});
+// Static imports — `dynamic({ ssr: false })` is no longer permitted from
+// Server Components in Next.js 16, and these are all client components so
+// Next handles the client/server boundary on its own.
+import { BidHistory } from "@/components/auction/BidHistory";
+import { ReviewForm } from "@/components/review/ReviewForm";
+import { ReportModal } from "@/components/auction/ReportModal";
+import ChatInterface from "@/components/social/ChatInterface";
 
 import { AuctionWithBids, AuctionStatus } from "@/types";
 import { auth } from "@/lib/auth";
@@ -99,10 +87,12 @@ export default async function AuctionDetailPage({ params }: Props) {
   const t = await getTranslations("Auction");
   if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
 
+  // Each of these is independently optional for rendering — wrap individually
+  // so a single failure (e.g. chat unavailable) doesn't blow up the whole page.
   const [bids, watched, chat] = await Promise.all([
-    getAuctionBids(id),
-    isWatched(id),
-    getAuctionChat(id)
+    getAuctionBids(id).catch((e) => { console.error('[AuctionDetail] getAuctionBids:', e); return [] as Awaited<ReturnType<typeof getAuctionBids>>; }),
+    isWatched(id).catch((e) => { console.error('[AuctionDetail] isWatched:', e); return false; }),
+    getAuctionChat(id).catch((e) => { console.error('[AuctionDetail] getAuctionChat:', e); return null; }),
   ]);
 
   const jsonLd = {

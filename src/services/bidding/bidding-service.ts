@@ -22,12 +22,25 @@ interface BidSideEffectParams {
 
 export class BiddingService {
   /**
-   * Execute an atomic bid transaction
+   * Execute an atomic bid transaction.
+   *
+   * Correctness notes:
+   *   - All values used for validation MUST come from `tx.get(aRef)`. Firestore
+   *     transactions only lock document reads via `tx.get`; collection queries
+   *     (`.where(...).get()`) inside a transaction are NOT transactional, so
+   *     concurrent bids would each read the same "previous" state and both win.
+   *   - The previous top bidder (used for outbid notifications) is therefore
+   *     denormalised onto the auction document as `currentBidderId`, so we can
+   *     read it transactionally.
+   *   - Pre-existing alerts for the auction are also fetched OUTSIDE the
+   *     transaction (after commit) — they're advisory, not authoritative, and
+   *     querying them inside the transaction would expose the same race.
    */
   static async placeBid(auctionId: string, amount: number, userId: string, userName: string, userEmail: string): Promise<PlaceBidResult> {
     return log.time('BiddingService.placeBid', async () => {
-      const result = await db.runTransaction(async (tx) => {
-        const aRef  = db.collection('auctions').doc(auctionId);
+      const aRef = db.collection('auctions').doc(auctionId);
+
+      const txResult = await db.runTransaction(async (tx) => {
         const aSnap = await tx.get(aRef);
         if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
 
@@ -38,67 +51,61 @@ export class BiddingService {
         if (now >= endTime)                  throw new Error(ERROR_CODES.AUCTION_ENDED);
         if (auction.sellerId === userId)     throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
 
+        // Validate against the transactionally-locked currentPrice. Two
+        // concurrent bids cannot both pass this check — one will retry.
         const minRequired = (auction.currentPrice ?? auction.startingPrice) + (auction.minBidIncrement ?? 10);
         if (amount < minRequired) throw new Error(`${ERROR_CODES.BID_TOO_LOW}: ৳${minRequired.toLocaleString()}`);
 
-        // Previous top bid
-        const prevBidsSnap = await db.collection('bids')
-          .where('auctionId', '==', auctionId)
-          .orderBy('amount', 'desc')
-          .limit(1)
-          .get();
-        const prevBid = prevBidsSnap.empty ? null : prevBidsSnap.docs[0].data();
+        // Previous top bidder is read from the auction doc itself (locked by tx).
+        const prevBidderId: string | null = auction.currentBidderId ?? null;
 
         // Create bid
         const bidId  = newId();
         const bidRef = db.collection('bids').doc(bidId);
         tx.set(bidRef, { id: bidId, amount, auctionId, bidderId: userId, createdAt: now });
 
-        // Anti-sniping: Extend if bid is placed in the final window
+        // Anti-sniping: Extend if bid is placed in the final window. We extend
+        // from the current `endTime` (not `now`) so a bidder cannot SHORTEN
+        // the auction by bidding early in the soft-close window.
         const timeUntilEnd     = endTime.getTime() - now.getTime();
         let newEndTime         = endTime;
         let antiSnipeTriggered = false;
-        
+
         if (timeUntilEnd <= SOFT_CLOSE_WINDOW_MS) {
-          // New end time is now + extension, or current end + extension
-          // We use current end + extension to prevent users from 'reducing' the time by bidding early in the window
           newEndTime         = new Date(endTime.getTime() + SOFT_CLOSE_EXTENSION_MS);
           antiSnipeTriggered = true;
         }
 
         tx.update(aRef, {
-          currentPrice: amount,
-          endTime:      newEndTime,
-          wasExtended:  antiSnipeTriggered ? true : auction.wasExtended,
-          bidCount:     (auction.bidCount ?? 0) + 1,
-          updatedAt:    now,
+          currentPrice:    amount,
+          currentBidderId: userId,                                 // denormalised for the next bid's tx read
+          endTime:         newEndTime,
+          wasExtended:     antiSnipeTriggered ? true : auction.wasExtended,
+          bidCount:        (auction.bidCount ?? 0) + 1,
+          updatedAt:       now,
         });
 
-        // Active alerts
-        const alertsSnap = await db.collection('alerts')
-          .where('auctionId', '==', auctionId)
-          .where('isActive', '==', true)
-          .get();
-
-        const alerts = snapDocs<Alert>(alertsSnap);
-        const triggeredAlerts = alerts.filter((a) =>
-          a.userId !== userId &&
-          (a.type === 'OUTBID' || (a.type === 'TARGET_REACHED' && (a.thresholdPrice ?? 0) <= amount))
-        );
-
-        triggeredAlerts
-          .filter((a) => a.type === 'TARGET_REACHED')
-          .forEach((a) => tx.update(db.collection('alerts').doc(a.id), { isActive: false }));
-
         return {
-          bidId, newEndTime, antiSnipeTriggered,
-          prevBidderId:  prevBid?.bidderId ?? null,
-          auctionTitle:  auction.title,
+          bidId,
+          newEndTime,
+          antiSnipeTriggered,
+          prevBidderId,
+          auctionTitle:    auction.title,
           auctionStartTime: auction.startTime?.toDate ? auction.startTime.toDate() : new Date(auction.startTime),
-          triggeredAlerts,
-          sellerId: auction.sellerId,
+          sellerId:        auction.sellerId,
         };
       });
+
+      // Alerts are fetched + deactivated AFTER the bid commits. They're
+      // notification triggers, not authoritative state, so a small window
+      // between commit and alert update is acceptable. Keeping them out of
+      // the transaction means we don't reintroduce a non-transactional query.
+      const triggeredAlerts = await this.processAlertsAfterBid(auctionId, userId, amount);
+
+      const result: BidSideEffectParams = {
+        ...txResult,
+        triggeredAlerts,
+      };
 
       // Trigger Side Effects (Async)
       this.handleBidSideEffects(result, auctionId, userId, userName, userEmail, amount);
@@ -110,6 +117,39 @@ export class BiddingService {
         antiSnipeTriggered: result.antiSnipeTriggered,
       };
     }, { auctionId, userId, amount });
+  }
+
+  /**
+   * Find active alerts for an auction that should fire because of `amount`.
+   * Deactivates any TARGET_REACHED alerts that triggered. Runs OUTSIDE the
+   * bid transaction — it is advisory, not authoritative state.
+   */
+  private static async processAlertsAfterBid(
+    auctionId: string,
+    bidderId: string,
+    amount: number,
+  ): Promise<Alert[]> {
+    const alertsSnap = await db.collection('alerts')
+      .where('auctionId', '==', auctionId)
+      .where('isActive', '==', true)
+      .get();
+
+    const alerts = snapDocs<Alert>(alertsSnap);
+    const triggered = alerts.filter((a) =>
+      a.userId !== bidderId &&
+      (a.type === 'OUTBID' || (a.type === 'TARGET_REACHED' && (a.thresholdPrice ?? 0) <= amount))
+    );
+
+    const targetReached = triggered.filter((a) => a.type === 'TARGET_REACHED');
+    if (targetReached.length > 0) {
+      const batch = db.batch();
+      for (const a of targetReached) {
+        batch.update(db.collection('alerts').doc(a.id), { isActive: false });
+      }
+      await batch.commit();
+    }
+
+    return triggered;
   }
 
   /**
@@ -172,10 +212,17 @@ export class BiddingService {
     const bidderSnaps = await Promise.all(bidderIds.map(id => db.collection('users').doc(id).get()));
     const biddersMap  = new Map(bidderSnaps.map(s => [s.id, { id: s.id, name: s.data()?.name ?? null, image: s.data()?.image ?? null }]));
 
-    return snap.docs.map(d => {
-      const b = d.data();
-      return { ...b, id: d.id, createdAt: b.createdAt?.toDate?.() ?? new Date(b.createdAt),
-        bidder: biddersMap.get(b.bidderId) ?? { id: b.bidderId, name: null, image: null } };
+    return snap.docs.map((d) => {
+      const b = d.data() as { amount: number; auctionId: string; bidderId: string; createdAt: { toDate?: () => Date } | Date };
+      const createdAt = b.createdAt instanceof Date ? b.createdAt : b.createdAt?.toDate?.() ?? new Date();
+      return {
+        id: d.id,
+        amount: b.amount,
+        auctionId: b.auctionId,
+        bidderId: b.bidderId,
+        createdAt,
+        bidder: biddersMap.get(b.bidderId) ?? { id: b.bidderId, name: null as string | null, image: null as string | null },
+      };
     });
   }
 }

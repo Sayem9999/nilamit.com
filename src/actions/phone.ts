@@ -4,6 +4,11 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { normalizePhone } from '@/lib/utils';
 import { smsGateway } from '@/lib/sms-gateway';
+import {
+  phoneOtpSendLimiter,
+  phoneOtpVerifyLimiter,
+  emailOtpSendLimiter,
+} from '@/lib/ratelimit';
 
 import crypto from 'crypto';
 
@@ -50,6 +55,15 @@ export async function requestStandaloneOTP(phone: string) {
 }
 
 async function internalSendOTP(phone: string, userId?: string, email?: string) {
+  // Per-phone-number rate limit (independent of caller IP). Without this an
+  // attacker can rotate IPs and burn through SMS budget on arbitrary numbers,
+  // or harass a single victim by spamming OTP texts to their phone.
+  const sendGate = await phoneOtpSendLimiter.limit(`phone_send_${phone}`);
+  if (!sendGate.success) {
+    return { success: false, error: 'Too many OTP requests. Please try again in an hour.' };
+  }
+
+  // Belt-and-braces: also enforce against Firestore in case Redis is wiped.
   const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
   const rateSnap   = await db.collection('phoneVerifications')
     .where('phone', '==', phone)
@@ -112,6 +126,14 @@ export async function verifyStandaloneOTP(phone: string, otp: string) {
 }
 
 async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
+  // Cap verification attempts per phone. A 6-digit OTP is brute-forceable in
+  // <1M tries; without a per-number limit an attacker can spray attempts as
+  // fast as Firestore will respond.
+  const verifyGate = await phoneOtpVerifyLimiter.limit(`phone_verify_${phone}`);
+  if (!verifyGate.success) {
+    return { success: false, error: 'Too many verification attempts. Please request a new code.' };
+  }
+
   const hashedOTP = hashOTP(otp);
   const now       = new Date();
 
@@ -146,31 +168,40 @@ async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
 }
 
 export async function sendEmailOTP(email: string) {
+  // Per-address rate limit prevents email-bombing a victim's inbox or burning
+  // Resend budget by enumerating addresses.
+  const normalized = email.trim().toLowerCase();
+  const sendGate = await emailOtpSendLimiter.limit(`email_send_${normalized}`);
+  if (!sendGate.success) {
+    return { success: false, error: 'Too many OTP requests. Try again in an hour.' };
+  }
+
   const otp        = generateOTP();
   const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
 
   const rateSnap = await db.collection('verificationTokens')
-    .where('identifier', '==', email)
+    .where('identifier', '==', normalized)
     .where('expires', '>', oneHourAgo)
     .get();
   if (rateSnap.size >= MAX_OTP_PER_HOUR) {
     return { success: false, error: 'Too many OTP requests. Try again in an hour.' };
   }
 
-  const tokenId = `${email}__${otp}`;
+  const tokenId = `${normalized}__${otp}`;
   await db.collection('verificationTokens').doc(tokenId).set({
-    identifier: email, token: otp, expires: new Date(Date.now() + OTP_EXPIRY_MS),
+    identifier: normalized, token: otp, expires: new Date(Date.now() + OTP_EXPIRY_MS),
   });
 
   try {
     const { sendEmail } = await import('@/lib/firebase-email');
     await sendEmail({
-      to: email,
+      to: normalized,
       subject: 'Your nilamit.com Login Code',
       html: `<p>Your code: <strong>${otp}</strong> — valid 5 minutes.</p>`,
     });
     return { success: true };
   } catch (e) {
+    console.error('[sendEmailOTP] failed:', e);
     return { success: false, error: 'Failed to send email.' };
   }
 }

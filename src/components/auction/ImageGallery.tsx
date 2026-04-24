@@ -10,7 +10,17 @@ interface ImageGalleryProps {
 }
 
 export function ImageGallery({ images, title }: ImageGalleryProps) {
+  // "Adjusting state during render" pattern (React docs): when the parent
+  // swaps to a different gallery we reset the index inline instead of in an
+  // effect. This avoids the setState-in-effect lint warning and the extra
+  // render the effect would cause, and crucially prevents an out-of-bounds
+  // `images[currentIndex]` read on the first render after the swap.
+  const [trackedImages, setTrackedImages] = useState(images);
   const [currentIndex, setCurrentIndex] = useState(0);
+  if (images !== trackedImages) {
+    setTrackedImages(images);
+    setCurrentIndex(0);
+  }
 
   if (!images || images.length === 0) {
     return (

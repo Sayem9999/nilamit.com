@@ -7,6 +7,7 @@
  */
 
 import * as Sentry from '@sentry/nextjs';
+import { scrubEvent, scrubBreadcrumb } from './src/lib/sentry-scrub';
 
 const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
@@ -21,11 +22,15 @@ if (SENTRY_DSN) {
     replaysOnErrorSampleRate: 0.1,   // Capture replay only on error
 
     enabled: process.env.NODE_ENV === 'production',
+    sendDefaultPii: false,
 
     ignoreErrors: [
       'ResizeObserver loop limit exceeded',  // Browser quirk — not actionable
       'ChunkLoadError',                      // User navigated away mid-chunk-load
       'Network request failed',              // User offline
     ],
+
+    beforeSend: scrubEvent,
+    beforeBreadcrumb: scrubBreadcrumb,
   });
 }

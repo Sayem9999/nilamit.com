@@ -19,24 +19,29 @@ import { NextResponse } from 'next/server';
  *   x-cron-secret: <CRON_SECRET>           ← alternative header
  */
 export function verifyCronSecret(req: Request): Response | null {
-  // Skip auth check in development
-  if (process.env.NODE_ENV !== 'production') return null;
-
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // Production MUST have a secret configured. Refuse to serve otherwise.
+  if (isProduction && !cronSecret) {
     console.error('[Cron] CRON_SECRET env var is not set — blocking all cron requests in production');
     return new Response('Service misconfigured', { status: 500 });
   }
 
-  const authHeader     = req.headers.get('authorization');
-  const secretHeader   = req.headers.get('x-cron-secret');
-  const expectedBearer = `Bearer ${cronSecret}`;
+  // If a secret is configured (even in non-prod environments like staging),
+  // ALWAYS validate it. Skipping the check just because NODE_ENV !== 'production'
+  // means any internet-reachable preview environment exposes cron endpoints.
+  if (cronSecret) {
+    const authHeader     = req.headers.get('authorization');
+    const secretHeader   = req.headers.get('x-cron-secret');
+    const expectedBearer = `Bearer ${cronSecret}`;
 
-  if (authHeader !== expectedBearer && secretHeader !== cronSecret) {
-    return new Response('Unauthorized', { status: 401 });
+    if (authHeader !== expectedBearer && secretHeader !== cronSecret) {
+      return new Response('Unauthorized', { status: 401 });
+    }
   }
 
-  return null; // Authorised
+  return null; // Authorised (or local dev with no secret configured)
 }
 
 // ─── Retry ────────────────────────────────────────────────────

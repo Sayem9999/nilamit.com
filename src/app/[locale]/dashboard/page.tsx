@@ -52,7 +52,10 @@ export default async function DashboardPage({
   // Fetch relevant data based on tab
   let watchlistAuctions: AuctionWithSeller[] = [];
   let activeBids: AuctionWithSeller[] = [];
-  let escrowTransactions: unknown[] = [];
+  // Intentional any[]: this slot holds one of three shapes depending on
+  // currentTab (escrow list, conversations list, or a single SellerStats).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let escrowTransactions: any[] = [];
 
   if (currentTab === "listings") {
     const rawSnap = await db.collection('auctions')
