@@ -26,15 +26,20 @@ describe('Security Sanitizer', () => {
 });
 
 describe('PII Filter', () => {
+  // The PII filter intentionally emits a Bangla replacement string so users
+  // see the masking notice in the marketplace's primary language.
+  // Source of truth: REPLACEMENT_TEXT in src/lib/pii-filter.ts.
+  const REPLACEMENT = '[নিরাপত্তার স্বার্থে লুকানো]';
+
   it('should mask Bangladeshi phone numbers', () => {
     const text = 'Call me at 01712345678 or 8801912345678';
     const filtered = filterPII(text);
-    expect(filtered).toContain('[PHONE_HIDDEN]');
+    expect(filtered).toContain(REPLACEMENT);
     expect(filtered).not.toContain('01712345678');
   });
 
   it('should mask email addresses', () => {
     const text = 'My email is test@nilamit.app';
-    expect(filterPII(text)).toBe('My email is [EMAIL_HIDDEN]');
+    expect(filterPII(text)).toBe(`My email is ${REPLACEMENT}`);
   });
 });

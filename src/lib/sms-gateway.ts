@@ -108,4 +108,12 @@ export function createSMSGateway(): SMSGateway {
   }
 }
 
-export const smsGateway = createSMSGateway();
+// Lazy singleton — building eagerly at module import would crash boot in
+// production whenever SMS env vars aren't set yet (e.g. App Hosting deploys
+// before the GREENWEB_TOKEN secret is provisioned). The hard-fail-in-prod
+// check inside createSMSGateway() still runs on first sendSMS() call.
+let _gateway: SMSGateway | null = null;
+export function getSMSGateway(): SMSGateway {
+  if (!_gateway) _gateway = createSMSGateway();
+  return _gateway;
+}
