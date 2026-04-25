@@ -3,7 +3,7 @@
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { normalizePhone } from '@/lib/utils';
-import { smsGateway } from '@/lib/sms-gateway';
+import { getSMSGateway } from '@/lib/sms-gateway';
 import {
   phoneOtpSendLimiter,
   phoneOtpVerifyLimiter,
@@ -86,7 +86,7 @@ async function internalSendOTP(phone: string, userId?: string, email?: string) {
     verified: false, attempts: 0, createdAt: now,
   });
 
-  const smsResult = await smsGateway.sendSMS(
+  const smsResult = await getSMSGateway().sendSMS(
     phone, `Your nilamit.com verification code is: ${otp}. Valid for 5 minutes.`
   );
 

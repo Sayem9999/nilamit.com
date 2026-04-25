@@ -83,11 +83,10 @@ env:
     value: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
 
   # ─── SMS Gateway ─────────────────────────────────────────────
-  - variable: SMS_PROVIDER
-    value: greenweb           # greenweb | bulksmsbd | console
-
-  - variable: GREENWEB_TOKEN
-    secret: GREENWEB_TOKEN
+  # SMS provider intentionally omitted until a real gateway is provisioned.
+  # The factory in src/lib/sms-gateway.ts is lazy and will hard-fail at first
+  # sendSMS() call in production until SMS_PROVIDER + the matching token
+  # secret (GREENWEB_TOKEN, BULKSMS_API_KEY+BULKSMS_SENDER_ID) are added here.
 
   # ─── Sentry (optional) ───────────────────────────────────────
   # - variable: SENTRY_DSN
