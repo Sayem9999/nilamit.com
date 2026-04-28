@@ -64,17 +64,15 @@ export function validateEnv(): Env {
       .map(([key, messages]) => `  • ${key}: ${messages?.join(', ')}`)
       .join('\n');
 
-    // Soft-fail only when the developer has explicitly opted in via
-    // LOCAL_BUILD=1. Fail-closed by default: any deploy environment
-    // (CI, Firebase App Hosting, Cloud Build) hard-fails on missing secrets,
-    // even if it doesn't set CI=true, so a broken-image deploy never ships.
-    const isLocalBuild =
-      process.env.LOCAL_BUILD === '1' &&
-      (process.env.NEXT_PHASE === 'phase-production-build' ||
-        process.env.npm_lifecycle_event === 'build');
+    // Soft-fail during the build phase. In Firebase App Hosting, secrets are 
+    // injected at runtime, so Next.js must be allowed to build static pages 
+    // without them.
+    const isBuildPhase =
+      process.env.NEXT_PHASE === 'phase-production-build' ||
+      process.env.npm_lifecycle_event === 'build';
 
-    if (isLocalBuild) {
-      console.warn(`\n[Env] ⚠️  Missing/Invalid environment variables during local BUILD:\n${errorMessages}\nContinuing build anyway...\n`);
+    if (isBuildPhase) {
+      console.warn(`\n[Env] ⚠️  Missing/Invalid environment variables during BUILD:\n${errorMessages}\nContinuing build anyway...\n`);
       return process.env as unknown as Env;
     }
 

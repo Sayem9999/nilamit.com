@@ -24,4 +24,4 @@ When writing bid handlers:
 
 ## 5. Deployment
 - Use `pnpm build` locally before pushing to verify type safety.
-- Check `.env` for the required `SUPABASE_PRIVATE_KEY` and `DATABASE_URL`.
+- Check `.env` for the required `Firebase_PRIVATE_KEY` and `DATABASE_URL`.

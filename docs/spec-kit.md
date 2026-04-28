@@ -9,9 +9,9 @@ This document is the **Single Source of Truth** for the Nilamit architectural st
 ### 1.1 Data Integrity & Concurrency
 - **Transaction Isolation**: All critical state changes (Bidding, Settlement) must use `Serializable` isolation level.
 - **Row-Level Locking**: High-concurrency models (Auctions) must use `SELECT ... FOR UPDATE` via `tx.$queryRaw` to prevent race conditions during heavy traffic.
-- **Prisma Proxy**: Access the database via the type-safe proxy in `src/lib/db.ts`. This ensures compatibility with the Edge runtime without bundling the heavy Node.js Prisma engine.
+- **Firestore Proxy**: Access the database via the type-safe proxy in `src/lib/db.ts`. This ensures compatibility with the Edge runtime without bundling the heavy Node.js Firestore engine.
 
-### 1.2 Real-time Infrastructure (Pusher)
+### 1.2 Real-time Infrastructure (Firebase RTDB)
 | Channel | Type | Usage |
 |---|---|---|
 | `user-{userId}` | Private | Personal alerts (Outbid, Ending Soon). |
@@ -20,7 +20,7 @@ This document is the **Single Source of Truth** for the Nilamit architectural st
 
 ### 1.3 Tech Stack
 - **Framework**: Next.js 16 (App Router + Turbopack).
-- **ORM**: Prisma 7 (PostgreSQL).
+- **ORM**: Firestore 7 (NoSQL).
 - **Styling**: Tailwind CSS 4 + Framer Motion 12.
 - **Auth**: NextAuth v5 (Beta).
 
@@ -76,8 +76,8 @@ type ActionResult<T = any> = {
 
 ## 7. Verification Protocol
 - **Build**: `npm run build` must pass with zero TypeScript errors.
-- **Real-time**: Manual verification of Pusher event chains using local Pusher Debug Console.
-- **State**: Verification of DB state shifts using Prisma Studio after critical transactions.
+- **Real-time**: Manual verification of Firebase RTDB event chains using local Firebase RTDB Debug Console.
+- **State**: Verification of DB state shifts using Firestore Studio after critical transactions.
 
 ---
 

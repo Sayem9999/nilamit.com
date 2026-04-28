@@ -7,7 +7,7 @@
 4. **Environment**: Primary development is local Windows; Production deployments are tunneled via Tailscale Funnel.
 
 ## Coding Style
-- **Server Actions**: Use for all data mutations. Never expose database URLs or raw prisma queries to the client.
+- **Server Actions**: Use for all data mutations. Never expose database URLs or raw Firestore queries to the client.
 - **Error Handling**: Return clean, localized error messages to the UI.
 - **SVG Management**: Initialize SVG elements before attaching zooming hooks (specifically in the StarMap component) to avoid `ReferenceError`.
 

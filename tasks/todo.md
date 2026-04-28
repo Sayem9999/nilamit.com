@@ -10,7 +10,7 @@
 ## 1. Advanced Search & Filtering
 
 - [x] Create `/search` route and page component.
-- [x] Implement Prisma search queries (term, category, status).
+- [x] Implement Firestore search queries (term, category, status).
 - [x] Implement Sorting logic (Ending Soon, Price).
 - [x] Connect Navbar Search Input to the new page.
 

@@ -9,8 +9,8 @@ Complete step-by-step guide to deploy nilamit.app on Firebase App Hosting (Googl
 - Node.js 20+ installed locally
 - A GitHub account with the nilamit repo pushed
 - A Google account (for Firebase / GCP)
-- Your Supabase database already running
-- All third-party keys ready (Pusher, UploadThing, Resend, etc.)
+- Your Firebase database already running
+- All third-party keys ready (Firebase RTDB, UploadThing, Resend, etc.)
 
 ---
 
@@ -85,8 +85,8 @@ Run these commands (replace placeholder values with your actual secrets):
 ```bash
 PROJECT_ID="nilamit-app"  # ← set this once
 
-# Database (Supabase PostgreSQL connection string)
-echo -n "postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres?pgbouncer=true" \
+# Database (Firebase NoSQL connection string)
+echo -n "NoSQL://postgres:[PASSWORD]@db.[REF].Firebase.co:5432/postgres?pgbouncer=true" \
   | gcloud secrets create DATABASE_URL --data-file=- --project=$PROJECT_ID
 
 # Auth.js secret (generate a random 32-byte secret)
@@ -107,19 +107,19 @@ echo -n "admin@nilamit.com" \
 echo -n "$(openssl rand -hex 32)" \
   | gcloud secrets create CRON_SECRET --data-file=- --project=$PROJECT_ID
 
-# Pusher
-echo -n "YOUR_PUSHER_APP_ID"  | gcloud secrets create PUSHER_APP_ID  --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_PUSHER_KEY"     | gcloud secrets create PUSHER_KEY     --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_PUSHER_SECRET"  | gcloud secrets create PUSHER_SECRET  --data-file=- --project=$PROJECT_ID
-echo -n "mt1"                 | gcloud secrets create PUSHER_CLUSTER --data-file=- --project=$PROJECT_ID
+# Firebase RTDB
+echo -n "YOUR_Firebase RTDB_APP_ID"  | gcloud secrets create Firebase RTDB_APP_ID  --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_Firebase RTDB_KEY"     | gcloud secrets create Firebase RTDB_KEY     --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_Firebase RTDB_SECRET"  | gcloud secrets create Firebase RTDB_SECRET  --data-file=- --project=$PROJECT_ID
+echo -n "mt1"                 | gcloud secrets create Firebase RTDB_CLUSTER --data-file=- --project=$PROJECT_ID
 
-# Supabase Storage
-echo -n "https://[REF].supabase.co" \
-  | gcloud secrets create SUPABASE_URL --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_SUPABASE_ANON_KEY" \
-  | gcloud secrets create SUPABASE_ANON_KEY --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_SUPABASE_SERVICE_ROLE_KEY" \
-  | gcloud secrets create SUPABASE_SERVICE_ROLE_KEY --data-file=- --project=$PROJECT_ID
+# Firebase Storage
+echo -n "https://[REF].Firebase.co" \
+  | gcloud secrets create Firebase_URL --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_Firebase_ANON_KEY" \
+  | gcloud secrets create Firebase_ANON_KEY --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_Firebase_SERVICE_ROLE_KEY" \
+  | gcloud secrets create Firebase_SERVICE_ROLE_KEY --data-file=- --project=$PROJECT_ID
 
 # UploadThing
 echo -n "YOUR_UPLOADTHING_TOKEN" \
@@ -297,7 +297,7 @@ Visit your app and sign in with email/password and (if configured) Google OAuth.
 
 ### Test real-time bidding
 
-Create an auction and place a bid — the Pusher real-time updates should work.
+Create an auction and place a bid — the Firebase RTDB real-time updates should work.
 
 ### Test cron jobs
 
@@ -326,7 +326,7 @@ Current settings in `apphosting.yaml` (suitable for production):
 | `minInstances` | 0 | Scales to zero when idle (saves cost) |
 | `maxInstances` | 10 | Cap to control costs |
 | `concurrency` | 80 | Requests per container |
-| `cpu` | 1 vCPU | Sufficient for Next.js + Prisma |
+| `cpu` | 1 vCPU | Sufficient for Next.js + Firestore |
 | `memoryMiB` | 1024 | 1 GB RAM |
 | `timeoutSeconds` | 60 | Max request duration |
 
@@ -336,8 +336,8 @@ For higher traffic, increase `minInstances` to 1 (eliminates cold starts) and `m
 
 ## Troubleshooting
 
-**Build fails with "Prisma binary not found"**
-→ Check that `prisma/schema.prisma` has `debian-openssl-1.1.x` and `debian-openssl-3.0.x` in `binaryTargets`. ✅ Already added.
+**Build fails with "Firestore binary not found"**
+→ Check that `Firestore/schema.Firestore` has `debian-openssl-1.1.x` and `debian-openssl-3.0.x` in `binaryTargets`. ✅ Already added.
 
 **"Secret not found" during build**
 → Run Step 7 again to ensure the Cloud Build service account has `secretmanager.secretAccessor` role.
@@ -365,8 +365,8 @@ For higher traffic, increase `minInstances` to 1 (eliminates cold starts) and `m
 | `.firebaserc` | Maps `default` to your Firebase project ID |
 | `cloudbuild.yaml` | Build pipeline: install → migrate → build |
 | `scripts/setup-cloud-scheduler.sh` | Creates/updates all 4 cron jobs in Cloud Scheduler |
-| `prisma/schema.prisma` | Includes Debian binary targets for Cloud Run |
+| `Firestore/schema.Firestore` | Includes Debian binary targets for Cloud Run |
 | `src/middleware.ts` | Rate limiting + auth guard + i18n routing |
 | `src/lib/auth.config.ts` | Edge-safe NextAuth config (used in middleware) |
-| `src/lib/auth.ts` | Full NextAuth config with Prisma adapter |
+| `src/lib/auth.ts` | Full NextAuth config with Firestore adapter |
 | `src/app/api/health/route.ts` | Health check endpoint (`/api/health`) |

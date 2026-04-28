@@ -16,7 +16,7 @@
 
 ## [v0.3.0] - 2026-04-12
 ### 🔔 Interaction (Smart Alerts)
-- **Real-time Notifications**: Integrated `ending-soon` Pusher events with custom toast notifications.
+- **Real-time Notifications**: Integrated `ending-soon` Firebase RTDB events with custom toast notifications.
 - **Closing-Soon Cron**: Automated the task to identify and push alerts for auctions closing within 30-60 minutes.
 
 ### 🛡 Admin & Trust

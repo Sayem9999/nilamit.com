@@ -22,15 +22,15 @@ npm install next-auth@4.24.11
 **Create `.env.example`:**
 ```bash
 # .env.example
-DATABASE_URL=postgresql://...
+DATABASE_URL=NoSQL://...
 NEXTAUTH_SECRET=generate-with-openssl-rand-hex-32
 NEXTAUTH_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-PUSHER_APP_ID=your-pusher-id
-PUSHER_KEY=your-pusher-key
-PUSHER_SECRET=your-pusher-secret
-PUSHER_CLUSTER=mt1
+Firebase RTDB_APP_ID=your-Firebase RTDB-id
+Firebase RTDB_KEY=your-Firebase RTDB-key
+Firebase RTDB_SECRET=your-Firebase RTDB-secret
+Firebase RTDB_CLUSTER=mt1
 ```
 
 **Add to `src/lib/env.ts`:**
@@ -64,7 +64,7 @@ if (typeof window === 'undefined') {
 export async function GET() {
   try {
     validateEnv();
-    await prisma.$queryRaw`SELECT 1`; // Check DB
+    await Firestore.$queryRaw`SELECT 1`; // Check DB
     return Response.json({ status: 'ok' });
   } catch (error) {
     return Response.json({ status: 'error', message: error.message }, { status: 500 });
@@ -179,7 +179,7 @@ export async function POST(req: Request) {
 import * as Sentry from "@sentry/nextjs";
 
 async function closeExpiredAuctions() {
-  const expiringAuctions = await prisma.auction.findMany({
+  const expiringAuctions = await Firestore.auction.findMany({
     where: {
       status: 'ACTIVE',
       endTime: { lte: new Date() }
@@ -208,7 +208,7 @@ async function closeExpiredAuctions() {
     );
     
     // Store errors for manual review
-    await prisma.systemLog.create({
+    await Firestore.systemLog.create({
       data: {
         type: 'CRON_FAILURE',
         job: 'closeAuctions',
@@ -260,8 +260,8 @@ export async function GET(req: Request) {
 
 - [ ] Normalize images to `AuctionImage` table (database migration)
 - [ ] Add Redis caching for listings/profiles
-- [ ] Optimize Prisma queries with `select` projections
-- [ ] Batch Pusher updates (every 2 seconds instead of per-bid)
+- [ ] Optimize Firestore queries with `select` projections
+- [ ] Batch Firebase RTDB updates (every 2 seconds instead of per-bid)
 - [ ] Standardize error responses across all Server Actions
 - [ ] Add structured logging (winston)
 

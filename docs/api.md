@@ -1,6 +1,6 @@
 # 🛠 Nilamit API Documentation
 
-Nilamit utilizes Next.js **Server Actions** as the primary interaction layer, complemented by **Cron API Routes** for scheduled tasks and **Pusher** for real-time events.
+Nilamit utilizes Next.js **Server Actions** as the primary interaction layer, complemented by **Cron API Routes** for scheduled tasks and **Firebase RTDB** for real-time events.
 
 ## 1. Server Actions (Data Layer)
 
@@ -15,7 +15,7 @@ Nilamit utilizes Next.js **Server Actions** as the primary interaction layer, co
 ### `bid.ts`
 | Action | Description |
 |---|---|
-| `placeBid(id, amount)` | **High Integrity**: Uses Serializable DB transactions and SELECT FOR UPDATE to handle concurrent bids. Triggers Anti-snipe logic and Pusher events. |
+| `placeBid(id, amount)` | **High Integrity**: Uses Serializable DB transactions and SELECT FOR UPDATE to handle concurrent bids. Triggers Anti-snipe logic and Firebase RTDB events. |
 
 ### `admin-users.ts`
 | Action | Description |
@@ -49,11 +49,11 @@ Nilamit utilizes Next.js **Server Actions** as the primary interaction layer, co
 
 ### `GET /api/cron/closing-soon`
 - **Schedule**: Every 15-30 minutes.
-- **Task**: Scans watchlists and alerts. Fires both Resend emails and **Pusher** `ending-soon` events to active users.
+- **Task**: Scans watchlists and alerts. Fires both Resend emails and **Firebase RTDB** `ending-soon` events to active users.
 
 ---
 
-## 3. Real-time Events (Pusher)
+## 3. Real-time Events (Firebase RTDB)
 
 ### `user-{userId}` (Private)
 | Event | Payload | Description |
@@ -75,4 +75,4 @@ Nilamit utilizes Next.js **Server Actions** as the primary interaction layer, co
 ---
 
 ## 4. Middleware & Edge Runtime
-- **Prisma Proxy**: All server actions utilize a dynamic Prisma Proxy to ensure the heavy Prisma engine is not bundled into Edge functions (like authentication middleware), preventing 500 crashes.
+- **Firestore Proxy**: All server actions utilize a dynamic Firestore Proxy to ensure the heavy Firestore engine is not bundled into Edge functions (like authentication middleware), preventing 500 crashes.

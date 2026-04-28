@@ -5,34 +5,34 @@ Nilamit is a real-time, transaction-safe auction platform optimized for the Bang
 
 ## Technical Stack
 - **Framework**: Next.js 15 (App Router)
-- **Database**: PostgreSQL (Supabase) via Prisma 7
-- **Real-time**: Pusher (Event streaming for bid updates)
+- **Database**: NoSQL (Firebase) via Firestore 7
+- **Real-time**: Firebase RTDB (Event streaming for bid updates)
 - **File Storage**: Uploadthing (CDN for auction images)
 - **Auth**: NextAuth v5 (Hybrid) — Supports Phone OTP, Email/Password, and Google OAuth.
 - **Verification**: Dedicated `VerificationGuard` component gating database mutations.
 
 ## Core Engine: Bidding & Treasury
-The bidding engine relies on **Row-Level Locking**. Every bid increment uses a Prisma transaction with a `SELECT FOR UPDATE` clause to prevent race conditions during high-volume auction closes.
+The bidding engine relies on **Row-Level Locking**. Every bid increment uses a Firestore transaction with a `SELECT FOR UPDATE` clause to prevent race conditions during high-volume auction closes.
 
 ### Automated Treasury Model (v1.8.0)
 The platform manages an automated escrow flow:
 1. **Merchant Routing**: Official platform accounts (bKash/Nagad) are synchronized from the Admin Hub.
 2. **Instant Verification**: Transactions move from `PENDING` to `HELD` automatically upon valid provider reference submission.
-3. **Logistics Authorization**: Successful escrow holding triggers Pusher events to instantly unlock the **Coordination Hub** for both parties.
+3. **Logistics Authorization**: Successful escrow holding triggers Firebase RTDB events to instantly unlock the **Coordination Hub** for both parties.
 
 ## Topology (Mermaid)
 ```mermaid
 graph TD
     User((User))
     NextJS[Next.js App Router]
-    DB[(PostgreSQL - Supabase)]
-    Pusher[Pusher Realtime]
+    DB[(NoSQL - Firebase)]
+    Firebase RTDB[Firebase RTDB Realtime]
     Uploadthing[Uploadthing CDN]
 
     User -- Bids --> NextJS
     NextJS -- Transactional Update --> DB
-    NextJS -- Trigger Event --> Pusher
-    Pusher -- Live Update --> User
+    NextJS -- Trigger Event --> Firebase RTDB
+    Firebase RTDB -- Live Update --> User
     User -- Uploads --> Uploadthing
 ```
 

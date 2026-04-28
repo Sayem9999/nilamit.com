@@ -16,7 +16,7 @@ All `.md` files in the Nilamit project must follow these guidelines:
   - [ ] To do
 
 ## 3. Code Blocks
-- Always specify the language: ` ```typescript `, ` ```bash `, ` ```prisma `.
+- Always specify the language: ` ```typescript `, ` ```bash `, ` ```Firestore `.
 - Inline code like `const x = 5` should use single backticks.
 
 ## 4. Linking

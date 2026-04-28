@@ -50,7 +50,7 @@
 1. **Never trust the client** — all bid validation happens server-side in Server Actions
 2. **Never store OTP plaintext** — hash before storage
 3. **Never skip phone verification** — no backdoors for bidding/selling
-4. **Always use parameterized queries** — Prisma handles this, never raw-dog SQL
+4. **Always use parameterized queries** — Firestore handles this, never raw-dog SQL
 5. **Always handle errors gracefully** — show Bengali-friendly error messages
 6. **No Quick Fixes / Placeholders** — Implementation must be production-ready. No `console.log` for critical notifications (email/SMS). No bypassing logic. If a feature isn't ready, disable it.
 7. **Launch Readiness Protocol** — Every user flow (Bid, Sell, Auth) must be usable by a non-technical user. No manual image URLs; must use integrated uploads. No silent outbids; must use notifications.

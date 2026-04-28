@@ -138,7 +138,7 @@ import { AuctionCard } from "@/components/auction/AuctionCard";
 
 // 4. Utilities/types
 import { formatBDT } from "@/lib/format";
-import type { Auction } from "@prisma/client";
+import type { Auction } from "@Firestore/client";
 ```
 
 ### Currency Formatting

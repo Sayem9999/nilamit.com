@@ -4,7 +4,7 @@ Nilamit is a high-performance, real-time C2C auction marketplace designed for tr
 
 ## 1. Real-time Auction Engine
 - **One-Time Soft-Close**: Automatically extends auction time *once* by 2 minutes if a bid is placed in the final window, ensuring fair price discovery.
-- **Proactive Alerts**: Pusher notifications for outbid status and custom target-price hits.
+- **Proactive Alerts**: Firebase RTDB notifications for outbid status and custom target-price hits.
 - **Multimodal Onboarding**: Unauthenticated browsing with signup options via **Email, Google, or Phone (OTP)**.
 
 ## 2. Social Proof & Trust Architecture (StarMap)
@@ -42,6 +42,6 @@ Nilamit is a high-performance, real-time C2C auction marketplace designed for tr
 
 ## 8. Admin Conflict Management
 - **Centralized Dispute Hub**: Real-time auditing of reported conflicts between Buyers and Sellers.
-- **Atomic Resolutions**: Direct administrative tools to release or refund funds using protected Prisma transactions.
+- **Atomic Resolutions**: Direct administrative tools to release or refund funds using protected Firestore transactions.
 - **Dynamic Reputation Governance**: Automated reputation adjustments based on dispute outcomes.
 - **Global Health Metrics**: High-level monitoring of total users, bids, and revenue streams.

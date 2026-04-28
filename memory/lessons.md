@@ -9,7 +9,7 @@
     - *Issue*: Attaching D3 zoom hooks to an SVG before it is fully initialized leads to `ReferenceError`.
     - *Fix*: Ensure SVG selection and basic DOM structure are established before calling `.call(d3.zoom())`.
 - **Next.js 15 Polling vs WebSockets**:
-    - *Lesson*: High-frequency polling (5s) is acceptable for MVP but causes performance degradation during peak auctions. WebSockets (Pusher) is the preferred production path.
+    - *Lesson*: High-frequency polling (5s) is acceptable for MVP but causes performance degradation during peak auctions. WebSockets (Firebase RTDB) is the preferred production path.
 - **Phone Verification latency**:
     - *Lesson*: Do not gate browsing behind phone verification; only gate bidding/posting to reduce friction.
 - **Micro-Deposit Advance vs. Full Price**:

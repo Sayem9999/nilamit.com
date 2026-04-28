@@ -23,9 +23,9 @@ Bangladesh's first dedicated C2C real-time auction marketplace, built for the **
 | Component | Technology |
 |-----------|-----------|
 | Framework | Next.js 16.1.6 (App Router, Server Actions) |
-| Database | PostgreSQL via Supabase |
-| ORM | Prisma 7.4.0 |
-| Real-time | Pusher WebSocket |
+| Database | NoSQL via Firebase |
+| ORM | Firestore 7.4.0 |
+| Real-time | Firebase RTDB WebSocket |
 | Auth | Auth.js v5.0.0-beta.30 (hybrid: phone/email/Google) |
 | Verification | SMS OTP + Multi-step verification |
 | i18n | next-intl (English & Bengali) |
@@ -41,7 +41,7 @@ Bangladesh's first dedicated C2C real-time auction marketplace, built for the **
 - ✅ Bulk image upload + optimization
 - ✅ Review & rating system
 - ✅ Gamification (badges, winning streaks)
-- ✅ Real-time chat + Pusher coordination
+- ✅ Real-time chat + Firebase RTDB coordination
 - ✅ Advanced search + watchlists + alerts
 
 ---
@@ -51,7 +51,7 @@ Bangladesh's first dedicated C2C real-time auction marketplace, built for the **
 ### 1. Architecture & Design Principles ⭐⭐⭐
 - **Excellent CONSTITUTION.md** — Documents non-negotiable principles with clarity (mobile-first, trust-without-friction, data integrity, no dark patterns)
 - **Strong separation of concerns** — Server Actions for business logic, Client Components for UI, utilities for cross-cutting concerns
-- **Excellent database design** — Prisma schema is well-normalized with proper relationships, indexes, and constraints
+- **Excellent database design** — Firestore schema is well-normalized with proper relationships, indexes, and constraints
 - **Well-documented tech decisions** — MEMORY.md, STYLE_GUIDE.md show mature architectural thinking
 
 ### 2. Security Foundations ⭐⭐⭐
@@ -73,7 +73,7 @@ Bangladesh's first dedicated C2C real-time auction marketplace, built for the **
 - Clear action/component/lib separation
 - Proper use of Next.js App Router patterns
 - Server Actions for all mutations
-- Type-safe Prisma models
+- Type-safe Firestore models
 
 ---
 
@@ -127,17 +127,17 @@ clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy',
 **Fix:**
 1. Create `.env.example`:
 ```env
-DATABASE_URL=postgresql://user:password@db.supabase.co:5432/postgres
+DATABASE_URL=NoSQL://user:password@db.Firebase.co:5432/postgres
 NEXTAUTH_SECRET=your-secret-key-here
 NEXTAUTH_URL=http://localhost:3000
 
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-PUSHER_APP_ID=your-pusher-app-id
-PUSHER_KEY=your-pusher-key
-PUSHER_SECRET=your-pusher-secret
-PUSHER_CLUSTER=mt1
+Firebase RTDB_APP_ID=your-Firebase RTDB-app-id
+Firebase RTDB_KEY=your-Firebase RTDB-key
+Firebase RTDB_SECRET=your-Firebase RTDB-secret
+Firebase RTDB_CLUSTER=mt1
 
 GREENWEB_API_KEY=your-greenweb-key
 RESEND_API_KEY=your-resend-key
@@ -164,7 +164,7 @@ export function validateEnv() {
 
 // app/layout.tsx or api/startup route
 validateEnv();
-await prisma.$connect(); // throws if DB unreachable
+await Firestore.$connect(); // throws if DB unreachable
 ```
 
 ---
@@ -199,7 +199,7 @@ const pool = new Pool({
 });
 ```
 
-**Note:** Supabase Pro tier supports 40+ connections. Adjust based on your plan.
+**Note:** Firebase Pro tier supports 40+ connections. Adjust based on your plan.
 
 ---
 
@@ -356,9 +356,9 @@ export const config = {
 
 ---
 
-### Issue #7: Pusher Auth Token Not Validated
+### Issue #7: Firebase RTDB Auth Token Not Validated
 **Severity:** 🟠 HIGH  
-**File:** `src/app/api/pusher/auth/route.ts`
+**File:** `src/app/api/Firebase RTDB/auth/route.ts`
 
 **Current Code (likely):**
 ```typescript
@@ -366,7 +366,7 @@ export const config = {
 export async function POST(req: Request) {
   const { channel, socket_id } = await req.json();
   
-  const token = pusher.authorizeChannel(socket_id, channel);
+  const token = Firebase RTDB.authorizeChannel(socket_id, channel);
   return Response.json(token);
 }
 ```
@@ -384,7 +384,7 @@ export async function POST(req: Request) {
   // Validate ownership
   if (channel.startsWith("auction-")) {
     const auctionId = channel.split("-")[1];
-    const auction = await prisma.auction.findUnique({
+    const auction = await Firestore.auction.findUnique({
       where: { id: auctionId },
       select: { sellerId: true, winnerId: true }
     });
@@ -398,7 +398,7 @@ export async function POST(req: Request) {
     }
   }
 
-  const token = pusher.authorizeChannel(socket_id, channel);
+  const token = Firebase RTDB.authorizeChannel(socket_id, channel);
   return Response.json(token);
 }
 ```
@@ -407,10 +407,10 @@ export async function POST(req: Request) {
 
 ### Issue #8: Images Stored as String[] in Database
 **Severity:** 🟠 HIGH  
-**File:** `prisma/schema.prisma:107`
+**File:** `Firestore/schema.Firestore:107`
 
 **Current:**
-```prisma
+```Firestore
 model Auction {
   images String[] // Array of image URLs
 }
@@ -423,7 +423,7 @@ model Auction {
 - Harder to add image metadata (alt text, order, file size)
 
 **Fix: Normalize to separate table**
-```prisma
+```Firestore
 model Auction {
   id String @id
   // ... other fields
@@ -446,7 +446,7 @@ model AuctionImage {
 
 **Then use select projection:**
 ```typescript
-const auction = await prisma.auction.findUnique({
+const auction = await Firestore.auction.findUnique({
   where: { id },
   select: {
     id: true,
@@ -456,7 +456,7 @@ const auction = await prisma.auction.findUnique({
 });
 
 // Fetch images separately with limit
-const images = await prisma.auctionImage.findMany({
+const images = await Firestore.auctionImage.findMany({
   where: { auctionId: id },
   take: 10, // pagination support
   orderBy: { order: 'asc' }
@@ -486,7 +486,7 @@ export async function resumeBulkUpload(
   bulkOpId: string,
   file: File
 ) {
-  const bulkOp = await prisma.bulkOperation.findUnique({
+  const bulkOp = await Firestore.bulkOperation.findUnique({
     where: { id: bulkOpId }
   });
 
@@ -514,7 +514,7 @@ async jwt({ token, user }) {
   if (user) token.id = user.id;
   
   if (token.id) {
-    const dbUser = await prisma.user.findUnique({ // DB QUERY
+    const dbUser = await Firestore.user.findUnique({ // DB QUERY
       where: { id: token.id as string },
       select: { isPhoneVerified: true, emailVerified: true, ... }
     });
@@ -534,7 +534,7 @@ async jwt({ token, user, trigger }) {
 
   // Only refresh from DB on explicit update or after 1 hour
   if (trigger === "update" || (token.lastRefresh && Date.now() - token.lastRefresh > 3600000)) {
-    const dbUser = await prisma.user.findUnique({
+    const dbUser = await Firestore.user.findUnique({
       where: { id: token.id as string },
       select: { isPhoneVerified: true, emailVerified: true }
     });
@@ -710,12 +710,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 **Fix: Add Redis**
 ```bash
-npm install redis @vercel/kv
+npm install @upstash/redis
 ```
 
 ```typescript
 // lib/cache.ts
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
+
+const kv = Redis.fromEnv();
 
 export async function getCachedAuctions(category: string) {
   const key = `auctions:${category}`;
@@ -725,7 +727,7 @@ export async function getCachedAuctions(category: string) {
   if (cached) return cached;
 
   // Miss: query DB
-  const auctions = await prisma.auction.findMany({
+  const auctions = await Firestore.auction.findMany({
     where: { category, status: "ACTIVE" },
     take: 50,
     select: { id: true, title: true, currentPrice: true, endTime: true }
@@ -752,7 +754,7 @@ revalidateTag(`auctions:${auction.category}`);
 
 **Current (Inefficient):**
 ```typescript
-const auctions = await prisma.auction.findMany();
+const auctions = await Firestore.auction.findMany();
 // ↓ Loads entire seller object for each
 // ↓ Loads all bids for each
 // ↓ Loads all reviews for each
@@ -760,7 +762,7 @@ const auctions = await prisma.auction.findMany();
 
 **Fix: Use select projection**
 ```typescript
-const auctions = await prisma.auction.findMany({
+const auctions = await Firestore.auction.findMany({
   where: { status: "ACTIVE" },
   take: 20,
   select: {
@@ -776,21 +778,21 @@ const auctions = await prisma.auction.findMany({
 
 ---
 
-### Issue #16: Pusher Broadcasting Not Optimized
+### Issue #16: Firebase RTDB Broadcasting Not Optimized
 **Severity:** 🟡 MEDIUM  
-**Impact:** 500 concurrent bidders = 500 messages/sec to Pusher
+**Impact:** 500 concurrent bidders = 500 messages/sec to Firebase RTDB
 
 **Current (Likely):**
 ```typescript
 // On every bid, broadcast to all subscribers
-await pusherServer.trigger(`auction-${auctionId}`, "new-bid", {
+await Firebase RTDBServer.trigger(`auction-${auctionId}`, "new-bid", {
   bidId: bid.id,
   amount: bid.amount,
   bidderId: bid.bidderId,
 });
 ```
 
-**Problem:** Pusher bill = $0.50 per million messages. 500 bids/sec = $1.6M/month at scale.
+**Problem:** Firebase RTDB bill = $0.50 per million messages. 500 bids/sec = $1.6M/month at scale.
 
 **Fix: Batch Updates**
 ```typescript
@@ -810,7 +812,7 @@ export async function placeBid(auctionId: string, amount: number) {
   // Debounced broadcast (every 2 seconds)
   setTimeout(() => {
     const updates = Array.from(updateQueue.values());
-    pusherServer.trigger("auctions", "snapshot", updates);
+    Firebase RTDBServer.trigger("auctions", "snapshot", updates);
     updateQueue.clear();
   }, 2000);
 }
@@ -867,10 +869,10 @@ Reduces messages by 90%.
 - [ ] **Normalize images** to AuctionImage table
 - [ ] **Add Redis caching** for listings/profiles
 - [ ] **Optimize DB queries** with select projections
-- [ ] **Batch Pusher updates** (every 2s instead of per-bid)
+- [ ] **Batch Firebase RTDB updates** (every 2s instead of per-bid)
 - [ ] **Standardize error handling** across actions
 - [ ] **Add structured logging** (winston/pino)
-- [ ] **Add Pusher auth validation** (channel ownership)
+- [ ] **Add Firebase RTDB auth validation** (channel ownership)
 
 **Estimated effort:** 50-60 hours
 
@@ -912,7 +914,7 @@ Reduces messages by 90%.
 | No caching | 🟠 High | DB under load | Medium | P1 |
 | N+1 queries | 🟠 High | Slow page loads | Medium | P1 |
 | Inconsistent errors | 🟡 Medium | Poor UX error handling | Medium | P2 |
-| Pusher over-broadcast | 🟡 Medium | High bills at scale | Medium | P2 |
+| Firebase RTDB over-broadcast | 🟡 Medium | High bills at scale | Medium | P2 |
 
 ---
 
@@ -952,17 +954,17 @@ Reduces messages by 90%.
 - [ ] Staging environment (prod clone)
 - [ ] CI/CD pipeline (GitHub Actions)
 - [ ] Pre-deploy health checks
-- [ ] Supabase backup schedule (daily, 7-day retention)
+- [ ] Firebase backup schedule (daily, 7-day retention)
 - [ ] Synthetic monitoring (Uptime Robot)
 - [ ] DDoS protection (Cloudflare)
-- [ ] Vercel previews for all PRs
+- [ ] Firebase App Hosting Preview Channels for all PRs
 - [ ] Rollback procedure documented
 
 ---
 
 ## CONCLUSION
 
-Nilamit.app is **well-designed and thoughtfully built**. The CONSTITUTION.md shows serious architectural maturity, and the Prisma models are excellent.
+Nilamit.app is **well-designed and thoughtfully built**. The CONSTITUTION.md shows serious architectural maturity, and the Firestore models are excellent.
 
 However, **5 critical issues must be fixed before scaling to 100k+ users:**
 

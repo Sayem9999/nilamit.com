@@ -13,7 +13,7 @@ sequenceDiagram
     participant FE as Frontend (AuthForm)
     participant SA as Server Actions (sendOTP/verify)
     participant AC as Auth.js (NextAuth)
-    participant DB as PostgreSQL (Prisma)
+    participant DB as NoSQL (Firestore)
     
     User->>FE: Enter Identity (Phone/Email)
     FE->>SA: requestOTP(phone/email)
@@ -41,9 +41,9 @@ sequenceDiagram
 sequenceDiagram
     actor Bidder
     participant SA as placeBid (Server Action)
-    participant TX as Prisma Transaction (FOR UPDATE)
-    participant DB as PostgreSQL
-    participant PS as Pusher Server
+    participant TX as Firestore Transaction (FOR UPDATE)
+    participant DB as NoSQL
+    participant PS as Firebase RTDB Server
     
     Bidder->>SA: Submit Bid (৳Amount)
     SA->>TX: Start Serializable Transaction
@@ -69,7 +69,7 @@ sequenceDiagram
 sequenceDiagram
     participant Sys as System / Cron / User
     participant CA as closeAuction Logic
-    participant DB as PostgreSQL
+    participant DB as NoSQL
     participant ESC as Escrow Shield
     participant RES as Resend (Email)
     
@@ -94,8 +94,8 @@ sequenceDiagram
     actor Seller
 SA as chat.ts (Server Action)
     participant PII as PII Filter Utility
-    participant DB as PostgreSQL
-    participant PS as Pusher Server
+    participant DB as NoSQL
+    participant PS as Firebase RTDB Server
     
     Buyer->>SA: Send Message + Image
     SA->>PII: checkContent() (Filter phone/critical info)
@@ -118,7 +118,7 @@ graph LR
     Match -->|Hit Target| T[TARGET_REACHED Alert]
     Match -->|Surpassed| O[OUTBID Alert]
     T --> Deactivate[Mark Alert Inactive]
-    Deactivate --> Push[Pusher Dispatch]
+    Deactivate --> Push[Firebase RTDB Dispatch]
     O --> Push
     Push --> Client[Toast UI + Desktop Notice]
 ```
