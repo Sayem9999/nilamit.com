@@ -81,24 +81,21 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
       const endTime = a.endTime?.toDate ? a.endTime.toDate() : new Date(a.endTime);
       if (now < endTime) return;
 
-      // 1. Get the top bidder
-      const bidsSnap = await db.collection('bids')
-        .where('auctionId', '==', auctionId)
-        .orderBy('amount', 'desc')
-        .limit(1)
-        .get();
+      // Read winner from the transactionally-locked auction doc itself.
+      // BiddingService denormalises every bid onto `currentBidderId` /
+      // `currentPrice`, so we never need a non-transactional bids query
+      // here — that would expose a lost-update race against late bids.
+      const winnerId: string | null = a.currentBidderId ?? null;
+      const finalPrice: number | null = a.currentPrice ?? null;
 
-      if (bidsSnap.empty) {
+      if (!winnerId || !finalPrice) {
         tx.update(aRef, { status: 'EXPIRED', updatedAt: now });
         return;
       }
 
-      const topBid = bidsSnap.docs[0].data();
-      
-      // 2. FETCH WINNER & SELLER DATA (Required for emails and escrow logic)
-      // Note: Inside transaction, we MUST use tx.get
+      // FETCH WINNER & SELLER DATA via tx.get so they're locked in this tx.
       const [winnerSnap, sellerSnap] = await Promise.all([
-        tx.get(db.collection('users').doc(topBid.bidderId)),
+        tx.get(db.collection('users').doc(winnerId)),
         tx.get(db.collection('users').doc(a.sellerId))
       ]);
 
@@ -110,12 +107,12 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
         { id: auctionId, title: a.title, sellerId: a.sellerId,
           deliveryCharge: a.deliveryCharge, reservePrice: a.reservePrice },
         { id: a.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
-        { 
-          id: topBid.bidderId, 
-          email: winnerData.email ?? null, 
-          name: winnerData.name ?? 'Winner' 
+        {
+          id: winnerId,
+          email: winnerData.email ?? null,
+          name: winnerData.name ?? 'Winner'
         },
-        topBid.amount,
+        finalPrice,
       );
     });
   } catch (e) {

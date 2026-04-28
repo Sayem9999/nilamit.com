@@ -15,12 +15,15 @@ const envSchema = z.object({
   FIREBASE_CLIENT_EMAIL: z.string().email(),
   FIREBASE_PRIVATE_KEY: z.string().transform(v => v.replace(/\\n/g, '\n')),
   FIREBASE_DATABASE_URL: z.string().url().optional(),
-  
+  FIREBASE_STORAGE_BUCKET: z.string().optional(),
+
   // --- FIREBASE (Client-Side) ---
   NEXT_PUBLIC_FIREBASE_API_KEY: z.string(),
   NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string(),
   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string(),
   NEXT_PUBLIC_FIREBASE_APP_ID: z.string(),
+  NEXT_PUBLIC_FIREBASE_DATABASE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().optional(),
   
   // --- INFRASTRUCTURE ---
   UPSTASH_REDIS_REST_URL: z.string().url(),

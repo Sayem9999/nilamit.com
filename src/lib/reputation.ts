@@ -3,6 +3,16 @@
 import { db } from '@/lib/db';
 import { log } from '@/lib/logger';
 
+// Bayesian prior for the global rating mean. Used as the shrinkage target
+// for users with few reviews. Computing this dynamically previously meant
+// scanning the entire `reviews` collection on every recalc — which fires
+// twice per escrow release. A fixed prior is the standard production
+// approach: the value matters far less than its consistency, and the
+// confidence weight `m` already controls how fast a user's rating moves
+// away from the prior as they accumulate real reviews.
+const BAYESIAN_PRIOR_RATING = 3.5;
+const BAYESIAN_CONFIDENCE   = 5;
+
 /**
  * Recalculate a user's reputation score using:
  *   1. Volume-based points (sold auctions, purchases, cancellations)
@@ -10,13 +20,12 @@ import { log } from '@/lib/logger';
  */
 export async function recalculateUserReputation(userId: string): Promise<number> {
   try {
-    const [soldSnap, purchasesSnap, cancelledSnap, reviewsSnap, allReviewsSnap] =
+    const [soldSnap, purchasesSnap, cancelledSnap, reviewsSnap] =
       await Promise.all([
         db.collection('auctions').where('sellerId', '==', userId).where('status', '==', 'SOLD').get(),
         db.collection('escrowTransactions').where('buyerId', '==', userId).where('status', '==', 'RELEASED').get(),
         db.collection('auctions').where('sellerId', '==', userId).where('status', '==', 'CANCELLED').get(),
         db.collection('reviews').where('toId', '==', userId).get(),
-        db.collection('reviews').get(),
       ]);
 
     // 1. Volume points
@@ -35,11 +44,8 @@ export async function recalculateUserReputation(userId: string): Promise<number>
     const v = ratings.length;
     const R = v > 0 ? ratings.reduce((a, b) => a + b, 0) / v : 0;
 
-    const allRatings = allReviewsSnap.docs.map(d => d.data().rating as number).filter(Boolean);
-    const C = allRatings.length > 0 ? allRatings.reduce((a, b) => a + b, 0) / allRatings.length : 3.5;
-    const m = 5; // confidence threshold
-
-    const bayesian  = (v / (v + m)) * R + (m / (v + m)) * C;
+    const bayesian  = (v / (v + BAYESIAN_CONFIDENCE)) * R
+                    + (BAYESIAN_CONFIDENCE / (v + BAYESIAN_CONFIDENCE)) * BAYESIAN_PRIOR_RATING;
     const quality   = bayesian / 5;
     const finalScore = Math.max(0, Math.round(points * quality));
 
