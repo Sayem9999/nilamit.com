@@ -10,6 +10,18 @@ import { processAuctionSale } from '@/lib/auction-logic';
 import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
 
+async function requireBiddingPrivileges(userId: string) {
+  const userSnap = await db.collection('users').doc(userId).get();
+  if (!userSnap.exists) return { error: ERROR_CODES.NOT_FOUND };
+  const user = userSnap.data()!;
+
+  if (!user.isPhoneVerified) return { error: ERROR_CODES.PHONE_NOT_VERIFIED };
+  if (user.isBanned) return { error: 'Your account has been banned for policy violations.' };
+  if (user.isMinor) return { error: 'Users under 18 are not eligible to place binding bids or purchases.' };
+
+  return { user };
+}
+
 /**
  * Server Action: Place a bid on an auction
  */
@@ -18,18 +30,15 @@ export async function placeBid(auctionId: string, amount: number) {
   if (!session?.user?.id) return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
   const userId = session.user.id;
 
-  const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
+  const h = await headers();
+  const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await bidLimiter.limit(`bid_${userId}_${ip}`);
   if (!rateLimitSuccess) return { success: false, error: 'Too many bids placed rapidly. Please wait a moment.' };
 
   try {
-    const userSnap = await db.collection('users').doc(userId).get();
-    if (!userSnap.exists) return { success: false, error: ERROR_CODES.NOT_FOUND };
-    const user = userSnap.data()!;
-
-    if (!user.isPhoneVerified) return { success: false, error: ERROR_CODES.PHONE_NOT_VERIFIED };
-    if (user.isBanned) return { success: false, error: 'Your account has been banned for policy violations.' };
-    if (user.isMinor) return { success: false, error: 'Users under 18 are not eligible to place binding bids.' };
+    const privileges = await requireBiddingPrivileges(userId);
+    if (privileges.error) return { success: false, error: privileges.error };
+    const { user } = privileges as { user: Record<string, unknown> };
 
     // Elite deposit check
     if (amount >= 100000 && !user.isVerifiedSeller) {
@@ -88,18 +97,15 @@ export async function executeBuyItNow(auctionId: string) {
   if (!session?.user?.id) return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
   const userId = session.user.id;
 
-  const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
+  const h = await headers();
+  const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await bidLimiter.limit(`bin_${userId}_${ip}`);
   if (!rateLimitSuccess) return { success: false, error: 'Too many purchase attempts. Please wait a moment.' };
 
   try {
-    const userSnap = await db.collection('users').doc(userId).get();
-    if (!userSnap.exists) return { success: false, error: ERROR_CODES.NOT_FOUND };
-    const user = userSnap.data()!;
-
-    if (!user.isPhoneVerified) return { success: false, error: ERROR_CODES.PHONE_NOT_VERIFIED };
-    if (user.isBanned) return { success: false, error: 'Your account has been banned for policy violations.' };
-    if (user.isMinor) return { success: false, error: 'Users under 18 are not eligible to purchase.' };
+    const privileges = await requireBiddingPrivileges(userId);
+    if (privileges.error) return { success: false, error: privileges.error };
+    const { user } = privileges as { user: Record<string, unknown> };
 
     await db.runTransaction(async (tx) => {
       const aRef = db.collection('auctions').doc(auctionId);

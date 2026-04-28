@@ -97,8 +97,12 @@ export async function getSpecializedFeeds() {
     // Hydrate endingSoon with seller
     const endingDocs = snapDocs<Auction>(endingSoonSnap);
     const sellerIds = [...new Set(endingDocs.map((a) => a.sellerId))];
-    const sellerSnaps = await Promise.all(sellerIds.map((id) => db.collection('users').doc(id).get()));
-    const sellerMap = new Map(sellerSnaps.map((s) => [s.id, toSellerPublic(s.id, s.data())]));
+    let sellerMap = new Map<string, Record<string, unknown>>();
+    if (sellerIds.length > 0) {
+      const sellerRefs = sellerIds.map((id) => db.collection('users').doc(id));
+      const sellerSnaps = await db.getAll(...sellerRefs);
+      sellerMap = new Map(sellerSnaps.map((s) => [s.id, toSellerPublic(s.id, s.data())]));
+    }
     const endingSoon = endingDocs.map((a) => ({
       ...a,
       seller: sellerMap.get(a.sellerId)!,
@@ -109,12 +113,22 @@ export async function getSpecializedFeeds() {
     const bidDocs = latestBidsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as { id: string; amount: number; auctionId: string; bidderId: string; createdAt: FirebaseFirestore.Timestamp | Date }));
     const bidderIds = [...new Set(bidDocs.map((b) => b.bidderId))];
     const auctionIds = [...new Set(bidDocs.map((b) => b.auctionId))];
-    const [bidderSnaps, auctionSnaps] = await Promise.all([
-      Promise.all(bidderIds.map((id) => db.collection('users').doc(id).get())),
-      Promise.all(auctionIds.map((id) => db.collection('auctions').doc(id).get())),
-    ]);
-    const biddersMap = new Map(bidderSnaps.map((s) => [s.id, { name: (s.data()?.name as string | null) ?? null }]));
-    const auctionsMap = new Map(auctionSnaps.map((s) => [s.id, { id: s.id, title: (s.data()?.title as string | undefined) ?? 'Unknown' }]));
+    
+    let biddersMap = new Map<string, { name: string | null }>();
+    let auctionsMap = new Map<string, { id: string; title: string }>();
+
+    if (bidderIds.length > 0 && auctionIds.length > 0) {
+      const bidderRefs = bidderIds.map((id) => db.collection('users').doc(id));
+      const auctionRefs = auctionIds.map((id) => db.collection('auctions').doc(id));
+      
+      const [bidderSnaps, auctionSnaps] = await Promise.all([
+        db.getAll(...bidderRefs),
+        db.getAll(...auctionRefs),
+      ]);
+      
+      biddersMap = new Map(bidderSnaps.map((s) => [s.id, { name: (s.data()?.name as string | null) ?? null }]));
+      auctionsMap = new Map(auctionSnaps.map((s) => [s.id, { id: s.id, title: (s.data()?.title as string | undefined) ?? 'Unknown' }]));
+    }
 
     const latestBids = bidDocs.map((b) => {
       const raw = b.createdAt as unknown as { toDate?: () => Date } | Date;

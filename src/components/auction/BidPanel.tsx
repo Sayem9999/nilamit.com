@@ -11,7 +11,6 @@ import {
   CheckCircle,
   Shield,
   Clock,
-  Users,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -23,6 +22,7 @@ import { useTranslations } from "next-intl";
 import { ERROR_CODES } from "@/lib/constants";
 import { VerificationGuard } from "../auth/VerificationGuard";
 import { PhoneVerificationPrompt, MFSLinkagePrompt } from "./components/BidPrompts";
+import { ViewerCount } from "./ViewerCount";
 
 interface BidPanelProps {
   auctionId: string;
@@ -63,7 +63,7 @@ export function BidPanel({
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showMFSModal, setShowMFSModal] = useState(false);
 
-  const { newBids, currentEndTime, viewers } = useAuctionBids(auctionId);
+  const { newBids, currentEndTime } = useAuctionBids(auctionId);
 
   const displayPrice = newBids.length > 0 ? newBids[0].amount : latestPrice;
   const displayEndTime = currentEndTime ? new Date(currentEndTime) : latestEndTime;
@@ -162,12 +162,7 @@ export function BidPanel({
           {t("placeBid")}
         </h3>
         <div className="flex items-center gap-2">
-          {viewers > 0 && (
-            <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-medium animate-pulse">
-              <Users className="w-3.5 h-3.5" />
-              {viewers} {t("viewing", { fallback: "viewing" })}
-            </div>
-          )}
+          <ViewerCount auctionId={auctionId} />
           <button
             onClick={toggleSoundEffects}
             className={`p-1.5 rounded-lg transition-colors ${

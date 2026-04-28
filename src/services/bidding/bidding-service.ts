@@ -84,6 +84,15 @@ export class BiddingService {
           updatedAt:       now,
         });
 
+        // Outbox pattern: Ensure side effects fire reliably even if container dies
+        const outboxRef = db.collection('outbox_events').doc();
+        tx.set(outboxRef, {
+          type: 'BID_PLACED',
+          payload: { auctionId, amount, userId, userName, userEmail, prevBidderId },
+          status: 'PENDING',
+          createdAt: now,
+        });
+
         return {
           bidId,
           newEndTime,
@@ -208,8 +217,13 @@ export class BiddingService {
       .get();
 
     const bidderIds = [...new Set(snap.docs.map(d => d.data().bidderId as string))];
-    const bidderSnaps = await Promise.all(bidderIds.map(id => db.collection('users').doc(id).get()));
-    const biddersMap  = new Map(bidderSnaps.map(s => [s.id, { id: s.id, name: s.data()?.name ?? null, image: s.data()?.image ?? null }]));
+    let biddersMap = new Map<string, { id: string; name: string | null; image: string | null }>();
+    
+    if (bidderIds.length > 0) {
+      const bidderRefs = bidderIds.map(id => db.collection('users').doc(id));
+      const bidderSnaps = await db.getAll(...bidderRefs);
+      biddersMap = new Map(bidderSnaps.map(s => [s.id, { id: s.id, name: s.data()?.name ?? null, image: s.data()?.image ?? null }]));
+    }
 
     return snap.docs.map((d) => {
       const b = d.data() as { amount: number; auctionId: string; bidderId: string; createdAt: { toDate?: () => Date } | Date };

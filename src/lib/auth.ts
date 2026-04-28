@@ -90,7 +90,7 @@ if (!googleEnabled && process.env.NODE_ENV === 'production') {
   log.error('[Auth-WARN] Google OAuth disabled — missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET');
 }
 
-const TOKEN_REFRESH_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+const TOKEN_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours (critical actions verify DB independently)
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
