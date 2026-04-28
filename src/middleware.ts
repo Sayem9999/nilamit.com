@@ -48,6 +48,9 @@ export default auth((req) => {
 });
 
 export const config = {
-  // Match all paths except Next.js internals and static files
+  // Match everything except Next.js internals and static files. /api/* is
+  // intentionally included so the locale-stripping branch above can rewrite
+  // /{locale}/api/* and the /auth/error redirect can fire; /api/* requests
+  // that don't need rewriting hit the early return on the `pathname.startsWith('/api')` check.
   matcher: ['/((?!_next|.*\\..*).*)']
 };

@@ -1,6 +1,6 @@
 # ═══════════════════════════════════════════════════════════════
 # Cloud Build — Nilamit Firebase App Hosting Pipeline
-# Runs Prisma migrations → builds Next.js → deploys to Cloud Run
+# Installs deps → builds Next.js → App Hosting deploys the output.
 #
 # This file is used by Firebase App Hosting automatically.
 # You do NOT need to trigger this manually.
@@ -13,7 +13,7 @@ steps:
     entrypoint: npm
     args: ["ci", "--prefer-offline"]
 
-  # ── Step 2: Build Next.js (generates Prisma client + builds app)
+  # ── Step 2: Build Next.js
   - name: "node:20"
     id: build
     entrypoint: npm
@@ -35,4 +35,4 @@ options:
   machineType: E2_HIGHCPU_8    # Faster build, reduces cold start penalty
 
 # ── Timeout ────────────────────────────────────────────────────
-timeout: 1200s   # 20 minutes — generous for first build with Prisma generate
+timeout: 900s    # 15 minutes — Next.js build only, no codegen step

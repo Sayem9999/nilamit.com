@@ -214,6 +214,12 @@ Firebase App Hosting will automatically trigger a Cloud Build that:
 2. Runs `npm run build` (Next.js build)
 3. Deploys the standalone container to Cloud Run
 
+> **Local builds without secrets:** `npm run build` fail-closes by default if required env vars are missing — that is what protects production deploys. To run a local build with placeholder/missing secrets (e.g. for type-checking the build output), set `LOCAL_BUILD=1`:
+> ```bash
+> LOCAL_BUILD=1 npm run build
+> ```
+> Never set `LOCAL_BUILD` in any deploy environment.
+
 Watch the build in the [Firebase Console](https://console.firebase.google.com) → your project → **App Hosting**.
 
 Or via CLI:

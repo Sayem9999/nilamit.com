@@ -4,10 +4,11 @@ import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { sendOutbidEmail as firebaseSendOutbidEmail } from '@/lib/firebase-email';
 import { sendOutbidAlert } from '@/lib/fcm';
-import { ERROR_CODES, SOFT_CLOSE_WINDOW_MS, SOFT_CLOSE_EXTENSION_MS } from '@/lib/constants';
+import { ERROR_CODES } from '@/lib/constants';
 import { checkAndAwardBadges } from '@/actions/gamification';
 import { detectShillBidding } from '@/lib/moderation';
 import { log } from '@/lib/logger';
+import { validateBidPreconditions, computeAntiSnipeExtension } from './bid-rules';
 
 interface BidSideEffectParams {
   bidId: string;
@@ -45,16 +46,22 @@ export class BiddingService {
         if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
 
         const auction = aSnap.data()!;
-        if (auction.status !== 'ACTIVE')    throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
         const now     = new Date();
         const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
-        if (now >= endTime)                  throw new Error(ERROR_CODES.AUCTION_ENDED);
-        if (auction.sellerId === userId)     throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
 
         // Validate against the transactionally-locked currentPrice. Two
         // concurrent bids cannot both pass this check — one will retry.
-        const minRequired = (auction.currentPrice ?? auction.startingPrice) + (auction.minBidIncrement ?? 10);
-        if (amount < minRequired) throw new Error(`${ERROR_CODES.BID_TOO_LOW}: ৳${minRequired.toLocaleString()}`);
+        validateBidPreconditions({
+          auctionStatus:   auction.status,
+          endTime,
+          sellerId:        auction.sellerId,
+          bidderId:        userId,
+          currentPrice:    auction.currentPrice,
+          startingPrice:   auction.startingPrice,
+          minBidIncrement: auction.minBidIncrement,
+          amount,
+          now,
+        });
 
         // Previous top bidder is read from the auction doc itself (locked by tx).
         const prevBidderId: string | null = auction.currentBidderId ?? null;
@@ -64,17 +71,9 @@ export class BiddingService {
         const bidRef = db.collection('bids').doc(bidId);
         tx.set(bidRef, { id: bidId, amount, auctionId, bidderId: userId, createdAt: now });
 
-        // Anti-sniping: Extend if bid is placed in the final window. We extend
-        // from the current `endTime` (not `now`) so a bidder cannot SHORTEN
-        // the auction by bidding early in the soft-close window.
-        const timeUntilEnd     = endTime.getTime() - now.getTime();
-        let newEndTime         = endTime;
-        let antiSnipeTriggered = false;
-
-        if (timeUntilEnd <= SOFT_CLOSE_WINDOW_MS) {
-          newEndTime         = new Date(endTime.getTime() + SOFT_CLOSE_EXTENSION_MS);
-          antiSnipeTriggered = true;
-        }
+        // Anti-sniping extends from the current `endTime` (not `now`) so a
+        // bidder cannot SHORTEN the auction by bidding early in the soft-close window.
+        const { newEndTime, triggered: antiSnipeTriggered } = computeAntiSnipeExtension({ endTime, now });
 
         tx.update(aRef, {
           currentPrice:    amount,
