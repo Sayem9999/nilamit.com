@@ -84,11 +84,11 @@ export default function CreateAuctionPage() {
         ...form,
         images: form.images.filter(Boolean),
       });
-      if (result.success && result.auctionId) {
-        router.push(`/auctions/${result.auctionId}`);
+      if (result.success && result.data?.auctionId) {
+        router.push(`/auctions/${result.data.auctionId}`);
       } else {
-        setError(result.error || t("createAuctionFailed"));
-        if (result.error === "PHONE_NOT_VERIFIED") {
+        setError(result.error?.message || t("createAuctionFailed"));
+        if (result.error?.code === "PHONE_NOT_VERIFIED") {
           setError(t("phoneVerifyRequiredDesc"));
         }
       }

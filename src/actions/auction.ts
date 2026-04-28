@@ -9,6 +9,7 @@ import type { Auction, AuctionFilters, AuctionWithSeller } from '@/types';
 import { AuctionStatus } from '@/types';
 import { createAuctionSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
 /**
  * Server Action: Fetch auctions with optional filtering
@@ -35,34 +36,34 @@ export async function getAuction(id: string) {
 /**
  * Server Action: Create a new auction listing
  */
-export async function createAuction(input: unknown) {
+export async function createAuction(input: unknown): Promise<ServiceResponse<{ auctionId: string }>> {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated', ERROR_CODES.NOT_AUTHENTICATED);
 
   const parsed = createAuctionSchema.safeParse(input);
-  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
 
   try {
     const userSnap = await db.collection('users').doc(session.user.id).get();
     const userData = userSnap.data();
 
-    if (!userData?.isPhoneVerified) return { success: false, error: ERROR_CODES.PHONE_NOT_VERIFIED };
-    if (userData?.isBanned) return { success: false, error: 'Your account has been banned for policy violations.' };
-    if (userData?.isMinor) return { success: false, error: 'Users under 18 are not eligible to list auctions.' };
+    if (!userData?.isPhoneVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Phone not verified', ERROR_CODES.PHONE_NOT_VERIFIED);
+    if (userData?.isBanned) return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
+    if (userData?.isMinor) return errorResponse(ErrorType.FORBIDDEN, 'Users under 18 are not eligible to list auctions.', 'MINOR');
 
     const response = await AuctionService.create(parsed.data, session.user.id);
     
     if (!response.success) {
-      return { success: false, error: response.error?.message || 'Failed to create auction.' };
+      return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to create auction.');
     }
     
     revalidatePath('/auctions');
     revalidatePath('/');
     
-    return { success: true, auctionId: response.data!.id };
+    return successResponse({ auctionId: response.data!.id });
   } catch (error) {
     log.error('[Action] createAuction failed', error);
-    return { success: false, error: 'An unexpected error occurred.' };
+    return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred.');
   }
 }
 
@@ -97,7 +98,7 @@ export async function getSpecializedFeeds() {
     // Hydrate endingSoon with seller
     const endingDocs = snapDocs<Auction>(endingSoonSnap);
     const sellerIds = [...new Set(endingDocs.map((a) => a.sellerId))];
-    let sellerMap = new Map<string, Record<string, unknown>>();
+    let sellerMap = new Map<string, ReturnType<typeof toSellerPublic>>();
     if (sellerIds.length > 0) {
       const sellerRefs = sellerIds.map((id) => db.collection('users').doc(id));
       const sellerSnaps = await db.getAll(...sellerRefs);

@@ -10,16 +10,18 @@ import { processAuctionSale } from '@/lib/auction-logic';
 import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
 
-async function requireBiddingPrivileges(userId: string) {
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+
+async function requireBiddingPrivileges(userId: string): Promise<ServiceResponse<Record<string, unknown>>> {
   const userSnap = await db.collection('users').doc(userId).get();
-  if (!userSnap.exists) return { error: ERROR_CODES.NOT_FOUND };
+  if (!userSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'User not found', ERROR_CODES.NOT_FOUND);
   const user = userSnap.data()!;
 
-  if (!user.isPhoneVerified) return { error: ERROR_CODES.PHONE_NOT_VERIFIED };
-  if (user.isBanned) return { error: 'Your account has been banned for policy violations.' };
-  if (user.isMinor) return { error: 'Users under 18 are not eligible to place binding bids or purchases.' };
+  if (!user.isPhoneVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Phone verification required', ERROR_CODES.PHONE_NOT_VERIFIED);
+  if (user.isBanned) return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
+  if (user.isMinor) return errorResponse(ErrorType.FORBIDDEN, 'Users under 18 are not eligible to place binding bids or purchases.', 'MINOR');
 
-  return { user };
+  return successResponse(user as Record<string, unknown>);
 }
 
 /**
@@ -27,18 +29,25 @@ async function requireBiddingPrivileges(userId: string) {
  */
 export async function placeBid(auctionId: string, amount: number) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated', ERROR_CODES.NOT_AUTHENTICATED);
   const userId = session.user.id;
 
   const h = await headers();
   const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
-  const { success: rateLimitSuccess } = await bidLimiter.limit(`bid_${userId}_${ip}`);
-  if (!rateLimitSuccess) return { success: false, error: 'Too many bids placed rapidly. Please wait a moment.' };
+  // Fail-Open Rate Limiter: Do not block users if Upstash Redis goes down
+  let rateLimitSuccess = true;
+  try {
+    const limitRes = await bidLimiter.limit(`bid_${userId}_${ip}`);
+    rateLimitSuccess = limitRes.success;
+  } catch (error) {
+    log.warn('Redis rate limiter unreachable, failing OPEN to allow bid', error);
+  }
+  if (!rateLimitSuccess) return errorResponse(ErrorType.RATE_LIMIT, 'Too many bids placed rapidly. Please wait a moment.');
 
   try {
     const privileges = await requireBiddingPrivileges(userId);
-    if (privileges.error) return { success: false, error: privileges.error };
-    const { user } = privileges as { user: Record<string, unknown> };
+    if (!privileges.success) return privileges as ServiceResponse<never>;
+    const user = privileges.data!;
 
     // Elite deposit check
     if (amount >= 100000 && !user.isVerifiedSeller) {
@@ -47,7 +56,7 @@ export async function placeBid(auctionId: string, amount: number) {
         .where('auctionId', '==', auctionId)
         .where('status', '==', 'held')
         .limit(1).get();
-      if (depositSnap.empty) return { success: false, error: ERROR_CODES.ELITE_DEPOSIT_REQUIRED };
+      if (depositSnap.empty) return errorResponse(ErrorType.FORBIDDEN, 'Elite deposit required', ERROR_CODES.ELITE_DEPOSIT_REQUIRED);
     }
 
     // Execute with high-level retry logic for contention handling
@@ -56,10 +65,15 @@ export async function placeBid(auctionId: string, amount: number) {
 
     while (attempts < MAX_ATTEMPTS) {
       try {
-        return await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
+        return successResponse(await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || ''));
       } catch (error) {
         attempts++;
         const message = error instanceof Error ? error.message : '';
+        
+        // Handle outbid / bid too low gracefully without retrying
+        if (message.startsWith(ERROR_CODES.BID_TOO_LOW)) {
+           return errorResponse(ErrorType.CONFLICT, message, ERROR_CODES.BID_TOO_LOW, { newMinimum: parseInt(message.replace(/\D/g, '')) });
+        }
         
         // Only retry on transient contention/transaction errors
         const isContention = message.includes('too much contention') || message.includes('transaction failed');
@@ -72,14 +86,14 @@ export async function placeBid(auctionId: string, amount: number) {
         }
 
         log.error('placeBid failed', error, { userId, auctionId, amount, attempts });
-        return { success: false, error: message || 'Failed to place bid.' };
+        return errorResponse(ErrorType.INTERNAL, message || 'Failed to place bid.');
       }
     }
     
-    return { success: false, error: 'The bidding system is currently very busy. Please try again in a moment.' };
+    return errorResponse(ErrorType.INTERNAL, 'The bidding system is currently very busy. Please try again in a moment.');
   } catch (error) {
     log.error('placeBid outer failed', error, { userId, auctionId, amount });
-    return { success: false, error: 'An unexpected error occurred.' };
+    return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred.');
   }
 }
 
@@ -94,18 +108,25 @@ export async function placeBid(auctionId: string, amount: number) {
  */
 export async function executeBuyItNow(auctionId: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: ERROR_CODES.NOT_AUTHENTICATED };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated', ERROR_CODES.NOT_AUTHENTICATED);
   const userId = session.user.id;
 
   const h = await headers();
   const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
-  const { success: rateLimitSuccess } = await bidLimiter.limit(`bin_${userId}_${ip}`);
-  if (!rateLimitSuccess) return { success: false, error: 'Too many purchase attempts. Please wait a moment.' };
+  // Fail-Open Rate Limiter
+  let rateLimitSuccess = true;
+  try {
+    const limitRes = await bidLimiter.limit(`bin_${userId}_${ip}`);
+    rateLimitSuccess = limitRes.success;
+  } catch (error) {
+    log.warn('Redis rate limiter unreachable, failing OPEN to allow Buy It Now', error);
+  }
+  if (!rateLimitSuccess) return errorResponse(ErrorType.RATE_LIMIT, 'Too many purchase attempts. Please wait a moment.');
 
   try {
     const privileges = await requireBiddingPrivileges(userId);
-    if (privileges.error) return { success: false, error: privileges.error };
-    const { user } = privileges as { user: Record<string, unknown> };
+    if (!privileges.success) return privileges as ServiceResponse<never>;
+    const user = privileges.data!;
 
     await db.runTransaction(async (tx) => {
       const aRef = db.collection('auctions').doc(auctionId);
@@ -142,11 +163,11 @@ export async function executeBuyItNow(auctionId: string) {
 
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/dashboard');
-    return { success: true };
+    return successResponse(null);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
     log.error('executeBuyItNow failed', error, { userId, auctionId });
-    return { success: false, error: message };
+    return errorResponse(ErrorType.INTERNAL, message);
   }
 }
 

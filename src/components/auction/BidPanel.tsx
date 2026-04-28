@@ -57,8 +57,7 @@ export function BidPanel({
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{
     success: boolean;
-    error?: string;
-    antiSnipeTriggered?: boolean;
+    error?: { code?: string; message?: string; details?: { newMinimum?: number } };
   } | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showMFSModal, setShowMFSModal] = useState(false);
@@ -94,7 +93,19 @@ export function BidPanel({
       }
       return;
     }
-    if (bidAmount < minBid) return;
+    
+    // 🟢 Optimistic UI Pre-Validation: Catch errors instantly before 3G network roundtrip
+    if (bidAmount < minBid) {
+      setResult({
+        success: false,
+        error: {
+          type: "CONFLICT_ERROR",
+          message: `Bid must be at least ৳${minBid.toLocaleString()}`,
+          code: ERROR_CODES.BID_TOO_LOW,
+        }
+      });
+      return;
+    }
 
     startTransition(async () => {
       const res = await placeBid(auctionId, bidAmount);
@@ -113,11 +124,16 @@ export function BidPanel({
         setBidAmount(newPrice + minBidIncrement);
         onBidPlaced?.();
       }
-      if (res.error === ERROR_CODES.PHONE_NOT_VERIFIED) {
+      if (res.error?.code === ERROR_CODES.PHONE_NOT_VERIFIED) {
         setShowPhoneModal(true);
       }
       
-      if (res.error === "MFS_LINKAGE_REQUIRED" || res.error === "ELITE_DEPOSIT_REQUIRED") {
+      // Automatic Overbid Suggestion: If outbid during flight, suggest the new minimum
+      if (res.error?.code === ERROR_CODES.BID_TOO_LOW && res.error?.details?.newMinimum) {
+        setBidAmount(res.error.details.newMinimum);
+      }
+      
+      if (res.error?.code === "MFS_LINKAGE_REQUIRED" || res.error?.code === ERROR_CODES.ELITE_DEPOSIT_REQUIRED) {
         setShowMFSModal(true);
       }
     });
