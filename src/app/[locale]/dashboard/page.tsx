@@ -55,129 +55,209 @@ export default async function DashboardPage({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let escrowTransactions: any[] = [];
 
+  // ─── LISTINGS ──────────────────────────────────────────────────────────────
   if (currentTab === "listings") {
     const rawSnap = await db.collection('auctions')
       .where('sellerId', '==', userId)
       .orderBy('createdAt', 'desc')
       .get();
-    
-    watchlistAuctions = await Promise.all(rawSnap.docs.map(async d => {
-      const a = d.data();
-      const bidsSnap = await db.collection('bids').where('auctionId', '==', d.id).get();
-      const wSnap = await db.collection('watchlist').where('auctionId', '==', d.id).where('userId', '==', userId).get();
-      const sellerSnap = await db.collection('users').doc(userId).get();
-      const seller = sellerSnap.data()!;
-      return {
-        ...a, id: d.id,
-        createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
-        endTime: a.endTime?.toDate?.() || new Date(a.endTime),
-        seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
-        _count: { bids: bidsSnap.size },
-        watchlist: wSnap.docs.map(w => w.data()),
-      };
-    })) as unknown as AuctionWithSeller[];
+
+    if (!rawSnap.empty) {
+      const auctionIds = rawSnap.docs.map(d => d.id);
+
+      // Seller is always the current user — fetch once, not per-auction
+      const [sellerSnap, bidCountSnaps] = await Promise.all([
+        db.collection('users').doc(userId).get(),
+        Promise.all(auctionIds.map(id =>
+          db.collection('bids').where('auctionId', '==', id).count().get()
+        )),
+      ]);
+      const seller = sellerSnap.data() ?? {};
+      const bidCountMap = new Map(auctionIds.map((id, i) => [id, bidCountSnaps[i].data().count]));
+
+      watchlistAuctions = rawSnap.docs.map(d => {
+        const a = d.data();
+        return {
+          ...a, id: d.id,
+          createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
+          endTime:   a.endTime?.toDate?.()   || new Date(a.endTime),
+          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
+          _count: { bids: bidCountMap.get(d.id) ?? 0 },
+          watchlist: [],
+        };
+      }) as unknown as AuctionWithSeller[];
+    }
+
+  // ─── WATCHLIST ─────────────────────────────────────────────────────────────
   } else if (currentTab === "watchlist") {
     const watchSnap = await db.collection('watchlist').where('userId', '==', userId).get();
-    
-    const results = await Promise.all(watchSnap.docs.map(async d => {
-      const w = d.data();
-      const aSnap = await db.collection('auctions').doc(w.auctionId).get();
-      if (!aSnap.exists) return null;
-      const a = aSnap.data()!;
-      const bidsSnap = await db.collection('bids').where('auctionId', '==', w.auctionId).get();
-      const sellerSnap = await db.collection('users').doc(a.sellerId).get();
-      const seller = sellerSnap.exists ? sellerSnap.data()! : {};
-      return {
-        ...a, id: w.auctionId,
-        createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
-        endTime: a.endTime?.toDate?.() || new Date(a.endTime),
-        seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
-        _count: { bids: bidsSnap.size },
-        watchlist: [w],
-      };
-    }));
-    watchlistAuctions = results.filter(Boolean) as unknown as AuctionWithSeller[];
+
+    if (!watchSnap.empty) {
+      const watchDocs = watchSnap.docs.map(d => d.data());
+      const auctionIds = [...new Set(watchDocs.map(w => w.auctionId as string))];
+
+      // Pass 1: batch auctions + bid counts
+      const [auctionSnaps, bidCountSnaps] = await Promise.all([
+        db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id))),
+        Promise.all(auctionIds.map(id =>
+          db.collection('bids').where('auctionId', '==', id).count().get()
+        )),
+      ]);
+      const auctionMap  = new Map(auctionSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
+      const bidCountMap = new Map(auctionIds.map((id, i) => [id, bidCountSnaps[i].data().count]));
+
+      // Pass 2: batch sellers from auction data
+      const sellerIds = [...new Set(auctionSnaps.map(s => s.data()?.sellerId).filter(Boolean) as string[])];
+      const sellerSnaps = await db.getAll(...sellerIds.map(id => db.collection('users').doc(id)));
+      const sellerMap = new Map(sellerSnaps.map(s => [s.id, s.data() ?? {}]));
+
+      watchlistAuctions = watchDocs.map(w => {
+        const a = auctionMap.get(w.auctionId);
+        if (!a) return null;
+        const seller = sellerMap.get(a.sellerId) ?? {};
+        return {
+          ...a, id: w.auctionId,
+          createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
+          endTime:   a.endTime?.toDate?.()   || new Date(a.endTime),
+          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
+          _count: { bids: bidCountMap.get(w.auctionId) ?? 0 },
+          watchlist: [w],
+        };
+      }).filter(Boolean) as unknown as AuctionWithSeller[];
+    }
+
+  // ─── ACTIVE BIDS ───────────────────────────────────────────────────────────
   } else if (currentTab === "bids") {
-    const bidsSnap = await db.collection('bids').where('bidderId', '==', userId).orderBy('createdAt', 'desc').get();
-    const uniqueAuctionIds = [...new Set(bidsSnap.docs.map(d => d.data().auctionId))];
-    
-    const results = await Promise.all(uniqueAuctionIds.map(async auctionId => {
-      const aSnap = await db.collection('auctions').doc(auctionId as string).get();
-      if (!aSnap.exists) return null;
-      const a = aSnap.data()!;
-      if (a.status !== 'ACTIVE') return null;
-      
-      const bSnap = await db.collection('bids').where('auctionId', '==', auctionId).get();
-      const wSnap = await db.collection('watchlist').where('auctionId', '==', auctionId).where('userId', '==', userId).get();
-      const sellerSnap = await db.collection('users').doc(a.sellerId).get();
-      const seller = sellerSnap.exists ? sellerSnap.data()! : {};
-      
-      return {
-        ...a, id: auctionId,
-        createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
-        endTime: a.endTime?.toDate?.() || new Date(a.endTime),
-        seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
-        _count: { bids: bSnap.size },
-        watchlist: wSnap.docs.map(w => w.data()),
-      };
-    }));
-    activeBids = results.filter(Boolean) as unknown as AuctionWithSeller[];
-  } else if (currentTab === "escrow") {
-    const escrowSnap = await db.collection('escrowTransactions').where('buyerId', '==', userId).orderBy('createdAt', 'desc').get();
-    
-    escrowTransactions = await Promise.all(escrowSnap.docs.map(async d => {
-      const e = d.data();
-      const aSnap = await db.collection('auctions').doc(e.auctionId).get();
-      const a = aSnap.exists ? aSnap.data()! : null;
-      let seller: Partial<User> = {};
-      if (a) {
-        const sSnap = await db.collection('users').doc(a.sellerId).get();
-        seller = sSnap.exists ? sSnap.data()! : {};
+    const bidsSnap = await db.collection('bids')
+      .where('bidderId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    const bidDocs = bidsSnap.docs.map(d => d.data());
+    const uniqueAuctionIds = [...new Set(bidDocs.map(d => d.auctionId as string))];
+
+    if (uniqueAuctionIds.length > 0) {
+      // Pass 1: batch auctions
+      const auctionSnaps = await db.getAll(...uniqueAuctionIds.map(id => db.collection('auctions').doc(id)));
+      const auctionMap = new Map(auctionSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
+
+      // Count bids per auction from the already-fetched bids — no second DB call
+      const bidCountMap = new Map<string, number>();
+      bidDocs.forEach(b => bidCountMap.set(b.auctionId, (bidCountMap.get(b.auctionId) ?? 0) + 1));
+
+      // Pass 2: batch sellers (only for ACTIVE auctions to minimise reads)
+      const activeAuctionSnaps = auctionSnaps.filter(s => s.data()?.status === 'ACTIVE');
+      const sellerIds = [...new Set(activeAuctionSnaps.map(s => s.data()?.sellerId).filter(Boolean) as string[])];
+      const sellerMap = new Map<string, FirebaseFirestore.DocumentData>();
+      if (sellerIds.length > 0) {
+        const sellerSnaps = await db.getAll(...sellerIds.map(id => db.collection('users').doc(id)));
+        sellerSnaps.forEach(s => sellerMap.set(s.id, s.data() ?? {}));
       }
-      const disputeSnap = await db.collection('disputes').where('transactionId', '==', d.id).limit(1).get();
-      
-      return {
-        ...e, id: d.id,
-        createdAt: e.createdAt?.toDate?.() || new Date(e.createdAt),
-        auction: a ? { ...a, id: e.auctionId, seller: { name: seller.name, image: seller.image } } : null,
-        dispute: disputeSnap.empty ? null : { ...disputeSnap.docs[0].data(), id: disputeSnap.docs[0].id },
-      };
-    }));
+
+      activeBids = uniqueAuctionIds.map(id => {
+        const a = auctionMap.get(id);
+        if (!a || a.status !== 'ACTIVE') return null;
+        const seller = sellerMap.get(a.sellerId) ?? {};
+        return {
+          ...a, id,
+          createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
+          endTime:   a.endTime?.toDate?.()   || new Date(a.endTime),
+          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
+          _count: { bids: bidCountMap.get(id) ?? 0 },
+          watchlist: [],
+        };
+      }).filter(Boolean) as unknown as AuctionWithSeller[];
+    }
+
+  // ─── ESCROW ────────────────────────────────────────────────────────────────
+  } else if (currentTab === "escrow") {
+    const escrowSnap = await db.collection('escrowTransactions')
+      .where('buyerId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    if (!escrowSnap.empty) {
+      const escrowDocs = escrowSnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; auctionId: string; createdAt: FirebaseFirestore.Timestamp; [key: string]: unknown }));
+      const auctionIds = [...new Set(escrowDocs.map(e => e.auctionId))];
+
+      // Batch auctions + disputes in parallel
+      const [auctionSnaps, disputeSnaps] = await Promise.all([
+        db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id))),
+        Promise.all(escrowDocs.map(e =>
+          db.collection('disputes').where('transactionId', '==', e.id).limit(1).get()
+        )),
+      ]);
+      const auctionMap = new Map(auctionSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
+
+      // Batch sellers
+      const sellerIds = [...new Set(auctionSnaps.map(s => s.data()?.sellerId).filter(Boolean) as string[])];
+      const sellerMap = new Map<string, FirebaseFirestore.DocumentData>();
+      if (sellerIds.length > 0) {
+        const sellerSnaps = await db.getAll(...sellerIds.map(id => db.collection('users').doc(id)));
+        sellerSnaps.forEach(s => sellerMap.set(s.id, s.data() ?? {}));
+      }
+
+      escrowTransactions = escrowDocs.map((e, i) => {
+        const a = auctionMap.get(e.auctionId);
+        const seller = a ? (sellerMap.get(a.sellerId as string) ?? {}) : {};
+        return {
+          ...e,
+          createdAt: e.createdAt?.toDate?.() || new Date(),
+          auction: a ? { ...a, id: e.auctionId, seller: { name: seller.name, image: seller.image } } : null,
+          dispute: disputeSnaps[i].empty ? null : { ...disputeSnaps[i].docs[0].data(), id: disputeSnaps[i].docs[0].id },
+        };
+      });
+    }
+
+  // ─── COORDINATION HUB ──────────────────────────────────────────────────────
   } else if (currentTab === "coordination") {
-    // Phase 11: Coordination Hub (Post-Advance Chat)
-    // Firestore OR queries for buyerId == userId OR sellerId == userId
-    // Since Firestore doesn't easily do OR across fields, we do two queries and merge
-    const buyerConvSnap = await db.collection('conversations').where('buyerId', '==', userId).get();
-    const sellerConvSnap = await db.collection('conversations').where('sellerId', '==', userId).get();
-    
-    const convMap = new Map();
+    const [buyerConvSnap, sellerConvSnap] = await Promise.all([
+      db.collection('conversations').where('buyerId', '==', userId).get(),
+      db.collection('conversations').where('sellerId', '==', userId).get(),
+    ]);
+
+    const convMap = new Map<string, FirebaseFirestore.DocumentSnapshot>();
     [...buyerConvSnap.docs, ...sellerConvSnap.docs].forEach(d => convMap.set(d.id, d));
-    
-    const allConvs = Array.from(convMap.values()).map(d => ({ ...d.data(), id: d.id }));
-    
-    const results = await Promise.all(allConvs.map(async conv => {
-      const aSnap = await db.collection('auctions').doc(conv.auctionId).get();
-      if (!aSnap.exists) return null;
-      const a = aSnap.data()!;
-      
-      const eSnap = await db.collection('escrowTransactions').doc(conv.auctionId).get();
-      const escrow = eSnap.exists ? eSnap.data()! : null;
-      
-      if (!escrow || (escrow.status !== 'HELD' && escrow.status !== 'DISPUTED')) return null;
-      
-      const mSnap = await db.collection('messages').where('conversationId', '==', conv.id).orderBy('createdAt', 'desc').limit(1).get();
-      
-      return {
-        ...conv,
-        auction: {
-          title: a.title, images: a.images, id: conv.auctionId,
-          escrowTransaction: { status: escrow.status, id: eSnap.id }
-        },
-        messages: mSnap.empty ? [] : [{ ...mSnap.docs[0].data(), id: mSnap.docs[0].id }]
-      };
-    }));
-    
-    escrowTransactions = results.filter(Boolean).sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+    const allConvs = Array.from(convMap.values()).map(d => ({ ...d.data(), id: d.id } as { id: string; auctionId: string; lastMessageAt: number; [key: string]: unknown }));
+
+    if (allConvs.length > 0) {
+      const auctionIds = [...new Set(allConvs.map(c => c.auctionId))];
+
+      // Batch auctions, escrows, and last messages in two passes
+      const [auctionSnaps, escrowSnaps, messageSnaps] = await Promise.all([
+        db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id))),
+        db.getAll(...auctionIds.map(id => db.collection('escrowTransactions').doc(id))),
+        Promise.all(allConvs.map(conv =>
+          db.collection('messages')
+            .where('conversationId', '==', conv.id)
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get()
+        )),
+      ]);
+      const auctionMap = new Map(auctionSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
+      const escrowMap  = new Map(escrowSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
+
+      escrowTransactions = allConvs.map((conv, i) => {
+        const a      = auctionMap.get(conv.auctionId);
+        const escrow = escrowMap.get(conv.auctionId);
+        if (!a || !escrow) return null;
+        if (escrow.status !== 'HELD' && escrow.status !== 'DISPUTED') return null;
+
+        return {
+          ...conv,
+          auction: {
+            title: a.title, images: a.images, id: conv.auctionId,
+            escrowTransaction: { status: escrow.status, id: conv.auctionId },
+          },
+          messages: messageSnaps[i].empty
+            ? []
+            : [{ ...messageSnaps[i].docs[0].data(), id: messageSnaps[i].docs[0].id }],
+        };
+      }).filter(Boolean).sort((a, b) =>
+        ((b as { lastMessageAt?: number }).lastMessageAt ?? 0) -
+        ((a as { lastMessageAt?: number }).lastMessageAt ?? 0)
+      );
+    }
   }
 
   return (

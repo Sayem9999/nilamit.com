@@ -130,7 +130,9 @@ export default function ChatInterface({
     setInputMessage('');
 
     const result = await sendMessage(auctionId, content, imageUrl);
-    if (!result.success) console.error(result.error);
+    if (!result.success) {
+      console.error('[Chat] sendMessage failed', result.error?.message);
+    }
     setIsSending(false);
   };
 
