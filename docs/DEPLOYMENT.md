@@ -1,58 +1,190 @@
-# 🚀 Nilamit Deployment Guide
+# Deployment Guide
 
 > Last Updated: April 29, 2026
 
-This document outlines the production deployment strategy for the Nilamit platform.
+Nilamit runs on **Firebase App Hosting** — a managed Google Cloud Run backend with git-triggered deployments. Pushing to `main` automatically triggers a Cloud Build pipeline that builds and deploys the app.
 
-## 🏗️ Architecture Overview
-- **Frontend/Backend**: Next.js 15 (Standalone Mode)
-- **Database**: Firestore (NoSQL) + RTDB (Real-time Events)
-- **Cache/Rate-Limiting**: Upstash Redis
-- **Storage**: Firebase Storage + UploadThing
-- **Containerization**: Docker (Alpine-based)
+For the full step-by-step first-time setup, see [DEPLOY_FIREBASE.md](DEPLOY_FIREBASE.md).
 
-## 📦 Production Deployment (Docker)
+---
 
-### 1. Build the Image
-```bash
-docker build -t nilamit-app .
+## How Deployment Works
+
+```
+git push origin main
+  → GitHub triggers Firebase App Hosting webhook
+  → Cloud Build runs cloudbuild.yaml:
+       1. npm install
+       2. npm run build  (Next.js standalone build)
+  → Built container deployed to Cloud Run
+  → New traffic served within ~3 minutes
 ```
 
-### 2. Run with Docker Compose (Local Simulation)
+No manual deploy commands are needed once Firebase App Hosting is connected to the repository.
+
+---
+
+## Key Config Files
+
+| File | Purpose |
+|---|---|
+| `apphosting.yaml` | Cloud Run settings + all env/secrets mapping |
+| `cloudbuild.yaml` | Build pipeline steps |
+| `firebase.json` | Firebase CLI project config |
+| `.firebaserc` | Maps `default` to your Firebase project ID |
+| `scripts/setup-cloud-scheduler.sh` | Creates/updates all 4 Cloud Scheduler cron jobs |
+
+---
+
+## Environment Variables
+
+All secrets are stored in **Google Secret Manager** and referenced in `apphosting.yaml`. They are injected into the container at runtime — never baked into the image.
+
+To add or update a secret:
 ```bash
-docker-compose up -d
+# Add new secret
+echo -n "SECRET_VALUE" | gcloud secrets create SECRET_NAME --data-file=- --project=YOUR_PROJECT_ID
+
+# Update existing secret
+echo -n "NEW_VALUE" | gcloud secrets versions add SECRET_NAME --data-file=- --project=YOUR_PROJECT_ID
 ```
 
-## ☁️ Cloud Deployment (Recommended: Google Cloud Run)
+After updating a secret, trigger a redeploy by pushing any commit (or via the Firebase Console → App Hosting → Rollout).
 
-### 1. Authenticate & Configure
+Required secrets — see `.env.example` for full list:
+
+| Secret | Description |
+|---|---|
+| `AUTH_SECRET` | JWT signing key — `openssl rand -base64 32` |
+| `FIREBASE_PROJECT_ID` | Firebase project ID |
+| `FIREBASE_CLIENT_EMAIL` | Service account email |
+| `FIREBASE_PRIVATE_KEY` | Service account private key |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis endpoint |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token |
+| `CRON_SECRET` | Shared secret for Cloud Scheduler → cron routes |
+| `ADMIN_EMAILS` | Comma-separated admin email list |
+
+---
+
+## Cron Jobs
+
+Four Cloud Scheduler jobs send POST requests to the deployed app every minute (or on schedule). Set up once with:
+
 ```bash
-gcloud auth login
-gcloud config set project [YOUR_PROJECT_ID]
+chmod +x scripts/setup-cloud-scheduler.sh
+./scripts/setup-cloud-scheduler.sh
 ```
 
-### 2. Deploy from Source
-Google Cloud Run can build the Dockerfile automatically:
+| Job | Endpoint | Schedule |
+|---|---|---|
+| `nilamit-close-auctions` | `POST /api/cron/close-auctions` | Every minute |
+| `nilamit-process-auctions` | `POST /api/cron/process-auctions` | Every minute (alias — run only one) |
+| `nilamit-closing-soon` | `POST /api/cron/closing-soon` | Every 15 minutes |
+| `nilamit-process-alerts` | `POST /api/cron/process-alerts` | Every 2 minutes |
+
+All cron endpoints require `Authorization: Bearer <CRON_SECRET>`. In production without `CRON_SECRET` set, all cron requests are rejected.
+
+Manually trigger a job:
 ```bash
-gcloud run deploy nilamit-app \
-  --source . \
-  --platform managed \
-  --region asia-southeast1 \
-  --allow-unauthenticated
+gcloud scheduler jobs run nilamit-close-auctions \
+  --project=YOUR_PROJECT_ID \
+  --location=asia-southeast1
 ```
 
-## 🔐 Environment Setup (Production)
+---
 
-Ensure the following variables are set in your Cloud Provider's Secret Manager:
+## Scaling
 
-| Variable | Description |
-| :--- | :--- |
-| `AUTH_SECRET` | Secret for JWT signing (32+ chars) |
-| `FIREBASE_PRIVATE_KEY` | RSA Private key from service account |
-| `UPSTASH_REDIS_REST_TOKEN` | Token for rate-limiting |
-| `ADMIN_EMAILS` | Comma-separated list of authorized admins |
+Current `apphosting.yaml` settings:
 
-## 🛠️ Maintenance & Monitoring
-- **Logs**: View real-time logs via `gcloud logs read` or the Sentry dashboard.
-- **Scaling**: The application is stateless (standalone mode) and can be scaled horizontally from 0 to 1000+ instances.
-- **Backups**: Firestore backups should be scheduled via GCP Cloud Scheduler.
+| Setting | Value | Notes |
+|---|---|---|
+| `minInstances` | 0 | Scales to zero when idle — costs nothing |
+| `maxInstances` | 10 | Cap to control costs |
+| `concurrency` | 80 | Requests per container instance |
+| `cpu` | 1 vCPU | Sufficient for Next.js + Firestore |
+| `memoryMiB` | 1024 | 1 GB RAM |
+| `timeoutSeconds` | 60 | Max request duration |
+
+For production traffic with latency requirements, set `minInstances: 1` to eliminate cold starts.
+
+---
+
+## Health Check
+
+```bash
+curl https://YOUR_DOMAIN/api/health
+```
+
+Expected:
+```json
+{ "status": "ok", "db": "connected", "latencyMs": 15, "timestamp": "..." }
+```
+
+---
+
+## Monitoring
+
+- **Errors:** Sentry dashboard (`SENTRY_DSN` env var)
+- **Logs:** Firebase Console → App Hosting → Logs (streamed from Cloud Run)
+- **Cron failures:** `cronFailures` Firestore collection — admin-readable
+- **Build status:** Firebase Console → App Hosting → Rollouts
+
+---
+
+## Rollback
+
+In the Firebase Console → App Hosting → your backend → Rollouts, select any previous successful rollout and click **Rollback**.
+
+Or redeploy a specific commit:
+```bash
+git push origin <commit-sha>:main --force
+```
+
+---
+
+## Firestore Indexes
+
+Composite indexes are defined in `firestore.indexes.json`. Deploy them with:
+```bash
+firebase deploy --only firestore:indexes --project YOUR_PROJECT_ID
+```
+
+---
+
+## Firestore Security Rules
+
+Security rules are in `firestore.rules`. Deploy with:
+```bash
+firebase deploy --only firestore:rules --project YOUR_PROJECT_ID
+```
+
+---
+
+## Custom Domain
+
+1. Firebase Console → App Hosting → your backend → Custom domain
+2. Add domain (e.g., `nilamit.app`)
+3. Add the DNS records from the console to your registrar
+4. Wait for SSL provisioning (< 1 hour)
+5. Update `AUTH_URL` in Secret Manager to your custom domain
+6. Trigger a redeploy
+
+---
+
+## Troubleshooting
+
+**Build fails with missing env errors**
+→ Check Secret Manager — all secrets in `apphosting.yaml` must exist before the first deploy. The env validator soft-fails during build but some secrets must exist.
+
+**Cron jobs return 401**
+→ `CRON_SECRET` in Secret Manager doesn't match Cloud Scheduler's configured auth token. Re-run `setup-cloud-scheduler.sh`.
+
+**Auth redirect loop**
+→ `AUTH_URL` / `NEXTAUTH_URL` doesn't match the actual deployment domain exactly (including `https://`).
+
+**Cold start latency**
+→ Set `minInstances: 1` in `apphosting.yaml` and push to redeploy.
+
+**"Firebase Admin — Missing credentials" error**
+→ The service account credentials are not properly set in Secret Manager, or the Cloud Run service account doesn't have `secretmanager.secretAccessor` IAM role.

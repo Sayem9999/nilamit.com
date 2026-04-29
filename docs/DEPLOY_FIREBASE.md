@@ -109,19 +109,21 @@ echo -n "admin@nilamit.com" \
 echo -n "$(openssl rand -hex 32)" \
   | gcloud secrets create CRON_SECRET --data-file=- --project=$PROJECT_ID
 
-# Firebase RTDB
-echo -n "YOUR_FIREBASE_RTDB_URL"  | gcloud secrets create FIREBASE_RTDB_URL  --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_FIREBASE_API_KEY"     | gcloud secrets create FIREBASE_API_KEY     --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_FIREBASE_PRIVATE_KEY"  | gcloud secrets create FIREBASE_PRIVATE_KEY  --data-file=- --project=$PROJECT_ID
-echo -n "mt1"                 | gcloud secrets create Firebase RTDB_CLUSTER --data-file=- --project=$PROJECT_ID
-
-# Firebase Storage
-echo -n "https://[REF].Firebase.co" \
-  | gcloud secrets create FIREBASE_DATABASE_URL --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_FIREBASE_API_KEY" \
-  | gcloud secrets create FIREBASE_API_KEY --data-file=- --project=$PROJECT_ID
+# Firebase Admin SDK (server-side)
+echo -n "YOUR_FIREBASE_CLIENT_EMAIL" \
+  | gcloud secrets create FIREBASE_CLIENT_EMAIL --data-file=- --project=$PROJECT_ID
 echo -n "YOUR_FIREBASE_PRIVATE_KEY" \
   | gcloud secrets create FIREBASE_PRIVATE_KEY --data-file=- --project=$PROJECT_ID
+echo -n "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com" \
+  | gcloud secrets create FIREBASE_DATABASE_URL --data-file=- --project=$PROJECT_ID
+
+# Firebase Client SDK (public — NEXT_PUBLIC_ prefix)
+echo -n "YOUR_FIREBASE_API_KEY" \
+  | gcloud secrets create NEXT_PUBLIC_FIREBASE_API_KEY --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_MESSAGING_SENDER_ID" \
+  | gcloud secrets create NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_APP_ID" \
+  | gcloud secrets create NEXT_PUBLIC_FIREBASE_APP_ID --data-file=- --project=$PROJECT_ID
 
 # UploadThing
 echo -n "YOUR_UPLOADTHING_TOKEN" \
@@ -243,12 +245,14 @@ chmod +x scripts/setup-cloud-scheduler.sh
 
 This creates 4 scheduled jobs:
 
-| Job | Schedule | Endpoint |
-|-----|----------|----------|
-| `nilamit-process-auctions` | Every minute | `/api/cron/process-auctions` |
-| `nilamit-close-auctions` | Every minute | `/api/cron/close-auctions` |
-| `nilamit-closing-soon` | Every 15 min | `/api/cron/closing-soon` |
-| `nilamit-process-alerts` | Every 2 min | `/api/cron/process-alerts` |
+| Job | Schedule | Endpoint | Method |
+|-----|----------|----------|--------|
+| `nilamit-process-auctions` | Every minute | `/api/cron/process-auctions` | POST |
+| `nilamit-close-auctions` | Every minute | `/api/cron/close-auctions` | POST |
+| `nilamit-closing-soon` | Every 15 min | `/api/cron/closing-soon` | POST |
+| `nilamit-process-alerts` | Every 2 min | `/api/cron/process-alerts` | POST |
+
+> **Note:** `process-auctions` and `close-auctions` are identical — both call `closeAllEndedAuctions()`. Run only one of them from the scheduler. The duplication exists for backwards compatibility with older scheduler configs.
 
 Verify in the [Cloud Scheduler Console](https://console.cloud.google.com/cloudscheduler).
 

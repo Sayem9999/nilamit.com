@@ -1,79 +1,180 @@
-# Nilamit Architecture: The Firebase-Native SOA Blueprint (v2.0)
+# Nilamit Architecture
 
 > Last Updated: April 29, 2026
 
-This document outlines the architectural layers and core technologies powering **Nilamit**, a mission-critical C2C auction marketplace built for scale.
+---
 
-## 🏛️ System Overview
+## System Overview
 
-Nilamit is built on a **Service-Oriented Architecture (SOA)** using Next.js 15 and the Firebase-Native stack. The architecture is designed for zero-latency bidding, atomic transactional integrity, and edge-level security.
+Nilamit is a Next.js 16 full-stack application using a **layered SOA pattern**: Server Actions as thin controllers, domain Services for business logic, and Firebase as the data layer. All client-to-database writes are forbidden — every mutation goes through Server Actions using the Firebase Admin SDK.
 
-```mermaid
-graph TD
-    User((User)) -->|Browser| FE[Frontend: Next.js + React 19]
-    FE -->|Server Actions| AC[Controller Layer: Actions]
-    AC -->|Orchestration| SV[Service Layer: Domain Services]
-    
-    subgraph Services
-        SV --> AS[Auction Service]
-        SV --> BS[Bidding Service]
-        SV --> IS[Identity Service]
-    end
-
-    AS -->|Source of Truth| FS[(Firestore: NoSQL)]
-    BS -->|Atomic Transaction| FS
-    BS -->|Event Broadcast| RT[Realtime DB: Event Bus]
-    RT -->|Live Updates| FE
-    
-    SV --> INF[Infrastructure]
-    subgraph INF
-        E[Firebase Email]
-        F[FCM Push]
-        S[SMS Gateway]
-    end
+```
+Browser (React 19)
+  │
+  ├── Client Components      → UI state, RTDB listeners, session reads
+  │
+  └── Server Actions         → Auth gate, Zod validation, revalidation
+       │                        src/actions/*.ts
+       ├── Domain Services   → Business logic, Firestore transactions
+       │   src/services/     → BiddingService, AuctionService
+       │
+       └── Infrastructure    → src/lib/
+            ├── Firestore    → All persistent state (Admin SDK only)
+            ├── RTDB         → Real-time events (bids, notifications, presence)
+            ├── Firebase Storage → Images, chat attachments
+            ├── Upstash Redis   → Rate limiting (fail-closed in production)
+            └── Sentry          → Error tracking + performance
 ```
 
 ---
 
-## 🎨 Layer 1: Frontend (Next.js 15)
-- **Framework**: React 19 + Next.js App Router.
-- **Modularity**: Implements **Component Sharding** for complex interactive panels (e.g., `BidPanel`).
-- **Performance**: Dynamic imports for heavy components and parallel data pre-fetching in Server Components.
-- **Internationalization**: `next-intl` with `[locale]`-based dynamic routing (EN/BN).
+## Layer Responsibilities
 
-## ⚙️ Layer 2: Controller (Server Actions)
-- **Thin Controllers**: `src/actions` handle only high-level orchestration (Auth validation, revalidation, and error mapping).
-- **Security Edge**: Implements **Upstash Rate Limiting** and **XSS Sanitization** before data reaches the services.
+### Layer 1 — Frontend (Next.js App Router)
 
-## ⚙️ Layer 3: Service Layer (Domain Logic)
-- **Domain-Driven**: Core business logic is isolated in `src/services`.
-- **Stateless & Scalable**: Logic is decoupled from the Next.js Request/Response cycle, allowing for high testability and reuse in CRON jobs or background workers.
-- **Integrity**: Handles complex multi-step side effects like parallel notification triggers and gamification updates.
+- **Server Components** pre-fetch and render initial page state.
+- **Client Components** manage interactive UI: bid panel, countdown timer, RTDB listeners.
+- **Routing:** `src/app/[locale]/` provides English/Bengali i18n via `next-intl`. All UI routes are locale-prefixed.
+- **Real-time:** Clients subscribe to Firebase RTDB paths for live bid prices, viewer counts, and notifications. RTDB is append-only from the server — clients only read.
 
-## 🗄️ Layer 4: Data (Firebase Native)
-- **Firestore (Source of Truth)**: 
-  - Stores all persistent state (Auctions, Bids, Users).
-  - Uses **Administrative Transactions** for bidding to ensure absolute consistency.
-  - Locked down with **Zero-Trust Security Rules** (No client-side writes).
-- **Realtime Database (Event Bus)**: 
-  - Handles high-frequency live state (Current Bid, Presence, Notifications).
-  - Provides sub-100ms synchronization across all connected clients.
+### Layer 2 — Server Actions (`src/actions/`)
+
+Thin controllers. Each action:
+1. Calls `auth()` to verify session
+2. Validates input through a Zod schema from `src/lib/schemas.ts`
+3. Calls the appropriate Service or library function
+4. Calls `revalidatePath()` on success
+5. Returns a typed `ServiceResponse<T>` — never throws to the client
+
+Actions never contain business logic. They are the authentication and validation boundary.
+
+### Layer 3 — Domain Services (`src/services/`)
+
+Stateless business logic, decoupled from the HTTP layer:
+
+- **`BiddingService`** — `placeBid()` runs a serializable Firestore transaction. All bid validation, anti-snipe extension, and denormalization of `currentPrice`/`currentBidderId` onto the auction document happen here atomically.
+- **`AuctionService`** — listing queries with cursor pagination, single-auction fetch with seller hydration.
+
+Services are also called directly by cron routes.
+
+### Layer 4 — Infrastructure (`src/lib/`)
+
+| File | Responsibility |
+|---|---|
+| `auth.ts` | NextAuth config, inline FirestoreAdapter (JWT strategy), session/JWT callbacks |
+| `auth.config.ts` | Edge-safe NextAuth subset used in middleware |
+| `admin-guard.ts` | Single `requireAdmin()` guard — all admin actions import from here |
+| `db.ts` | Firestore proxy singleton, `docData()`, `snapDocs()`, `newId()`, `toSellerPublic()` |
+| `firebase-admin.ts` | Admin SDK init (throws on missing secrets), `rtdbPush()`, `rtdbSet()` |
+| `firebase-client.ts` | Browser SDK for Auth, Storage, Analytics |
+| `ratelimit.ts` | Upstash-backed limiters — fail-closed in production |
+| `auction-logic.ts` | `processAuctionSale()` — reserve check, commission calc, escrow creation, winner notification |
+| `schemas.ts` | All Zod schemas for trust-boundary inputs |
+| `sanitizer.ts` | HTML/XSS stripping via DOMPurify |
+| `pii-filter.ts` | Phone/email/bypass-keyword redaction in public text |
+| `errors.ts` | `ServiceResponse<T>`, `errorResponse()`, `successResponse()`, `ErrorType` enum |
+| `env.ts` | Zod env validation — soft-fails during build, throws at runtime |
+| `cron-utils.ts` | `verifyCronSecret()`, `withRetry()`, `cronSuccess()`, `cronError()` |
 
 ---
 
-## 🔒 Security Architecture
-- **Defensive Depth**: 3-tier validation (Action → Service → Database Rules).
-- **Identity Normalization**: Case-insensitive admin guards and secure role derivation in NextAuth.
-- **PII Shielding**: Automated regex-based filtering of sensitive info in public listings.
-- **Rate Limiting**: Specialized limiters for Auth, Bids, and API calls to prevent automated abuse.
+## Data Architecture
 
-## 🚀 Performance Engineering
-- **Query Parallelization**: Use of `Promise.all` for fetching metadata and paged data.
-- **N+1 Resolution**: Batch-lookup patterns for linked records (e.g., bidders, sellers).
-- **LCP Optimization**: Priority loading for ATF images and memoization of list items.
+### Firestore (Source of Truth)
+
+All persistent state lives in Firestore. Key design decisions:
+
+- **`currentPrice` and `currentBidderId` are denormalized onto the auction document.** The bidding transaction reads and locks these from the auction doc itself, not from a separate query on the bids collection. This is critical — collection queries inside a Firestore transaction are not transactionally locked.
+- **`escrowTransactions` doc ID = `auctionId`** for idempotent upsert via `{ merge: true }`.
+- **`conversations` doc ID = `auctionId`** by convention, linking chat to its auction.
+- **Client writes are blocked.** `firestore.rules` forbids all client-side writes to every collection. Reads are scoped per collection (public, authenticated, admin-only).
+
+### Firebase Realtime Database (Event Bus)
+
+RTDB is used for high-frequency, ephemeral state that Firestore's cost model doesn't suit:
+
+| Path | Data | Pattern |
+|---|---|---|
+| `bids/auction/{id}` | Latest bid price + bidder | Overwrite (`rtdbSet`) |
+| `activity/auction/{id}` | Bid history feed | Append (`rtdbPush`) |
+| `activity/global` | Homepage ticker | Append |
+| `notifications/user/{id}` | Per-user inbox | Append |
+| `chat/conversation/{id}` | Messages | Append |
+| `presence/auction/{id}/{userId}` | Viewer presence | Set/remove |
+
+RTDB data is append-only from the server side. The client SDK reads with `onValue` or `onChildAdded` listeners.
 
 ---
 
-## 🏆 Reputation & Trust
-- **Trust-Tier System**: Verification gates for phone numbers and MFS accounts.
-- **Automated Moderation**: Middleware-level enforcement for banned users and atomic action blocking.
+## Security Architecture
+
+### Defense in Depth
+
+```
+Request
+  → Middleware (auth check, ban redirect, i18n routing)
+  → Server Action (auth(), Zod validation, rate limit)
+  → Service (business rule enforcement)
+  → Firestore Security Rules (write: if false for all collections)
+```
+
+### Key Security Properties
+
+- **Admin gate:** `requireAdmin()` checks `ADMIN_EMAILS` env var (normalized to lowercase). Admin status is also derived from this env var in the JWT callback — never from user-supplied data.
+- **Rate limiting:** Fail-closed in production. If Upstash is unreachable, requests are rejected with 429. `bidLimiter`, `authLimiter`, `loginLimiter`, `phoneOtpSendLimiter`, `phoneOtpVerifyLimiter` each have independent windows.
+- **OTP security:** Generated with `crypto.randomInt()` (CSPRNG), stored as SHA-256 hash, consumed and deleted on first use.
+- **JWT refresh:** Token re-reads Firestore every 5 minutes, ensuring ban/verification changes propagate quickly.
+- **CSP:** `script-src` allows `'unsafe-inline'` (required for Next.js hydration scripts) but not `'unsafe-eval'`. Full header set in `next.config.ts`.
+
+### Firestore Rules Summary
+
+| Collection | Read | Write |
+|---|---|---|
+| `users` | Self or admin | Blocked (Admin SDK only) |
+| `auctions` | Public | Blocked |
+| `bids` | Public | Blocked |
+| `conversations` | Participants or admin | Blocked |
+| `messages` | Participants or admin | Blocked |
+| `escrowTransactions` | — | Blocked |
+| `reports` | Admin only | Blocked |
+| Everything else | Blocked | Blocked |
+
+---
+
+## Cron Architecture
+
+Four scheduled jobs run on Cloud Scheduler, all hitting `POST` endpoints:
+
+| Job | Endpoint | Schedule | What it does |
+|---|---|---|---|
+| close-auctions | `POST /api/cron/close-auctions` | Every minute | Closes expired ACTIVE auctions via `closeAllEndedAuctions()` |
+| process-auctions | `POST /api/cron/process-auctions` | Every minute | Alias for close-auctions (backwards compat — run only one) |
+| closing-soon | `POST /api/cron/closing-soon` | Every 15 min | Sends ending-soon notifications for watched auctions |
+| process-alerts | `POST /api/cron/process-alerts` | Every 2 min | Processes pending price alerts |
+
+All cron routes verify `CRON_SECRET` via `Authorization: Bearer <secret>` or `X-Cron-Secret` header. In production without a secret configured, all cron requests are rejected with 500. Failed jobs are recorded in the `cronFailures` Firestore collection for operator review.
+
+---
+
+## Commission Model
+
+| Sale price | Rate | Base fee |
+|---|---|---|
+| ≤ ৳10,000 | 2.5% | + ৳20 |
+| ৳10,001 – ৳150,000 | 1.5% | + ৳20 |
+| > ৳150,000 | 1.0% | + ৳20 |
+
+For **verified sellers**: escrow holds `finalPrice` (full amount).
+For **unverified sellers**: escrow holds `commission + deliveryCharge` only.
+
+Delivery charge defaults to ৳0 unless set on the auction.
+
+---
+
+## Performance Patterns
+
+- **Batch reads over N+1:** All admin hydration (disputes, treasury, active escrows) uses `db.getAll(...refs)` in 3 round-trips regardless of row count.
+- **Parallel fetches:** Unrelated reads use `Promise.all()`.
+- **Firestore aggregations:** Admin stats use `.count().get()` — counts 1000 docs for the cost of 1 read.
+- **Denormalization:** Bid panel reads `currentPrice` and `currentBidderId` from the auction doc (already loaded), not from a separate bids query.
+- **Live ticker filtering:** Homepage bid feed fetches 25 bids, filters to ACTIVE-auction bids only, returns 10.
