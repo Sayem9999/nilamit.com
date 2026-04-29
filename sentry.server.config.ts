@@ -9,6 +9,7 @@
 
 import * as Sentry from '@sentry/nextjs';
 import { scrubEvent, scrubBreadcrumb } from './src/lib/sentry-scrub';
+import { log } from './src/lib/logger';
 
 const SENTRY_DSN = process.env.SENTRY_DSN;
 
@@ -38,5 +39,5 @@ if (SENTRY_DSN) {
     beforeBreadcrumb: scrubBreadcrumb,
   });
 } else if (process.env.NODE_ENV === 'production') {
-  console.warn('[Sentry] SENTRY_DSN is not set — errors will not be captured.');
+  log.warn('[Sentry] SENTRY_DSN is not set — errors will not be captured in production.');
 }

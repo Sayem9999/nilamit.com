@@ -51,7 +51,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https://*.googleusercontent.com https://utfs.io https://*.uploadthing.com https://*.uploadthing.com https://firebasestorage.googleapis.com https://storage.googleapis.com https://avatars.githubusercontent.com https://*.ingest.sentry.io",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.googleapis.com https://storage.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.cloudfunctions.net https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com https://*.ingest.sentry.io https://*.sentry.io https://utfs.io https://*.uploadthing.com",
+      "connect-src 'self' https://*.googleapis.com https://storage.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.cloudfunctions.net https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.sentry.io https://utfs.io https://*.uploadthing.com",
       "frame-src 'self' https://*.firebaseapp.com",
       "media-src 'self'",
       "object-src 'none'",

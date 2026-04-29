@@ -35,6 +35,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   SENTRY_DSN: z.string().url().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   RESEND_API_KEY: z.string().optional(),
   SMS_PROVIDER: z.enum(['console', 'greenweb']).default('console'),
   GREENWEB_TOKEN: z.string().optional(),

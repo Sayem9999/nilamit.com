@@ -88,8 +88,9 @@ env:
   # sendSMS() call in production until SMS_PROVIDER + the matching token
   # secret (GREENWEB_TOKEN, BULKSMS_API_KEY+BULKSMS_SENDER_ID) are added here.
 
-  # ─── Sentry (optional) ───────────────────────────────────────
-  # - variable: SENTRY_DSN
-  #   secret: SENTRY_DSN
-  # - variable: NEXT_PUBLIC_SENTRY_DSN
-  #   secret: SENTRY_DSN
+  # ─── Sentry ──────────────────────────────────────────────────
+  - variable: SENTRY_DSN
+    secret: SENTRY_DSN
+
+  - variable: NEXT_PUBLIC_SENTRY_DSN
+    secret: SENTRY_DSN

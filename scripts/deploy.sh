@@ -43,15 +43,24 @@ set -euo pipefail
 # ██  CONFIGURE — fill in these 3 values, then run the script
 # ────────────────────────────────────────────────────────────────────────
 
-PROJECT_ID="nilamit-app"                          # Firebase project ID (create new or use existing)
-ADMIN_EMAIL="admin@yourdomain.com"                # Your admin email (lowercase)
-REGION="asia-southeast1"                          # Closest to Bangladesh (Singapore)
+PROJECT_ID="nilamit-52073"                         # Firebase project ID
+ADMIN_EMAIL="sayemf21@gmail.com"                  # Admin email (lowercase)
+REGION="asia-southeast1"                          # Singapore — closest to Bangladesh
 
 # Optional — leave empty to skip
 CUSTOM_DOMAIN=""                                  # e.g. "nilamit.app" — configure after deploy
-GOOGLE_CLIENT_ID=""                               # For Google sign-in — get from GCP Console
-GOOGLE_CLIENT_SECRET=""                           # For Google sign-in
-SENTRY_DSN=""                                     # For error monitoring — get from sentry.io
+
+# Google OAuth — CLIENT_ID is safe to commit; CLIENT_SECRET must NOT be committed.
+# Set GOOGLE_CLIENT_SECRET as an environment variable before running:
+#   export GOOGLE_CLIENT_SECRET="GOCSPX-..."
+# Then ROTATE it at https://console.cloud.google.com/apis/credentials
+# (the old value was exposed in .env — treat it as compromised)
+GOOGLE_CLIENT_ID="1045595955604-qotl3u9el94dho3l74qnv3ihefat8hgr.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET:-}"  # read from env var, not hardcoded
+
+# Sentry DSN (EU region — safe to commit, used in the browser bundle)
+SENTRY_DSN="https://a46a5f04797546f696a1df32e119a54b@o4510857201319936.ingest.de.sentry.io/4510857203482704"
+
 GREENWEB_TOKEN=""                                 # For SMS OTPs — get from greenweb.com.bd
 RESEND_API_KEY=""                                 # For email notifications — get from resend.com
 
