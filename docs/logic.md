@@ -1,5 +1,7 @@
 # Nilamit Business Logic: The Firebase-Native Engine
 
+> Last Updated: April 29, 2026
+
 ## 1. Atomic Bidding Logic
 The bidding engine is encapsulated within `BiddingService.placeBid` using **Firestore Transactions**.
 

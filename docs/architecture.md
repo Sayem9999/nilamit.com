@@ -1,5 +1,7 @@
 # Nilamit Architecture: The Firebase-Native SOA Blueprint (v2.0)
 
+> Last Updated: April 29, 2026
+
 This document outlines the architectural layers and core technologies powering **Nilamit**, a mission-critical C2C auction marketplace built for scale.
 
 ## 🏛️ System Overview

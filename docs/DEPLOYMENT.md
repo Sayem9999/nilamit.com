@@ -1,5 +1,7 @@
 # 🚀 Nilamit Deployment Guide
 
+> Last Updated: April 29, 2026
+
 This document outlines the production deployment strategy for the Nilamit platform.
 
 ## 🏗️ Architecture Overview

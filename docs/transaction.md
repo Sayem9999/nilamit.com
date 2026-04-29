@@ -1,5 +1,7 @@
 # Transaction & Asset Custody Model
 
+> Last Updated: April 29, 2026
+
 This document outlines the financial nodes and custody logic for the Nilamit marketplace, specifically tailored for the Bangladesh context (Cash on Delivery + MFS).
 
 ## 1. Financial Nodes

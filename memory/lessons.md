@@ -1,5 +1,7 @@
 # 💡 Lessons: Patterns & Anti-Patterns
 
+> Last Updated: April 29, 2026
+
 ## Patterns to Follow
 - **Transactional Bidding**: Always use `SELECT FOR UPDATE` to prevent race conditions.
 - **Bengali UI Localization**: Use the `.bn` CSS class for high-contrast Bengali text.

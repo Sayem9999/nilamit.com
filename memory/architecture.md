@@ -1,5 +1,7 @@
 # 🏗️ Architecture: Nilamit System Design
 
+> Last Updated: April 29, 2026
+
 ## System Overview
 Nilamit is a real-time, transaction-safe auction platform optimized for the Bangladeshi mobile web. It uses a **Push-First** model where price updates are broadcast to clients via WebSockets (transitioning from polling).
 

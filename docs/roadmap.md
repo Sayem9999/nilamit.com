@@ -1,5 +1,7 @@
 # 🗺️ Nilamit Strategic Roadmap
 
+> Last Updated: April 29, 2026
+
 ## Phase 1: Foundation (Q1 2026) — COMPLETED ✅
 - [x] Initial Next.js scaffold and Firestore setup.
 - [x] SMS-based phone authentication (+880).

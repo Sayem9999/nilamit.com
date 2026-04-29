@@ -1,5 +1,7 @@
 # 📢 Nilamit Platform Updates
 
+> Last Updated: April 29, 2026
+
 ## [v0.3.1] - 2026-04-12
 ### 🚀 Added (Regional & Social Filtering)
 - **Geographic Areas**: Implemented neighborhood-specific filtering for Dhaka (Mirpur, Banani, Gulshan, etc.).

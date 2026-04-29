@@ -1,5 +1,7 @@
 # 🏛️ nilamit.com — Project Constitution
 
+> Last Updated: April 29, 2026
+
 > The non-negotiable principles governing every decision in this codebase.
 
 ## Core Identity

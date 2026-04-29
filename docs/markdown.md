@@ -1,5 +1,7 @@
 # 📄 Markdown Documentation Standards
 
+> Last Updated: April 29, 2026
+
 All `.md` files in the Nilamit project must follow these guidelines:
 
 ## 1. Visual Hierarchy

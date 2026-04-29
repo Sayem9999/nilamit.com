@@ -1,5 +1,7 @@
 # 🚀 Nilamit: Platform Summary
 
+> Last Updated: April 29, 2026
+
 **Nilamit** is a premium, real-time C2C (Consumer-to-Consumer) auction marketplace purpose-built for the unique landscape of Bangladesh. It combines enterprise-grade data integrity with social-proof mechanisms and hyper-local discovery.
 
 ## 核心 (Core) Mission

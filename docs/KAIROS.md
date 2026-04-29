@@ -1,5 +1,7 @@
 # 🏛️ KAIROS: Strategic Memory Core
 
+> Last Updated: April 29, 2026
+
 **KAIROS** is the permanent knowledge management system for Nilamit. It ensures continuity between AI coding sessions by maintaining a single source of truth for architectural decisions, rules, and lessons.
 
 ## 🧭 Memory Structure

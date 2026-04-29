@@ -1,5 +1,7 @@
 # 📜 Rules: Agent Operational Constraints
 
+> Last Updated: April 29, 2026
+
 ## Core Technical Rules
 1. **Bengali-First (bn)**: Use high-contrast Bengali text for all user-facing technical labels to ensure accessibility for non-technical merchants.
 2. **Atomic Bidding**: All price updates must happen within a database transaction using `SELECT FOR UPDATE`.

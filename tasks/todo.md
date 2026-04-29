@@ -1,5 +1,7 @@
 # Project Tasks (v1.6 Hardened)
 
+> Last Updated: April 29, 2026
+
 ## 0. Identity & Verification Hardening (High Priority)
 - [x] Refactor Auth.js for Hybrid Credentials (Phone + Email).
 - [x] Implement Multi-Step Standalone OTP verification flow.

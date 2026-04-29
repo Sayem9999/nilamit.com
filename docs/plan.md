@@ -1,5 +1,7 @@
 # 🗓️ Nilamit Project Plan
 
+> Last Updated: April 29, 2026
+
 ## Current Milestone: v1.5 Hardening & Social Expansion
 **Status**: In Progress 🏗️
 

@@ -1,5 +1,7 @@
 # 🧠 Nilamit: Future Brainstorming (Phase 4 & Beyond)
 
+> Last Updated: April 29, 2026
+
 This document serves as a "Living Laboratory" for high-potential features, architectural pivots, and moonshot ideas for the Nilamit marketplace.
 
 ---

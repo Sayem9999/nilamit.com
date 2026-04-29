@@ -1,5 +1,7 @@
 # 🌙 Auto Dream Protocol
 
+> Last Updated: April 29, 2026
+
 The **Auto Dream** is a synchronization anchor. At the end of every active coding session, the agent synthesizes the "State of the Project" into this file to bridge the gap between sessions.
 
 ## 🌈 Current Project Vibe

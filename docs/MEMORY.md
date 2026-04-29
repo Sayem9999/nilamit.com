@@ -1,5 +1,7 @@
 # 🧠 Nilamit Core Memory (KAIROS Index)
 
+> Last Updated: April 29, 2026
+
 ## Project Vision
 Nilamit is a specialized auction marketplace for the Bangladeshi market, prioritizing localized trust, mobile efficiency, and accessible social commerce.
 

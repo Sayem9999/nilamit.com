@@ -1,6 +1,8 @@
 # 🏛️ NILAMIT.APP PROJECT AUDIT
+
+> Last Updated: April 29, 2026
 **Bangladesh C2C Auction Marketplace**
-**April 15, 2026 | v0.2.0**
+**April 29, 2026 | v0.2.0**
 
 ---
 
@@ -127,17 +129,17 @@ clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy',
 **Fix:**
 1. Create `.env.example`:
 ```env
-DATABASE_URL=NoSQL://user:password@db.Firebase.co:5432/postgres
+DATABASE_URL="firebase-admin-sdk-json"
 NEXTAUTH_SECRET=your-secret-key-here
 NEXTAUTH_URL=http://localhost:3000
 
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-Firebase RTDB_APP_ID=your-Firebase RTDB-app-id
-Firebase RTDB_KEY=your-Firebase RTDB-key
-Firebase RTDB_SECRET=your-Firebase RTDB-secret
-Firebase RTDB_CLUSTER=mt1
+FIREBASE_RTDB_URL=your-Firebase RTDB-app-id
+FIREBASE_API_KEY=your-Firebase RTDB-key
+FIREBASE_PRIVATE_KEY=your-Firebase RTDB-secret
+FIREBASE_PROJECT_ID="nilamit-app"
 
 GREENWEB_API_KEY=your-greenweb-key
 RESEND_API_KEY=your-resend-key
@@ -980,5 +982,5 @@ However, **5 critical issues must be fixed before scaling to 100k+ users:**
 
 ---
 
-**Audit Completed:** April 15, 2026  
+**Audit Completed:** April 29, 2026  
 **Auditor:** Claude Code Agent

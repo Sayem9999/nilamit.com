@@ -1,5 +1,7 @@
 # ⚖️ Decisions: Project Governance & Versions
 
+> Last Updated: April 29, 2026
+
 ## Core Decisions
 - **Mobile-First Orientation**: Target Bangladeshi market on low-bandwidth (3G/4G). No feature ships without mobile viewport validation.
 - **Trust Anchor**: Phone number (+880) is the non-negotiable identity anchor.

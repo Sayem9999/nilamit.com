@@ -1,5 +1,7 @@
 # 🎨 nilamit.com — Style Guide & Design System
 
+> Last Updated: April 29, 2026
+
 > White & Blue. Clean. Trustworthy. Welcoming.
 
 ---

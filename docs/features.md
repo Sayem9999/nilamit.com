@@ -1,5 +1,7 @@
 # 🚀 Nilamit Platform Features
 
+> Last Updated: April 29, 2026
+
 Nilamit is a high-performance, real-time C2C auction marketplace designed for trust, speed, and visual excellence.
 
 ## 1. Real-time Auction Engine

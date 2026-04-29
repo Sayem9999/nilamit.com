@@ -1,5 +1,7 @@
 # ⚖️ Nilamit Legal Framework (v1.0)
 
+> Last Updated: April 29, 2026
+
 This document establishes the legal boundaries and regulatory compliance standards for Nilamit, a C2C auction marketplace operating in Bangladesh.
 
 ---

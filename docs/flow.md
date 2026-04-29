@@ -1,5 +1,7 @@
 # Nilamit Behavioral Flows: The Logic Engine
 
+> Last Updated: April 29, 2026
+
 This document visualizes the mission-critical workflows of the Nilamit platform, using sequence diagrams to map interactions between the Client, Server Actions, Database, and Real-time Bus.
 
 ---

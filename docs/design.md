@@ -1,5 +1,7 @@
 # 🎨 Nilamit Design System
 
+> Last Updated: April 29, 2026
+
 ## Aesthetic Vision
 "Modern, Trustworthy, and Accessible."
 

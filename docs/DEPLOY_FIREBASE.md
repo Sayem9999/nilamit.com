@@ -1,5 +1,7 @@
 # Nilamit — Firebase App Hosting Deployment Guide
 
+> Last Updated: April 29, 2026
+
 Complete step-by-step guide to deploy nilamit.app on Firebase App Hosting (Google Cloud Run).
 
 ---
@@ -86,7 +88,7 @@ Run these commands (replace placeholder values with your actual secrets):
 PROJECT_ID="nilamit-app"  # ← set this once
 
 # Database (Firebase NoSQL connection string)
-echo -n "NoSQL://postgres:[PASSWORD]@db.[REF].Firebase.co:5432/postgres?pgbouncer=true" \
+echo -n ""firebase-admin-sdk-json"" \
   | gcloud secrets create DATABASE_URL --data-file=- --project=$PROJECT_ID
 
 # Auth.js secret (generate a random 32-byte secret)
@@ -108,18 +110,18 @@ echo -n "$(openssl rand -hex 32)" \
   | gcloud secrets create CRON_SECRET --data-file=- --project=$PROJECT_ID
 
 # Firebase RTDB
-echo -n "YOUR_Firebase RTDB_APP_ID"  | gcloud secrets create Firebase RTDB_APP_ID  --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_Firebase RTDB_KEY"     | gcloud secrets create Firebase RTDB_KEY     --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_Firebase RTDB_SECRET"  | gcloud secrets create Firebase RTDB_SECRET  --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_FIREBASE_RTDB_URL"  | gcloud secrets create FIREBASE_RTDB_URL  --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_FIREBASE_API_KEY"     | gcloud secrets create FIREBASE_API_KEY     --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_FIREBASE_PRIVATE_KEY"  | gcloud secrets create FIREBASE_PRIVATE_KEY  --data-file=- --project=$PROJECT_ID
 echo -n "mt1"                 | gcloud secrets create Firebase RTDB_CLUSTER --data-file=- --project=$PROJECT_ID
 
 # Firebase Storage
 echo -n "https://[REF].Firebase.co" \
-  | gcloud secrets create Firebase_URL --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_Firebase_ANON_KEY" \
-  | gcloud secrets create Firebase_ANON_KEY --data-file=- --project=$PROJECT_ID
-echo -n "YOUR_Firebase_SERVICE_ROLE_KEY" \
-  | gcloud secrets create Firebase_SERVICE_ROLE_KEY --data-file=- --project=$PROJECT_ID
+  | gcloud secrets create FIREBASE_DATABASE_URL --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_FIREBASE_API_KEY" \
+  | gcloud secrets create FIREBASE_API_KEY --data-file=- --project=$PROJECT_ID
+echo -n "YOUR_FIREBASE_PRIVATE_KEY" \
+  | gcloud secrets create FIREBASE_PRIVATE_KEY --data-file=- --project=$PROJECT_ID
 
 # UploadThing
 echo -n "YOUR_UPLOADTHING_TOKEN" \

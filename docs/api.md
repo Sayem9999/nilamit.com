@@ -1,5 +1,7 @@
 # 🛠 Nilamit API Documentation
 
+> Last Updated: April 29, 2026
+
 Nilamit utilizes Next.js **Server Actions** as the primary interaction layer, complemented by **Cron API Routes** for scheduled tasks and **Firebase RTDB** for real-time events.
 
 ## 1. Server Actions (Data Layer)

@@ -1,5 +1,7 @@
 # 🚨 CRITICAL FIXES — Priority Implementation Order
 
+> Last Updated: April 29, 2026
+
 ## Phase 1: DO THIS FIRST (Next 2 Weeks)
 
 ### Fix #1: next-auth Beta Version ⏱️ 2 hours
@@ -27,10 +29,10 @@ NEXTAUTH_SECRET=generate-with-openssl-rand-hex-32
 NEXTAUTH_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-Firebase RTDB_APP_ID=your-Firebase RTDB-id
-Firebase RTDB_KEY=your-Firebase RTDB-key
-Firebase RTDB_SECRET=your-Firebase RTDB-secret
-Firebase RTDB_CLUSTER=mt1
+FIREBASE_RTDB_URL=your-Firebase RTDB-id
+FIREBASE_API_KEY=your-Firebase RTDB-key
+FIREBASE_PRIVATE_KEY=your-Firebase RTDB-secret
+FIREBASE_PROJECT_ID="nilamit-app"
 ```
 
 **Add to `src/lib/env.ts`:**

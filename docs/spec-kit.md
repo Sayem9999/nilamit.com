@@ -1,5 +1,7 @@
 # 💎 Nilamit Spec-Kit (v1.0)
 
+> Last Updated: April 29, 2026
+
 This document is the **Single Source of Truth** for the Nilamit architectural standards and feature specifications. Every new feature must be spec'd here or in a feature-specific spec file before implementation.
 
 ---

@@ -1,5 +1,7 @@
 # 🌙 Protocol: autoDream Consolidation
 
+> Last Updated: April 29, 2026
+
 ## Purpose
 The `autoDream` protocol is the final phase of any major task session. It ensures that session-specific lessons are distilled into the project's long-term memory.
 

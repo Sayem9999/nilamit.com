@@ -1,5 +1,7 @@
 # 🛠️ Nilamit Agent Skills
 
+> Last Updated: April 29, 2026
+
 This document defines the specialized "skills" and patterns required for an AI agent to build effectively in the Nilamit codebase.
 
 ## 1. Atomic Bidding Logic
