@@ -135,7 +135,10 @@
     "trust4Desc": "Trade with confidence using our transparent trust scoring system.",
     "ctaFooterTitle": "Ready to Start Bidding?",
     "ctaFooterDesc": "Join thousands of members today and bid on authentic items.",
-    "ctaFooterBtn": "Register Now"
+    "ctaFooterBtn": "Register Now",
+    "currentPrice": "Current Price",
+    "placeYourBid": "Place Your Bid",
+    "verifiedSeller": "Verified Seller"
   },
   "Auction": {
     "live": "Live",
