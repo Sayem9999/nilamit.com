@@ -265,28 +265,25 @@ export default async function DashboardPage({
               </div>
 
               {/* Trust Fabric Sidebar Card */}
-              <div className="mt-6 p-6 rounded-[2rem] bg-indigo-900 text-white shadow-xl relative overflow-hidden group">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-[60px] group-hover:bg-indigo-500/40 transition-all" />
-                 <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                       <Trophy className="w-6 h-6 text-amber-400" />
-                       <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">{t("nilamitScore")}</span>
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-white">
-                        {Number(session.user.reputationScore) || 0}
-                      </span>
-                      <span className="text-xs text-indigo-300 ml-1">{t("reputationPoints")}</span>
-                    </div>
-                    <p className="text-[10px] text-indigo-300 mb-4 font-bold uppercase">{t("trustPointsTitle")}</p>
-                    <Link 
-                      href={`/${locale}/leaderboard`}
-                      className="flex items-center justify-between w-full py-2 px-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-bold uppercase transition-all"
-                    >
-                      {t("viewLeaderboard")}
-                      <ChevronRight className="w-3 h-3" />
-                    </Link>
-                 </div>
+              <div className="mt-6 p-5 rounded-2xl bg-gray-50 border border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("nilamitScore")}</span>
+                  <Trophy className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-3xl font-black text-gray-900">
+                    {Number(session.user.reputationScore) || 0}
+                  </span>
+                  <span className="text-xs text-gray-400 font-bold ml-1">{t("reputationPoints")}</span>
+                </div>
+                <p className="text-[10px] text-gray-400 mb-3 font-medium">{t("trustPointsTitle")}</p>
+                <Link
+                  href={`/${locale}/leaderboard`}
+                  className="flex items-center justify-between w-full py-2 px-3 bg-white border border-gray-100 hover:border-primary-200 hover:bg-primary-50 rounded-xl text-[10px] font-bold uppercase text-gray-600 hover:text-primary-600 transition-all"
+                >
+                  {t("viewLeaderboard")}
+                  <ChevronRight className="w-3 h-3" />
+                </Link>
               </div>
             </div>
           </div>

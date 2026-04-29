@@ -53,12 +53,16 @@ export async function toggleFeaturedAuction(auctionId: string, featured: boolean
 }
 
 export async function getFeaturedAuctions() {
-  const snap = await db.collection('auctions')
-    .where('isFeatured', '==', true)
-    .where('status', '==', 'ACTIVE')
-    .orderBy('endTime', 'asc')
-    .get();
-
-  return snapDocs<Auction>(snap);
+  try {
+    const snap = await db.collection('auctions')
+      .where('isFeatured', '==', true)
+      .where('status', '==', 'ACTIVE')
+      .orderBy('endTime', 'asc')
+      .get();
+    return snapDocs<Auction>(snap);
+  } catch (e) {
+    log.error('[admin-content] getFeaturedAuctions failed', e);
+    return [];
+  }
 }
 
