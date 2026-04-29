@@ -334,7 +334,9 @@
     "verif_Phone": "Phone Verified",
     "verif_Phone_Desc": "Basic level. User has verified a BD phone number via OTP.",
     "verif_Unverified": "Unverified",
-    "verif_Unverified_Desc": "This user has not verified any contact details yet."
+    "verif_Unverified_Desc": "This user has not verified any contact details yet.",
+    "uploadFailed": "Upload failed",
+    "typeMessage": "Type a message..."
   },
   "FAQ": {
     "title": "Frequently Asked Questions",
@@ -505,7 +507,8 @@
     "noResults": "No results found",
     "noResultsDesc": "We couldn't find any auctions matching your criteria. Try adjusting your filters or search term.",
     "clearFilters": "Clear all filters",
-    "allCategories": "All Categories"
+    "allCategories": "All Categories",
+    "searchPlaceholder": "Search auctions..."
   },
   "Categories": {
     "mobile-phones": "Mobile Phones",
