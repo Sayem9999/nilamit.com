@@ -1,4 +1,5 @@
 import { getAuction } from "@/actions/auction";
+import { log } from "@/lib/logger";
 export const dynamic = "force-dynamic";
 
 import { getAuctionBids } from "@/actions/bid";
@@ -90,9 +91,9 @@ export default async function AuctionDetailPage({ params }: Props) {
   // Each of these is independently optional for rendering — wrap individually
   // so a single failure (e.g. chat unavailable) doesn't blow up the whole page.
   const [bids, watched, chat] = await Promise.all([
-    getAuctionBids(id).catch((e) => { console.error('[AuctionDetail] getAuctionBids:', e); return [] as Awaited<ReturnType<typeof getAuctionBids>>; }),
-    isWatched(id).catch((e) => { console.error('[AuctionDetail] isWatched:', e); return false; }),
-    getAuctionChat(id).catch((e) => { console.error('[AuctionDetail] getAuctionChat:', e); return null; }),
+    getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return [] as Awaited<ReturnType<typeof getAuctionBids>>; }),
+    isWatched(id).catch((e) => { log.error('[AuctionDetail] isWatched failed', e); return false; }),
+    getAuctionChat(id).catch((e) => { log.error('[AuctionDetail] getAuctionChat failed', e); return null; }),
   ]);
 
   const jsonLd = {

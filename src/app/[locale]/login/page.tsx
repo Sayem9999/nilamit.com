@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Loader2, Mail, Lock, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
@@ -13,6 +13,7 @@ import { sanitizeRedirect } from "@/lib/url-safety";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
+  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   // sanitizeRedirect blocks open-redirect attacks via ?callbackUrl=https://evil.com
@@ -98,7 +99,7 @@ export default function LoginPage() {
                   {t("passwordLabel")}
                 </label>
                 <Link 
-                  href="/forgot-password" 
+                  href={`/${locale}/forgot-password`}
                   className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors uppercase tracking-widest"
                 >
                   {t("forgotPassword")}
@@ -139,7 +140,7 @@ export default function LoginPage() {
             <p className="text-gray-500 font-medium tracking-tight">
               {t("noAccount")}{" "}
               <Link
-                href="/register"
+                href={`/${locale}/register`}
                 className="text-primary-600 font-black hover:text-primary-700 transition-colors underline decoration-2 underline-offset-4"
               >
                 {t("signUpBtn")}

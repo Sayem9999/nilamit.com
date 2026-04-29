@@ -3,10 +3,11 @@
 import { useState, useTransition, useEffect } from "react";
 import { Gavel, Loader2, ArrowRight, Smartphone, CheckCircle, Mail } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 export default function RegisterPage() {
   const t = useTranslations("Auth");
+  const locale = useLocale();
   const [signupMethod, setSignupMethod] = useState<"phone" | "email">("phone");
   const [step, setStep] = useState<"phone" | "otp" | "details">("phone");
   const [phone, setPhone] = useState("");
@@ -109,7 +110,7 @@ export default function RegisterPage() {
             {t("welcomeDesc")}
           </p>
           <Link
-            href="/login"
+            href={`/${locale}/login`}
             className="block w-full bg-gray-900 text-white font-bold py-4 rounded-2xl hover:bg-black shadow-lg transition-all"
           >
             {t("goToLogin")}
@@ -123,7 +124,7 @@ export default function RegisterPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-4">
+          <Link href={`/${locale}`} className="inline-flex items-center gap-2 mb-4">
             <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-sm">
               <Gavel className="w-5 h-5 text-white" />
             </div>
@@ -402,7 +403,7 @@ export default function RegisterPage() {
               <p className="text-gray-500 font-medium tracking-tight">
                 {t("alreadyHaveAccount")}{" "}
                 <Link
-                  href="/login"
+                  href={`/${locale}/login`}
                   className="text-primary-600 font-black hover:text-primary-700 transition-colors underline decoration-2 underline-offset-4"
                 >
                   {t("signInBtn")}
