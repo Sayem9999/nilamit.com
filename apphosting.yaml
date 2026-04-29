@@ -88,6 +88,15 @@ env:
   # sendSMS() call in production until SMS_PROVIDER + the matching token
   # secret (GREENWEB_TOKEN, BULKSMS_API_KEY+BULKSMS_SENDER_ID) are added here.
 
+  # ─── Upstash Redis (rate limiting) ──────────────────────────
+  # Without these, all rate limiters fail-closed in production (requests blocked).
+  # Get credentials from upstash.com → your Redis database → REST API.
+  - variable: UPSTASH_REDIS_REST_URL
+    secret: UPSTASH_REDIS_REST_URL
+
+  - variable: UPSTASH_REDIS_REST_TOKEN
+    secret: UPSTASH_REDIS_REST_TOKEN
+
   # ─── Sentry ──────────────────────────────────────────────────
   - variable: SENTRY_DSN
     secret: SENTRY_DSN

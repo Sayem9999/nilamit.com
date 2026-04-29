@@ -26,8 +26,10 @@ const envSchema = z.object({
   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().optional(),
   
   // --- INFRASTRUCTURE ---
-  UPSTASH_REDIS_REST_URL: z.string().url(),
-  UPSTASH_REDIS_REST_TOKEN: z.string(),
+  // Optional so the build phase succeeds before secrets are injected at runtime.
+  // ratelimit.ts handles missing Redis gracefully (fail-closed in production).
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   CRON_SECRET: z.string().min(16).optional(),
   
   // --- OPTIONAL / EXTERNAL ---
