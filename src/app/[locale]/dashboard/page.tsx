@@ -9,10 +9,8 @@ import type { AuctionWithSeller } from "@/types";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 import { getTranslations } from "next-intl/server";
 import { getSystemConfig } from "@/actions/admin-content";
-import { SellerPerformance } from "@/components/seller/SellerPerformance";
-import { 
-  BarChart3, 
-  ChevronRight, 
+import {
+  ChevronRight,
   Trophy
 } from "lucide-react";
 import type { User } from "@/types";
@@ -180,17 +178,6 @@ export default async function DashboardPage({
     }));
     
     escrowTransactions = results.filter(Boolean).sort((a, b) => b.lastMessageAt - a.lastMessageAt);
-  } else if (currentTab === "performance") {
-    const sellerAuctionsSnap = await db.collection('auctions').where('sellerId', '==', userId).get();
-    const sellerAuctions = sellerAuctionsSnap.docs.map(d => d.data());
-    
-    const stats = {
-      totalSales: sellerAuctions.filter(a => a.status === 'SOLD').length,
-      revenue: sellerAuctions.reduce((acc, curr) => acc + (Number(curr.currentPrice) || 0), 0),
-      reputation: typeof session.user.reputationScore === 'number' ? session.user.reputationScore : 0,
-      successRate: sellerAuctions.length > 0 ? Math.round((sellerAuctions.filter(a => a.status === 'SOLD').length / sellerAuctions.length) * 100) : 100
-    };
-    escrowTransactions = [stats]; // Borrowing the slot
   }
 
   return (
@@ -267,18 +254,6 @@ export default async function DashboardPage({
                 <MessageSquare className="w-4 h-4" />
                 {t("coordinationHub")}
               </Link>
-              <Link
-                href={`/${locale}/dashboard?tab=performance`}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
-                  currentTab === "performance"
-                    ? "bg-amber-50 text-amber-600"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                <BarChart3 className="w-4 h-4" />
-                {t("sellerPerformance")}
-              </Link>
-
               <div className="pt-4 mt-4 border-t border-gray-100">
                 <Link
                   href={`/${locale}/profile`}
@@ -450,9 +425,6 @@ export default async function DashboardPage({
               </div>
             )}
 
-            {currentTab === "performance" && (
-              <SellerPerformance stats={escrowTransactions[0]} />
-            )}
           </div>
         </div>
       </div>

@@ -17,7 +17,6 @@ const PROTECTED_PATHS = [
   '/auctions/create',
   '/admin',
   '/seller/inventory',
-  '/seller/performance',
 ];
 
 export const authConfig: NextAuthConfig = {
