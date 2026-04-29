@@ -8,10 +8,15 @@
 
 steps:
   # ── Step 1: Install dependencies ──────────────────────────────
+  # Using npm install instead of npm ci: the lockfile was generated on Windows
+  # and omits Linux-only optional packages (@emnapi/*, @img/sharp-linux-*),
+  # which causes npm ci to fail with "missing packages" on the Cloud Build
+  # Linux runner. Regenerate the lockfile on Linux to restore npm ci:
+  #   docker run --rm -v $(pwd):/app -w /app node:20 npm install
   - name: "node:20"
     id: install
     entrypoint: npm
-    args: ["ci", "--prefer-offline"]
+    args: ["install", "--no-audit", "--no-fund"]
 
   # ── Step 2: Build Next.js
   - name: "node:20"
