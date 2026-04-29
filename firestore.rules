@@ -62,10 +62,13 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
+      // buyerId and sellerId are denormalized onto each message doc (see chat.ts sendMessage).
+      // This avoids a per-read get() on the conversations collection, halving read costs
+      // for chat history loads.
       allow read: if signedIn() && (
         isAdmin() ||
-        get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.buyerId == request.auth.uid ||
-        get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.sellerId == request.auth.uid
+        resource.data.buyerId  == request.auth.uid ||
+        resource.data.sellerId == request.auth.uid
       );
       allow write: if false;
     }

@@ -30,8 +30,11 @@ export async function sendMessage(conversationId: string, content: string, image
   const now      = new Date();
   const msgId    = db.collection('messages').doc().id;
 
+  // buyerId/sellerId denormalized here so firestore.rules can authorize reads
+  // with resource.data fields instead of a per-read get() call on conversations.
   await db.collection('messages').doc(msgId).set({
     id: msgId, conversationId, senderId: session.user.id,
+    buyerId: conv.buyerId, sellerId: conv.sellerId,
     content: filtered, imageUrl: imageUrl ?? null,
     isSystemMessage: false, isRead: false, createdAt: now,
   });

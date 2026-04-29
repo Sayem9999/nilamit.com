@@ -13,67 +13,79 @@ export async function raiseDispute(transactionId: string, reason: string) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
-  const txSnap = await db.collection('escrowTransactions').doc(transactionId).get();
-  if (!txSnap.exists) return { success: false, error: 'Transaction not found' };
-  const tx = txSnap.data()!;
+  // Use transactionId as the dispute doc ID — idempotent: two concurrent calls
+  // result in one successful tx.set and one "already exists" error, not two disputes.
+  const disputeRef = db.collection('disputes').doc(transactionId);
+  const escrowRef  = db.collection('escrowTransactions').doc(transactionId);
 
-  if (tx.buyerId !== session.user.id) return { success: false, error: 'Unauthorized' };
-  if (tx.status !== 'HELD')           return { success: false, error: 'Dispute only valid for held escrow.' };
+  try {
+    await db.runTransaction(async (tx) => {
+      const [escrowSnap, disputeSnap] = await Promise.all([
+        tx.get(escrowRef),
+        tx.get(disputeRef),
+      ]);
 
-  const existingSnap = await db.collection('disputes')
-    .where('transactionId', '==', transactionId)
-    .limit(1).get();
-  if (!existingSnap.empty) return { success: false, error: 'Dispute already exists.' };
+      if (!escrowSnap.exists) throw new Error('Transaction not found');
+      const escrow = escrowSnap.data()!;
+      if (escrow.buyerId !== session.user.id) throw new Error('Unauthorized');
+      if (escrow.status !== 'HELD')           throw new Error('Dispute only valid for held escrow.');
+      if (disputeSnap.exists)                 throw new Error('Dispute already exists.');
 
-  const disputeId = db.collection('disputes').doc().id;
-  const now       = new Date();
+      const now = new Date();
+      tx.set(disputeRef, {
+        id: transactionId, transactionId, openerId: session.user.id,
+        reason, status: 'OPEN', resolution: null, createdAt: now, updatedAt: now,
+      });
+      tx.update(escrowRef, { status: 'DISPUTED', updatedAt: now });
+    });
 
-  const batch = db.batch();
-  batch.set(db.collection('disputes').doc(disputeId), {
-    id: disputeId, transactionId, openerId: session.user.id,
-    reason, status: 'OPEN', resolution: null, createdAt: now, updatedAt: now,
-  });
-  batch.update(db.collection('escrowTransactions').doc(transactionId), {
-    status: 'DISPUTED', updatedAt: now,
-  });
-  await batch.commit();
-
-  revalidatePath('/dashboard/escrow');
-  return { success: true };
+    revalidatePath('/dashboard/escrow');
+    return { success: true };
+  } catch (e) {
+    log.error('[dispute] raiseDispute failed', e);
+    return { success: false, error: e instanceof Error ? e.message : 'Failed to raise dispute.' };
+  }
 }
 
 export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYER', resolution: string) {
   await requireAdmin();
 
-  const disputeSnap = await db.collection('disputes').doc(disputeId).get();
-  if (!disputeSnap.exists) return { success: false, error: 'Dispute not found' };
-  const dispute = disputeSnap.data()!;
-  if (dispute.status !== 'OPEN') return { success: false, error: 'Dispute already resolved' };
+  try {
+    const { sellerId, buyerId } = await db.runTransaction(async (tx) => {
+      const disputeRef = db.collection('disputes').doc(disputeId);
+      const disputeSnap = await tx.get(disputeRef);
+      if (!disputeSnap.exists) throw new Error('Dispute not found');
+      const dispute = disputeSnap.data()!;
+      if (dispute.status !== 'OPEN') throw new Error('Dispute already resolved');
 
-  const txSnap   = await db.collection('escrowTransactions').doc(dispute.transactionId).get();
-  const tx       = txSnap.data()!;
-  const aSnap    = await db.collection('auctions').doc(tx.auctionId).get();
-  const sellerId = aSnap.data()?.sellerId;
+      const escrowRef  = db.collection('escrowTransactions').doc(dispute.transactionId);
+      const escrowSnap = await tx.get(escrowRef);
+      const escrow     = escrowSnap.data()!;
 
-  const finalEscrow  = ruling === 'SELLER' ? 'RELEASED' : 'REFUNDED';
-  const finalDispute = ruling === 'SELLER' ? 'RESOLVED_SELLER' : 'RESOLVED_BUYER';
-  const now          = new Date();
+      const aRef   = db.collection('auctions').doc(escrow.auctionId);
+      const aSnap  = await tx.get(aRef);
+      const seller = (aSnap.data()?.sellerId as string | undefined) ?? null;
 
-  const batch = db.batch();
-  batch.update(db.collection('escrowTransactions').doc(dispute.transactionId), {
-    status: finalEscrow, updatedAt: now,
-  });
-  batch.update(db.collection('disputes').doc(disputeId), {
-    status: finalDispute, resolution, updatedAt: now,
-  });
-  await batch.commit();
+      const now          = new Date();
+      const finalEscrow  = ruling === 'SELLER' ? 'RELEASED' : 'REFUNDED';
+      const finalDispute = ruling === 'SELLER' ? 'RESOLVED_SELLER' : 'RESOLVED_BUYER';
 
-  if (sellerId) await recalculateUserReputation(sellerId);
-  await recalculateUserReputation(tx.buyerId);
+      tx.update(escrowRef,  { status: finalEscrow,  updatedAt: now });
+      tx.update(disputeRef, { status: finalDispute, resolution, updatedAt: now });
 
-  revalidatePath('/admin/disputes');
-  revalidatePath('/dashboard/escrow');
-  return { success: true };
+      return { sellerId: seller, buyerId: escrow.buyerId as string };
+    });
+
+    if (sellerId) await recalculateUserReputation(sellerId);
+    await recalculateUserReputation(buyerId);
+
+    revalidatePath('/admin/disputes');
+    revalidatePath('/dashboard/escrow');
+    return { success: true };
+  } catch (e) {
+    log.error('[dispute] resolveDispute failed', e);
+    return { success: false, error: e instanceof Error ? e.message : 'Resolution failed.' };
+  }
 }
 
 /** Admin override refund — uses runtime ADMIN_EMAILS check, not token flag */

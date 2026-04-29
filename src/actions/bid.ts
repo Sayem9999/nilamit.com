@@ -11,6 +11,7 @@ import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
 
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { placeBidSchema, formatZodError } from '@/lib/schemas';
 
 async function requireBiddingPrivileges(userId: string): Promise<ServiceResponse<Record<string, unknown>>> {
   const userSnap = await db.collection('users').doc(userId).get();
@@ -31,6 +32,9 @@ export async function placeBid(auctionId: string, amount: number) {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated', ERROR_CODES.NOT_AUTHENTICATED);
   const userId = session.user.id;
+
+  const parsed = placeBidSchema.safeParse({ auctionId, amount });
+  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
 
   const h = await headers();
   const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
