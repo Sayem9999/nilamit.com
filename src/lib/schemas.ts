@@ -149,6 +149,29 @@ export const placeBidSchema = z.object({
 });
 export type PlaceBidInput = z.infer<typeof placeBidSchema>;
 
+/** Firestore document ID — only printable non-slash chars, max 1500 bytes. */
+const firestoreIdSchema = z.string().trim().min(1).max(128).regex(/^[^/]+$/, 'Invalid ID');
+
+export const sendMessageSchema = z.object({
+  conversationId: firestoreIdSchema,
+  content:        z.string().min(1, 'Message cannot be empty').max(2000, 'Message too long'),
+  imageUrl:       z.string().url('Invalid image URL').max(2048).optional(),
+});
+export type SendMessageInput = z.infer<typeof sendMessageSchema>;
+
+export const raiseDisputeSchema = z.object({
+  transactionId: firestoreIdSchema,
+  reason: z.string().trim().min(10, 'Reason must be at least 10 characters').max(1000, 'Reason too long'),
+});
+export type RaiseDisputeInput = z.infer<typeof raiseDisputeSchema>;
+
+export const reportAuctionSchema = z.object({
+  auctionId:   firestoreIdSchema,
+  reason:      z.string().trim().min(1).max(120),
+  description: z.string().trim().max(1000).optional(),
+});
+export type ReportAuctionInput = z.infer<typeof reportAuctionSchema>;
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 /** Flatten a ZodError into a single human-readable line for action responses. */

@@ -8,10 +8,14 @@ import { recalculateUserReputation } from '@/lib/reputation';
 
 import { requireAdmin, isAdminEmail } from '@/lib/admin-guard';
 import { log } from '@/lib/logger';
+import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
 
 export async function raiseDispute(transactionId: string, reason: string) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+  const parsed = raiseDisputeSchema.safeParse({ transactionId, reason });
+  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
 
   // Use transactionId as the dispute doc ID — idempotent: two concurrent calls
   // result in one successful tx.set and one "already exists" error, not two disputes.

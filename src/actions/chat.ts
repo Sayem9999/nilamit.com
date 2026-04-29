@@ -6,12 +6,16 @@ import { filterPII } from '@/lib/pii-filter';
 import { adminDB, rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { log } from '@/lib/logger';
+import { sendMessageSchema, formatZodError } from '@/lib/schemas';
 
 export async function sendMessage(conversationId: string, content: string, imageUrl?: string) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
-  const convSnap = await db.collection('conversations').doc(conversationId).get();
+  const parsed = sendMessageSchema.safeParse({ conversationId, content, imageUrl });
+  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+
+  const convSnap = await db.collection('conversations').doc(parsed.data.conversationId).get();
   if (!convSnap.exists) return { success: false, error: 'Conversation not found' };
   const conv = convSnap.data()!;
 
@@ -26,16 +30,16 @@ export async function sendMessage(conversationId: string, content: string, image
     return { success: false, error: 'Chat only available after advance payment.' };
   }
 
-  const filtered = filterPII(content);
+  const filtered = filterPII(parsed.data.content);
   const now      = new Date();
   const msgId    = db.collection('messages').doc().id;
 
   // buyerId/sellerId denormalized here so firestore.rules can authorize reads
   // with resource.data fields instead of a per-read get() call on conversations.
   await db.collection('messages').doc(msgId).set({
-    id: msgId, conversationId, senderId: session.user.id,
+    id: msgId, conversationId: parsed.data.conversationId, senderId: session.user.id,
     buyerId: conv.buyerId, sellerId: conv.sellerId,
-    content: filtered, imageUrl: imageUrl ?? null,
+    content: filtered, imageUrl: parsed.data.imageUrl ?? null,
     isSystemMessage: false, isRead: false, createdAt: now,
   });
 
