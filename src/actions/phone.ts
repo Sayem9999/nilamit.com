@@ -23,7 +23,7 @@ function hashOTP(otp: string): string {
 }
 
 function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100_000, 1_000_000).toString();
 }
 
 export async function sendPhoneOTP(phone: string) {

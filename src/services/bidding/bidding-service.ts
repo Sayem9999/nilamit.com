@@ -84,15 +84,6 @@ export class BiddingService {
           updatedAt:       now,
         });
 
-        // Outbox pattern: Ensure side effects fire reliably even if container dies
-        const outboxRef = db.collection('outbox_events').doc();
-        tx.set(outboxRef, {
-          type: 'BID_PLACED',
-          payload: { auctionId, amount, userId, userName, userEmail, prevBidderId },
-          status: 'PENDING',
-          createdAt: now,
-        });
-
         return {
           bidId,
           newEndTime,

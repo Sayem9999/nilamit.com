@@ -15,9 +15,10 @@ export async function getAdminStats() {
   await requireAdmin();
 
   // 1. Efficient counts using aggregation (bills only 1 read per 1000 docs)
-  const [userCountSnap, activeAuctionCountSnap, bidCountSnap, verifiedUserCountSnap] = await Promise.all([
+  const [userCountSnap, activeAuctionCountSnap, totalAuctionCountSnap, bidCountSnap, verifiedUserCountSnap] = await Promise.all([
     db.collection('users').count().get(),
     db.collection('auctions').where('status', '==', AuctionStatus.ACTIVE).count().get(),
+    db.collection('auctions').count().get(),
     db.collection('bids').count().get(),
     db.collection('users').where('isPhoneVerified', '==', true).count().get(),
   ]);
@@ -52,7 +53,7 @@ export async function getAdminStats() {
   return {
     totalUsers: userCountSnap.data().count,
     verifiedUsers: verifiedUserCountSnap.data().count,
-    totalAuctions: null,
+    totalAuctions: totalAuctionCountSnap.data().count,
     activeAuctions: activeAuctionCountSnap.data().count,
     totalBids: bidCountSnap.data().count,
     totalRevenue,
@@ -106,35 +107,68 @@ interface AdminEscrowDoc {
   providerRef?: string | null;
 }
 
-async function hydrateEscrowRow(tx: AdminEscrowDoc) {
-  const [auctionSnap, buyerSnap] = await Promise.all([
-    db.collection('auctions').doc(tx.auctionId).get(),
-    db.collection('users').doc(tx.buyerId).get(),
+type HydratedEscrowRow = {
+  id: string; amount: number; status: string; createdAt: Date;
+  verificationType: string; providerRef: string | null;
+  auction: { id: string; title: string; seller: { name: string | null; phone: string | null } };
+  buyer: { name: string | null; email: string | null; phone: string | null };
+};
+
+/**
+ * Batch-hydrates an array of escrow docs in 3 round-trips (auctions+buyers,
+ * then sellers) instead of N×3 serial reads per row.
+ */
+async function batchHydrateEscrowRows(txDocs: AdminEscrowDoc[]): Promise<HydratedEscrowRow[]> {
+  if (txDocs.length === 0) return [];
+
+  const auctionIds = [...new Set(txDocs.map((t) => t.auctionId))];
+  const buyerIds   = [...new Set(txDocs.map((t) => t.buyerId))];
+
+  const [auctionSnaps, buyerSnaps] = await Promise.all([
+    db.getAll(...auctionIds.map((id) => db.collection('auctions').doc(id))),
+    db.getAll(...buyerIds.map((id) => db.collection('users').doc(id))),
   ]);
-  const auction = auctionSnap.data() ?? {};
-  const sellerSnap = auction.sellerId
-    ? await db.collection('users').doc(auction.sellerId).get()
-    : null;
-  const seller = sellerSnap?.data() ?? {};
-  const buyer = buyerSnap.data() ?? {};
 
-  const createdAtRaw = tx.createdAt as unknown as { toDate?: () => Date } | Date;
-  const createdAt = createdAtRaw instanceof Date ? createdAtRaw : createdAtRaw?.toDate?.() ?? new Date();
+  const auctionMap = new Map(auctionSnaps.map((s) => [s.id, s.data() ?? {}]));
+  const buyerMap   = new Map(buyerSnaps.map((s) => [s.id, s.data() ?? {}]));
 
-  return {
-    id: tx.id,
-    amount: tx.amount,
-    status: tx.status,
-    createdAt,
-    verificationType: tx.verificationType ?? 'AUTOMATIC',
-    providerRef: tx.providerRef ?? null,
-    auction: {
-      id: tx.auctionId,
-      title: (auction.title as string) ?? 'Unknown Auction',
-      seller: { name: (seller.name as string | null) ?? null, phone: (seller.phone as string | null) ?? null },
-    },
-    buyer: { name: (buyer.name as string | null) ?? null, email: (buyer.email as string | null) ?? null, phone: (buyer.phone as string | null) ?? null },
-  };
+  const sellerIds = [
+    ...new Set(
+      auctionSnaps
+        .map((s) => (s.data() ?? {}).sellerId as string | undefined)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  const sellerMap = new Map<string, FirebaseFirestore.DocumentData>();
+  if (sellerIds.length > 0) {
+    const sellerSnaps = await db.getAll(...sellerIds.map((id) => db.collection('users').doc(id)));
+    sellerSnaps.forEach((s) => sellerMap.set(s.id, s.data() ?? {}));
+  }
+
+  return txDocs.map((tx) => {
+    const auction = auctionMap.get(tx.auctionId) ?? {};
+    const buyer   = buyerMap.get(tx.buyerId) ?? {};
+    const seller  = auction.sellerId ? (sellerMap.get(auction.sellerId as string) ?? {}) : {};
+
+    const createdAtRaw = tx.createdAt as unknown as { toDate?: () => Date } | Date;
+    const createdAt = createdAtRaw instanceof Date ? createdAtRaw : createdAtRaw?.toDate?.() ?? new Date();
+
+    return {
+      id: tx.id,
+      amount: tx.amount,
+      status: tx.status,
+      createdAt,
+      verificationType: tx.verificationType ?? 'AUTOMATIC',
+      providerRef: tx.providerRef ?? null,
+      auction: {
+        id:     tx.auctionId,
+        title:  (auction.title  as string | null) ?? 'Unknown Auction',
+        seller: { name: (seller.name  as string | null) ?? null, phone: (seller.phone as string | null) ?? null },
+      },
+      buyer: { name: (buyer.name as string | null) ?? null, email: (buyer.email as string | null) ?? null, phone: (buyer.phone as string | null) ?? null },
+    };
+  });
 }
 
 /**
@@ -152,13 +186,23 @@ export async function getAdminDisputes() {
 
   const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
 
-  return Promise.all(txDocs.map(async (tx) => {
-    const base = await hydrateEscrowRow(tx);
-    const disputeSnap = await db.collection('disputes')
-      .where('transactionId', '==', tx.id)
-      .limit(1).get();
-    const dispute = disputeSnap.empty ? null : { reason: (disputeSnap.docs[0].data().reason as string) ?? '' };
-    return { ...base, dispute };
+  // Batch-hydrate rows and fetch dispute reasons in parallel.
+  // Dispute lookups are per-transaction WHERE queries (can't batch), but
+  // running them concurrently with batchHydrateEscrowRows keeps total round-trips at 4.
+  const [hydratedRows, disputeSnaps] = await Promise.all([
+    batchHydrateEscrowRows(txDocs),
+    Promise.all(
+      txDocs.map((tx) =>
+        db.collection('disputes').where('transactionId', '==', tx.id).limit(1).get(),
+      ),
+    ),
+  ]);
+
+  return hydratedRows.map((row, i) => ({
+    ...row,
+    dispute: disputeSnaps[i].empty
+      ? null
+      : { reason: (disputeSnaps[i].docs[0].data().reason as string) ?? '' },
   }));
 }
 
@@ -265,7 +309,7 @@ export async function getTreasuryAudit() {
     .get();
 
   const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
-  return Promise.all(txDocs.map(hydrateEscrowRow));
+  return batchHydrateEscrowRows(txDocs);
 }
 
 /**
@@ -281,5 +325,5 @@ export async function getAdminActiveEscrows() {
     .get();
 
   const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
-  return Promise.all(txDocs.map(hydrateEscrowRow));
+  return batchHydrateEscrowRows(txDocs);
 }

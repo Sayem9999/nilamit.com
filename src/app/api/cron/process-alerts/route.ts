@@ -16,7 +16,7 @@ import { Alert, Auction } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
   const authError = verifyCronSecret(req);
   if (authError) return authError;
 

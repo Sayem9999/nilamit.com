@@ -20,6 +20,8 @@ import { useAuctionBids } from "@/hooks/useAuctionBids";
 import { useSound } from "@/hooks/useSound";
 import { useTranslations } from "next-intl";
 import { ERROR_CODES } from "@/lib/constants";
+import { ErrorType, type ServiceResponse } from "@/lib/errors";
+import type { PlaceBidResult } from "@/types";
 import { VerificationGuard } from "../auth/VerificationGuard";
 import { PhoneVerificationPrompt, MFSLinkagePrompt } from "./components/BidPrompts";
 import { ViewerCount } from "./ViewerCount";
@@ -55,10 +57,7 @@ export function BidPanel({
   const [latestEndTime] = useState(new Date(endTime));
   const [bidAmount, setBidAmount] = useState(currentPrice + minBidIncrement);
   const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState<{
-    success: boolean;
-    error?: { code?: string; message?: string; details?: { newMinimum?: number } };
-  } | null>(null);
+  const [result, setResult] = useState<ServiceResponse<PlaceBidResult | null> | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showMFSModal, setShowMFSModal] = useState(false);
 
@@ -99,7 +98,7 @@ export function BidPanel({
       setResult({
         success: false,
         error: {
-          type: "CONFLICT_ERROR",
+          type: ErrorType.CONFLICT,
           message: `Bid must be at least ৳${minBid.toLocaleString()}`,
           code: ERROR_CODES.BID_TOO_LOW,
         }
@@ -129,8 +128,9 @@ export function BidPanel({
       }
       
       // Automatic Overbid Suggestion: If outbid during flight, suggest the new minimum
-      if (res.error?.code === ERROR_CODES.BID_TOO_LOW && res.error?.details?.newMinimum) {
-        setBidAmount(res.error.details.newMinimum);
+      const newMin = (res.error?.details as { newMinimum?: number } | undefined)?.newMinimum;
+      if (res.error?.code === ERROR_CODES.BID_TOO_LOW && newMin) {
+        setBidAmount(newMin);
       }
       
       if (res.error?.code === "MFS_LINKAGE_REQUIRED" || res.error?.code === ERROR_CODES.ELITE_DEPOSIT_REQUIRED) {
@@ -282,8 +282,8 @@ export function BidPanel({
             }`}>
               {result.success ? <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" /> : <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />}
               <div>
-                <p className="font-medium">{result.success ? t("success") : (result.error === "PHONE_NOT_VERIFIED" ? t("phoneNotVerified") : result.error)}</p>
-                {result.success && result.antiSnipeTriggered && <p className="text-xs mt-1 text-green-600">{t("antiSnipe")}</p>}
+                <p className="font-medium">{result.success ? t("success") : (result.error?.code === ERROR_CODES.PHONE_NOT_VERIFIED ? t("phoneNotVerified") : result.error?.message)}</p>
+                {result.success && result.data?.antiSnipeTriggered && <p className="text-xs mt-1 text-green-600">{t("antiSnipe")}</p>}
               </div>
             </div>
           )}

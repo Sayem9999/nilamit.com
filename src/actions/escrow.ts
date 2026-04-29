@@ -2,14 +2,14 @@
 
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recalculateUserReputation } from '@/lib/reputation';
 import { createLogisticsOrder } from './logistics';
 import { log } from '@/lib/logger';
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
+import { randomUUID } from 'crypto';
 
 /**
  * Transitions PENDING → HELD (buyer confirms advance payment).
@@ -41,7 +41,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         throw new Error('MFS_LINKAGE_REQUIRED');
       }
 
-      const ref = providerRef ?? `PAY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      const ref = providerRef ?? `PAY-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 
       // 1. Update Escrow
       tx.update(txRef, {
@@ -138,25 +138,44 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
 
-  const txRef = db.collection('escrowTransactions').doc(transactionId);
-  const txSnap = await txRef.get();
-  const txData = txSnap.data();
-  if (!txData || txData.status !== 'HELD') return { success: false, error: 'Invalid state' };
+  if (!trackingNumber || trackingNumber.trim().length === 0 || trackingNumber.length > 128) {
+    return { success: false, error: 'Invalid tracking number.' };
+  }
+  const safeTracking = trackingNumber.trim();
 
-  const aRef = db.collection('auctions').doc(txData.auctionId);
-  const aSnap = await aRef.get();
-  if (aSnap.data()?.sellerId !== session.user.id) return { success: false, error: 'Unauthorized' };
+  let buyerId: string;
+  let auctionId: string;
 
-  await aRef.update({
-    deliveryStatus: 'SHIPPED',
-    trackingNumber,
-    updatedAt: new Date()
-  });
+  try {
+    const result = await db.runTransaction(async (tx) => {
+      const txRef  = db.collection('escrowTransactions').doc(transactionId);
+      const txSnap = await tx.get(txRef);
+      if (!txSnap.exists) throw new Error('Transaction not found');
+      const t = txSnap.data()!;
 
-  await rtdbPush(RTDB_PATHS.userNotifications(txData.buyerId), {
+      if (t.status !== 'HELD') throw new Error('Invalid state');
+
+      const aRef  = db.collection('auctions').doc(t.auctionId);
+      const aSnap = await tx.get(aRef);
+      if (!aSnap.exists) throw new Error('Auction not found');
+      if (aSnap.data()!.sellerId !== session.user.id) throw new Error('Unauthorized');
+
+      tx.update(aRef, { deliveryStatus: 'SHIPPED', trackingNumber: safeTracking, updatedAt: new Date() });
+
+      return { buyerId: t.buyerId as string, auctionId: t.auctionId as string };
+    });
+
+    buyerId   = result.buyerId;
+    auctionId = result.auctionId;
+  } catch (e) {
+    log.error('[escrow] markAsShipped failed', e);
+    return { success: false, error: e instanceof Error ? e.message : 'Failed to mark as shipped.' };
+  }
+
+  await rtdbPush(RTDB_PATHS.userNotifications(buyerId), {
     event: 'ITEM_SHIPPED',
-    auctionId: txData.auctionId,
-    message: `Your item has been shipped! Tracking: ${trackingNumber}`,
+    auctionId,
+    message: `Your item has been shipped! Tracking: ${safeTracking}`,
   });
 
   revalidatePath('/dashboard');
@@ -167,10 +186,11 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
  * Refund escrow — SECURITY CRITICAL: Restricted to Admins only.
  */
 export async function refundEscrow(transactionId: string) {
-  const session = await auth();
-  // Require verified admin status
-  const isAdmin = ADMIN_EMAILS.includes(session?.user?.email ?? '');
-  if (!isAdmin) return { success: false, error: 'Access Denied: Admin intervention required for refunds.' };
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: 'Access Denied: Admin intervention required for refunds.' };
+  }
 
   try {
     const txRef = db.collection('escrowTransactions').doc(transactionId);

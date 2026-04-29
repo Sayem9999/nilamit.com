@@ -5,8 +5,12 @@
  */
 
 // Includes English (0-9) and Bangla (০-৯) digits, handling common 01... prefix
-const BANGLADESH_PHONE_REGEX = /(?:\+?88)?(?:0|০)(?:1|১)[3-9৩-৯](?:[\s-]?[0-9০-৯]){8}/g;
-const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+// Two forms: the `g` flag version for replace() calls, and a flag-free version
+// for .test() so the stateful lastIndex never causes alternating false-negatives.
+const BANGLADESH_PHONE_REGEX        = /(?:\+?88)?(?:0|০)(?:1|১)[3-9৩-৯](?:[\s-]?[0-9০-৯]){8}/g;
+const BANGLADESH_PHONE_REGEX_TEST   = /(?:\+?88)?(?:0|০)(?:1|১)[3-9৩-৯](?:[\s-]?[0-9০-৯]){8}/;
+const EMAIL_REGEX                   = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+const EMAIL_REGEX_TEST              = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
 
 // Phonetic and word-based bypasses common in Bangladesh
 const DIGIT_WORDS = ["zero","shunno","one","ek","two","dui","three","tin","four","char","five","pach","six","choy","seven","saat","eight","aat","nine","noy"];
@@ -54,7 +58,7 @@ export function filterPII(text: string | null | undefined): string {
  * Useful for warnings or strict blocking.
  */
 export function containsPII(text: string): boolean {
-  if (BANGLADESH_PHONE_REGEX.test(text)) return true;
-  if (EMAIL_REGEX.test(text)) return true;
+  if (BANGLADESH_PHONE_REGEX_TEST.test(text)) return true;
+  if (EMAIL_REGEX_TEST.test(text)) return true;
   return BYPASS_KEYWORDS.some((regex) => regex.test(text));
 }

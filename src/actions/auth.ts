@@ -68,7 +68,7 @@ export async function signupWithPhone(data: unknown) {
     const now  = new Date();
     await ref.set({
       id: ref.id, name, phone: normalizedPhone, password: hashedPassword,
-      email: email ?? `user-${Date.now()}@nilamit.placeholder`,
+      email: email ?? null,
       emailVerified: null, image: null,
       isPhoneVerified: true, isVerifiedSeller: false, reputationScore: 0,
       winningStreak: 0, userLevel: 1, createdAt: now, updatedAt: now,

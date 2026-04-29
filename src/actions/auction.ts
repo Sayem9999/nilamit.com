@@ -17,6 +17,7 @@ import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/li
 export async function getAuctions(filters: AuctionFilters = {}) {
   const response = await AuctionService.list(filters);
   if (!response.success) {
+    log.error('[Action] getAuctions failed', undefined, { error: response.error?.message });
     return { auctions: [], total: 0, pages: 0, currentPage: 1 };
   }
   return response.data!;
@@ -89,9 +90,10 @@ export async function getSpecializedFeeds() {
         .orderBy('endTime', 'asc')
         .limit(8)
         .get(),
+      // Fetch extra so we can discard bids whose auction is no longer ACTIVE after hydration
       db.collection('bids')
         .orderBy('createdAt', 'desc')
-        .limit(10)
+        .limit(25)
         .get(),
     ]);
 
@@ -116,7 +118,7 @@ export async function getSpecializedFeeds() {
     const auctionIds = [...new Set(bidDocs.map((b) => b.auctionId))];
     
     let biddersMap = new Map<string, { name: string | null }>();
-    let auctionsMap = new Map<string, { id: string; title: string }>();
+    let auctionsMap = new Map<string, { id: string; title: string; status: string }>();
 
     if (bidderIds.length > 0 && auctionIds.length > 0) {
       const bidderRefs = bidderIds.map((id) => db.collection('users').doc(id));
@@ -128,20 +130,24 @@ export async function getSpecializedFeeds() {
       ]);
       
       biddersMap = new Map(bidderSnaps.map((s) => [s.id, { name: (s.data()?.name as string | null) ?? null }]));
-      auctionsMap = new Map(auctionSnaps.map((s) => [s.id, { id: s.id, title: (s.data()?.title as string | undefined) ?? 'Unknown' }]));
+      auctionsMap = new Map(auctionSnaps.map((s) => [s.id, { id: s.id, title: (s.data()?.title as string | undefined) ?? 'Unknown', status: (s.data()?.status as string | undefined) ?? '' }]));
     }
 
-    const latestBids = bidDocs.map((b) => {
-      const raw = b.createdAt as unknown as { toDate?: () => Date } | Date;
-      const createdAt = raw instanceof Date ? raw : raw?.toDate?.() ?? new Date();
-      return {
-        id: b.id,
-        amount: b.amount,
-        createdAt,
-        bidder: biddersMap.get(b.bidderId) ?? { name: null },
-        auction: auctionsMap.get(b.auctionId) ?? { id: b.auctionId, title: 'Unknown' },
-      };
-    });
+    const latestBids = bidDocs
+      .filter((b) => auctionsMap.get(b.auctionId)?.status === AuctionStatus.ACTIVE)
+      .slice(0, 10)
+      .map((b) => {
+        const raw = b.createdAt as unknown as { toDate?: () => Date } | Date;
+        const createdAt = raw instanceof Date ? raw : raw?.toDate?.() ?? new Date();
+        const auctionEntry = auctionsMap.get(b.auctionId) ?? { id: b.auctionId, title: 'Unknown' };
+        return {
+          id: b.id,
+          amount: b.amount,
+          createdAt,
+          bidder: biddersMap.get(b.bidderId) ?? { name: null },
+          auction: { id: auctionEntry.id, title: auctionEntry.title },
+        };
+      });
 
     return { endingSoon, latestBids };
   } catch (error) {

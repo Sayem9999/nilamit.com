@@ -15,7 +15,7 @@ import { verifyCronSecret, withRetry, cronSuccess, cronError } from '@/lib/cron-
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
   // 1. Auth gate
   const authError = verifyCronSecret(req);
   if (authError) return authError;

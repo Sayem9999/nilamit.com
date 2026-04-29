@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
@@ -11,34 +11,38 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # --- TEST & VERIFY PHASE ---
   verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
+
       - name: Install dependencies
-        # Using `npm install` instead of `npm ci` because the lockfile is
-        # generated on Windows and prunes Linux-only optional native deps
-        # (e.g. @emnapi/*, @img/sharp-linux-*). `npm ci`'s strict lockfile
-        # check then fails. Once the team standardises on a Linux dev/CI
-        # lockfile (or a devcontainer), revert to `npm ci`.
+        # TODO: the package-lock.json was generated on Windows and omits
+        # Linux-only optional native deps (e.g. @img/sharp-linux-*), causing
+        # `npm ci` to fail on the lockfile integrity check. Regenerate the
+        # lockfile inside a Linux container (or a devcontainer) once to fix:
+        #   docker run --rm -v $(pwd):/app -w /app node:20 npm install
+        # Then commit the result and revert this line to `npm ci`.
         run: npm install --no-audit --no-fund
-      - name: Lint check
+
+      - name: Lint
         run: npm run lint
+
       - name: Type check
         run: npx tsc --noEmit
-      - name: Run Unit & Integration Tests
+
+      - name: Unit tests
         run: npx vitest run
-      - name: Production build smoke test
+
+      - name: Build smoke test
         run: npm run build
         env:
-          # Placeholders sufficient to satisfy env.ts zod schema. None reach
-          # runtime — the deploy job injects real secrets via Secret Manager.
           NODE_ENV: production
           AUTH_SECRET: ci-placeholder-secret-at-least-32-characters-long
           ADMIN_EMAILS: ci@example.com
@@ -52,38 +56,7 @@ jobs:
           UPSTASH_REDIS_REST_URL: https://ci-placeholder.upstash.io
           UPSTASH_REDIS_REST_TOKEN: ci-placeholder
 
-  # --- BUILD & DEPLOY PHASE ---
-  deploy:
-    needs: verify
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    
-    # We use Google Cloud Run as the target for this example
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # 💡 In a real setup, you would authenticate with your provider here:
-      # - uses: 'google-github-actions/auth@v2'
-      # - run: gcloud auth configure-docker
-
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: gcr.io/${{ secrets.GCP_PROJECT_ID }}/nilamit-app:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
-            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
-
-      - name: Deployment Success Notification
-        run: echo "🚀 Nilamit App v${{ github.sha }} ready for rollout."
+# Deployment is handled automatically by Firebase App Hosting on push to main.
+# No deploy job is needed here — Firebase App Hosting watches this branch and
+# triggers a build+deploy via Cloud Build when the verify job passes.
+# See: apphosting.yaml and cloudbuild.yaml for the build configuration.

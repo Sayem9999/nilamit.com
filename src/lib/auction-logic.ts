@@ -1,6 +1,8 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import { sendAuctionWonEmail } from '@/lib/firebase-email';
+import { rtdbPush } from '@/lib/firebase-admin';
+import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import type { AuctionStatus } from '@/types';
 import { log } from '@/lib/logger';
 
@@ -60,10 +62,17 @@ export async function processAuctionSale(
     updatedAt:        now,
   }, { merge: true });
 
-  // Non-blocking winner email
+  // Non-blocking post-sale notifications (fire-and-forget outside the transaction)
   if (winner.email) {
-    sendAuctionWonEmail(winner.email, auction.title, finalPrice, auction.id).catch((e) => log.error('auction-logic: winner email failed', e, { auctionId: auction.id }));
+    sendAuctionWonEmail(winner.email, auction.title, finalPrice, auction.id)
+      .catch((e) => log.error('auction-logic: winner email failed', e, { auctionId: auction.id }));
   }
+  rtdbPush(RTDB_PATHS.userNotifications(winner.id), {
+    event:     FIREBASE_EVENTS.AUCTION_WON,
+    auctionId: auction.id,
+    title:     auction.title,
+    amount:    finalPrice,
+  }).catch((e) => log.error('auction-logic: winner RTDB notification failed', e, { auctionId: auction.id }));
 }
 
 // ─── closeAuctionIfEnded ─────────────────────────────────────────────────────

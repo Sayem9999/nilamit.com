@@ -34,15 +34,9 @@ export async function placeBid(auctionId: string, amount: number) {
 
   const h = await headers();
   const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
-  // Fail-Open Rate Limiter: Do not block users if Upstash Redis goes down
-  let rateLimitSuccess = true;
-  try {
-    const limitRes = await bidLimiter.limit(`bid_${userId}_${ip}`);
-    rateLimitSuccess = limitRes.success;
-  } catch (error) {
-    log.warn('Redis rate limiter unreachable, failing OPEN to allow bid', error);
-  }
-  if (!rateLimitSuccess) return errorResponse(ErrorType.RATE_LIMIT, 'Too many bids placed rapidly. Please wait a moment.');
+  // bidLimiter already fail-closes in production on Redis unavailability (see ratelimit.ts).
+  const { success: rateLimitOk } = await bidLimiter.limit(`bid_${userId}_${ip}`);
+  if (!rateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, 'Too many bids placed rapidly. Please wait a moment.');
 
   try {
     const privileges = await requireBiddingPrivileges(userId);
@@ -113,15 +107,8 @@ export async function executeBuyItNow(auctionId: string) {
 
   const h = await headers();
   const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
-  // Fail-Open Rate Limiter
-  let rateLimitSuccess = true;
-  try {
-    const limitRes = await bidLimiter.limit(`bin_${userId}_${ip}`);
-    rateLimitSuccess = limitRes.success;
-  } catch (error) {
-    log.warn('Redis rate limiter unreachable, failing OPEN to allow Buy It Now', error);
-  }
-  if (!rateLimitSuccess) return errorResponse(ErrorType.RATE_LIMIT, 'Too many purchase attempts. Please wait a moment.');
+  const { success: binRateLimitOk } = await bidLimiter.limit(`bin_${userId}_${ip}`);
+  if (!binRateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, 'Too many purchase attempts. Please wait a moment.');
 
   try {
     const privileges = await requireBiddingPrivileges(userId);
@@ -156,7 +143,11 @@ export async function executeBuyItNow(auctionId: string) {
           reservePrice: auction.reservePrice,
         },
         { id: auction.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
-        { id: userId, email: user.email ?? null, name: user.name ?? 'Winner' },
+        {
+          id:    userId,
+          email: typeof user.email === 'string' ? user.email : null,
+          name:  typeof user.name  === 'string' ? user.name  : 'Winner',
+        },
         auction.buyItNowPrice,
       );
     });

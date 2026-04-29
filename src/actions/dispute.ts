@@ -93,40 +93,62 @@ export async function getOpenDisputes() {
   if (!isAdminEmail(session?.user?.email)) return [];
 
   const snap = await db.collection('disputes').where('status', '==', 'OPEN').orderBy('createdAt', 'desc').get();
+  if (snap.empty) return [];
 
-  return Promise.all(snapDocs<Dispute>(snap).map(async dispute => {
-    const [txSnap, openerSnap] = await Promise.all([
-      db.collection('escrowTransactions').doc(dispute.transactionId).get(),
-      db.collection('users').doc(dispute.openerId).get(),
-    ]);
-    const tx = docData<EscrowTransaction>(txSnap);
-    const opener = docData<User>(openerSnap);
-    const aSnap = tx ? await db.collection('auctions').doc(tx.auctionId).get() : null;
-    const a = aSnap ? docData<Auction>(aSnap) : null;
-    const buyerSnap = tx ? await db.collection('users').doc(tx.buyerId).get() : null;
-    const buyer = buyerSnap ? docData<User>(buyerSnap) : null;
-    const sellerSnap = a ? await db.collection('users').doc(a.sellerId).get() : null;
-    const seller = sellerSnap ? docData<User>(sellerSnap) : null;
+  const disputes = snapDocs<Dispute>(snap);
+
+  // Pass 1 — transactions + openers (both available directly from dispute docs)
+  const txIds     = [...new Set(disputes.map((d) => d.transactionId))];
+  const openerIds = [...new Set(disputes.map((d) => d.openerId))];
+
+  const [txSnaps, openerSnaps] = await Promise.all([
+    db.getAll(...txIds.map((id) => db.collection('escrowTransactions').doc(id))),
+    db.getAll(...openerIds.map((id) => db.collection('users').doc(id))),
+  ]);
+
+  const txMap     = new Map(txSnaps.map((s) => [s.id, docData<EscrowTransaction>(s)]));
+  const openerMap = new Map(openerSnaps.map((s) => [s.id, docData<User>(s)]));
+
+  // Pass 2 — auctions + buyers (IDs come from the transaction docs)
+  const auctionIds = [...new Set(txSnaps.map((s) => (s.data() ?? {}).auctionId as string).filter(Boolean))];
+  const buyerIds   = [...new Set(txSnaps.map((s) => (s.data() ?? {}).buyerId   as string).filter(Boolean))];
+
+  const [auctionSnaps, buyerSnaps] = await Promise.all([
+    auctionIds.length ? db.getAll(...auctionIds.map((id) => db.collection('auctions').doc(id))) : Promise.resolve([]),
+    buyerIds.length   ? db.getAll(...buyerIds.map((id)   => db.collection('users').doc(id)))    : Promise.resolve([]),
+  ]);
+
+  const auctionMap = new Map(auctionSnaps.map((s) => [s.id, docData<Auction>(s)]));
+  const buyerMap   = new Map(buyerSnaps.map((s) => [s.id, docData<User>(s)]));
+
+  // Pass 3 — sellers (IDs come from the auction docs)
+  const sellerIds = [...new Set(
+    auctionSnaps.map((s) => (s.data() ?? {}).sellerId as string).filter(Boolean),
+  )];
+
+  const sellerMap = new Map<string, User | null>();
+  if (sellerIds.length > 0) {
+    const sellerSnaps = await db.getAll(...sellerIds.map((id) => db.collection('users').doc(id)));
+    sellerSnaps.forEach((s) => sellerMap.set(s.id, docData<User>(s)));
+  }
+
+  return disputes.map((dispute) => {
+    const tx     = txMap.get(dispute.transactionId);
+    const opener = openerMap.get(dispute.openerId);
+    const a      = tx ? auctionMap.get(tx.auctionId)   : null;
+    const buyer  = tx ? buyerMap.get(tx.buyerId)        : null;
+    const seller = a?.sellerId ? (sellerMap.get(a.sellerId) ?? null) : null;
 
     return {
       ...dispute,
       transaction: {
-        id: tx?.id ?? '',
-        amount: tx?.amount ?? 0,
+        id:        tx?.id        ?? '',
+        amount:    tx?.amount    ?? 0,
         auctionId: tx?.auctionId ?? '',
-        auction: { 
-          title: a?.title ?? '', 
-          seller: { name: seller?.name ?? null } 
-        },
-        buyer: { 
-          name: buyer?.name ?? null, 
-          email: buyer?.email ?? null 
-        },
+        auction: { title: a?.title ?? '', seller: { name: seller?.name ?? null } },
+        buyer:   { name: buyer?.name ?? null, email: buyer?.email ?? null },
       },
-      opener: { 
-        name: opener?.name ?? null, 
-        email: opener?.email ?? null 
-      },
+      opener: { name: opener?.name ?? null, email: opener?.email ?? null },
     };
-  }));
+  });
 }

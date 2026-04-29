@@ -3,6 +3,7 @@ import type { Adapter, AdapterUser, AdapterAccount, VerificationToken, AdapterSe
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { db } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
 import { isAdminEmail } from '@/lib/admin-guard';
@@ -66,12 +67,12 @@ function FirestoreAdapter(): Adapter {
     async updateSession(session) { return session as unknown as AdapterSession; },
     async deleteSession() {},
     async createVerificationToken(token: VerificationToken) {
-      const id = `${token.identifier}__${token.token}`;
+      const id = crypto.createHash('sha256').update(`${token.identifier}:${token.token}`).digest('hex');
       await db.collection('verificationTokens').doc(id).set(token);
       return token;
     },
     async useVerificationToken({ identifier, token }: { identifier: string; token: string }) {
-      const id = `${identifier}__${token}`;
+      const id = crypto.createHash('sha256').update(`${identifier}:${token}`).digest('hex');
       const snap = await db.collection('verificationTokens').doc(id).get();
       if (!snap.exists) return null;
       const data = snap.data() as VerificationToken;
@@ -90,7 +91,9 @@ if (!googleEnabled && process.env.NODE_ENV === 'production') {
   log.error('[Auth-WARN] Google OAuth disabled — missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET');
 }
 
-const TOKEN_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours (critical actions verify DB independently)
+// 5 minutes: short enough that ban/verification changes propagate quickly,
+// long enough to avoid hammering Firestore on every request.
+const TOKEN_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,

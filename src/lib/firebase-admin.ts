@@ -28,8 +28,10 @@ export function getAdminApp(): App {
   const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !privateKeyRaw) {
-    console.warn('⚠️ [Firebase Admin] Missing secrets. Using mock app.');
-    return initializeApp({ projectId: 'mock-project' }, 'mock-app');
+    throw new Error(
+      '[Firebase Admin] Missing required credentials. ' +
+      'Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY.'
+    );
   }
 
   const privateKey = privateKeyRaw.replace(/\\n/g, '\n');
