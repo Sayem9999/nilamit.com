@@ -12,6 +12,7 @@
 import { auth } from '@/lib/auth';
 import { adminAuth } from '@/lib/firebase-admin';
 import { NextResponse } from 'next/server';
+import { log } from '@/lib/logger';
 
 export async function GET() {
   const session = await auth();
@@ -29,7 +30,7 @@ export async function GET() {
     const token = await adminAuth.createCustomToken(session.user.id, customClaims);
     return NextResponse.json({ token });
   } catch (error) {
-    console.error('[Firebase Token] Failed to create custom token:', error);
+    log.error('[Firebase Token] Failed to create custom token', error);
     return NextResponse.json(
       { error: 'Failed to create Firebase token' },
       { status: 500 }

@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { detectImageMime, SUPPORTED_IMAGE_MIMES } from '@/lib/image-sniff';
 import { apiLimiter } from '@/lib/ratelimit';
+import { log } from '@/lib/logger';
 
 const LIMITS = {
   auction: 4 * 1024 * 1024,  // 4 MB
@@ -120,7 +121,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url });
   } catch (error) {
-    console.error('[Upload] Firebase Storage error:', error);
+    log.error('[Upload] Firebase Storage error', error);
     return NextResponse.json({ error: 'Upload failed. Please try again.' }, { status: 500 });
   }
 }

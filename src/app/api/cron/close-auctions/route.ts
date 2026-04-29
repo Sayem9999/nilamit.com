@@ -12,6 +12,7 @@
 
 import { closeAllEndedAuctions } from '@/lib/auction-logic';
 import { verifyCronSecret, withRetry, cronSuccess, cronError } from '@/lib/cron-utils';
+import { log } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
   );
 
   if (result.error) {
-    console.error('[Cron:close-auctions] All retries failed:', result.error);
+    log.error('[Cron:close-auctions] All retries failed', result.error);
     return cronError(`close-auctions failed after ${result.attempts} attempts: ${result.error.message}`);
   }
 

@@ -1,10 +1,10 @@
 /**
- * GET /api/cron/process-alerts
+ * POST /api/cron/process-alerts
  *
- * Checks all active PRICE_DROP and TARGET_REACHED alerts.
- * Triggers Realtime notification (RTDB) + deactivates alert (one-time trigger).
+ * Checks all active TARGET_REACHED and PRICE_DROP alerts.
+ * Triggers a real-time RTDB notification and deactivates the alert.
  *
- * Called every 2 minutes by Vercel Cron.
+ * Called every 2 minutes by Google Cloud Scheduler.
  */
 
 import { NextResponse } from 'next/server';
@@ -12,6 +12,7 @@ import { db } from '@/lib/db';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
+import { log } from '@/lib/logger';
 import { Alert, Auction } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -28,17 +29,25 @@ export async function POST(req: Request) {
 
     const activeAlerts = alertsSnap.docs
       .map(d => ({ ...d.data(), id: d.id } as Alert))
-      .filter(a => !!a.auctionId);
+      .filter(a => !!a.auctionId && a.thresholdPrice !== null);
+
+    if (activeAlerts.length === 0) return { checked: 0, triggered: 0 };
+
+    // Batch-fetch all referenced auctions in one round-trip instead of per-alert
+    const auctionIds = [...new Set(activeAlerts.map(a => a.auctionId as string))];
+    const auctionSnaps = await db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id)));
+    const auctionMap = new Map(
+      auctionSnaps
+        .filter(s => s.exists)
+        .map(s => [s.id, s.data() as Auction]),
+    );
 
     let triggered = 0;
     const alertsToDeactivate: string[] = [];
 
     for (const alert of activeAlerts) {
-      if (alert.thresholdPrice === null) continue;
-
-      const auctionSnap = await db.collection('auctions').doc(alert.auctionId as string).get();
-      if (!auctionSnap.exists) continue;
-      const auction = auctionSnap.data() as Auction;
+      const auction = auctionMap.get(alert.auctionId as string);
+      if (!auction) continue;
 
       const currentPrice = auction.currentPrice as number;
       const threshold    = alert.thresholdPrice as number;
@@ -48,23 +57,19 @@ export async function POST(req: Request) {
 
       if (!isTargetReached && !isPriceDropped) continue;
 
-      // Push real-time notification to user's RTDB inbox (non-fatal)
-      await rtdbPush(RTDB_PATHS.userNotifications(alert.userId as string), {
+      rtdbPush(RTDB_PATHS.userNotifications(alert.userId as string), {
         event:        FIREBASE_EVENTS.PRICE_ALERT,
         auctionId:    alert.auctionId,
         auctionTitle: auction.title as string,
         amount:       currentPrice,
         type:         alert.type as string,
         threshold,
-      }).catch(err =>
-        console.error(`[Cron:process-alerts] RTDB push failed for alert ${alert.id}:`, err)
-      );
+      }).catch(err => log.error(`[Cron:process-alerts] RTDB push failed for alert ${alert.id}`, err));
 
       alertsToDeactivate.push(alert.id as string);
       triggered++;
     }
 
-    // Deactivate triggered alerts in a single batch update
     if (alertsToDeactivate.length > 0) {
       const batch = db.batch();
       for (const id of alertsToDeactivate) {

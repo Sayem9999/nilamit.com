@@ -9,6 +9,7 @@
  */
 
 import { db } from "@/lib/db";
+import { log } from "@/lib/logger";
 
 // Vercel cron / CDN must not cache health checks
 export const dynamic = "force-dynamic";
@@ -24,7 +25,7 @@ export async function GET() {
     dbStatus = "ok";
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
-    console.error("[Health] Database ping failed:", err);
+    log.error("[Health] Database ping failed", err);
   }
 
   const latencyMs = Date.now() - start;

@@ -172,6 +172,14 @@ export const reportAuctionSchema = z.object({
 });
 export type ReportAuctionInput = z.infer<typeof reportAuctionSchema>;
 
+export const updateProfileSchema = z.object({
+  name:  z.string().trim().min(2, 'Name too short').max(80, 'Name too long').optional(),
+  image: z.string().url('Invalid image URL').max(2048).optional(),
+}).refine(d => d.name !== undefined || d.image !== undefined, {
+  message: 'Provide at least one field to update',
+});
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 /** Flatten a ZodError into a single human-readable line for action responses. */

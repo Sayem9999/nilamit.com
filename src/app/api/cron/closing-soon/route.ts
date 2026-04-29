@@ -1,5 +1,5 @@
 /**
- * GET /api/cron/closing-soon
+ * POST /api/cron/closing-soon
  *
  * Notifies watchers and alert-holders about auctions ending within 1 hour.
  * Sends email (Firebase Trigger Email extension) + real-time RTDB event.
@@ -13,6 +13,7 @@ import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { sendEndingSoonEmail } from '@/lib/firebase-email';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
+import { log } from '@/lib/logger';
 import { Auction, User } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -39,33 +40,36 @@ export async function POST(req: Request) {
     for (const auction of auctions) {
       const notifiedUserIds = new Set<string>();
 
-      // Get watchlist users for this auction
+      // Batch-fetch all watchlist users for this auction in one round-trip
       const watchlistSnap = await db.collection('watchlist').where('auctionId', '==', auction.id).get();
-      for (const entryDoc of watchlistSnap.docs) {
-        const userId = entryDoc.data().userId;
-        const userSnap = await db.collection('users').doc(userId).get();
-        if (!userSnap.exists) continue;
-        
-        const user = { id: userSnap.id, ...userSnap.data() } as User;
-        notifiedUserIds.add(user.id);
+      if (!watchlistSnap.empty) {
+        const watcherIds = watchlistSnap.docs.map(d => d.data().userId as string);
+        const userSnaps  = await db.getAll(...watcherIds.map(id => db.collection('users').doc(id)));
+        const usersMap   = new Map(userSnaps.map(s => [s.id, s.exists ? { id: s.id, ...s.data() } as User : null]));
 
-        if (user.email) {
-          sendEndingSoonEmail(user.email as string, auction.title as string, auction.currentPrice as number, auction.id)
-            .catch(err => console.error(`[Cron:closing-soon] Email failed for user ${user.id}:`, err));
-          emailsQueued++;
+        for (const watcherId of watcherIds) {
+          const user = usersMap.get(watcherId);
+          if (!user) continue;
+          notifiedUserIds.add(user.id);
+
+          if (user.email) {
+            sendEndingSoonEmail(user.email as string, auction.title as string, auction.currentPrice as number, auction.id)
+              .catch(err => log.error(`[Cron:closing-soon] Email failed for user ${user.id}`, err));
+            emailsQueued++;
+          }
+
+          rtdbPush(RTDB_PATHS.userNotifications(user.id), {
+            event:        FIREBASE_EVENTS.ENDING_SOON,
+            auctionId:    auction.id,
+            auctionTitle: auction.title as string,
+            currentPrice: auction.currentPrice as number,
+            endTime:      toDate(auction.endTime).toISOString(),
+          }).catch(err => log.error(`[Cron:closing-soon] RTDB failed for user ${user.id}`, err));
+          rtdbEvents++;
         }
-
-        await rtdbPush(RTDB_PATHS.userNotifications(user.id), {
-          event:        FIREBASE_EVENTS.ENDING_SOON,
-          auctionId:    auction.id,
-          auctionTitle: auction.title as string,
-          currentPrice: auction.currentPrice as number,
-          endTime:      toDate(auction.endTime).toISOString(),
-        }).catch(err => console.error(`[Cron:closing-soon] RTDB failed for user ${user.id}:`, err));
-        rtdbEvents++;
       }
 
-      // Get alerts
+      // ENDING_SOON alerts for users not already notified via watchlist
       const alertsSnap = await db.collection('alerts')
         .where('auctionId', '==', auction.id)
         .where('type', '==', 'ENDING_SOON')
@@ -76,13 +80,13 @@ export async function POST(req: Request) {
         const alert = alertDoc.data();
         if (notifiedUserIds.has(alert.userId)) continue;
 
-        await rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
+        rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
           event:        FIREBASE_EVENTS.ENDING_SOON,
           auctionId:    auction.id,
           auctionTitle: auction.title as string,
           currentPrice: auction.currentPrice as number,
           endTime:      toDate(auction.endTime).toISOString(),
-        }).catch(err => console.error(`[Cron:closing-soon] RTDB (alert) failed for user ${alert.userId}:`, err));
+        }).catch(err => log.error(`[Cron:closing-soon] RTDB (alert) failed for user ${alert.userId}`, err));
         rtdbEvents++;
       }
     }

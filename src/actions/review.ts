@@ -14,7 +14,6 @@ export async function submitReview({
   const fromId = session.user.id;
   if (fromId === toId) return { success: false, error: 'You cannot review yourself' };
 
-  // SECURITY FIX: verify caller is seller or winner of the auction
   const aSnap = await db.collection('auctions').doc(auctionId).get();
   if (!aSnap.exists) return { success: false, error: 'Auction not found' };
   const auction = aSnap.data()!;
@@ -23,29 +22,34 @@ export async function submitReview({
     return { success: false, error: 'You can only review auctions you participated in' };
   }
 
-  // Uniqueness check: one review per user per auction
+  // Composite doc ID — one review per user per auction, idempotent
   const reviewId = `${fromId}_${auctionId}`;
   const existing = await db.collection('reviews').doc(reviewId).get();
   if (existing.exists) return { success: false, error: 'You have already reviewed this auction.' };
 
+  const clampedRating = Math.max(1, Math.min(5, Math.round(rating)));
   const now    = new Date();
   const review = {
     id: reviewId, auctionId, fromId, toId,
-    rating: Math.max(1, Math.min(5, Math.round(rating))),
+    rating: clampedRating,
     comment: filterPII(comment) || null,
     createdAt: now,
   };
 
   await db.collection('reviews').doc(reviewId).set(review);
 
-  // Update recipient reputation score
-  const allReviewsSnap = await db.collection('reviews').where('toId', '==', toId).get();
-  const ratings = allReviewsSnap.docs.map(d => d.data().rating as number);
-  const avg     = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
-  
-  // Hardened Production Formula: (Avg * 15) + (Log-scaled count * 10)
-  // This prevents linear exploitation while rewarding consistency.
+  // Reputation: cap at the 100 most recent reviews to avoid unbounded scans.
+  // The formula rewards both quality (avg) and volume (log-scaled count).
+  const allReviewsSnap = await db.collection('reviews')
+    .where('toId', '==', toId)
+    .orderBy('createdAt', 'desc')
+    .limit(100)
+    .get();
+
+  const ratings  = allReviewsSnap.docs.map(d => d.data().rating as number);
+  const avg      = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
   const newScore = Math.round((avg * 15) + (Math.log10(ratings.length + 1) * 20));
+
   await db.collection('users').doc(toId).update({ reputationScore: newScore, updatedAt: now });
 
   revalidatePath(`/profile/${toId}`);
@@ -63,28 +67,28 @@ export async function getUserReviews(userId: string) {
   const reviews = snapDocs<Review>(snap);
   if (reviews.length === 0) return [];
 
-  // Batch fetch profiles and auctions to avoid N+1
+  // Batch-fetch reviewers and auctions in two round-trips instead of N+1
   const fromIds    = [...new Set(reviews.map(r => r.fromId))];
   const auctionIds = [...new Set(reviews.map(r => r.auctionId))];
 
   const [fromSnaps, auctionSnaps] = await Promise.all([
-    Promise.all(fromIds.map(id => db.collection('users').doc(id).get())),
-    Promise.all(auctionIds.map(id => db.collection('auctions').doc(id).get())),
+    db.getAll(...fromIds.map(id => db.collection('users').doc(id))),
+    db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id))),
   ]);
 
-  const fromMap = new Map(fromSnaps.map(s => [s.id, s.data() || {}]));
-  const aMap    = new Map(auctionSnaps.map(s => [s.id, s.data() || {}]));
+  const fromMap = new Map(fromSnaps.map(s => [s.id, s.data() ?? {}]));
+  const aMap    = new Map(auctionSnaps.map(s => [s.id, s.data() ?? {}]));
 
   return reviews.map(r => ({
     ...r,
-    from: { 
-      id: r.fromId, 
-      name: fromMap.get(r.fromId)?.name ?? 'User', 
-      image: fromMap.get(r.fromId)?.image ?? null 
+    from: {
+      id:    r.fromId,
+      name:  (fromMap.get(r.fromId)?.name  as string | null) ?? 'User',
+      image: (fromMap.get(r.fromId)?.image as string | null) ?? null,
     },
-    auction: { 
-      title: aMap.get(r.auctionId)?.title ?? 'Archived Auction' 
-    }
+    auction: {
+      title: (aMap.get(r.auctionId)?.title as string | undefined) ?? 'Archived Auction',
+    },
   }));
 }
 
