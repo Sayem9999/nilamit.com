@@ -14,29 +14,31 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **Live URL:** `https://nilamit--nilamit-52073.asia-southeast1.hosted.app`
 
-**Admin panel:** `/en/admin` — requires `isAdmin: true` in JWT (derived from `ADMIN_EMAILS` env var = `sayemf21@gmail.com`)
+**Admin panel:** `/en/admin` — requires `isAdmin: true` in JWT (derived from `ADMIN_EMAILS=sayemf21@gmail.com`)
 
 ---
 
-## Critical Rules — Never Violate These
+## CRITICAL RULES — Never Violate
 
-1. **Never write directly to Firestore from client components.** All writes go through Server Actions → Firebase Admin SDK. Security rules enforce `allow write: if false` for all collections.
+1. **Never write directly to Firestore from client components.** All writes go through Server Actions → Firebase Admin SDK. Security rules enforce `allow write: if false`.
 
 2. **Never use `db.batch()` for operations with pre-read status checks.** Use `db.runTransaction()`. Batches have no read isolation.
 
-3. **Never fail open on rate limiting for financial actions.** `bidLimiter`, `authLimiter` etc. in `src/lib/ratelimit.ts` already fail-closed in production. Do not wrap them in `try/catch` that sets success to true on error.
+3. **Never fail open on rate limiting for financial actions.** `bidLimiter` etc. already fail-closed in production — don't wrap in try/catch that passes on error.
 
-4. **All admin gates must use `requireAdmin()` from `src/lib/admin-guard.ts`.** Never re-implement the `ADMIN_EMAILS` check inline.
+4. **All admin gates must use `requireAdmin()` from `src/lib/admin-guard.ts`.** Never re-implement `ADMIN_EMAILS` check inline.
 
 5. **OTP generation must use `crypto.randomInt()`.** Never `Math.random()`.
 
-6. **All cron routes must be `POST`, not `GET`.** HTTP GET must be idempotent; crons mutate state.
+6. **All cron routes must be `POST`, not `GET`.** HTTP GET must be idempotent.
 
-7. **Build-time packages must be in `dependencies`, not `devDependencies`.** Firebase App Hosting builds with `NODE_ENV=production` which omits devDependencies. Tailwind CSS, PostCSS, CSS animation libraries and any package imported in CSS/source must be in `dependencies`.
+7. **Build-time packages must be in `dependencies`, not `devDependencies`.** Firebase App Hosting builds with `NODE_ENV=production` which omits devDependencies. Any package imported in CSS or source during the build must be in `dependencies`. Currently in `dependencies`: `tailwindcss`, `@tailwindcss/postcss`, `tw-animate-css`, `shadcn`.
 
-8. **After running `npm install`, always re-patch `@emnapi` in the lockfile.** The lockfile was patched manually (see Known Issues). Running `npm install` overwrites those entries.
+8. **After running `npm install`, always re-patch `@emnapi` in the lockfile** (see Known Issues below).
 
-9. **After adding i18n keys to a component, add them to both `messages/en.json` AND `messages/bn.json` under the correct namespace.** Missing keys cause `MISSING_MESSAGE` server errors on every page load. Check the namespace the component uses with `useTranslations('NamespaceHere')`.
+9. **After adding i18n keys to a component, add them to BOTH `messages/en.json` AND `messages/bn.json`** under the correct namespace. Missing keys throw `MISSING_MESSAGE` exceptions that crash Server Components in production.
+
+10. **Admin pages must check `isAdmin` and redirect before fetching data.** If `requireAdmin()` throws, Next.js shows a 500 error page. Always use `auth()` check + `redirect('/login')` at the top of admin Server Components.
 
 ---
 
@@ -51,7 +53,7 @@ Browser (React 19)
         └── Infrastructure    src/lib/
              ├── Firestore   (Admin SDK only — all writes)
              ├── RTDB        (real-time events after commits)
-             ├── Upstash     (rate limiting — real creds stored in Secret Manager)
+             ├── Upstash     (rate limiting — real creds in Secret Manager)
              └── Sentry      (EU region: ingest.de.sentry.io)
 ```
 
@@ -62,59 +64,52 @@ Browser (React 19)
 | File | Purpose |
 |---|---|
 | `src/lib/auth.ts` | NextAuth config, FirestoreAdapter, JWT/session callbacks |
-| `src/lib/auth.config.ts` | Edge-safe NextAuth config — `pages.error: '/login'`, admin protected paths |
-| `src/lib/admin-guard.ts` | `requireAdmin()` — single admin gate, never duplicate |
+| `src/lib/auth.config.ts` | Edge-safe NextAuth config — `pages.error: '/login'`, protected paths |
+| `src/lib/admin-guard.ts` | `requireAdmin()` — single admin gate |
 | `src/lib/db.ts` | Firestore proxy singleton, `docData()`, `snapDocs()`, `newId()` |
 | `src/lib/firebase-admin.ts` | Admin SDK init (throws on missing creds), `rtdbPush()`, `rtdbSet()` |
 | `src/lib/ratelimit.ts` | All rate limiters — fail-closed in production |
-| `src/lib/schemas.ts` | All Zod schemas — add new ones here, never inline |
+| `src/lib/schemas.ts` | All Zod schemas — add new ones here |
 | `src/lib/auction-logic.ts` | `processAuctionSale()` — reserve check, commission, escrow, RTDB notify |
 | `src/lib/errors.ts` | `ServiceResponse<T>`, `errorResponse()`, `successResponse()` |
-| `src/lib/env.ts` | Zod env validation — `UPSTASH_REDIS_*` optional (rate limiting degrades gracefully) |
-| `src/lib/constants.ts` | `ERROR_CODES`, soft-close constants |
-| `src/services/bidding/bidding-service.ts` | `BiddingService.placeBid()` — the atomic bid transaction |
-| `src/services/bidding/bid-rules.ts` | `validateBidPreconditions()`, `computeAntiSnipeExtension()` |
-| `src/services/auction/auction-service.ts` | `AuctionService.list()`, `AuctionService.getById()` |
+| `src/lib/env.ts` | Zod env validation — `UPSTASH_REDIS_*` optional |
 | `src/actions/bid.ts` | `placeBid()`, `executeBuyItNow()` |
 | `src/actions/auction.ts` | `createAuction()`, `getAuctions()`, `getSpecializedFeeds()` |
 | `src/actions/escrow.ts` | Escrow state transitions (all transactional) |
-| `src/actions/admin.ts` | Admin stats/disputes/treasury — uses `batchHydrateEscrowRows()` |
+| `src/actions/admin.ts` | Admin stats/disputes/treasury — batch-hydrated |
 | `src/actions/dispute.ts` | `raiseDispute()`, `resolveDispute()` — both transactional |
-| `src/actions/report.ts` | `reportAuction()` — composite doc ID, transactional uniqueness |
+| `src/actions/report.ts` | `reportAuction()` — composite doc ID, transactional |
 | `src/actions/chat.ts` | `sendMessage()` — validated, PII-filtered, stores buyerId/sellerId |
 | `src/actions/review.ts` | Reviews — batch-fetched, reputation capped at 100 reviews |
 | `src/actions/user.ts` | `updateProfile()` (validated), `getPublicProfile()` (count aggregations) |
-| `src/middleware.ts` | Auth check, ban redirect, i18n routing, locale stripping for API |
-| `src/app/[locale]/admin/page.tsx` | Admin page — checks `isAdmin` before fetching, redirects to `/login` |
+| `src/middleware.ts` | Auth check, ban redirect, i18n routing |
+| `src/app/[locale]/admin/page.tsx` | Checks `isAdmin` and redirects before fetching |
 | `src/app/api/cron/` | 4 cron routes — all POST, all `verifyCronSecret()` |
-| `src/app/api/upload/route.ts` | Image upload — magic-byte validated, rate-limited |
-| `firestore.rules` | Security rules — `allow write: if false` everywhere |
+| `firestore.rules` | `allow write: if false` everywhere |
+| `firestore.indexes.json` | All composite indexes — update and `firebase deploy --only firestore:indexes` |
 | `apphosting.yaml` | Firebase App Hosting config + all 16 secret mappings |
-| `cloudbuild.yaml` | Build pipeline — `npm install` (not `npm ci`, see Known Issues) |
-| `messages/en.json` | English translations — all components must have keys here |
+| `cloudbuild.yaml` | Build pipeline — uses `npm install` (not `npm ci`, see Known Issues) |
+| `messages/en.json` | English translations — every component key must be here |
 | `messages/bn.json` | Bengali translations — must mirror en.json structure |
 
 ---
 
-## Bidding Flow (most critical path)
+## Bidding Flow
 
 ```
 placeBid(auctionId, amount)
-  1. auth() — require session
-  2. placeBidSchema.safeParse() — validate inputs
-  3. bidLimiter.limit() — 60/60s per user+IP, fail-closed
-  4. requireBiddingPrivileges() — phone verified, not banned, not minor
-  5. Elite deposit check (≥ ৳100,000)
-  6. BiddingService.placeBid() →
+  1. auth() + placeBidSchema.safeParse()
+  2. bidLimiter.limit() — fail-closed
+  3. requireBiddingPrivileges() — phone verified, not banned, not minor
+  4. Elite deposit check (≥ ৳100,000)
+  5. BiddingService.placeBid() →
        db.runTransaction()
-         tx.get(auctionRef)       ← locks auction doc
+         tx.get(auctionRef) ← locks auction doc
          validateBidPreconditions()
          computeAntiSnipeExtension() ← extends from endTime if < 2min left
          tx.set(bidRef)
          tx.update(auctionRef, { currentPrice, currentBidderId, endTime, bidCount })
-       COMMIT
-       processAlertsAfterBid()   ← post-tx, deactivate TARGET_REACHED
-       handleBidSideEffects()    ← RTDB, email, FCM, badges (all async)
+       COMMIT → processAlertsAfterBid(), handleBidSideEffects() (async)
 ```
 
 ## Escrow State Machine
@@ -132,15 +127,9 @@ DISPUTED→ resolveAdminDispute()    → RELEASED or REFUNDED
 
 ## Secrets in Secret Manager (project: nilamit-52073)
 
-All 16 secrets stored. Manage with:
-```bash
-firebase apphosting:secrets:set SECRET_NAME --project nilamit-52073 --data-file -
-firebase apphosting:secrets:grantaccess SECRET_NAME --project nilamit-52073 --backend nilamit
-```
-
 | Secret | Status | Notes |
 |---|---|---|
-| `AUTH_SECRET` | ✓ Real | Updated to user-provided value |
+| `AUTH_SECRET` | ✓ Real | `aFOCaYn0TDGp6WA4Gi77noq0vu/S/LbFx5UT5GBkz9Q=` |
 | `ADMIN_EMAILS` | ✓ Real | `sayemf21@gmail.com` |
 | `CRON_SECRET` | ✓ Real | Auto-generated hex |
 | `FIREBASE_PROJECT_ID` | ✓ Real | `nilamit-52073` |
@@ -152,11 +141,22 @@ firebase apphosting:secrets:grantaccess SECRET_NAME --project nilamit-52073 --ba
 | `FIREBASE_MESSAGING_SENDER_ID` | ✓ Real | `884637735592` |
 | `FIREBASE_APP_ID` | ✓ Real | Client SDK |
 | `GOOGLE_CLIENT_ID` | ✓ Real | OAuth client |
-| `GOOGLE_CLIENT_SECRET` | ⚠️ Rotate | Old value from `.env` was leaked |
-| `SENTRY_DSN` | ✓ Real | EU region DSN |
+| `GOOGLE_CLIENT_SECRET` | ⚠️ Rotate | Old value was leaked in `.env` |
+| `SENTRY_DSN` | ✓ Real | EU region: `ingest.de.sentry.io` |
 | `UPSTASH_REDIS_REST_URL` | ✓ Real | `https://safe-stallion-50421.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | ✓ Real | Real Upstash token |
-| `GREENWEB_TOKEN` | ⚠️ Placeholder | `"console"` — update with real SMS token |
+| `GREENWEB_TOKEN` | ⚠️ Placeholder | `"console"` — OTPs log to stdout, not real SMS |
+
+---
+
+## Dashboard Tabs (current)
+
+- **Watchlist** — saved auctions
+- **Active Bids** — auctions user is currently bidding on
+- **Won & Escrow** — completed wins and payment status
+- **My Listings** — seller's own auctions
+- **Coordination Hub** — post-sale buyer/seller chat (escrow-gated)
+- ~~Seller Performance~~ — **removed** (not needed for C2C)
 
 ---
 
@@ -173,10 +173,8 @@ import { revalidatePath } from 'next/cache';
 export async function doSomething(input: unknown) {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
-
   const parsed = mySchema.safeParse(input);
   if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
-
   try {
     await db.runTransaction(async (tx) => { /* ... */ });
     revalidatePath('/relevant-path');
@@ -190,59 +188,43 @@ export async function doSomething(input: unknown) {
 
 ## Adding i18n Keys
 
-Every new string in a component must go in BOTH message files:
-
 ```typescript
-// Component uses: const t = useTranslations('MyNamespace')
+// Component declares: const t = useTranslations('MyNamespace')
 // Then calls: t('myKey')
 ```
-
+Add to BOTH files:
 ```json
-// messages/en.json  — add under "MyNamespace": { "myKey": "English text" }
-// messages/bn.json  — add under "MyNamespace": { "myKey": "বাংলা টেক্সট" }
+// messages/en.json → "MyNamespace": { "myKey": "English text" }
+// messages/bn.json → "MyNamespace": { "myKey": "বাংলা টেক্সট" }
 ```
-
-Missing keys throw `MISSING_MESSAGE` server errors visible in Cloud Run logs.
+Missing keys throw `Error: MISSING_MESSAGE` in production and crash the page.
 
 ---
 
 ## Firestore Collections Reference
 
-| Collection | Key fields | Notes |
-|---|---|---|
-| `users` | `isPhoneVerified`, `isBanned`, `reputationScore`, `isVerifiedSeller` | All writes via Admin SDK |
-| `auctions` | `status`, `currentPrice`, `currentBidderId`, `endTime`, `sellerId` | `currentBidderId` denormalized for bid transactions |
-| `bids` | `auctionId`, `bidderId`, `amount`, `createdAt` | Public read |
-| `escrowTransactions` | `status`, `buyerId`, `auctionId`, `amount` | Doc ID = `auctionId` (idempotent) |
-| `conversations` | `buyerId`, `sellerId`, `auctionId` | Doc ID = `auctionId` |
-| `messages` | `conversationId`, `senderId`, `buyerId`, `sellerId`, `content` | `buyerId`/`sellerId` denormalized for rules |
-| `disputes` | `transactionId`, `openerId`, `status`, `reason` | Doc ID = `transactionId` (idempotent) |
-| `reports` | `auctionId`, `reporterId`, `reason`, `status` | Doc ID = `auctionId_reporterId` (idempotent) |
-| `reviews` | `auctionId`, `fromId`, `toId`, `rating` | Doc ID = `fromId_auctionId` (idempotent) |
-| `alerts` | `userId`, `auctionId`, `type`, `isActive`, `thresholdPrice` | Deactivated post-bid |
-| `admin_logs` | `adminId`, `action`, `targetId` | Audit trail |
-| `cronFailures` | `job`, `error`, `attempts` | Operator review queue |
-
----
-
-## RTDB Paths
-
-```
-bids/auction/{id}            latest bid state (overwrite — rtdbSet)
-activity/auction/{id}        bid history feed (append — rtdbPush)
-notifications/user/{id}      per-user inbox (append)
-chat/conversation/{id}       messages (append)
-presence/auction/{id}/{uid}  viewer presence (client writes own entry)
-```
+| Collection | Key fields |
+|---|---|
+| `users` | `isPhoneVerified`, `isBanned`, `reputationScore`, `isVerifiedSeller` |
+| `auctions` | `status`, `currentPrice`, `currentBidderId`, `endTime`, `sellerId` |
+| `bids` | `auctionId`, `bidderId`, `amount`, `createdAt` |
+| `escrowTransactions` | `status`, `buyerId`, `auctionId` — doc ID = `auctionId` |
+| `conversations` | `buyerId`, `sellerId`, `auctionId` — doc ID = `auctionId` |
+| `messages` | `conversationId`, `senderId`, `buyerId`, `sellerId` |
+| `disputes` | `transactionId`, `openerId`, `status` — doc ID = `transactionId` |
+| `reports` | `auctionId`, `reporterId` — doc ID = `auctionId_reporterId` |
+| `reviews` | `auctionId`, `fromId`, `toId` — doc ID = `fromId_auctionId` |
+| `admin_logs` | `adminId`, `action`, `targetId` |
+| `cronFailures` | `job`, `error`, `attempts` |
 
 ---
 
 ## Known Issues (handle carefully)
 
 ### `package-lock.json` is manually patched
-The lockfile has manually-injected entries for `@emnapi/runtime@1.10.0` and `@emnapi/core@1.10.0` with npm registry integrity hashes. These are wasm32 optional deps of `vitest→vite→rolldown`. Windows npm skips wasm32 packages, so they never get hoisted entries. Firebase App Hosting's Linux buildpack requires them.
 
-**Every time you run `npm install`, you must re-patch the lockfile:**
+Running `npm install` wipes the `@emnapi` entries. After any `npm install`, run:
+
 ```bash
 node -e "
 const fs = require('fs');
@@ -250,49 +232,52 @@ const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
 lock.packages['node_modules/@emnapi/runtime'] = { version:'1.10.0', resolved:'https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.10.0.tgz', integrity:'sha512-ewvYlk86xUoGI0zQRNq/mC+16R1QeDlKQy21Ki3oSYXNgLb45GV1P6A0M+/s6nyCuNDqe5VpaY84BzXGwVbwFA==', optional:true, dependencies:{'@emnapi/core':'^1.4.3'} };
 lock.packages['node_modules/@emnapi/core']    = { version:'1.10.0', resolved:'https://registry.npmjs.org/@emnapi/core/-/core-1.10.0.tgz',    integrity:'sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==',  optional:true, dependencies:{'@emnapi/runtime':'^1.4.3'} };
 fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2)+'\n');
-console.log('emnapi patched');
 "
 ```
-Permanent fix: `docker run --rm -v $(pwd):/app -w /app node:20 npm install` then commit.
 
-### Build-time packages must be in `dependencies`
-Firebase App Hosting runs `npm ci` with `NODE_ENV=production`, omitting devDependencies. Any package imported in CSS or source code during build must be in `dependencies`:
-- `tailwindcss`, `@tailwindcss/postcss`, `tw-animate-css`, `shadcn` — all in `dependencies` ✓
+Permanent fix: `docker run --rm -v $(pwd):/app -w /app node:20 npm install`
+
+### `cloudbuild.yaml` uses `npm install` not `npm ci`
+
+Firebase App Hosting's buildpack internally runs `npm ci`. Our `cloudbuild.yaml` runs `npm install` for the initial setup step. The buildpack's own `npm ci` is what actually installs for production — that's why the lockfile patch above matters.
+
+### `GOOGLE_CLIENT_SECRET` needs rotation
+
+The old value was in `.env` (potentially committed). Rotate at [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) then update Secret Manager.
+
+### `GREENWEB_TOKEN` is a placeholder
+
+SMS OTPs log to stdout. Get real token from greenweb.com.bd, update the secret, and add `SMS_PROVIDER=greenweb` to `apphosting.yaml`.
 
 ### Auth.js v5 beta
-Monitor for stable release. No code change needed until then.
 
-### Email OTPs in plaintext
-`verificationTokens` collection stores OTP tokens in plaintext (Auth.js adapter convention). 5-min TTL is the mitigation.
-
-### GREENWEB_TOKEN is placeholder
-SMS OTPs currently log to stdout. Get token from greenweb.com.bd, update secret, add `SMS_PROVIDER=greenweb` to `apphosting.yaml`.
-
-### GOOGLE_CLIENT_SECRET needs rotation
-The old value (`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`) was in the `.env` file which may have been committed. Rotate at `console.cloud.google.com/apis/credentials`.
+Monitor for stable release.
 
 ---
 
 ## Deployment Commands
 
 ```bash
-# Trigger deploy (push to main)
+# Deploy (push triggers auto-build)
 git push origin main
 
 # Manual rollout
 firebase apphosting:rollouts:create nilamit --project nilamit-52073 --git-branch main
 
-# Check build status
+# Check builds
 gcloud builds list --project=nilamit-52073 --region=asia-southeast1 --limit=3
 
-# Get build logs
+# Get build log
 gcloud builds log BUILD_ID --project=nilamit-52073 --region=asia-southeast1
 
 # Set a secret
 firebase apphosting:secrets:set SECRET_NAME --project nilamit-52073 --data-file -
 
-# Grant secret access to App Hosting
+# Grant secret access
 firebase apphosting:secrets:grantaccess SECRET_NAME --project nilamit-52073 --backend nilamit
+
+# Deploy Firestore indexes only
+firebase deploy --only firestore:indexes --project nilamit-52073
 
 # Health check
 curl https://nilamit--nilamit-52073.asia-southeast1.hosted.app/api/health
@@ -306,6 +291,6 @@ gcloud logging read "resource.type=cloud_run_revision AND severity>=ERROR" --pro
 ## Running Tests
 
 ```bash
-npx vitest run          # 53 unit tests passing
-npx tsc --noEmit        # 0 type errors
+npx vitest run       # 53 unit tests
+npx tsc --noEmit     # 0 type errors
 ```
