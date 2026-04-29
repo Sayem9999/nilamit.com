@@ -1,4 +1,4 @@
-import { ImageResponse } from 'next/og';
+﻿import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
                     color: '#6366f1',
                   }}
                 >
-                  ৳ {Number(price).toLocaleString()}
+                  à§³ {Number(price).toLocaleString()}
                 </div>
                 <div
                   style={{
@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
                     fontWeight: 500,
                   }}
                 >
-                  📍 {location}
+                  ðŸ“ {location}
                 </div>
               </div>
               
@@ -192,7 +192,7 @@ export async function GET(req: NextRequest) {
       }
     );
   } catch (e: unknown) {
-    console.log(`${e instanceof Error ? e.message : 'Unknown error'}`);
+    console.error('[OG] image generation failed:', e instanceof Error ? e.message : 'Unknown error');
     return new Response(`Failed to generate the image`, {
       status: 500,
     });
