@@ -7,27 +7,28 @@ import { adminDB, rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { log } from '@/lib/logger';
 import { sendMessageSchema, formatZodError } from '@/lib/schemas';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 export async function sendMessage(conversationId: string, content: string, imageUrl?: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Unauthorized');
 
   const parsed = sendMessageSchema.safeParse({ conversationId, content, imageUrl });
-  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
 
   const convSnap = await db.collection('conversations').doc(parsed.data.conversationId).get();
-  if (!convSnap.exists) return { success: false, error: 'Conversation not found' };
+  if (!convSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Conversation not found');
   const conv = convSnap.data()!;
 
   if (conv.buyerId !== session.user.id && conv.sellerId !== session.user.id) {
-    return { success: false, error: 'Forbidden' };
+    return errorResponse(ErrorType.FORBIDDEN, 'Forbidden');
   }
 
   // Escrow must be HELD or RELEASED for chat to be active
   const escrowSnap = await db.collection('escrowTransactions').doc(conv.auctionId).get();
-  if (!escrowSnap.exists) return { success: false, error: 'Escrow not found' };
+  if (!escrowSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Escrow not found');
   if (!['HELD', 'RELEASED'].includes(escrowSnap.data()!.status)) {
-    return { success: false, error: 'Chat only available after advance payment.' };
+    return errorResponse(ErrorType.FORBIDDEN, 'Chat only available after advance payment.');
   }
 
   const filtered = filterPII(parsed.data.content);
@@ -66,7 +67,7 @@ export async function sendMessage(conversationId: string, content: string, image
     senderName: session.user.name ?? 'Someone', preview: filtered.slice(0, 60),
   }).catch((e) => log.error('chat: recipient notification push failed', e));
 
-  return { success: true, message: { id: msgId, content: filtered, createdAt: now } };
+  return successResponse({ id: msgId, content: filtered, createdAt: now });
 }
 
 export async function markAsRead(conversationId: string) {

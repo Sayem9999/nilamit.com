@@ -19,23 +19,17 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
     startTransition(async () => {
-      const result = await submitReview({
-        auctionId,
-        toId,
-        rating,
-        comment,
-      });
-
+      const result = await submitReview({ auctionId, toId, rating, comment });
       if (result.success) {
         setSuccess(true);
         onSuccess?.();
       } else {
-        setError(result.error || 'Failed to submit review');
+        setError(result.error?.message ?? 'Failed to submit review');
       }
     });
   };
@@ -62,7 +56,6 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Star Rating */}
         <div>
           <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Rating</label>
           <div className="flex gap-2">
@@ -94,7 +87,6 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
           </div>
         </div>
 
-        {/* Comment */}
         <div>
           <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Comment (Optional)</label>
           <div className="relative">
@@ -124,7 +116,7 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
             <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
           ) : (
             <>
-              Submit Review 
+              Submit Review
               <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             </>
           )}

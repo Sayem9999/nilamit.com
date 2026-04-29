@@ -28,7 +28,7 @@ export function ReportModal({ auctionId }: ReportModalProps) {
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!reason) return;
 
@@ -46,7 +46,7 @@ export function ReportModal({ auctionId }: ReportModalProps) {
           setDescription('');
         }, 2000);
       } else {
-        setError(res.error || 'Failed to submit report');
+        setError(res.error?.message ?? 'Failed to submit report');
       }
     } catch {
       setError('An unexpected error occurred');
@@ -79,7 +79,7 @@ export function ReportModal({ auctionId }: ReportModalProps) {
                   <Flag className="w-4 h-4 text-red-500" />
                   <h3 className="font-heading font-semibold text-gray-900 text-sm">Report Auction</h3>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsOpen(false)}
                   className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                 >

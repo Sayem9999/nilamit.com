@@ -4,28 +4,30 @@ import { db, snapDocs } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { filterPII } from '@/lib/pii-filter';
+import { log } from '@/lib/logger';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 import type { Review } from '@/types';
 
 export async function submitReview({
   auctionId, toId, rating, comment,
 }: { auctionId: string; toId: string; rating: number; comment?: string }) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Not authenticated' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
   const fromId = session.user.id;
-  if (fromId === toId) return { success: false, error: 'You cannot review yourself' };
+  if (fromId === toId) return errorResponse(ErrorType.FORBIDDEN, 'You cannot review yourself');
 
   const aSnap = await db.collection('auctions').doc(auctionId).get();
-  if (!aSnap.exists) return { success: false, error: 'Auction not found' };
+  if (!aSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
   const auction = aSnap.data()!;
-  if (auction.status !== 'SOLD') return { success: false, error: 'Auction not yet completed' };
+  if (auction.status !== 'SOLD') return errorResponse(ErrorType.FORBIDDEN, 'Auction not yet completed');
   if (auction.sellerId !== fromId && auction.winnerId !== fromId) {
-    return { success: false, error: 'You can only review auctions you participated in' };
+    return errorResponse(ErrorType.FORBIDDEN, 'You can only review auctions you participated in');
   }
 
   // Composite doc ID — one review per user per auction, idempotent
   const reviewId = `${fromId}_${auctionId}`;
   const existing = await db.collection('reviews').doc(reviewId).get();
-  if (existing.exists) return { success: false, error: 'You have already reviewed this auction.' };
+  if (existing.exists) return errorResponse(ErrorType.CONFLICT, 'You have already reviewed this auction.');
 
   const clampedRating = Math.max(1, Math.min(5, Math.round(rating)));
   const now    = new Date();
@@ -36,25 +38,30 @@ export async function submitReview({
     createdAt: now,
   };
 
-  await db.collection('reviews').doc(reviewId).set(review);
+  try {
+    await db.collection('reviews').doc(reviewId).set(review);
 
-  // Reputation: cap at the 100 most recent reviews to avoid unbounded scans.
-  // The formula rewards both quality (avg) and volume (log-scaled count).
-  const allReviewsSnap = await db.collection('reviews')
-    .where('toId', '==', toId)
-    .orderBy('createdAt', 'desc')
-    .limit(100)
-    .get();
+    // Reputation: cap at the 100 most recent reviews to avoid unbounded scans.
+    // The formula rewards both quality (avg) and volume (log-scaled count).
+    const allReviewsSnap = await db.collection('reviews')
+      .where('toId', '==', toId)
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .get();
 
-  const ratings  = allReviewsSnap.docs.map(d => d.data().rating as number);
-  const avg      = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
-  const newScore = Math.round((avg * 15) + (Math.log10(ratings.length + 1) * 20));
+    const ratings  = allReviewsSnap.docs.map(d => d.data().rating as number);
+    const avg      = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+    const newScore = Math.round((avg * 15) + (Math.log10(ratings.length + 1) * 20));
 
-  await db.collection('users').doc(toId).update({ reputationScore: newScore, updatedAt: now });
+    await db.collection('users').doc(toId).update({ reputationScore: newScore, updatedAt: now });
 
-  revalidatePath(`/profile/${toId}`);
-  revalidatePath(`/auctions/${auctionId}`);
-  return { success: true, review };
+    revalidatePath(`/profile/${toId}`);
+    revalidatePath(`/auctions/${auctionId}`);
+    return successResponse(review);
+  } catch (e) {
+    log.error('[review] submitReview failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to submit review');
+  }
 }
 
 export async function getUserReviews(userId: string) {

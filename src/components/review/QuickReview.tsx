@@ -34,7 +34,7 @@ export function QuickReview({ auctionId, toId, onComplete }: QuickReviewProps) {
         toast.success("Review submitted!");
         onComplete?.();
       } else {
-        toast.error(result.error || "Failed to submit review");
+        toast.error(result.error?.message ?? "Failed to submit review");
       }
     } catch {
       toast.error("Something went wrong");

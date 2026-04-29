@@ -4,13 +4,14 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { reportAuctionSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 export async function reportAuction(data: unknown) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Not authenticated' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   const parsed = reportAuctionSchema.safeParse(data);
-  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
   const { auctionId, reason, description } = parsed.data;
 
   // Composite doc ID is idempotent — one user can have at most one report per
@@ -32,9 +33,10 @@ export async function reportAuction(data: unknown) {
       });
     });
 
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error('[report] reportAuction failed', e);
-    return { success: false, error: e instanceof Error ? e.message : 'Failed to submit report.' };
+    const msg = e instanceof Error ? e.message : 'Failed to submit report.';
+    return errorResponse(ErrorType.INTERNAL, msg);
   }
 }
