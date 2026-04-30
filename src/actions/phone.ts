@@ -11,6 +11,7 @@ import {
   emailOtpVerifyLimiter,
 } from '@/lib/ratelimit';
 import { log } from '@/lib/logger';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 import crypto from 'crypto';
 
 const OTP_EXPIRY_MS        = 5 * 60 * 1000;
@@ -28,11 +29,11 @@ function generateOTP(): string {
 
 export async function sendPhoneOTP(phone: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'You must be logged in.' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'You must be logged in.');
 
   const normalizedPhone = normalizePhone(phone);
   if (!/^\+8801\d{9}$/.test(normalizedPhone)) {
-    return { success: false, error: 'Invalid Bangladesh phone number.' };
+    return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladesh phone number.');
   }
 
   // Block if already verified by a *different* account
@@ -41,7 +42,7 @@ export async function sendPhoneOTP(phone: string) {
     .where('isPhoneVerified', '==', true)
     .limit(1).get();
   if (!existingSnap.empty && existingSnap.docs[0].id !== session.user.id) {
-    return { success: false, error: 'This phone number is already verified by another account.' };
+    return errorResponse(ErrorType.CONFLICT, 'This phone number is already verified by another account.');
   }
 
   return internalSendOTP(normalizedPhone, session.user.id, session.user.email ?? undefined);
@@ -50,7 +51,7 @@ export async function sendPhoneOTP(phone: string) {
 export async function requestStandaloneOTP(phone: string) {
   const normalizedPhone = normalizePhone(phone);
   if (!/^\+8801\d{9}$/.test(normalizedPhone)) {
-    return { success: false, error: 'Invalid Bangladesh phone number.' };
+    return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladesh phone number.');
   }
   return internalSendOTP(normalizedPhone);
 }
@@ -59,7 +60,7 @@ async function internalSendOTP(phone: string, userId?: string, email?: string) {
   // Per-phone rate limit — prevents SMS budget exhaustion and victim harassment
   const sendGate = await phoneOtpSendLimiter.limit(`phone_send_${phone}`);
   if (!sendGate.success) {
-    return { success: false, error: 'Too many OTP requests. Please try again in an hour.' };
+    return errorResponse(ErrorType.RATE_LIMIT, 'Too many OTP requests. Please try again in an hour.');
   }
 
   // Belt-and-braces Firestore check in case Redis is wiped
@@ -69,7 +70,7 @@ async function internalSendOTP(phone: string, userId?: string, email?: string) {
     .where('createdAt', '>', oneHourAgo)
     .get();
   if (rateSnap.size >= MAX_OTP_PER_HOUR) {
-    return { success: false, error: 'Too many OTP requests. Please try again in an hour.' };
+    return errorResponse(ErrorType.RATE_LIMIT, 'Too many OTP requests. Please try again in an hour.');
   }
 
   const otp       = generateOTP();
@@ -101,14 +102,14 @@ async function internalSendOTP(phone: string, userId?: string, email?: string) {
   }
 
   if (!smsResult.success && !emailSent) {
-    return { success: false, error: 'Failed to send OTP. Please try again later.' };
+    return errorResponse(ErrorType.INTERNAL, 'Failed to send OTP. Please try again later.');
   }
-  return { success: true, message: 'OTP sent successfully.' };
+  return successResponse({ message: 'OTP sent successfully.' });
 }
 
 export async function verifyPhoneOTP(phone: string, otp: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'You must be logged in.' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'You must be logged in.');
 
   // Always normalize before querying and storing — consistent with sendPhoneOTP
   const normalizedPhone = normalizePhone(phone);
@@ -121,7 +122,7 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
     isPhoneVerified: true,
     updatedAt: new Date(),
   });
-  return { success: true };
+  return successResponse(null);
 }
 
 export async function verifyStandaloneOTP(phone: string, otp: string) {
@@ -132,7 +133,7 @@ async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
   // Cap attempts per phone — prevents brute-force of 6-digit OTP space
   const verifyGate = await phoneOtpVerifyLimiter.limit(`phone_verify_${phone}`);
   if (!verifyGate.success) {
-    return { success: false, error: 'Too many verification attempts. Please request a new code.' };
+    return errorResponse(ErrorType.RATE_LIMIT, 'Too many verification attempts. Please request a new code.');
   }
 
   const hashedOTP = hashOTP(otp);
@@ -161,12 +162,12 @@ async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
         await latest.ref.update({ attempts: (latest.data().attempts ?? 0) + 1 });
       }
     }
-    return { success: false, error: 'Invalid or expired OTP.' };
+    return errorResponse(ErrorType.VALIDATION, 'Invalid or expired OTP.');
   }
 
   // Delete on consumption — spent OTPs have no audit value and bloat rate-limit queries
   await snap.docs[0].ref.delete();
-  return { success: true };
+  return successResponse(null);
 }
 
 export async function sendEmailOTP(email: string) {
@@ -175,7 +176,7 @@ export async function sendEmailOTP(email: string) {
   // Per-address rate limit — prevents inbox-bombing and Resend budget exhaustion
   const sendGate = await emailOtpSendLimiter.limit(`email_send_${normalized}`);
   if (!sendGate.success) {
-    return { success: false, error: 'Too many OTP requests. Try again in an hour.' };
+    return errorResponse(ErrorType.RATE_LIMIT, 'Too many OTP requests. Try again in an hour.');
   }
 
   const otp        = generateOTP();
@@ -187,7 +188,7 @@ export async function sendEmailOTP(email: string) {
     .where('expires', '>', oneHourAgo)
     .get();
   if (rateSnap.size >= MAX_OTP_PER_HOUR) {
-    return { success: false, error: 'Too many OTP requests. Try again in an hour.' };
+    return errorResponse(ErrorType.RATE_LIMIT, 'Too many OTP requests. Try again in an hour.');
   }
 
   // Doc ID uses the hash — doc ID is observable in error messages and logs,
@@ -206,9 +207,9 @@ export async function sendEmailOTP(email: string) {
       subject: 'Your nilamit.com Login Code',
       html: `<p>Your code: <strong>${otp}</strong> — valid 5 minutes.</p>`,
     });
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error('[sendEmailOTP] failed', e);
-    return { success: false, error: 'Failed to send email.' };
+    return errorResponse(ErrorType.INTERNAL, 'Failed to send email.');
   }
 }

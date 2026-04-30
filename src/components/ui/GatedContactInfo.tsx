@@ -38,7 +38,7 @@ export function GatedContactInfo({
       if (result.success) {
         toast.success("অ্যাডভান্স সফল! তথ্য আনলক করা হয়েছে।");
       } else {
-        toast.error(result.error || "আনলক করতে ব্যর্থ হয়েছে।");
+        toast.error(result.error?.message || "আনলক করতে ব্যর্থ হয়েছে।");
       }
     });
   };

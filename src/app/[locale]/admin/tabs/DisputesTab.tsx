@@ -30,8 +30,12 @@ export function DisputesTab() {
     setLogLoading(true);
     setActiveAuctionTitle(title);
     try {
-      const logs = await getAdminCoordinationLog(auctionId);
-      setActiveLog(logs);
+      const res = await getAdminCoordinationLog(auctionId);
+      if (res.success && res.data) {
+        setActiveLog(res.data);
+      } else {
+        toast.error(res.error?.message || "Failed to fetch coordination log.");
+      }
     } catch {
       toast.error("Failed to fetch coordination log.");
     } finally {
@@ -43,7 +47,11 @@ export function DisputesTab() {
     setLoading(true);
     try {
       const res = await getAdminDisputes();
-      setDisputes(res as DisputeTransaction[]);
+      if (res.success && res.data) {
+        setDisputes(res.data as DisputeTransaction[]);
+      } else {
+        toast.error(res.error?.message || "Failed to load disputes");
+      }
     } catch {
       toast.error("Failed to load disputes");
     } finally {
@@ -61,9 +69,13 @@ export function DisputesTab() {
 
     startTransition(async () => {
       try {
-        await resolveAdminDispute(id, resolution);
-        toast.success(`Dispute resolved: ${actionLabel}`);
-        setDisputes(prev => prev.filter(d => d.id !== id));
+        const res = await resolveAdminDispute(id, resolution);
+        if (res.success) {
+          toast.success(`Dispute resolved: ${actionLabel}`);
+          setDisputes(prev => prev.filter(d => d.id !== id));
+        } else {
+          toast.error(res.error?.message || "Failed to resolve dispute");
+        }
       } catch (error) {
         toast.error((error as Error).message || "Failed to resolve dispute");
       }

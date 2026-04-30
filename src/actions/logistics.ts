@@ -2,19 +2,13 @@
 
 import { db } from '@/lib/db';
 import { log } from '@/lib/logger';
-
-interface LogisticsResponse {
-  success: boolean;
-  trackingId?: string;
-  labelUrl?: string;
-  error?: string;
-}
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 /**
  * Mocks an integration with a local Bangladeshi courier API (e.g., Pathao or RedX).
  * In a real scenario, this would POST to their API with seller/buyer addresses and item details.
  */
-export async function createLogisticsOrder(auctionId: string, sellerId: string, buyerId: string): Promise<LogisticsResponse> {
+export async function createLogisticsOrder(auctionId: string, sellerId: string, buyerId: string) {
   try {
     const [sellerSnap, buyerSnap] = await Promise.all([
       db.collection('users').doc(sellerId).get(),
@@ -26,7 +20,7 @@ export async function createLogisticsOrder(auctionId: string, sellerId: string, 
 
     if (!buyer?.address || !seller?.address) {
       log.warn(`Logistics deferred for ${auctionId}: Missing addresses`);
-      return { success: false, error: 'ADDRESS_REQUIRED' };
+      return errorResponse(ErrorType.VALIDATION, 'ADDRESS_REQUIRED', 'ADDRESS_REQUIRED');
     }
     
     const trackingId = `NLM-${Date.now().toString(36).toUpperCase()}`;
@@ -46,10 +40,10 @@ export async function createLogisticsOrder(auctionId: string, sellerId: string, 
 
     log.info(`Logistics order created for auction ${auctionId}`, { trackingId });
 
-    return { success: true, trackingId, labelUrl };
+    return successResponse({ trackingId, labelUrl });
   } catch (error) {
     const e = error as Error;
     log.error('Logistics initialization error:', e);
-    return { success: false, error: e.message };
+    return errorResponse(ErrorType.INTERNAL, e.message);
   }
 }

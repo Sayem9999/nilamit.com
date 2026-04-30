@@ -8,13 +8,14 @@ import { recalculateUserReputation } from '@/lib/reputation';
 import { requireAdmin } from '@/lib/admin-guard';
 import { log } from '@/lib/logger';
 import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 export async function raiseDispute(transactionId: string, reason: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   const parsed = raiseDisputeSchema.safeParse({ transactionId, reason });
-  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
 
   const disputeRef = db.collection('disputes').doc(transactionId);
   const escrowRef  = db.collection('escrowTransactions').doc(transactionId);
@@ -41,10 +42,10 @@ export async function raiseDispute(transactionId: string, reason: string) {
     });
 
     revalidatePath('/dashboard/escrow');
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error('[dispute] raiseDispute failed', e);
-    return { success: false, error: e instanceof Error ? e.message : 'Failed to raise dispute.' };
+    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Failed to raise dispute.');
   }
 }
 
@@ -90,10 +91,10 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
 
     revalidatePath('/admin/disputes');
     revalidatePath('/dashboard/escrow');
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error('[dispute] resolveDispute failed', e);
-    return { success: false, error: e instanceof Error ? e.message : 'Resolution failed.' };
+    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Resolution failed.');
   }
 }
 
@@ -131,10 +132,10 @@ export async function adminRefundEscrow(transactionId: string, reason: string) {
 
     log.info(`[Admin] Transaction ${transactionId} refunded. Reason: ${reason}`);
     revalidatePath('/admin/escrow');
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error('[dispute] adminRefundEscrow failed', e);
-    return { success: false, error: e instanceof Error ? e.message : 'Refund failed.' };
+    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Refund failed.');
   }
 }
 

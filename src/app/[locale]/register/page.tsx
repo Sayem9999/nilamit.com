@@ -34,7 +34,7 @@ export default function RegisterPage() {
         setStep("otp");
         setResendTimer(60);
       } else {
-        setError(result.error || t("errorGeneric"));
+        setError(result.error?.message || t("errorGeneric"));
       }
     });
   };
@@ -68,7 +68,7 @@ export default function RegisterPage() {
         if (result.success) {
           setSuccess(true);
         } else {
-          setError(result.error || t("errorGeneric"));
+          setError(result.error?.message || t("errorGeneric"));
         }
       } else {
         // Email Signup Path
@@ -83,7 +83,7 @@ export default function RegisterPage() {
         if (result.success) {
           setSuccess(true);
         } else {
-          setError(result.error || t("errorGeneric"));
+          setError(result.error?.message || t("errorGeneric"));
         }
       }
     });

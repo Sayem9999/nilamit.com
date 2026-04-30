@@ -6,6 +6,7 @@ import { AuctionStatus, type User } from '@/types';
 import { recalculateUserReputation } from '@/lib/reputation';
 import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 /**
  * Admin Dashboard Core Stats
@@ -50,15 +51,21 @@ export async function getAdminStats() {
     return sum + Number(doc.data().commissionEarned ?? 0);
   }, 0);
 
-  return {
-    totalUsers: userCountSnap.data().count,
-    verifiedUsers: verifiedUserCountSnap.data().count,
-    totalAuctions: totalAuctionCountSnap.data().count,
-    activeAuctions: activeAuctionCountSnap.data().count,
-    totalBids: bidCountSnap.data().count,
-    totalRevenue,
-    recentUsers,
-  };
+  try {
+    const stats = {
+      totalUsers: userCountSnap.data().count,
+      verifiedUsers: verifiedUserCountSnap.data().count,
+      totalAuctions: totalAuctionCountSnap.data().count,
+      activeAuctions: activeAuctionCountSnap.data().count,
+      totalBids: bidCountSnap.data().count,
+      totalRevenue,
+      recentUsers,
+    };
+    return successResponse(stats);
+  } catch (e) {
+    log.error('[admin] getAdminStats failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch admin stats');
+  }
 }
 
 /**
@@ -87,7 +94,7 @@ export async function adminToggleVerification(userId: string) {
   });
 
   revalidatePath('/admin');
-  return { success: true, isVerifiedSeller: next };
+  return successResponse({ isVerifiedSeller: next });
 }
 
 // ─── Disputes & Treasury ────────────────────────────────────────────────────
@@ -198,12 +205,18 @@ export async function getAdminDisputes() {
     ),
   ]);
 
-  return hydratedRows.map((row, i) => ({
-    ...row,
-    dispute: disputeSnaps[i].empty
-      ? null
-      : { reason: (disputeSnaps[i].docs[0].data().reason as string) ?? '' },
-  }));
+  try {
+    const data = hydratedRows.map((row, i) => ({
+      ...row,
+      dispute: disputeSnaps[i].empty
+        ? null
+        : { reason: (disputeSnaps[i].docs[0].data().reason as string) ?? '' },
+    }));
+    return successResponse(data);
+  } catch (e) {
+    log.error('[admin] getAdminDisputes failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch disputes');
+  }
 }
 
 /**
@@ -259,10 +272,10 @@ export async function resolveAdminDispute(transactionId: string, resolution: 'RE
     await recalculateUserReputation(result.buyerId);
 
     revalidatePath('/admin');
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error('resolveAdminDispute failed', e, { transactionId, resolution });
-    return { success: false, error: e instanceof Error ? e.message : 'Resolution failed' };
+    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Resolution failed');
   }
 }
 
@@ -280,19 +293,25 @@ export async function getAdminCoordinationLog(auctionId: string) {
     .limit(200)
     .get();
 
-  return messagesSnap.docs.map((d) => {
-    const data = d.data();
-    const createdAtRaw = data.createdAt as { toDate?: () => Date } | Date;
-    const createdAt = createdAtRaw instanceof Date ? createdAtRaw : createdAtRaw?.toDate?.() ?? new Date();
-    return {
-      id: d.id,
-      content: (data.content as string) ?? '',
-      senderId: (data.senderId as string) ?? 'system',
-      isSystemMessage: Boolean(data.isSystemMessage),
-      createdAt,
-      imageUrl: (data.imageUrl as string | null) ?? null,
-    };
-  });
+  try {
+    const data = messagesSnap.docs.map((d) => {
+      const data = d.data();
+      const createdAtRaw = data.createdAt as { toDate?: () => Date } | Date;
+      const createdAt = createdAtRaw instanceof Date ? createdAtRaw : createdAtRaw?.toDate?.() ?? new Date();
+      return {
+        id: d.id,
+        content: (data.content as string) ?? '',
+        senderId: (data.senderId as string) ?? 'system',
+        isSystemMessage: Boolean(data.isSystemMessage),
+        createdAt,
+        imageUrl: (data.imageUrl as string | null) ?? null,
+      };
+    });
+    return successResponse(data);
+  } catch (e) {
+    log.error('[admin] getAdminCoordinationLog failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch coordination log');
+  }
 }
 
 /**
@@ -309,7 +328,14 @@ export async function getTreasuryAudit() {
     .get();
 
   const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
-  return batchHydrateEscrowRows(txDocs);
+
+  try {
+    const data = await batchHydrateEscrowRows(txDocs);
+    return successResponse(data);
+  } catch (e) {
+    log.error('[admin] getTreasuryAudit failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch treasury audit');
+  }
 }
 
 /**
@@ -325,5 +351,12 @@ export async function getAdminActiveEscrows() {
     .get();
 
   const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
-  return batchHydrateEscrowRows(txDocs);
+
+  try {
+    const data = await batchHydrateEscrowRows(txDocs);
+    return successResponse(data);
+  } catch (e) {
+    log.error('[admin] getAdminActiveEscrows failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch active escrows');
+  }
 }

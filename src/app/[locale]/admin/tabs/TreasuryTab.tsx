@@ -32,12 +32,16 @@ export function TreasuryTab() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [auditData, escrowData] = await Promise.all([
+      const [auditRes, escrowRes] = await Promise.all([
         getTreasuryAudit(),
         getAdminActiveEscrows()
       ]);
-      setLogs(auditData as TreasuryLog[]);
-      setActiveEscrows(escrowData as ActiveEscrow[]);
+      if (auditRes.success && auditRes.data) {
+        setLogs(auditRes.data as TreasuryLog[]);
+      }
+      if (escrowRes.success && escrowRes.data) {
+        setActiveEscrows(escrowRes.data as ActiveEscrow[]);
+      }
     } catch (e: unknown) {
       console.error(e);
       toast.error("Failed to load treasury data");
@@ -58,6 +62,8 @@ export function TreasuryTab() {
       if (res.success) {
         toast.success(`Escrow ${resolution.toLowerCase()}ed successfully`);
         setActiveEscrows(prev => prev.filter(e => e.id !== id));
+      } else {
+        toast.error(res.error?.message || "Resolution failed");
       }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Resolution failed");

@@ -36,7 +36,7 @@ export default function PriceAlertButton({
       );
       setIsSetting(false);
     } else {
-      toast.error(result.error || "Failed to set alert");
+      toast.error(result.error?.message || "Failed to set alert");
     }
   };
 

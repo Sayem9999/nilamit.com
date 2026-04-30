@@ -74,8 +74,10 @@ export function MetricsTab() {
     let mounted = true;
     const load = async () => {
       try {
-        const data = await getKeyMetrics();
-        if (mounted) setMetrics(data);
+        const res = await getKeyMetrics();
+        if (mounted && res.success && res.data) {
+          setMetrics(res.data);
+        }
       } catch {
         // User not admin or error
       }

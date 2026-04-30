@@ -13,7 +13,6 @@ import {
   ChevronRight,
   Trophy
 } from "lucide-react";
-import type { User } from "@/types";
 
 export default async function DashboardPage({
   params,
@@ -31,7 +30,9 @@ export default async function DashboardPage({
     redirect(`/${locale}/login?callbackUrl=/${locale}/dashboard`);
   }
 
-  const configFromDb = await getSystemConfig();
+  const configRes = await getSystemConfig();
+  const configFromDb = configRes.success ? configRes.data : null;
+
   const systemConfig = {
     heroTitle: configFromDb?.heroTitle || t("heroTitle"),
     heroSubtitle: configFromDb?.heroSubtitle || t("heroSubtitle"),

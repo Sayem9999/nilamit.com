@@ -46,13 +46,13 @@ export function WatchlistButton({
       const result = await toggleWatchlist(auctionId);
       if (!result.success) {
         setIsWatchlisted(previous);
-        if (result.error !== "Unauthorized") {
-          toast.error(result.error || "Failed to update watchlist");
+        if (result.error?.type !== "UNAUTHORIZED_ERROR") {
+          toast.error(result.error?.message || "Failed to update watchlist");
         }
-      } else if (result.watching !== undefined) {
-        setIsWatchlisted(result.watching);
+      } else if (result.data?.watching !== undefined) {
+        setIsWatchlisted(result.data.watching);
         toast.success(
-          result.watching
+          result.data.watching
             ? "Added to watchlist"
             : "Removed from watchlist",
         );

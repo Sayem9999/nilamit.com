@@ -16,8 +16,12 @@ export function VerificationToggle({ userId, initialStatus }: VerificationToggle
   const handleToggle = async () => {
     setIsLoading(true);
     try {
-      await adminToggleVerification(userId);
-      setIsVerified(!isVerified);
+      const res = await adminToggleVerification(userId);
+      if (res.success) {
+        setIsVerified(!!res.data?.isVerifiedSeller);
+      } else {
+        alert(res.error?.message || 'Verification toggle failed');
+      }
     } catch {
       alert('Verification toggle failed');
     } finally {

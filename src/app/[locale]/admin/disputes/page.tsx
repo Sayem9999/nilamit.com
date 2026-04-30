@@ -66,7 +66,7 @@ export default function AdminDisputesPage() {
         toast.success("Dispute resolved successfully.");
         fetchDisputes();
       } else {
-        toast.error(res.error || "Failed to resolve dispute.");
+        toast.error(res.error?.message || "Failed to resolve dispute.");
       }
     });
   };

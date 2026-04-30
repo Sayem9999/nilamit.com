@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
         setStep("otp");
         setResendTimer(60);
       } else {
-        setError(result.error || t("errorGeneric"));
+        setError(result.error?.message || t("errorGeneric"));
       }
     });
   };
@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
       if (result.success) {
         setSuccess(true);
       } else {
-        setError(result.error || t("errorGeneric"));
+        setError(result.error?.message || t("errorGeneric"));
       }
     });
   };

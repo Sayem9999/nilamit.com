@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth';
 import { filterPII } from '@/lib/pii-filter';
 import { CATEGORIES } from '@/types';
 import { log } from '@/lib/logger';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 const VALID_CATEGORIES = CATEGORIES.map((c) => c.slug);
 const MAX_BULK_ROWS    = 1000;
@@ -23,15 +24,15 @@ type BulkUploadRow = z.infer<typeof BulkRowSchema>;
 
 export async function processBulkUpload(fileName: string, rows: BulkUploadRow[]) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   if (rows.length > MAX_BULK_ROWS) {
-    return { success: false, error: `Bulk upload limited to ${MAX_BULK_ROWS} rows per file.` };
+    return errorResponse(ErrorType.VALIDATION, `Bulk upload limited to ${MAX_BULK_ROWS} rows per file.`);
   }
 
   const userSnap = await db.collection('users').doc(session.user.id).get();
   if (!userSnap.data()?.isVerifiedSeller) {
-    return { success: false, error: 'Only verified sellers can bulk upload.' };
+    return errorResponse(ErrorType.FORBIDDEN, 'Only verified sellers can bulk upload.');
   }
 
   const opId  = newId();
@@ -124,7 +125,7 @@ export async function processBulkUpload(fileName: string, rows: BulkUploadRow[])
 
   await opRef.update({ status: finalStatus, processedRows: processed, errors, updatedAt: new Date() });
 
-  return { success: true, processed, errors };
+  return successResponse({ processed, errors });
 }
 
 export async function getBulkOperations() {

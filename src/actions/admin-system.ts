@@ -5,6 +5,7 @@ import { Auction } from '@/types';
 import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 async function deleteCollection(name: string, batchSize = 100) {
   while (true) {
@@ -42,11 +43,11 @@ export async function adminWipeTestData() {
     ]);
 
     revalidatePath('/');
-    return { success: true, message: 'All auction data wiped successfully.' };
+    return successResponse({ message: 'All auction data wiped successfully.' });
   } catch (error: unknown) {
     const err = error as Error;
     log.error('Wipe Error', err);
-    return { success: false, error: 'Failed to wipe data: ' + err.message };
+    return errorResponse(ErrorType.INTERNAL, 'Failed to wipe data: ' + err.message);
   }
 }
 
@@ -95,10 +96,10 @@ export async function exportTransactionsCSV() {
       csv += row.join(',') + '\n';
     }
 
-    return { success: true, data: csv };
+    return successResponse({ data: csv });
   } catch (error: unknown) {
     const err = error as Error;
     log.error('CSV Export Error', err);
-    return { success: false, error: 'Failed to generate CSV: ' + err.message };
+    return errorResponse(ErrorType.INTERNAL, 'Failed to generate CSV: ' + err.message);
   }
 }

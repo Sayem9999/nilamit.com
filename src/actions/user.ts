@@ -8,17 +8,18 @@ import { sanitizeObject } from '@/lib/sanitizer';
 import { headers } from 'next/headers';
 import { log } from '@/lib/logger';
 import { updateProfileSchema, formatZodError } from '@/lib/schemas';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 export async function updateProfile(data: unknown) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Not authenticated.' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
   const parsed = updateProfileSchema.safeParse(data);
-  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
 
   const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success } = await apiLimiter.limit(`user_update_${session.user.id}_${ip}`);
-  if (!success) return { success: false, error: 'Too many requests. Please wait.' };
+  if (!success) return errorResponse(ErrorType.RATE_LIMIT, 'Too many requests. Please wait.');
 
   const sanitized = sanitizeObject(parsed.data);
   const update: Record<string, unknown> = { updatedAt: new Date() };
@@ -27,7 +28,7 @@ export async function updateProfile(data: unknown) {
 
   await db.collection('users').doc(session.user.id).update(update);
   const snap = await db.collection('users').doc(session.user.id).get();
-  return { success: true, user: docData<User>(snap) };
+  return successResponse({ user: docData<User>(snap) });
 }
 
 export async function getPublicProfile(userId: string) {
@@ -51,29 +52,29 @@ export async function getPublicProfile(userId: string) {
 
 export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Not authenticated.' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
   const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success } = await apiLimiter.limit(`mfs_link_${session.user.id}_${ip}`);
-  if (!success) return { success: false, error: 'Too many requests. Please wait.' };
+  if (!success) return errorResponse(ErrorType.RATE_LIMIT, 'Too many requests. Please wait.');
 
   const phoneRegex = /^01[3-9]\d{8}$/;
-  if (!phoneRegex.test(number)) return { success: false, error: 'Invalid Bangladeshi mobile number.' };
+  if (!phoneRegex.test(number)) return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladeshi mobile number.');
 
   try {
     const field = type === 'bkash' ? 'bkashNumber' : 'nagadNumber';
 
     const existing = await db.collection('users').where(field, '==', number).limit(1).get();
     if (!existing.empty && existing.docs[0].id !== session.user.id) {
-      return { success: false, error: `This number is already linked to another account.` };
+      return errorResponse(ErrorType.CONFLICT, 'This number is already linked to another account.');
     }
 
     await db.collection('users').doc(session.user.id).update({
       [field]: number, updatedAt: new Date(),
     });
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error(`[user] linkMFSAccount ${type}`, e);
-    return { success: false, error: `Failed to link ${type}.` };
+    return errorResponse(ErrorType.INTERNAL, `Failed to link ${type}.`);
   }
 }

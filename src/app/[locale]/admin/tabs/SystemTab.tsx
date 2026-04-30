@@ -17,10 +17,10 @@ export function SystemTab() {
       const result = await adminWipeTestData();
       if (result.success) {
         setStatus('success');
-        setMessage(result.message || 'Success');
+        setMessage(result.data?.message || 'Success');
       } else {
         setStatus('error');
-        setMessage(result.error || 'Failed to wipe data');
+        setMessage(result.error?.message || 'Failed to wipe data');
       }
     } catch (e: unknown) {
       setStatus('error');
@@ -35,8 +35,8 @@ export function SystemTab() {
     setIsExporting(true);
     try {
       const result = await exportTransactionsCSV();
-      if (result.success && result.data) {
-        const blob = new Blob([result.data], { type: 'text/csv' });
+      if (result.success && result.data?.data) {
+        const blob = new Blob([result.data.data], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -46,7 +46,7 @@ export function SystemTab() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert(result.error);
+        alert(result.error?.message || 'Export failed');
       }
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Export failed');

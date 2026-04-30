@@ -6,13 +6,14 @@ import { revalidatePath } from 'next/cache';
 import { AlertType, Alert } from '@/types';
 import { createAlertSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 export async function createAlert(data: unknown) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   const parsed = createAlertSchema.safeParse(data);
-  if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
+  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
   const { type, auctionId, thresholdPrice } = parsed.data;
 
   // Composite ID prevents duplicate alerts for the same user/auction/type
@@ -28,10 +29,10 @@ export async function createAlert(data: unknown) {
     };
     await db.collection('alerts').doc(docId).set(alert, { merge: true });
     revalidatePath('/');
-    return { success: true, alert };
+    return successResponse(alert);
   } catch (error) {
     log.error('[alerts] createAlert failed', error);
-    return { success: false, error: 'Failed to create alert' };
+    return errorResponse(ErrorType.INTERNAL, 'Failed to create alert');
   }
 }
 
@@ -83,38 +84,38 @@ export async function getUserAlerts() {
 
 export async function toggleAlert(alertId: string, isActive: boolean) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   try {
     const snap = await db.collection('alerts').doc(alertId).get();
-    if (!snap.exists) return { success: false, error: 'Alert not found' };
+    if (!snap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Alert not found');
     // Ownership check — prevents any authenticated user from toggling others' alerts
-    if (snap.data()!.userId !== session.user.id) return { success: false, error: 'Unauthorized' };
+    if (snap.data()!.userId !== session.user.id) return errorResponse(ErrorType.FORBIDDEN, 'Unauthorized');
 
     await db.collection('alerts').doc(alertId).update({ isActive, updatedAt: new Date() });
     revalidatePath('/dashboard');
-    return { success: true };
+    return successResponse(null);
   } catch (error) {
     log.error('[alerts] toggleAlert failed', error);
-    return { success: false, error: 'Failed to toggle alert' };
+    return errorResponse(ErrorType.INTERNAL, 'Failed to toggle alert');
   }
 }
 
 export async function deleteAlert(alertId: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   try {
     const snap = await db.collection('alerts').doc(alertId).get();
-    if (!snap.exists) return { success: false, error: 'Alert not found' };
-    if (snap.data()!.userId !== session.user.id) return { success: false, error: 'Unauthorized' };
+    if (!snap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Alert not found');
+    if (snap.data()!.userId !== session.user.id) return errorResponse(ErrorType.FORBIDDEN, 'Unauthorized');
 
     await db.collection('alerts').doc(alertId).delete();
     revalidatePath('/dashboard');
-    return { success: true };
+    return successResponse(null);
   } catch (error) {
     log.error('[alerts] deleteAlert failed', error);
-    return { success: false, error: 'Failed to delete alert' };
+    return errorResponse(ErrorType.INTERNAL, 'Failed to delete alert');
   }
 }
 

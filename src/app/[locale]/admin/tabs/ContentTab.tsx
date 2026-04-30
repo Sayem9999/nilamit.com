@@ -21,7 +21,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
   const handleSaveConfig = async () => {
     setIsSaving(true);
     try {
-      await updateSystemConfig({
+      const res = await updateSystemConfig({
         heroTitle: config.heroTitle ?? undefined,
         heroSubtitle: config.heroSubtitle ?? undefined,
         heroImage: config.heroImage ?? undefined,
@@ -30,7 +30,11 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
         treasuryBkash: config.treasuryBkash ?? undefined,
         treasuryNagad: config.treasuryNagad ?? undefined,
       });
-      alert('Content updated successfully!');
+      if (res.success) {
+        alert('Content updated successfully!');
+      } else {
+        alert(res.error?.message || 'Failed to update content');
+      }
     } catch (e: unknown) {
       alert('Failed to update content: ' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
@@ -49,6 +53,8 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
             } else {
                 setAuctions(prev => prev.filter(a => a.id !== id));
             }
+        } else {
+            alert(res.error?.message || 'Failed to toggle featured status');
         }
     } catch (e: unknown) {
         alert('Error: ' + (e instanceof Error ? e.message : 'Unknown error'));

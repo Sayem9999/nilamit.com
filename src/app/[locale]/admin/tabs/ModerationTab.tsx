@@ -40,9 +40,9 @@ export function ModerationTab() {
     const load = async () => {
       setLoading(true);
       const res = await getAdminReports(filter, page);
-      if (mounted && res.success) {
-        setReports((res.reports as unknown as AdminReport[]) || []);
-        setTotalPages(res.pages || 1);
+      if (mounted && res.success && res.data) {
+        setReports((res.data.reports as unknown as AdminReport[]) || []);
+        setTotalPages(res.data.pages || 1);
       }
       if (mounted) setLoading(false);
     };
@@ -55,8 +55,12 @@ export function ModerationTab() {
   const handleDismiss = (id: string) => {
     if (!confirm("Dismiss this report?")) return;
     startTransition(async () => {
-      await resolveReport(id, "DISMISSED");
-      setReports((prev) => prev.filter((r) => r.id !== id));
+      const res = await resolveReport(id, "DISMISSED");
+      if (res.success) {
+        setReports((prev) => prev.filter((r) => r.id !== id));
+      } else {
+        alert(res.error?.message || "Failed to dismiss report");
+      }
     });
   };
 
@@ -68,8 +72,12 @@ export function ModerationTab() {
     )
       return;
     startTransition(async () => {
-      await suspendAuction(auctionId, reportId, "Moderator action");
-      setReports((prev) => prev.filter((r) => r.id !== reportId));
+      const res = await suspendAuction(auctionId, reportId, "Moderator action");
+      if (res.success) {
+        setReports((prev) => prev.filter((r) => r.id !== reportId));
+      } else {
+        alert(res.error?.message || "Failed to suspend auction");
+      }
     });
   };
 

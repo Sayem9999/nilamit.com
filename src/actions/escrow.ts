@@ -10,13 +10,14 @@ import { recalculateUserReputation } from '@/lib/reputation';
 import { createLogisticsOrder } from './logistics';
 import { log } from '@/lib/logger';
 import { randomUUID } from 'crypto';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 /**
  * Transitions PENDING → HELD (buyer confirms advance payment).
  */
 export async function payEscrowAdvance(transactionId: string, providerRef?: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   try {
     const result = await db.runTransaction(async (tx) => {
@@ -78,10 +79,10 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
     });
 
     revalidatePath('/dashboard');
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error('[escrow] payEscrowAdvance failed', e);
-    return { success: false, error: e instanceof Error ? e.message : 'Internal error' };
+    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Internal error', e instanceof Error ? e.message : undefined);
   }
 }
 
@@ -90,7 +91,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
  */
 export async function confirmItemReceived(transactionId: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   try {
     const result = await db.runTransaction(async (tx) => {
@@ -124,10 +125,10 @@ export async function confirmItemReceived(transactionId: string) {
     }
 
     revalidatePath('/dashboard');
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error('[escrow] confirmItemReceived failed', e);
-    return { success: false, error: 'Internal error' };
+    return errorResponse(ErrorType.INTERNAL, 'Internal error');
   }
 }
 
@@ -136,10 +137,10 @@ export async function confirmItemReceived(transactionId: string) {
  */
 export async function markAsShipped(transactionId: string, trackingNumber: string) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   if (!trackingNumber || trackingNumber.trim().length === 0 || trackingNumber.length > 128) {
-    return { success: false, error: 'Invalid tracking number.' };
+    return errorResponse(ErrorType.VALIDATION, 'Invalid tracking number.');
   }
   const safeTracking = trackingNumber.trim();
 
@@ -169,7 +170,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
     auctionId = result.auctionId;
   } catch (e) {
     log.error('[escrow] markAsShipped failed', e);
-    return { success: false, error: e instanceof Error ? e.message : 'Failed to mark as shipped.' };
+    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Failed to mark as shipped.');
   }
 
   await rtdbPush(RTDB_PATHS.userNotifications(buyerId), {
@@ -178,7 +179,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
   });
 
   revalidatePath('/dashboard');
-  return { success: true };
+  return successResponse(null);
 }
 
 /**
@@ -187,7 +188,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
 export async function refundEscrow(transactionId: string) {
   const adminSession = await requireAdmin().catch(() => null);
   if (!adminSession) {
-    return { success: false, error: 'Access Denied: Admin intervention required for refunds.' };
+    return errorResponse(ErrorType.FORBIDDEN, 'Access Denied: Admin intervention required for refunds.');
   }
 
   try {
@@ -218,9 +219,9 @@ export async function refundEscrow(transactionId: string) {
     });
 
     revalidatePath('/dashboard');
-    return { success: true };
+    return successResponse(null);
   } catch (e) {
     log.error('[escrow] refundEscrow failed', e);
-    return { success: false, error: e instanceof Error ? e.message : 'Refund failed' };
+    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Refund failed');
   }
 }

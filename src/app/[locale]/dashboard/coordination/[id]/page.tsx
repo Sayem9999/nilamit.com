@@ -22,7 +22,8 @@ export default async function CoordinationPage({
     redirect(`/${locale}/login`);
   }
 
-  const systemConfig = await getSystemConfig();
+  const configRes = await getSystemConfig();
+  const systemConfig = configRes.success ? configRes.data : null;
 
   const userId = session.user.id;
 

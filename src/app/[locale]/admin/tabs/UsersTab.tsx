@@ -48,9 +48,9 @@ export function UsersTab() {
     const load = async () => {
       setLoading(true);
       const res = await getAdminUsers({ cursor: currentCursor, limit: 20, search: debouncedSearch });
-      if (mounted && res.success) {
-        setUsers((res.users as unknown as AdminUser[]) || []);
-        setNextCursor(res.nextCursor ?? null);
+      if (mounted && res.success && res.data) {
+        setUsers((res.data.users as unknown as AdminUser[]) || []);
+        setNextCursor(res.data.nextCursor ?? null);
       }
       if (mounted) setLoading(false);
     };
@@ -70,6 +70,8 @@ export function UsersTab() {
             u.id === userId ? { ...u, isVerifiedSeller: !currentStatus } : u,
           ),
         );
+      } else {
+        alert(result.error?.message || "Failed to update verified status");
       }
     });
   };
@@ -85,6 +87,8 @@ export function UsersTab() {
             u.id === userId ? { ...u, isBanned: !isBanned } : u,
           ),
         );
+      } else {
+        alert(result.error?.message || "Failed to update ban status");
       }
     });
   };

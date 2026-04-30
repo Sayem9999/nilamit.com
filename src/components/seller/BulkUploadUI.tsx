@@ -50,10 +50,10 @@ export default function BulkUploadUI() {
     setIsUploading(false);
 
     if (res.success) {
-      setResult({ total: dummyRows.length, processed: res.processed || 0, errorCount: res.errors?.length || 0 });
+      setResult({ total: dummyRows.length, processed: res.data?.processed || 0, errorCount: res.data?.errors?.length || 0 });
       toast.success("Bulk upload processed!");
     } else {
-      toast.error(res.error || "Upload failed");
+      toast.error(res.error?.message || "Upload failed");
     }
   };
 

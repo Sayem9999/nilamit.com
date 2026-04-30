@@ -93,7 +93,7 @@ export default function ProfilePage() {
         setMsg(type === 'bkash' ? t_prof("bkashSuccess") : t_prof("nagadSuccess"));
         await update();
       } else {
-        setMsg(res.error || t_prof("errorGeneric"));
+        setMsg(res.error?.message || t_prof("errorGeneric"));
       }
     });
   };
@@ -106,7 +106,7 @@ export default function ProfilePage() {
         setPhoneStep("otp");
         setMsg(t_prof("otpSent"));
       } else {
-        setMsg(res.error || t_prof("errorGeneric"));
+        setMsg(res.error?.message || t_prof("errorGeneric"));
       }
     });
   };
@@ -119,7 +119,7 @@ export default function ProfilePage() {
         setPhoneStep("idle");
         setMsg(t_prof("verificationSuccess"));
         await update();
-      } else setMsg(res.error || t_prof("errorGeneric"));
+      } else setMsg(res.error?.message || t_prof("errorGeneric"));
     });
   };
 

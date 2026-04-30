@@ -12,7 +12,7 @@ import { MetricsTab } from "./tabs/MetricsTab";
 import { DisputesTab } from "./tabs/DisputesTab";
 import { TreasuryTab } from "./tabs/TreasuryTab";
 import { Users, Package, TrendingUp, DollarSign } from "lucide-react";
-import { SystemConfig, Auction } from "@/types";
+import { SystemConfig } from "@/types";
 
 function OverviewTab({
   stats,
@@ -151,20 +151,32 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const [systemConfig, featuredAuctions, adminStats] = await Promise.all([
+  const [systemConfigRes, featuredAuctionsRes, adminStatsRes] = await Promise.all([
     getSystemConfig(),
     getFeaturedAuctions(),
     getAdminStats(),
   ]);
 
+  const systemConfig = systemConfigRes.success ? systemConfigRes.data : null;
+  const featuredAuctions = featuredAuctionsRes.success ? featuredAuctionsRes.data : [];
+  const adminStats = adminStatsRes.success ? adminStatsRes.data : {
+    totalUsers: 0,
+    verifiedUsers: 0,
+    totalAuctions: 0,
+    activeAuctions: 0,
+    totalBids: 0,
+    totalRevenue: 0,
+    recentUsers: [],
+  };
+
   return (
     <AdminLayout
-      overview={<OverviewTab stats={adminStats} />}
+      overview={<OverviewTab stats={adminStats as Parameters<typeof OverviewTab>[0]['stats']} />}
       moderation={<ModerationTab />}
       content={
         <ContentTab
           initialConfig={systemConfig as SystemConfig}
-          featuredAuctions={featuredAuctions as Auction[]}
+          featuredAuctions={featuredAuctions as Parameters<typeof ContentTab>[0]['featuredAuctions']}
         />
       }
       system={<SystemTab />}

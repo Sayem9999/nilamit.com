@@ -68,7 +68,7 @@ export function EscrowActionCard({
         toast.success(t("advanceSuccess"));
         router.refresh();
       } else {
-        toast.error(result.error || t("paymentFailed"));
+        toast.error(result.error?.message || t("paymentFailed"));
       }
     } catch {
       toast.error(t("paymentFailed"));
@@ -86,7 +86,7 @@ export function EscrowActionCard({
       toast.success(t("orderComplete"));
       router.refresh();
     } else {
-      toast.error(result.error || t("confirmFailed"));
+      toast.error(result.error?.message || t("confirmFailed"));
     }
     setLoading(false);
   };
@@ -107,7 +107,7 @@ export function EscrowActionCard({
       toast.success(t("disputeSubmitted"));
       router.refresh();
     } else {
-      toast.error(result.error || t("disputeFailed"));
+      toast.error(result.error?.message || t("disputeFailed"));
     }
     setLoading(false);
   };
