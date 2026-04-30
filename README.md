@@ -21,7 +21,7 @@
 | Storage | Firebase Storage — auction images, chat attachments |
 | Auth | Auth.js v5 — Email/Password + Phone OTP + Google OAuth |
 | Rate Limiting | Upstash Redis (fail-closed in production) |
-| Monitoring | Sentry (errors + performance) |
+| Monitoring | Sentry (errors + performance + session replay) |
 | i18n | next-intl — English and Bengali |
 | Styling | Tailwind CSS 4 + shadcn/ui + Framer Motion |
 | SMS | Pluggable — GreenWeb (production) or Console (dev) |
@@ -100,7 +100,12 @@ Copy `.env.example` to `.env.local` and fill in all values. Required variables:
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token |
 | `CRON_SECRET` | Secret for authenticating cron job requests |
 
-Optional: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SENTRY_DSN`, `RESEND_API_KEY`, `GREENWEB_TOKEN`
+| `SENTRY_DSN` | Sentry Data Source Name |
+| `SENTRY_AUTH_TOKEN` | Sentry authentication token (for source map uploads) |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID (optional) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret (optional) |
+| `RESEND_API_KEY` | Resend API key for emails (optional) |
+| `GREENWEB_TOKEN` | GreenWeb SMS API token (optional) |
 
 ---
 
