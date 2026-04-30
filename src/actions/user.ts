@@ -2,13 +2,13 @@
 
 import { db, docData, toSellerPublic } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { User } from '@/types';
+import { User, PublicProfile } from '@/types';
 import { apiLimiter } from '@/lib/ratelimit';
 import { sanitizeObject } from '@/lib/sanitizer';
 import { headers } from 'next/headers';
 import { log } from '@/lib/logger';
 import { updateProfileSchema, formatZodError } from '@/lib/schemas';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
 export async function updateProfile(data: unknown) {
   const session = await auth();
@@ -31,23 +31,29 @@ export async function updateProfile(data: unknown) {
   return successResponse({ user: docData<User>(snap) });
 }
 
-export async function getPublicProfile(userId: string) {
-  // Use aggregation counts instead of fetching all docs — one read per 1000 docs
-  const [userSnap, auctionCountSnap, bidCountSnap] = await Promise.all([
-    db.collection('users').doc(userId).get(),
-    db.collection('auctions').where('sellerId', '==', userId).count().get(),
-    db.collection('bids').where('bidderId', '==', userId).count().get(),
-  ]);
 
-  if (!userSnap.exists) return null;
+export async function getPublicProfile(userId: string): Promise<ServiceResponse<PublicProfile | null>> {
+  try {
+    // Use aggregation counts instead of fetching all docs — one read per 1000 docs
+    const [userSnap, auctionCountSnap, bidCountSnap] = await Promise.all([
+      db.collection('users').doc(userId).get(),
+      db.collection('auctions').where('sellerId', '==', userId).count().get(),
+      db.collection('bids').where('bidderId', '==', userId).count().get(),
+    ]);
 
-  return {
-    ...toSellerPublic(userId, userSnap.data()),
-    _count: {
-      auctionsAsSeller: auctionCountSnap.data().count,
-      bids:             bidCountSnap.data().count,
-    },
-  };
+    if (!userSnap.exists) return successResponse(null);
+
+    return successResponse({
+      ...toSellerPublic(userId, userSnap.data()),
+      _count: {
+        auctionsAsSeller: auctionCountSnap.data().count,
+        bids:             bidCountSnap.data().count,
+      },
+    });
+  } catch (e) {
+    log.error('[user] getPublicProfile failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch profile');
+  }
 }
 
 export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string) {

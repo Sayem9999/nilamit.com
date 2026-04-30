@@ -4,8 +4,7 @@ export const dynamic = "force-dynamic";
 import AuctionCard from "@/components/auction/AuctionCard";
 import Link from "next/link";
 import { Search as SearchIcon, SlidersHorizontal, MapPin } from "lucide-react";
-import { CATEGORIES, LOCATIONS } from "@/types";
-import type { AuctionStatus } from "@/types";
+import { CATEGORIES, LOCATIONS, AuctionWithSeller, AuctionStatus } from "@/types";
 import { getTranslations } from "next-intl/server";
 
 interface Props {
@@ -28,7 +27,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
   const tCat = await getTranslations("Categories");
   const tLoc = await getTranslations("Locations");
 
-  const { auctions, total, pages } = await getAuctions({
+  const response = await getAuctions({
     category: params.category,
     search: params.search,
     sortBy:
@@ -40,6 +39,10 @@ export default async function AuctionsPage({ searchParams }: Props) {
     location: params.location,
     limit: 12,
   });
+
+  const { auctions, total, pages } = response.success 
+    ? response.data 
+    : { auctions: [] as AuctionWithSeller[], total: 0, pages: 0 };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -195,7 +198,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
-              {auctions.map((auction) => (
+              {auctions.map((auction: AuctionWithSeller) => (
                 <AuctionCard key={auction.id} auction={auction} />
               ))}
             </div>

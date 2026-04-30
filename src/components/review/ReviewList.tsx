@@ -31,8 +31,10 @@ export function ReviewList({ userId }: ReviewListProps) {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const data = await getUserReviews(userId);
-        setReviews(data);
+        const response = await getUserReviews(userId);
+        if (response.success) {
+          setReviews(response.data as unknown as Review[]);
+        }
       } catch (err) {
         console.error("Failed to fetch reviews:", err);
       } finally {

@@ -12,6 +12,7 @@ import { log } from '@/lib/logger';
 
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { placeBidSchema, formatZodError } from '@/lib/schemas';
+import { BidWithBidder } from '@/types';
 
 async function requireBiddingPrivileges(userId: string): Promise<ServiceResponse<Record<string, unknown>>> {
   const userSnap = await db.collection('users').doc(userId).get();
@@ -169,11 +170,12 @@ export async function executeBuyItNow(auctionId: string) {
 /**
  * Server Action: Fetch bid history for an auction
  */
-export async function getAuctionBids(auctionId: string) {
+export async function getAuctionBids(auctionId: string): Promise<ServiceResponse<BidWithBidder[]>> {
   try {
-    return await BiddingService.getAuctionBids(auctionId);
+    const bids = await BiddingService.getAuctionBids(auctionId);
+    return successResponse(bids);
   } catch (error) {
     log.error('[Action] getAuctionBids failed', error);
-    return [];
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch bids');
   }
 }

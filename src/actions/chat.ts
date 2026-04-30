@@ -7,7 +7,8 @@ import { adminDB, rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { log } from '@/lib/logger';
 import { sendMessageSchema, formatZodError } from '@/lib/schemas';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { ChatData } from '@/types';
 
 export async function sendMessage(conversationId: string, content: string, imageUrl?: string) {
   const session = await auth();
@@ -70,14 +71,14 @@ export async function sendMessage(conversationId: string, content: string, image
   return successResponse({ id: msgId, content: filtered, createdAt: now });
 }
 
-export async function markAsRead(conversationId: string) {
+export async function markAsRead(conversationId: string): Promise<ServiceResponse<null>> {
   const session = await auth();
-  if (!session?.user?.id) return;
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   const convSnap = await db.collection('conversations').doc(conversationId).get();
-  if (!convSnap.exists) return;
+  if (!convSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Conversation not found');
   const conv = convSnap.data()!;
-  if (conv.buyerId !== session.user.id && conv.sellerId !== session.user.id) return;
+  if (conv.buyerId !== session.user.id && conv.sellerId !== session.user.id) return errorResponse(ErrorType.FORBIDDEN, 'Forbidden');
 
   const unreadSnap = await db.collection('messages')
     .where('conversationId', '==', conversationId)
@@ -88,18 +89,20 @@ export async function markAsRead(conversationId: string) {
   const batch = db.batch();
   unreadSnap.docs.forEach(d => batch.update(d.ref, { isRead: true }));
   if (!unreadSnap.empty) await batch.commit();
+  return successResponse(null);
 }
 
-export async function getAuctionChat(auctionId: string) {
+
+export async function getAuctionChat(auctionId: string): Promise<ServiceResponse<ChatData | null>> {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
   const convSnap = await db.collection('conversations').doc(auctionId).get();
-  if (!convSnap.exists) return null;
+  if (!convSnap.exists) return successResponse(null);
   const conv = convSnap.data()! as { buyerId: string; sellerId: string; auctionId: string; lastMessageAt: { toDate?: () => Date } | Date; createdAt: { toDate?: () => Date } | Date };
 
   // SECURITY FIX: authorize BEFORE fetching messages
-  if (conv.buyerId !== session.user.id && conv.sellerId !== session.user.id) return null;
+  if (conv.buyerId !== session.user.id && conv.sellerId !== session.user.id) return errorResponse(ErrorType.FORBIDDEN, 'Forbidden');
 
   const [messagesSnap, aSnap] = await Promise.all([
     db.collection('messages')
@@ -124,7 +127,6 @@ export async function getAuctionChat(auctionId: string) {
     };
   });
 
-  // Hydrate seller + winner for the recipient display in ChatInterface.
   const auction = aSnap.data() ?? {};
   const [sellerSnap, winnerSnap] = await Promise.all([
     auction.sellerId ? db.collection('users').doc(auction.sellerId).get() : Promise.resolve(null),
@@ -136,7 +138,7 @@ export async function getAuctionChat(auctionId: string) {
   const lastMessageAt = conv.lastMessageAt instanceof Date ? conv.lastMessageAt : conv.lastMessageAt?.toDate?.() ?? new Date();
   const createdAt = conv.createdAt instanceof Date ? conv.createdAt : conv.createdAt?.toDate?.() ?? new Date();
 
-  return {
+  return successResponse({
     id: convSnap.id,
     auctionId: conv.auctionId,
     buyerId: conv.buyerId,
@@ -155,5 +157,5 @@ export async function getAuctionChat(auctionId: string) {
         ? { name: (winner.name as string | null) ?? null, image: (winner.image as string | null) ?? null }
         : null,
     },
-  };
+  });
 }

@@ -43,13 +43,16 @@ import { getAuctionChat } from "@/actions/chat";
 import { Metadata } from "next";
 import Script from "next/script";
 import { getTranslations } from "next-intl/server";
+import { ErrorType, errorResponse } from "@/lib/errors";
+import { Bid } from "@/types";
 
 interface Props {
   params: Promise<{ id: string; locale: string }>;
 }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const auction = await getAuction(id) as AuctionWithBids | null;
+  const response = await getAuction(id);
+  const auction = response.success ? response.data as AuctionWithBids : null;
 
   if (!auction) return { title: "Auction Not Found" };
 
@@ -84,17 +87,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AuctionDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await auth();
-  const auction = await getAuction(id) as AuctionWithBids | null;
+  const response = await getAuction(id);
+  const auction = response.success ? response.data as AuctionWithBids : null;
   const t = await getTranslations("Auction");
   if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
 
-  // Each of these is independently optional for rendering — wrap individually
-  // so a single failure (e.g. chat unavailable) doesn't blow up the whole page.
-  const [bids, watched, chat] = await Promise.all([
-    getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return [] as Awaited<ReturnType<typeof getAuctionBids>>; }),
+  const [bidsRes, watched, chatRes, reviewRes] = await Promise.all([
+    getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     isWatched(id).catch((e) => { log.error('[AuctionDetail] isWatched failed', e); return false; }),
-    getAuctionChat(id).catch((e) => { log.error('[AuctionDetail] getAuctionChat failed', e); return null; }),
+    getAuctionChat(id).catch((e) => { log.error('[AuctionDetail] getAuctionChat failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
+    canReviewAuction(id).catch((e) => { log.error('[AuctionDetail] canReviewAuction failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
   ]);
+
+  const bids = (bidsRes.success ? bidsRes.data : []) as (Bid & { bidder: { id: string, name: string, image: string | null } })[];
+  const chat = chatRes.success ? chatRes.data : null;
+  const canReview = reviewRes.success ? reviewRes.data : false;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -208,7 +215,7 @@ export default async function AuctionDetailPage({ params }: Props) {
           {/* Review Section (Phase 3) */}
           {auction.status === AuctionStatus.SOLD && (
             <div className="mt-12 pt-12 border-t border-gray-100">
-              {(await canReviewAuction(id)) ? (
+              {canReview ? (
                 <div className="max-w-2xl">
                   <ReviewForm
                     auctionId={id}

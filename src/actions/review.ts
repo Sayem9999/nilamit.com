@@ -5,8 +5,8 @@ import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { filterPII } from '@/lib/pii-filter';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
-import type { Review } from '@/types';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import type { Review, ReviewWithDetails } from '@/types';
 
 export async function submitReview({
   auctionId, toId, rating, comment,
@@ -64,51 +64,62 @@ export async function submitReview({
   }
 }
 
-export async function getUserReviews(userId: string) {
-  const snap = await db.collection('reviews')
-    .where('toId', '==', userId)
-    .orderBy('createdAt', 'desc')
-    .limit(50)
-    .get();
 
-  const reviews = snapDocs<Review>(snap);
-  if (reviews.length === 0) return [];
+export async function getUserReviews(userId: string): Promise<ServiceResponse<ReviewWithDetails[]>> {
+  try {
+    const snap = await db.collection('reviews')
+      .where('toId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
 
-  // Batch-fetch reviewers and auctions in two round-trips instead of N+1
-  const fromIds    = [...new Set(reviews.map(r => r.fromId))];
-  const auctionIds = [...new Set(reviews.map(r => r.auctionId))];
+    const reviews = snapDocs<Review>(snap);
+    if (reviews.length === 0) return successResponse([]);
 
-  const [fromSnaps, auctionSnaps] = await Promise.all([
-    db.getAll(...fromIds.map(id => db.collection('users').doc(id))),
-    db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id))),
-  ]);
+    // Batch-fetch reviewers and auctions in two round-trips instead of N+1
+    const fromIds    = [...new Set(reviews.map(r => r.fromId))];
+    const auctionIds = [...new Set(reviews.map(r => r.auctionId))];
 
-  const fromMap = new Map(fromSnaps.map(s => [s.id, s.data() ?? {}]));
-  const aMap    = new Map(auctionSnaps.map(s => [s.id, s.data() ?? {}]));
+    const [fromSnaps, auctionSnaps] = await Promise.all([
+      db.getAll(...fromIds.map(id => db.collection('users').doc(id))),
+      db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id))),
+    ]);
 
-  return reviews.map(r => ({
-    ...r,
-    from: {
-      id:    r.fromId,
-      name:  (fromMap.get(r.fromId)?.name  as string | null) ?? 'User',
-      image: (fromMap.get(r.fromId)?.image as string | null) ?? null,
-    },
-    auction: {
-      title: (aMap.get(r.auctionId)?.title as string | undefined) ?? 'Archived Auction',
-    },
-  }));
+    const fromMap = new Map(fromSnaps.map(s => [s.id, s.data() ?? {}]));
+    const aMap    = new Map(auctionSnaps.map(s => [s.id, s.data() ?? {}]));
+
+    return successResponse(reviews.map(r => ({
+      ...r,
+      from: {
+        id:    r.fromId,
+        name:  (fromMap.get(r.fromId)?.name  as string | null) ?? 'User',
+        image: (fromMap.get(r.fromId)?.image as string | null) ?? null,
+      },
+      auction: {
+        title: (aMap.get(r.auctionId)?.title as string | undefined) ?? 'Archived Auction',
+      },
+    })));
+  } catch (e) {
+    log.error('[review] getUserReviews failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch reviews');
+  }
 }
 
-export async function canReviewAuction(auctionId: string) {
+export async function canReviewAuction(auctionId: string): Promise<ServiceResponse<boolean>> {
   const session = await auth();
-  if (!session?.user?.id) return false;
+  if (!session?.user?.id) return successResponse(false);
 
-  const aSnap = await db.collection('auctions').doc(auctionId).get();
-  if (!aSnap.exists) return false;
-  const a = aSnap.data()!;
-  if (a.status !== 'SOLD') return false;
-  if (a.sellerId !== session.user.id && a.winnerId !== session.user.id) return false;
+  try {
+    const aSnap = await db.collection('auctions').doc(auctionId).get();
+    if (!aSnap.exists) return successResponse(false);
+    const a = aSnap.data()!;
+    if (a.status !== 'SOLD') return successResponse(false);
+    if (a.sellerId !== session.user.id && a.winnerId !== session.user.id) return successResponse(false);
 
-  const existing = await db.collection('reviews').doc(`${session.user.id}_${auctionId}`).get();
-  return !existing.exists;
+    const existing = await db.collection('reviews').doc(`${session.user.id}_${auctionId}`).get();
+    return successResponse(!existing.exists);
+  } catch (e) {
+    log.error('[review] canReviewAuction failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to check review status');
+  }
 }

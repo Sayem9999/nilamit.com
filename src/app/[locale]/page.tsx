@@ -12,9 +12,9 @@ export default async function HomePage({
   const { locale } = await params;
 
   const [
-    { auctions: trendingAuctions },
-    { endingSoon, latestBids },
-    { auctions: featuredAuctions },
+    trendingRes,
+    specializedRes,
+    featuredRes,
     totalUsersSnap,
     totalBidsSnap,
     totalAuctionsSnap,
@@ -28,6 +28,11 @@ export default async function HomePage({
     db.collection('auctions').where('status', '==', 'ACTIVE').count().get(),
     db.collection('users').where('isVerifiedSeller', '==', true).count().get(),
   ]);
+
+  const trendingAuctions = trendingRes.success ? trendingRes.data!.auctions : [];
+  const endingSoon = specializedRes.success ? specializedRes.data!.endingSoon : [];
+  const latestBids = specializedRes.success ? specializedRes.data!.latestBids : [];
+  const featuredAuctions = featuredRes.success ? featuredRes.data!.auctions : [];
 
   const totalUsers = totalUsersSnap.data().count;
   const totalBids = totalBidsSnap.data().count;

@@ -257,8 +257,12 @@ export type AuctionWithSeller = Auction & {
   watchlist?: { userId: string }[];
 };
 
+export type BidWithBidder = Bid & { 
+  bidder: Pick<User, 'id' | 'name' | 'image'> 
+};
+
 export type AuctionWithBids = AuctionWithSeller & {
-  bids: (Bid & { bidder: Pick<User, 'id' | 'name' | 'image'> })[];
+  bids: BidWithBidder[];
   winner?: Pick<User, 'id' | 'name' | 'image'> | null;
   escrowTransaction?: (EscrowTransaction & { dispute?: Dispute | null }) | null;
 };
@@ -327,3 +331,32 @@ export const CATEGORIES = [
 ] as const;
 
 export type CategorySlug = typeof CATEGORIES[number]['slug'];
+
+export interface ChatData extends Conversation {
+  messages: Message[];
+  auction: {
+    id: string;
+    title: string;
+    seller: { name: string | null; image: string | null };
+    winner: { name: string | null; image: string | null } | null;
+  };
+}
+
+export interface ReviewWithDetails extends Review {
+  from: { name: string | null; image: string | null };
+  auction: { title: string };
+}
+
+export interface PublicProfile extends SellerPublic {
+  _count: {
+    auctionsAsSeller: number;
+    bids: number;
+  };
+}
+
+export interface AuctionListResponse {
+  auctions: AuctionWithSeller[];
+  total: number;
+  pages: number;
+  currentPage: number;
+}

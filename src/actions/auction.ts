@@ -5,7 +5,7 @@ import { db, snapDocs, toSellerPublic } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { AuctionService } from '@/services/auction/auction-service';
 import { ERROR_CODES } from '@/lib/constants';
-import type { Auction, AuctionFilters, AuctionWithSeller } from '@/types';
+import type { Auction, AuctionFilters, AuctionWithSeller, AuctionListResponse, BidWithAuction } from '@/types';
 import { AuctionStatus } from '@/types';
 import { createAuctionSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
@@ -14,24 +14,24 @@ import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/li
 /**
  * Server Action: Fetch auctions with optional filtering
  */
-export async function getAuctions(filters: AuctionFilters = {}) {
+export async function getAuctions(filters: AuctionFilters = {}): Promise<ServiceResponse<AuctionListResponse>> {
   const response = await AuctionService.list(filters);
   if (!response.success) {
     log.error('[Action] getAuctions failed', undefined, { error: response.error?.message });
-    return { auctions: [], total: 0, pages: 0, currentPage: 1 };
+    return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to fetch auctions');
   }
-  return response.data!;
+  return successResponse(response.data!);
 }
 
 /**
  * Server Action: Fetch a single auction by ID
  */
-export async function getAuction(id: string) {
+export async function getAuction(id: string): Promise<ServiceResponse<Auction | null>> {
   const response = await AuctionService.getById(id);
   if (!response.success) {
-    return null;
+    return errorResponse(ErrorType.NOT_FOUND, response.error?.message || 'Auction not found');
   }
-  return response.data!;
+  return successResponse(response.data!);
 }
 
 /**
@@ -70,14 +70,11 @@ export async function createAuction(input: unknown): Promise<ServiceResponse<{ a
 
 /**
  * Homepage specialty feeds — shown alongside trending/featured.
- *   - endingSoon: active auctions closest to closing (next 48h).
- *   - latestBids: most recent bids across the marketplace, hydrated with
- *     bidder name + auction title for the live ticker.
- *
- * Both lists are small (<= 8 items). If they grow, move to materialised
- * views or a cached aggregate document.
  */
-export async function getSpecializedFeeds() {
+export async function getSpecializedFeeds(): Promise<ServiceResponse<{ 
+  endingSoon: AuctionWithSeller[], 
+  latestBids: BidWithAuction[] 
+}>> {
   try {
     const nowTs = new Date();
     const in48h = new Date(nowTs.getTime() + 48 * 60 * 60 * 1000);
@@ -90,14 +87,12 @@ export async function getSpecializedFeeds() {
         .orderBy('endTime', 'asc')
         .limit(8)
         .get(),
-      // Fetch extra so we can discard bids whose auction is no longer ACTIVE after hydration
       db.collection('bids')
         .orderBy('createdAt', 'desc')
         .limit(25)
         .get(),
     ]);
 
-    // Hydrate endingSoon with seller
     const endingDocs = snapDocs<Auction>(endingSoonSnap);
     const sellerIds = [...new Set(endingDocs.map((a) => a.sellerId))];
     let sellerMap = new Map<string, ReturnType<typeof toSellerPublic>>();
@@ -112,7 +107,6 @@ export async function getSpecializedFeeds() {
       endTime: (a.endTime as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.endTime),
     })) as AuctionWithSeller[];
 
-    // Hydrate latestBids with bidder + auction title
     const bidDocs = latestBidsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as { id: string; amount: number; auctionId: string; bidderId: string; createdAt: FirebaseFirestore.Timestamp | Date }));
     const bidderIds = [...new Set(bidDocs.map((b) => b.bidderId))];
     const auctionIds = [...new Set(bidDocs.map((b) => b.auctionId))];
@@ -149,9 +143,9 @@ export async function getSpecializedFeeds() {
         };
       });
 
-    return { endingSoon, latestBids };
+    return successResponse({ endingSoon, latestBids });
   } catch (error) {
     log.error('[Action] getSpecializedFeeds failed', error);
-    return { endingSoon: [] as AuctionWithSeller[], latestBids: [] as Array<{ id: string; amount: number; createdAt: Date; bidder: { name: string | null }; auction: { id: string; title: string } }> };
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch feeds');
   }
 }

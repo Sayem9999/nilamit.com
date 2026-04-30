@@ -35,7 +35,8 @@ export default async function SearchPage({
   };
 
   const { getAuctions } = await import("@/actions/auction");
-  const { auctions } = await getAuctions(filters);
+  const response = await getAuctions(filters);
+  const auctions = response.success ? response.data.auctions : [];
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
@@ -173,7 +174,7 @@ export default async function SearchPage({
             {auctions.length > 0 ? (
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {auctions.map((auction) => (
+                  {auctions.map((auction: AuctionWithSeller) => (
                     <AuctionCard
                       key={auction.id}
                       auction={auction as unknown as AuctionWithSeller}
