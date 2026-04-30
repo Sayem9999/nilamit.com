@@ -51,10 +51,27 @@ export default async function DashboardPage({
   // Fetch relevant data based on tab
   let watchlistAuctions: AuctionWithSeller[] = [];
   let activeBids: AuctionWithSeller[] = [];
-  // Intentional any[]: this slot holds one of three shapes depending on
-  // currentTab (escrow list, conversations list, or a single SellerStats).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let escrowTransactions: any[] = [];
+
+  // Coordination/Escrow items can have slightly different shapes
+  type CoordinationItem = {
+    id: string;
+    auctionId: string;
+    lastMessageAt: Date | number;
+    auction: { title: string; images: string[]; id: string; escrowTransaction?: { status: string; id: string } };
+    messages: { id: string; content: string; createdAt: Date; senderId: string }[];
+  };
+
+  type EscrowListItem = {
+    id: string;
+    auctionId: string;
+    amount: number;
+    status: string;
+    createdAt: Date;
+    auction: { id: string; title: string; images: string[]; seller: { name: string | null; image: string | null }; endTime: Date | string };
+    dispute: { id: string; reason: string } | null;
+  };
+
+  let escrowTransactions: (EscrowListItem | CoordinationItem)[] = [];
 
   // ─── LISTINGS ──────────────────────────────────────────────────────────────
   if (currentTab === "listings") {
@@ -199,14 +216,21 @@ export default async function DashboardPage({
 
       escrowTransactions = escrowDocs.map((e, i) => {
         const a = auctionMap.get(e.auctionId);
-        const seller = a ? (sellerMap.get(a.sellerId as string) ?? {}) : {};
+        if (!a) return null;
+        const seller = sellerMap.get(a.sellerId as string) ?? {};
         return {
           ...e,
           createdAt: e.createdAt?.toDate?.() || new Date(),
-          auction: a ? { ...a, id: e.auctionId, seller: { name: seller.name, image: seller.image } } : null,
+          auction: { 
+            ...a, 
+            id: e.auctionId, 
+            images: a.images || [],
+            seller: { name: seller.name, image: seller.image },
+            endTime: a.endTime?.toDate?.() || new Date(a.endTime)
+          },
           dispute: disputeSnaps[i].empty ? null : { ...disputeSnaps[i].docs[0].data(), id: disputeSnaps[i].docs[0].id },
-        };
-      });
+        } as EscrowListItem;
+      }).filter((x): x is EscrowListItem => x !== null);
     }
 
   // ─── COORDINATION HUB ──────────────────────────────────────────────────────
@@ -246,17 +270,19 @@ export default async function DashboardPage({
 
         return {
           ...conv,
+          lastMessageAt: conv.lastMessageAt,
           auction: {
-            title: a.title, images: a.images, id: conv.auctionId,
+            title: a.title, 
+            images: a.images || [], 
+            id: conv.auctionId,
             escrowTransaction: { status: escrow.status, id: conv.auctionId },
           },
           messages: messageSnaps[i].empty
             ? []
-            : [{ ...messageSnaps[i].docs[0].data(), id: messageSnaps[i].docs[0].id }],
-        };
-      }).filter(Boolean).sort((a, b) =>
-        ((b as { lastMessageAt?: number }).lastMessageAt ?? 0) -
-        ((a as { lastMessageAt?: number }).lastMessageAt ?? 0)
+            : [{ ...messageSnaps[i].docs[0].data() as { content: string; createdAt: Date; senderId: string }, id: messageSnaps[i].docs[0].id }],
+        } as CoordinationItem;
+      }).filter((x): x is CoordinationItem => x !== null).sort((a, b) =>
+        (Number(b.lastMessageAt) || 0) - (Number(a.lastMessageAt) || 0)
       );
     }
   }
@@ -423,7 +449,7 @@ export default async function DashboardPage({
                     {escrowTransactions.map((tx) => (
                       <EscrowActionCard 
                         key={tx.id} 
-                        transaction={tx} 
+                        transaction={tx as EscrowListItem} 
                         treasuryNumbers={{
                           bkash: systemConfig.treasuryBkash,
                           nagad: systemConfig.treasuryNagad
@@ -458,10 +484,10 @@ export default async function DashboardPage({
                         className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-4"
                       >
                          <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                            {conv.auction.images?.[0] ? (
+                            {(conv as CoordinationItem).auction.images?.[0] ? (
                               <Image 
-                                src={conv.auction.images[0]} 
-                                alt={conv.auction.title} 
+                                src={(conv as CoordinationItem).auction.images[0]} 
+                                alt={(conv as CoordinationItem).auction.title} 
                                 width={64} 
                                 height={64} 
                                 className="w-full h-full object-cover" 
@@ -474,15 +500,15 @@ export default async function DashboardPage({
                          </div>
                          <div className="flex-1">
                            <div className="flex items-center justify-between">
-                              <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{conv.auction.title}</h3>
+                              <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{(conv as CoordinationItem).auction.title}</h3>
                               <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border bn ${
-                                conv.auction.escrowTransaction?.status === 'DISPUTED' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                (conv as CoordinationItem).auction.escrowTransaction?.status === 'DISPUTED' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                               }`}>
-                                {te(`status_${conv.auction.escrowTransaction?.status || 'PENDING'}`)}
+                                {te(`status_${(conv as CoordinationItem).auction.escrowTransaction?.status || 'PENDING'}`)}
                               </span>
                            </div>
                            <p className="text-sm text-gray-500 line-clamp-1 mt-1 font-medium italic">
-                             {conv.messages?.[0]?.content || t("noMessagesYet")}
+                             {(conv as CoordinationItem).messages?.[0]?.content || t("noMessagesYet")}
                            </p>
                             <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
                               {t("sharedLogistics")}
