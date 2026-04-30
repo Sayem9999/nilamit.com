@@ -18,8 +18,8 @@ if (SENTRY_DSN) {
 
     // Lower sample rate on client — most errors bubble to server anyway
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.05 : 1.0,
-    replaysSessionSampleRate: 0,     // No session replays (privacy)
-    replaysOnErrorSampleRate: 0.1,   // Capture replay only on error
+    replaysSessionSampleRate: 0.1,   // 10% of all sessions
+    replaysOnErrorSampleRate: 1.0,   // 100% of errors
 
     enabled: process.env.NODE_ENV === 'production',
     sendDefaultPii: false,

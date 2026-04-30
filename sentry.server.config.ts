@@ -18,8 +18,8 @@ if (SENTRY_DSN) {
     dsn: SENTRY_DSN,
     environment: process.env.NODE_ENV ?? 'development',
 
-    // Capture 10 % of transactions for performance monitoring
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    // Capture 20% of transactions for performance monitoring
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
 
     // Only enable in production (avoids Sentry quota during local dev)
     enabled: process.env.NODE_ENV === 'production',
