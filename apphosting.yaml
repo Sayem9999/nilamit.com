@@ -103,6 +103,3 @@ env:
 
   - variable: NEXT_PUBLIC_SENTRY_DSN
     secret: SENTRY_DSN
-
-  - variable: SENTRY_AUTH_TOKEN
-    secret: SENTRY_AUTH_TOKEN
