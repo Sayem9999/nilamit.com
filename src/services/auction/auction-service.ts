@@ -72,7 +72,7 @@ export class AuctionService {
 
       // Security: Allowlist sort fields to prevent inference attacks or invalid queries
       const ALLOWED_SORT_FIELDS = ['currentPrice', 'endTime', 'bidCount', 'createdAt', 'bids'];
-      const orderField = ALLOWED_SORT_FIELDS.includes(sortBy || '') 
+      const orderField = (sortBy && ALLOWED_SORT_FIELDS.includes(sortBy)) 
         ? (sortBy === 'bids' ? 'bidCount' : sortBy) 
         : 'endTime';
       
