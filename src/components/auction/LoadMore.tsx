@@ -13,11 +13,10 @@ interface LoadMoreProps {
 }
 
 export default function LoadMore({
-  initialPage,
   filters,
-}: Omit<LoadMoreProps, "locale">) {
+}: Omit<LoadMoreProps, "locale" | "initialPage">) {
   const [auctions, setAuctions] = useState<AuctionWithSeller[]>([]);
-  const [page, setPage] = useState(initialPage + 1);
+  const [lastId, setLastId] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,14 +25,14 @@ export default function LoadMore({
 
     setIsLoading(true);
     try {
-      const response = await getAuctions({ ...filters, page, limit: 12 });
+      const response = await getAuctions({ ...filters, lastId: lastId || undefined, limit: 12 });
       if (response.success && response.data && response.data.auctions.length > 0) {
         setAuctions((prev) => [
           ...prev,
           ...(response.data!.auctions as unknown as AuctionWithSeller[]),
         ]);
-        setPage((prev) => prev + 1);
-        if (response.data!.currentPage >= response.data!.pages) {
+        setLastId(response.data.lastId);
+        if (!response.data.lastId || response.data.auctions.length < 12) {
           setHasMore(false);
         }
       } else {

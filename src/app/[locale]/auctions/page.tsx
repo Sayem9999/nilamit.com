@@ -40,9 +40,11 @@ export default async function AuctionsPage({ searchParams }: Props) {
     limit: 12,
   });
 
-  const { auctions, total, pages } = (response.success && response.data)
+  const { auctions, total } = (response.success && response.data)
     ? response.data 
-    : { auctions: [] as AuctionWithSeller[], total: 0, pages: 0 };
+    : { auctions: [] as AuctionWithSeller[], total: 0, lastId: null as string | null };
+
+  const pages = Math.ceil(total / 12);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

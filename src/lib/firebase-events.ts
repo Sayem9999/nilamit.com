@@ -58,6 +58,10 @@ export const FIREBASE_EVENTS = {
   // Chat
   NEW_MESSAGE:          'new_message',
   CHAT_NOTIFICATION:    'chat_notification',
+
+  // Payments & Escrow
+  PAYMENT_SUCCESS:      'payment_success',
+  ESCROW_HELD:          'escrow_held',
 } as const;
 
 export type FirebaseEvent = typeof FIREBASE_EVENTS[keyof typeof FIREBASE_EVENTS];

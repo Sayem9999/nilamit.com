@@ -294,6 +294,8 @@ export interface AuctionFilters {
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
+  lastId?: string;
+  viewerId?: string | null;
 }
 
 // ─── Static Data ────────────────────────────────────────────────────────────────
@@ -349,8 +351,7 @@ export interface PublicProfile extends SellerPublic {
 export interface AuctionListResponse {
   auctions: AuctionWithSeller[];
   total: number;
-  pages: number;
-  currentPage: number;
+  lastId: string | null;
 }
 
 export interface LatestActivity {

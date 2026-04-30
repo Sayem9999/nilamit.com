@@ -9,7 +9,7 @@ import { log } from '@/lib/logger';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { transactionId, amount, provider, secret } = body;
+    const { transactionId, automationToken, amount, provider, secret } = body;
 
     // 1. Basic Security Stub
     if (secret !== process.env.PAYMENT_WEBHOOK_SECRET) {
@@ -17,12 +17,13 @@ export async function POST(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    if (!transactionId || !amount || !provider) {
+    if (!automationToken || !transactionId || !amount || !provider) {
       return new NextResponse('Bad Request', { status: 400 });
     }
 
     // 2. Process via Service
     const res = await PaymentService.verifyAndReleaseEscrow(
+      automationToken,
       transactionId,
       Number(amount),
       provider as 'bkash' | 'nagad'

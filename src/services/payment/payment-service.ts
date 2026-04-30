@@ -11,18 +11,17 @@ export class PaymentService {
    * This is a "stub" for the actual webhook integration.
    */
   static async verifyAndReleaseEscrow(
-    transactionId: string, 
+    automationToken: string,
+    transactionId: string,
     amount: number, 
     provider: 'bkash' | 'nagad'
   ): Promise<ServiceResponse<EscrowTransaction>> {
     try {
       return await db.runTransaction(async (tx) => {
-        // 1. Find a pending escrow with matching amount
-        // In a real system, we'd query by transaction_id if the provider sends it,
-        // or by a unique "Payment Intent ID".
+        // 1. Find the exact escrow by its unique automation token
         const escrowSnap = await db.collection('escrowTransactions')
+          .where('automationToken', '==', automationToken)
           .where('status', '==', 'PENDING')
-          .where('amount', '==', amount)
           .limit(1)
           .get();
 

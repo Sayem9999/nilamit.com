@@ -53,16 +53,16 @@ export class AuctionService {
   }
 
   /**
-   * Fetch a paginated list of auctions with filters
+   * Fetch a paginated list of auctions with filters.
+   * Uses Cursor Pagination (startAfter) for O(1) performance at scale.
    */
-  static async list(filters: AuctionFilters & { limit?: number; offset?: number }): Promise<ServiceResponse<{
+  static async list(filters: AuctionFilters & { limit?: number; lastId?: string; viewerId?: string | null }): Promise<ServiceResponse<{
     auctions: AuctionWithSeller[];
     total: number;
-    pages: number;
-    currentPage: number;
+    lastId: string | null;
   }>> {
     try {
-      const { category, status = 'ACTIVE', sortBy, sortOrder = 'desc', limit = 12, page = 1 } = filters;
+      const { category, status = 'ACTIVE', sortBy, sortOrder = 'desc', limit = 12, lastId, viewerId } = filters;
 
       let query: FirebaseFirestore.Query = db.collection('auctions');
       
@@ -70,48 +70,59 @@ export class AuctionService {
       if (category && category !== 'all') query = query.where('category', '==', category);
       if (filters.location && filters.location !== 'all') query = query.where('location', '==', filters.location);
 
-      // Security: Allowlist sort fields to prevent inference attacks or invalid queries
       const ALLOWED_SORT_FIELDS = ['currentPrice', 'endTime', 'bidCount', 'createdAt', 'bids'];
       const orderField = (sortBy && ALLOWED_SORT_FIELDS.includes(sortBy)) 
         ? (sortBy === 'bids' ? 'bidCount' : sortBy) 
         : 'endTime';
       
+      // Finalize Query with ordering
+      let auctionsQuery = query.orderBy(orderField, sortOrder);
+
+      // Pagination: Start after the last document seen in the previous batch
+      if (lastId) {
+        const lastDoc = await db.collection('auctions').doc(lastId).get();
+        if (lastDoc.exists) {
+          auctionsQuery = auctionsQuery.startAfter(lastDoc);
+        }
+      }
+
       const [totalSnap, auctionsSnap] = await Promise.all([
         query.count().get(),
-        query
-          .orderBy(orderField, sortOrder)
-          .limit(limit)
-          .offset((page - 1) * limit)
-          .get()
+        auctionsQuery.limit(limit).get()
       ]);
 
       const total = totalSnap.data().count;
       const auctionDocs = snapDocs<Auction>(auctionsSnap);
 
-      // Batch fetch sellers to avoid N+1
+      // Hydration: Sellers + Watchlist (per viewer)
       const sellerIds = [...new Set(auctionDocs.map(a => a.sellerId))];
-      const sellerRefs = sellerIds.map(id => db.collection('users').doc(id));
-      const sellerSnaps = sellerIds.length > 0 ? await db.getAll(...sellerRefs) : [];
+      const sellerSnaps = sellerIds.length > 0 ? await db.getAll(...sellerIds.map(id => db.collection('users').doc(id))) : [];
       const sellerMap = new Map(sellerSnaps.map(s => [s.id, toSellerPublic(s.id, s.data())]));
 
+      // Sync Watchlist: If viewerId exists, check which auctions they've watchlisted
+      let watchlistSet = new Set<string>();
+      if (viewerId && auctionDocs.length > 0) {
+        const watchlistSnap = await db.collection('users').doc(viewerId).collection('watchlist').get();
+        watchlistSet = new Set(watchlistSnap.docs.map(d => d.data().auctionId));
+      }
+
       const auctions = auctionDocs.map(a => {
-        const rawEnd = a.endTime as unknown as { toDate?: () => Date } | Date | string | number;
-        const endTime =
-          rawEnd && typeof (rawEnd as { toDate?: () => Date }).toDate === 'function'
-            ? (rawEnd as { toDate: () => Date }).toDate()
-            : new Date(rawEnd as Date | string | number);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawEnd = a.endTime as any;
+        const endTime = rawEnd?.toDate ? rawEnd.toDate() : new Date(rawEnd);
+        
         return {
           ...a,
           seller: sellerMap.get(a.sellerId)!,
           endTime,
+          isWatchlisted: watchlistSet.has(a.id)
         };
       }) as AuctionWithSeller[];
 
       return successResponse({
         auctions,
         total,
-        pages: Math.ceil(total / limit),
-        currentPage: page,
+        lastId: auctionDocs.length > 0 ? auctionDocs[auctionDocs.length - 1].id : null,
       });
     } catch (err) {
       log.error('Failed to list auctions', err, { filters });

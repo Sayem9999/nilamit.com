@@ -65,7 +65,8 @@ export default function ProfilePage() {
     return null;
   }
 
-  const user = session.user as { 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const user = (session.user as any) as { 
     id: string; 
     isPhoneVerified: boolean; 
     reputationScore: number; 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { rtdb } from "@/lib/firebase";
+import { getClientDB } from "@/lib/firebase-client";
 import { ref, onChildAdded, query, limitToLast } from "firebase/database";
 import { RTDB_PATHS } from "@/lib/firebase-events";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +22,7 @@ export default function LiveTicker() {
   const [items, setItems] = useState<TickerItem[]>([]);
 
   useEffect(() => {
+    const rtdb = getClientDB();
     const activityRef = ref(rtdb, RTDB_PATHS.globalActivity());
     const q = query(activityRef, limitToLast(5));
 

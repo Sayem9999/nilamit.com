@@ -5,7 +5,7 @@ import { db, snapDocs, toSellerPublic } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { AuctionService } from '@/services/auction/auction-service';
 import { ERROR_CODES } from '@/lib/constants';
-import type { Auction, AuctionFilters, AuctionWithSeller, AuctionListResponse, BidWithAuction, LatestActivity } from '@/types';
+import type { Auction, AuctionFilters, AuctionWithSeller, AuctionListResponse, LatestActivity } from '@/types';
 import { AuctionStatus } from '@/types';
 import { createAuctionSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
@@ -16,7 +16,12 @@ import { cache } from 'react';
  * Server Action: Fetch auctions with optional filtering
  */
 export const getAuctions = cache(async (filters: AuctionFilters = {}): Promise<ServiceResponse<AuctionListResponse>> => {
-  const response = await AuctionService.list(filters);
+  const session = await auth();
+  const response = await AuctionService.list({ 
+    ...filters, 
+    viewerId: session?.user?.id 
+  });
+  
   if (!response.success) {
     log.error('[Action] getAuctions failed', undefined, { error: response.error?.message });
     return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to fetch auctions');
