@@ -192,6 +192,16 @@ export class BiddingService {
       event: FIREBASE_EVENTS.NEW_BID, amount, bidderName: userName ?? 'Someone',
     }).catch((e) => log.error('bidding: auction activity push failed', e, { auctionId }));
 
+    // Global Activity Ticker
+    rtdbPush(RTDB_PATHS.globalActivity(), {
+      event: FIREBASE_EVENTS.NEW_BID, 
+      amount, 
+      bidderName: userName ?? 'Someone',
+      auctionTitle: result.auctionTitle,
+      auctionId,
+      timestamp: Date.now()
+    }).catch((e) => log.error('bidding: global ticker push failed', e));
+
     // 4. Async background tasks
     checkAndAwardBadges(userId, auctionId, amount, result.antiSnipeTriggered, result.auctionStartTime).catch((e) => log.error('bidding: badge check failed', e, { auctionId, userId }));
     detectShillBidding(auctionId, userId, result.sellerId, amount).catch((e) => log.error('bidding: shill detection failed', e, { auctionId, userId }));

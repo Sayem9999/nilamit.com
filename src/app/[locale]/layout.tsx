@@ -57,6 +57,8 @@ import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 
+import LiveTicker from "@/components/home/LiveTicker";
+
 export default async function RootLayout({
   children,
   params,
@@ -85,6 +87,7 @@ export default async function RootLayout({
                 },
               }}
             />
+            <LiveTicker />
             <Navbar />
             <main className="min-h-screen bg-gray-50/50">{children}</main>
             <Footer />

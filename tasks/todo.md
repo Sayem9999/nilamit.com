@@ -42,3 +42,12 @@
 - [x] Implement **Lazy Loading** for heavy modals and gateways.
 - [x] Optimize **Shill Bidding Detection** for high-volume scalability.
 - [x] Add **Sort-Field Allowlisting** for public listing queries.
+- [x] Implement **Real CSV Parsing** and template download for Bulk Upload.
+
+## 5. The Elite Phase (Road to 100%)
+
+- [x] **Advanced Gamification**: Implement XP (Levels) and Winning Streaks (Finalized).
+- [x] **Public Trust Center**: Redesign profile/seller pages with Gamification Center components.
+- [x] **Automated Payment Stubs**: Implement bKash/Nagad webhook handlers for automated escrow verification.
+- [x] **Policy Enforcement Bot**: Create a background job to auto-ban "Non-Paying Winners" and trigger **Second Chance Offers**.
+- [x] **Live Auction Ticker**: Add a "Recent Activity" global ticker to the homepage (RTDB driven).

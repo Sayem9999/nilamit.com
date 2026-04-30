@@ -166,4 +166,50 @@ export class AuctionService {
       return errorResponse(ErrorType.INTERNAL, 'Failed to create auction listing');
     }
   }
+  /**
+   * Transition an auction to a "Second Chance Offer" for the next highest bidder.
+   * Triggered when the original winner fails to pay.
+   */
+  static async createSecondChanceOffer(auctionId: string): Promise<ServiceResponse<void>> {
+    try {
+      return await db.runTransaction(async (tx) => {
+        const aRef = db.collection('auctions').doc(auctionId);
+        const aSnap = await tx.get(aRef);
+        if (!aSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
+
+        const auction = aSnap.data() as Auction;
+        
+        // Find second highest bidder (excluding the current non-paying winner)
+        const bidsSnap = await db.collection('auctions').doc(auctionId)
+          .collection('bids')
+          .orderBy('amount', 'desc')
+          .limit(2)
+          .get();
+
+        if (bidsSnap.docs.length < 2) {
+          return errorResponse(ErrorType.NOT_FOUND, 'No second bidder available');
+        }
+
+        const secondBid = bidsSnap.docs[1].data();
+        const secondBidderId = secondBid.bidderId;
+        const secondAmount = secondBid.amount;
+
+        tx.update(aRef, {
+          status: 'OFFER_PENDING',
+          currentBidderId: secondBidderId,
+          currentPrice: secondAmount,
+          updatedAt: new Date(),
+          originalWinnerId: auction.currentBidderId, // Track who failed to pay
+        });
+
+        // Log the event
+        log.info('Second chance offer created', { auctionId, secondBidderId, secondAmount });
+
+        return successResponse(undefined);
+      });
+    } catch (err) {
+      log.error('Failed to create second chance offer', err, { auctionId });
+      return errorResponse(ErrorType.INTERNAL, 'Failed to process second chance offer');
+    }
+  }
 }

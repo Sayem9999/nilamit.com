@@ -16,6 +16,7 @@ export function calculateSuccessFee(finalPrice: number): { fee: number; rate: nu
 // ─── Post-sale notification payload ─────────────────────────────────────────
 interface SaleNotifyPayload {
   winnerId:    string;
+  sellerId:    string;
   winnerEmail: string | null;
   auctionId:   string;
   title:       string;
@@ -78,8 +79,10 @@ export function processAuctionSale(
   });
 
   // Return payload — notifications fired by caller AFTER commit
-  return { winnerId: winner.id, winnerEmail: winner.email, auctionId: auction.id, title: auction.title, finalPrice };
+  return { winnerId: winner.id, sellerId: auction.sellerId, winnerEmail: winner.email, auctionId: auction.id, title: auction.title, finalPrice };
 }
+
+import { processSaleGamification } from '@/actions/gamification';
 
 // ─── sendSaleNotifications ───────────────────────────────────────────────────
 export function sendSaleNotifications(payload: SaleNotifyPayload) {
@@ -93,6 +96,11 @@ export function sendSaleNotifications(payload: SaleNotifyPayload) {
     title:     payload.title,
     amount:    payload.finalPrice,
   }).catch((e) => log.error('auction-logic: winner RTDB notification failed', e, { auctionId: payload.auctionId }));
+
+  // Gamification: XP and Streaks
+  processSaleGamification(payload.winnerId, payload.sellerId).catch((e) => 
+    log.error('auction-logic: sale gamification failed', e, { auctionId: payload.auctionId })
+  );
 }
 
 // ─── closeAuctionIfEnded ─────────────────────────────────────────────────────

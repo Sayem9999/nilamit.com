@@ -17,7 +17,7 @@ function FirestoreAdapter(): Adapter {
       const now = new Date();
       const doc = { ...user, id: ref.id, createdAt: now, updatedAt: now,
         isPhoneVerified: false, isVerifiedSeller: false,
-        reputationScore: 0, winningStreak: 0, userLevel: 1 };
+        reputationScore: 0, winningStreak: 0, xp: 0, userLevel: 1 };
       await ref.set(doc);
       return { ...doc } as AdapterUser;
     },
@@ -124,7 +124,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             image: user.image as string | null,
             isVerifiedSeller: Boolean(user.isVerifiedSeller), reputationScore: Number(user.reputationScore || 0),
             isPhoneVerified: Boolean(user.isPhoneVerified), emailVerified: user.emailVerified as Date | null,
-            userLevel: Number(user.userLevel || 1), winningStreak: Number(user.winningStreak || 0),
+            userLevel: Number(user.userLevel || 1), xp: Number(user.xp || 0), winningStreak: Number(user.winningStreak || 0),
             isBanned: Boolean(user.isBanned) };
         } catch (e) {
           log.error('[Auth] credentials authorize error', e);
@@ -154,7 +154,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: user.name as string, image: user.image as string | null,
             isVerifiedSeller: Boolean(user.isVerifiedSeller), reputationScore: Number(user.reputationScore || 0),
             isPhoneVerified: Boolean(user.isPhoneVerified), emailVerified: user.emailVerified as Date | null,
-            userLevel: Number(user.userLevel || 1), winningStreak: Number(user.winningStreak || 0),
+            userLevel: Number(user.userLevel || 1), xp: Number(user.xp || 0), winningStreak: Number(user.winningStreak || 0),
             isBanned: Boolean(user.isBanned) };
         } catch (e) {
           log.error('[Auth-Phone] authorize error', e);
@@ -175,6 +175,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.reputationScore  = (user as unknown as Record<string, unknown>).reputationScore  ?? 0;
         token.isVerifiedSeller = (user as unknown as Record<string, unknown>).isVerifiedSeller ?? false;
         token.userLevel        = (user as unknown as Record<string, unknown>).userLevel        ?? 1;
+        token.xp               = (user as unknown as Record<string, unknown>).xp               ?? 0;
         token.winningStreak    = (user as unknown as Record<string, unknown>).winningStreak    ?? 0;
         token.isBanned         = (user as unknown as Record<string, unknown>).isBanned         ?? false;
         token.lastDbRefresh    = Date.now();
@@ -197,6 +198,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.reputationScore  = u.reputationScore ?? 0;
             token.isVerifiedSeller = u.isVerifiedSeller ?? false;
             token.userLevel        = u.userLevel        ?? 1;
+            token.xp               = u.xp               ?? 0;
             token.winningStreak    = u.winningStreak    ?? 0;
             token.isBanned         = u.isBanned         ?? false;
             token.lastDbRefresh    = Date.now();
@@ -221,6 +223,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         u.reputationScore  = token.reputationScore;
         u.isVerifiedSeller = token.isVerifiedSeller;
         u.userLevel        = token.userLevel;
+        u.xp               = token.xp;
         u.winningStreak    = token.winningStreak;
         u.isAdmin          = token.isAdmin;
         u.isBanned         = token.isBanned;

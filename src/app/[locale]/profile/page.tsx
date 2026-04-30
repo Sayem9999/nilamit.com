@@ -9,7 +9,6 @@ import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
 import {
   User,
   Phone,
-  Shield,
   CheckCircle,
   Edit3,
   Save,
@@ -24,6 +23,7 @@ import {
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
 import VerificationBadge from "@/components/social/VerificationBadge";
+import GamificationStats from "@/components/social/GamificationStats";
 import Image from "next/image";
 
 export default function ProfilePage() {
@@ -73,6 +73,9 @@ export default function ProfilePage() {
     email?: string;
     bkashNumber?: string;
     nagadNumber?: string;
+    xp: number;
+    userLevel: number;
+    winningStreak: number;
   };
   const isPhoneVerified = user?.isPhoneVerified as boolean;
 
@@ -245,7 +248,16 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Reputation Card */}
+      {/* Elite Gamification Center */}
+      <div className="mb-8">
+        <GamificationStats 
+          xp={user.xp || 0} 
+          level={user.userLevel || 1} 
+          streak={user.winningStreak || 0} 
+        />
+      </div>
+
+      {/* Trust Score & Badges */}
       <div className="bg-white border border-gray-100 rounded-3xl p-6 mb-6 shadow-sm overflow-hidden relative">
         <div className="absolute top-0 right-0 p-4">
            <Star className="w-8 h-8 text-primary-500/10 fill-primary-500/5 rotate-12" />
@@ -269,15 +281,6 @@ export default function ProfilePage() {
                 {(user?.reputationScore as number) || 0}
               </p>
             </div>
-          </div>
-          
-          <div className="pt-4 border-t border-gray-50 flex items-center gap-4 text-[10px] text-gray-400 font-bold uppercase tracking-wider bn">
-             <span className="flex items-center gap-1">
-               <Shield className="w-3 h-3 text-blue-500" /> {t_prof("bayesianCertified")}
-             </span>
-             <span className="flex items-center gap-1">
-               <CheckCircle className="w-3 h-3 text-emerald-500" /> {t_prof("activeTrader")}
-             </span>
           </div>
         </div>
       </div>

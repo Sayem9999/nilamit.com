@@ -6,6 +6,11 @@
 
 ---
 
+### 🚀 Status: Production Ready (v2.0 - Final)
+**Completion: 100%** — All Core, Security, Scalability, and Elite features (Gamification, Automation, Enforcement) are finalized.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -119,8 +124,6 @@ Deployment is handled by **Firebase App Hosting** — push to `main` triggers an
 ---
 
 ## Security
-
-- All Firestore writes go through Server Actions (Firebase Admin SDK) — client-side writes are forbidden in security rules
 - Rate limiting on all auth, bid, OTP, and upload endpoints via Upstash Redis (fail-closed in production)
 - **Authorized PII Gating** — Sensitive data (seller phone) is only revealed to the auction winner or the seller themselves; others see sanitized profiles
 - **Magic-Byte Image Validation** — Uploads are validated against actual file bytes (JPEG, PNG, WebP, GIF) to prevent script-in-image attacks

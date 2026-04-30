@@ -6,6 +6,7 @@ export const AuctionStatus = {
   EXPIRED:           'EXPIRED',
   CANCELLED:         'CANCELLED',
   AWAITING_PAYMENT:  'AWAITING_PAYMENT',
+  OFFER_PENDING:     'OFFER_PENDING',
 } as const;
 export type AuctionStatus = typeof AuctionStatus[keyof typeof AuctionStatus];
 
@@ -70,6 +71,7 @@ export interface User {
   bkashNumber?: string | null;
   nagadNumber?: string | null;
   winningStreak: number;
+  xp: number;
   userLevel: number;
   createdAt: Date;
   updatedAt: Date;
@@ -101,6 +103,7 @@ export interface Auction {
   trackingNumber?: string | null;
   sellerId: string;
   winnerId?: string | null;
+  originalWinnerId?: string | null;
   bidCount?: number;
   piiDetected?: boolean;
   createdAt: Date;
