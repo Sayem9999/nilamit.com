@@ -13,7 +13,6 @@ import { randomUUID } from 'crypto';
 
 /**
  * Transitions PENDING → HELD (buyer confirms advance payment).
- * Atomic transaction ensures logistics, chat, and escrow are synced.
  */
 export async function payEscrowAdvance(transactionId: string, providerRef?: string) {
   const session = await auth();
@@ -31,7 +30,11 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
 
       const aRef  = db.collection('auctions').doc(t.auctionId);
       const aSnap = await tx.get(aRef);
-      const auction = aSnap.data() || {};
+      if (!aSnap.exists) throw new Error('Auction not found');
+      // Use snapshot.id for the auction ID — never rely on data().id which may be absent
+      const auction = { ...aSnap.data()!, id: aSnap.id } as {
+        id: string; sellerId: string; title: string; [key: string]: unknown
+      };
 
       const buyerRef  = db.collection('users').doc(session.user.id);
       const buyerSnap = await tx.get(buyerRef);
@@ -43,7 +46,6 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
 
       const ref = providerRef ?? `PAY-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 
-      // 1. Update Escrow
       tx.update(txRef, {
         status:           'HELD',
         paymentMethod:    'bkash_automatic',
@@ -52,35 +54,33 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         updatedAt:        new Date(),
       });
 
-      // 2. Activate Conversation
-      const convId = t.auctionId;
-      const convRef = db.collection('conversations').doc(convId);
+      // Create conversation on first payment
+      const convRef  = db.collection('conversations').doc(t.auctionId);
       const convSnap = await tx.get(convRef);
       if (!convSnap.exists) {
         const now = new Date();
         tx.set(convRef, {
-          id: convId, auctionId: t.auctionId, buyerId: t.buyerId, sellerId: auction.sellerId,
-          lastMessageAt: now, createdAt: now,
+          id: t.auctionId, auctionId: t.auctionId, buyerId: t.buyerId,
+          sellerId: auction.sellerId, lastMessageAt: now, createdAt: now,
         });
       }
 
       return { auction, buyer, ref };
     });
 
-    // Post-transaction side effects (Logistics & Notifications)
-    await createLogisticsOrder(result.auction.id, result.auction.sellerId, session.user.id);
-    
-    await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId), {
-      event: FIREBASE_EVENTS.ADVANCE_PAID,
-      auctionId: result.auction.id,
+    await createLogisticsOrder(result.auction.id, result.auction.sellerId as string, session.user.id);
+
+    await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId as string), {
+      event:        FIREBASE_EVENTS.ADVANCE_PAID,
+      auctionId:    result.auction.id,
       auctionTitle: result.auction.title,
-      message: `Payment held for "${result.auction.title}". Please prepare for shipment.`,
+      message:      `Payment held for "${result.auction.title}". Please prepare for shipment.`,
     });
 
     revalidatePath('/dashboard');
     return { success: true };
   } catch (e) {
-    log.error('[escrow] Transaction failed', e);
+    log.error('[escrow] payEscrowAdvance failed', e);
     return { success: false, error: e instanceof Error ? e.message : 'Internal error' };
   }
 }
@@ -104,14 +104,14 @@ export async function confirmItemReceived(transactionId: string) {
 
       tx.update(txRef, { status: 'RELEASED', updatedAt: new Date() });
 
-      const aRef  = db.collection('auctions').doc(t.auctionId);
+      const aRef = db.collection('auctions').doc(t.auctionId);
       tx.update(aRef, { deliveryStatus: 'DELIVERED', updatedAt: new Date() });
-      
+
       return t;
     });
 
-    const aSnap  = await db.collection('auctions').doc(result.auctionId).get();
-    const sellerId = aSnap.data()?.sellerId;
+    const aSnap    = await db.collection('auctions').doc(result.auctionId).get();
+    const sellerId = aSnap.data()?.sellerId as string | undefined;
 
     if (sellerId) {
       await Promise.all([
@@ -143,7 +143,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
   }
   const safeTracking = trackingNumber.trim();
 
-  let buyerId: string;
+  let buyerId:   string;
   let auctionId: string;
 
   try {
@@ -157,7 +157,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
 
       const aRef  = db.collection('auctions').doc(t.auctionId);
       const aSnap = await tx.get(aRef);
-      if (!aSnap.exists) throw new Error('Auction not found');
+      if (!aSnap.exists)                           throw new Error('Auction not found');
       if (aSnap.data()!.sellerId !== session.user.id) throw new Error('Unauthorized');
 
       tx.update(aRef, { deliveryStatus: 'SHIPPED', trackingNumber: safeTracking, updatedAt: new Date() });
@@ -173,8 +173,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
   }
 
   await rtdbPush(RTDB_PATHS.userNotifications(buyerId), {
-    event: 'ITEM_SHIPPED',
-    auctionId,
+    event: 'ITEM_SHIPPED', auctionId,
     message: `Your item has been shipped! Tracking: ${safeTracking}`,
   });
 
@@ -183,29 +182,45 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
 }
 
 /**
- * Refund escrow — SECURITY CRITICAL: Restricted to Admins only.
+ * Refund escrow — SECURITY CRITICAL: Admins only.
  */
 export async function refundEscrow(transactionId: string) {
-  try {
-    await requireAdmin();
-  } catch {
+  const adminSession = await requireAdmin().catch(() => null);
+  if (!adminSession) {
     return { success: false, error: 'Access Denied: Admin intervention required for refunds.' };
   }
 
   try {
-    const txRef = db.collection('escrowTransactions').doc(transactionId);
-    const txSnap = await txRef.get();
-    if (!txSnap.exists) return { success: false, error: 'Not found' };
-    
-    const tx = txSnap.data()!;
     await db.runTransaction(async (t) => {
+      const txRef  = db.collection('escrowTransactions').doc(transactionId);
+      // Read inside the transaction so status check and update are atomic —
+      // prevents a concurrent confirmItemReceived from releasing while we refund.
+      const txSnap = await t.get(txRef);
+      if (!txSnap.exists) throw new Error('Not found');
+
+      const txData = txSnap.data()!;
+      if (!['HELD', 'DISPUTED', 'PENDING'].includes(txData.status)) {
+        throw new Error(`Cannot refund escrow in status: ${txData.status}`);
+      }
+
       t.update(txRef, { status: 'REFUNDED', updatedAt: new Date() });
-      t.update(db.collection('auctions').doc(tx.auctionId), { status: 'CANCELLED' });
+      t.update(db.collection('auctions').doc(txData.auctionId), {
+        status: 'CANCELLED', updatedAt: new Date(),
+      });
+    });
+
+    // Audit log for all admin financial actions
+    await db.collection('admin_logs').add({
+      action:    'REFUND_ESCROW',
+      adminId:   adminSession.user.id,
+      targetId:  transactionId,
+      createdAt: new Date(),
     });
 
     revalidatePath('/dashboard');
     return { success: true };
-  } catch (_error) {
-    return { success: false, error: 'Refund failed' };
+  } catch (e) {
+    log.error('[escrow] refundEscrow failed', e);
+    return { success: false, error: e instanceof Error ? e.message : 'Refund failed' };
   }
 }

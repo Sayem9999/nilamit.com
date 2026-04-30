@@ -122,3 +122,5 @@ export const loginLimiter = createLimiter("rl_login",  20, "5m");
 export const phoneOtpSendLimiter   = createLimiter("rl_phone_otp_send",   5, "1h");
 export const phoneOtpVerifyLimiter = createLimiter("rl_phone_otp_verify", 5, "15m");
 export const emailOtpSendLimiter   = createLimiter("rl_email_otp_send",   5, "1h");
+// Mirrors phoneOtpVerifyLimiter — prevents brute-force of 6-digit email OTP space
+export const emailOtpVerifyLimiter = createLimiter("rl_email_otp_verify", 5, "15m");

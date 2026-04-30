@@ -111,7 +111,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const email    = credentials.email as string;
+        const email    = (credentials.email as string).trim().toLowerCase();
         const password = credentials.password as string;
         try {
           const snap = await db.collection('users').where('email', '==', email).limit(1).get();

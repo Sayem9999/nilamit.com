@@ -8,6 +8,7 @@
  */
 
 import { z } from 'zod';
+import { CATEGORIES } from '@/types';
 
 // ─── Primitives ────────────────────────────────────────────────────────────
 
@@ -106,12 +107,14 @@ const isoDatetime = z
   .string()
   .refine((v) => !Number.isNaN(Date.parse(v)), 'Invalid date');
 
+const VALID_CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug);
+
 export const createAuctionSchema = z
   .object({
     title:           z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
     description:     z.string().trim().min(10, 'Description is too short').max(5000, 'Description is too long'),
     images:          z.array(imageUrlSchema).min(1, 'At least one image is required').max(10, 'Maximum 10 images per listing'),
-    category:        z.string().trim().min(1).max(60),
+    category:        z.string().trim().refine((v) => (VALID_CATEGORY_SLUGS as string[]).includes(v), 'Invalid category'),
     startingPrice:   priceSchema,
     minBidIncrement: priceSchema.optional(),
     startTime:       isoDatetime,
@@ -179,6 +182,15 @@ export const updateProfileSchema = z.object({
   message: 'Provide at least one field to update',
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+// ─── Alerts ────────────────────────────────────────────────────────────────
+
+export const createAlertSchema = z.object({
+  type:           z.enum(['OUTBID', 'TARGET_REACHED', 'PRICE_DROP']),
+  auctionId:      firestoreIdSchema.optional(),
+  thresholdPrice: z.number().int('Must be a whole number').positive().max(MAX_AUCTION_PRICE_BDT).optional(),
+});
+export type CreateAlertInput = z.infer<typeof createAlertSchema>;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 

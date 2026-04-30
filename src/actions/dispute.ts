@@ -5,8 +5,7 @@ import { Dispute, EscrowTransaction, Auction, User } from '@/types';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { recalculateUserReputation } from '@/lib/reputation';
-
-import { requireAdmin, isAdminEmail } from '@/lib/admin-guard';
+import { requireAdmin } from '@/lib/admin-guard';
 import { log } from '@/lib/logger';
 import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
 
@@ -17,8 +16,6 @@ export async function raiseDispute(transactionId: string, reason: string) {
   const parsed = raiseDisputeSchema.safeParse({ transactionId, reason });
   if (!parsed.success) return { success: false, error: formatZodError(parsed.error) };
 
-  // Use transactionId as the dispute doc ID — idempotent: two concurrent calls
-  // result in one successful tx.set and one "already exists" error, not two disputes.
   const disputeRef = db.collection('disputes').doc(transactionId);
   const escrowRef  = db.collection('escrowTransactions').doc(transactionId);
 
@@ -52,7 +49,7 @@ export async function raiseDispute(transactionId: string, reason: string) {
 }
 
 export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYER', resolution: string) {
-  await requireAdmin();
+  const adminSession = await requireAdmin();
 
   try {
     const { sellerId, buyerId } = await db.runTransaction(async (tx) => {
@@ -66,8 +63,8 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
       const escrowSnap = await tx.get(escrowRef);
       const escrow     = escrowSnap.data()!;
 
-      const aRef   = db.collection('auctions').doc(escrow.auctionId);
-      const aSnap  = await tx.get(aRef);
+      const aRef  = db.collection('auctions').doc(escrow.auctionId);
+      const aSnap = await tx.get(aRef);
       const seller = (aSnap.data()?.sellerId as string | undefined) ?? null;
 
       const now          = new Date();
@@ -78,6 +75,14 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
       tx.update(disputeRef, { status: finalDispute, resolution, updatedAt: now });
 
       return { sellerId: seller, buyerId: escrow.buyerId as string };
+    });
+
+    await db.collection('admin_logs').add({
+      action:    'RESOLVE_DISPUTE',
+      adminId:   adminSession.user.id,
+      targetId:  disputeId,
+      ruling,
+      createdAt: new Date(),
     });
 
     if (sellerId) await recalculateUserReputation(sellerId);
@@ -92,28 +97,57 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
   }
 }
 
-/** Admin override refund — uses runtime ADMIN_EMAILS check, not token flag */
+/**
+ * Admin override refund — always cancels the linked auction to keep state consistent.
+ */
 export async function adminRefundEscrow(transactionId: string, reason: string) {
-  await requireAdmin();
+  const adminSession = await requireAdmin();
 
-  await db.collection('escrowTransactions').doc(transactionId).update({
-    status: 'REFUNDED', updatedAt: new Date(),
-  });
-  log.info(`[Admin] Transaction ${transactionId} refunded. Reason: ${reason}`);
-  revalidatePath('/admin/escrow');
-  return { success: true };
+  try {
+    await db.runTransaction(async (tx) => {
+      const escrowRef  = db.collection('escrowTransactions').doc(transactionId);
+      const escrowSnap = await tx.get(escrowRef);
+      if (!escrowSnap.exists) throw new Error('Escrow transaction not found');
+      const escrow = escrowSnap.data()!;
+
+      const now = new Date();
+      tx.update(escrowRef, { status: 'REFUNDED', updatedAt: now });
+
+      // Cancel the auction so it doesn't remain SOLD with an unfulfilled winner
+      if (escrow.auctionId) {
+        tx.update(db.collection('auctions').doc(escrow.auctionId), {
+          status: 'CANCELLED', updatedAt: now,
+        });
+      }
+    });
+
+    await db.collection('admin_logs').add({
+      action:    'ADMIN_REFUND_ESCROW',
+      adminId:   adminSession.user.id,
+      targetId:  transactionId,
+      reason,
+      createdAt: new Date(),
+    });
+
+    log.info(`[Admin] Transaction ${transactionId} refunded. Reason: ${reason}`);
+    revalidatePath('/admin/escrow');
+    return { success: true };
+  } catch (e) {
+    log.error('[dispute] adminRefundEscrow failed', e);
+    return { success: false, error: e instanceof Error ? e.message : 'Refund failed.' };
+  }
 }
 
 export async function getOpenDisputes() {
-  const session = await auth();
-  if (!isAdminEmail(session?.user?.email)) return [];
+  // Use requireAdmin to throw consistently — isAdminEmail silently returns []
+  // which masks auth failures and diverges from all other admin action gates.
+  try { await requireAdmin(); } catch { return []; }
 
   const snap = await db.collection('disputes').where('status', '==', 'OPEN').orderBy('createdAt', 'desc').get();
   if (snap.empty) return [];
 
   const disputes = snapDocs<Dispute>(snap);
 
-  // Pass 1 — transactions + openers (both available directly from dispute docs)
   const txIds     = [...new Set(disputes.map((d) => d.transactionId))];
   const openerIds = [...new Set(disputes.map((d) => d.openerId))];
 
@@ -125,7 +159,6 @@ export async function getOpenDisputes() {
   const txMap     = new Map(txSnaps.map((s) => [s.id, docData<EscrowTransaction>(s)]));
   const openerMap = new Map(openerSnaps.map((s) => [s.id, docData<User>(s)]));
 
-  // Pass 2 — auctions + buyers (IDs come from the transaction docs)
   const auctionIds = [...new Set(txSnaps.map((s) => (s.data() ?? {}).auctionId as string).filter(Boolean))];
   const buyerIds   = [...new Set(txSnaps.map((s) => (s.data() ?? {}).buyerId   as string).filter(Boolean))];
 
@@ -137,11 +170,9 @@ export async function getOpenDisputes() {
   const auctionMap = new Map(auctionSnaps.map((s) => [s.id, docData<Auction>(s)]));
   const buyerMap   = new Map(buyerSnaps.map((s) => [s.id, docData<User>(s)]));
 
-  // Pass 3 — sellers (IDs come from the auction docs)
   const sellerIds = [...new Set(
     auctionSnaps.map((s) => (s.data() ?? {}).sellerId as string).filter(Boolean),
   )];
-
   const sellerMap = new Map<string, User | null>();
   if (sellerIds.length > 0) {
     const sellerSnaps = await db.getAll(...sellerIds.map((id) => db.collection('users').doc(id)));

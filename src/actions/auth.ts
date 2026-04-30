@@ -5,10 +5,15 @@ import bcrypt from 'bcryptjs';
 import { verifyStandaloneOTP } from './phone';
 import { normalizePhone } from '@/lib/utils';
 import { headers } from 'next/headers';
-import { loginLimiter } from '@/lib/ratelimit';
+import { loginLimiter, emailOtpVerifyLimiter } from '@/lib/ratelimit';
 import * as Sentry from '@sentry/nextjs';
 import { registerSchema, phoneSignupSchema, passwordResetSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
+import crypto from 'crypto';
+
+function hashOTP(otp: string): string {
+  return crypto.createHash('sha256').update(otp).digest('hex');
+}
 
 export async function registerUser(data: unknown) {
   const parsed = registerSchema.safeParse(data);
@@ -47,12 +52,13 @@ export async function signupWithPhone(data: unknown) {
   const { name, phone, otp, password, email } = parsed.data;
   const normalizedPhone = normalizePhone(phone);
 
-  const otpVerify = await verifyStandaloneOTP(normalizedPhone, otp);
-  if (!otpVerify.success) return otpVerify;
-
+  // Rate-limit BEFORE consuming the OTP — prevents OTP DOS and IP-rotation abuse
   const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await loginLimiter.limit(`signup_${ip}`);
   if (!rateLimitSuccess) return { success: false, error: 'Too many requests. Try again later.' };
+
+  const otpVerify = await verifyStandaloneOTP(normalizedPhone, otp);
+  if (!otpVerify.success) return otpVerify;
 
   const phoneExists = await db.collection('users').where('phone', '==', normalizedPhone).limit(1).get();
   if (!phoneExists.empty) return { success: false, error: 'Phone number already registered.' };
@@ -95,9 +101,19 @@ export async function resetPasswordWithOTP(data: unknown) {
       const otpVerify = await verifyStandaloneOTP(phone, otp);
       if (!otpVerify.success) return otpVerify;
     } else if (email) {
+      const normalizedEmail = email.trim().toLowerCase();
+
+      // Per-address verify rate limit — mirrors phone OTP brute-force protection
+      const verifyGate = await emailOtpVerifyLimiter.limit(`email_verify_${normalizedEmail}`);
+      if (!verifyGate.success) {
+        return { success: false, error: 'Too many attempts. Please request a new code.' };
+      }
+
+      // Query against the stored hash (sendEmailOTP now hashes before storing)
+      const hashedOTP = hashOTP(otp);
       const tokenSnap = await db.collection('verificationTokens')
-        .where('identifier', '==', email)
-        .where('token', '==', otp)
+        .where('identifier', '==', normalizedEmail)
+        .where('token', '==', hashedOTP)
         .limit(1).get();
       if (tokenSnap.empty) return { success: false, error: 'Invalid or expired OTP.' };
       const tokenDoc = tokenSnap.docs[0];

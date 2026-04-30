@@ -8,15 +8,15 @@ import {
   phoneOtpSendLimiter,
   phoneOtpVerifyLimiter,
   emailOtpSendLimiter,
+  emailOtpVerifyLimiter,
 } from '@/lib/ratelimit';
 import { log } from '@/lib/logger';
-
 import crypto from 'crypto';
 
-const OTP_EXPIRY_MS         = 5 * 60 * 1000;
-const MAX_ATTEMPTS          = 5;
-const RATE_LIMIT_WINDOW_MS  = 60 * 60 * 1000;
-const MAX_OTP_PER_HOUR      = 5;
+const OTP_EXPIRY_MS        = 5 * 60 * 1000;
+const MAX_ATTEMPTS         = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const MAX_OTP_PER_HOUR     = 5;
 
 function hashOTP(otp: string): string {
   return crypto.createHash('sha256').update(otp).digest('hex');
@@ -35,7 +35,7 @@ export async function sendPhoneOTP(phone: string) {
     return { success: false, error: 'Invalid Bangladesh phone number.' };
   }
 
-  // Check already verified by another user
+  // Block if already verified by a *different* account
   const existingSnap = await db.collection('users')
     .where('phone', '==', normalizedPhone)
     .where('isPhoneVerified', '==', true)
@@ -44,7 +44,7 @@ export async function sendPhoneOTP(phone: string) {
     return { success: false, error: 'This phone number is already verified by another account.' };
   }
 
-  return await internalSendOTP(normalizedPhone, session.user.id, session.user.email ?? undefined);
+  return internalSendOTP(normalizedPhone, session.user.id, session.user.email ?? undefined);
 }
 
 export async function requestStandaloneOTP(phone: string) {
@@ -52,25 +52,22 @@ export async function requestStandaloneOTP(phone: string) {
   if (!/^\+8801\d{9}$/.test(normalizedPhone)) {
     return { success: false, error: 'Invalid Bangladesh phone number.' };
   }
-  return await internalSendOTP(normalizedPhone);
+  return internalSendOTP(normalizedPhone);
 }
 
 async function internalSendOTP(phone: string, userId?: string, email?: string) {
-  // Per-phone-number rate limit (independent of caller IP). Without this an
-  // attacker can rotate IPs and burn through SMS budget on arbitrary numbers,
-  // or harass a single victim by spamming OTP texts to their phone.
+  // Per-phone rate limit — prevents SMS budget exhaustion and victim harassment
   const sendGate = await phoneOtpSendLimiter.limit(`phone_send_${phone}`);
   if (!sendGate.success) {
     return { success: false, error: 'Too many OTP requests. Please try again in an hour.' };
   }
 
-  // Belt-and-braces: also enforce against Firestore in case Redis is wiped.
+  // Belt-and-braces Firestore check in case Redis is wiped
   const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
   const rateSnap   = await db.collection('phoneVerifications')
     .where('phone', '==', phone)
     .where('createdAt', '>', oneHourAgo)
     .get();
-
   if (rateSnap.size >= MAX_OTP_PER_HOUR) {
     return { success: false, error: 'Too many OTP requests. Please try again in an hour.' };
   }
@@ -113,23 +110,26 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: 'You must be logged in.' };
 
-  const result = await internalVerifyOTP(phone, otp, session.user.id);
+  // Always normalize before querying and storing — consistent with sendPhoneOTP
+  const normalizedPhone = normalizePhone(phone);
+
+  const result = await internalVerifyOTP(normalizedPhone, otp, session.user.id);
   if (!result.success) return result;
 
   await db.collection('users').doc(session.user.id).update({
-    phone, isPhoneVerified: true, updatedAt: new Date(),
+    phone: normalizedPhone,   // store normalized form so phone-login queries match
+    isPhoneVerified: true,
+    updatedAt: new Date(),
   });
   return { success: true };
 }
 
 export async function verifyStandaloneOTP(phone: string, otp: string) {
-  return await internalVerifyOTP(normalizePhone(phone), otp);
+  return internalVerifyOTP(normalizePhone(phone), otp);
 }
 
 async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
-  // Cap verification attempts per phone. A 6-digit OTP is brute-forceable in
-  // <1M tries; without a per-number limit an attacker can spray attempts as
-  // fast as Firestore will respond.
+  // Cap attempts per phone — prevents brute-force of 6-digit OTP space
   const verifyGate = await phoneOtpVerifyLimiter.limit(`phone_verify_${phone}`);
   if (!verifyGate.success) {
     return { success: false, error: 'Too many verification attempts. Please request a new code.' };
@@ -149,7 +149,7 @@ async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
   const snap = await query.get();
 
   if (snap.empty) {
-    // Increment attempt on latest
+    // Increment attempt counter on the latest pending doc so MAX_ATTEMPTS is enforced
     const latestSnap = await db.collection('phoneVerifications')
       .where('phone', '==', phone)
       .where('verified', '==', false)
@@ -164,23 +164,22 @@ async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
     return { success: false, error: 'Invalid or expired OTP.' };
   }
 
-  // Delete on consumption — `users.isPhoneVerified` is the durable record;
-  // keeping spent OTP docs around bloats Firestore reads on the rate-limit
-  // window query above and provides no audit value.
+  // Delete on consumption — spent OTPs have no audit value and bloat rate-limit queries
   await snap.docs[0].ref.delete();
   return { success: true };
 }
 
 export async function sendEmailOTP(email: string) {
-  // Per-address rate limit prevents email-bombing a victim's inbox or burning
-  // Resend budget by enumerating addresses.
   const normalized = email.trim().toLowerCase();
+
+  // Per-address rate limit — prevents inbox-bombing and Resend budget exhaustion
   const sendGate = await emailOtpSendLimiter.limit(`email_send_${normalized}`);
   if (!sendGate.success) {
     return { success: false, error: 'Too many OTP requests. Try again in an hour.' };
   }
 
   const otp        = generateOTP();
+  const hashedOTP  = hashOTP(otp);   // store hash, not plaintext
   const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
 
   const rateSnap = await db.collection('verificationTokens')
@@ -191,9 +190,13 @@ export async function sendEmailOTP(email: string) {
     return { success: false, error: 'Too many OTP requests. Try again in an hour.' };
   }
 
-  const tokenId = `${normalized}__${otp}`;
+  // Doc ID uses the hash — doc ID is observable in error messages and logs,
+  // so we never embed the raw OTP there.
+  const tokenId = `${normalized}__${hashedOTP}`;
   await db.collection('verificationTokens').doc(tokenId).set({
-    identifier: normalized, token: otp, expires: new Date(Date.now() + OTP_EXPIRY_MS),
+    identifier: normalized,
+    token:      hashedOTP,    // hashed, matches what resetPasswordWithOTP will query
+    expires:    new Date(Date.now() + OTP_EXPIRY_MS),
   });
 
   try {

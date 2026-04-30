@@ -13,12 +13,22 @@ export function calculateSuccessFee(finalPrice: number): { fee: number; rate: nu
   return { fee: Math.round(finalPrice * 0.01) + 20, rate: 0.01 };
 }
 
+// ─── Post-sale notification payload ─────────────────────────────────────────
+interface SaleNotifyPayload {
+  winnerId:    string;
+  winnerEmail: string | null;
+  auctionId:   string;
+  title:       string;
+  finalPrice:  number;
+}
+
 // ─── processAuctionSale ──────────────────────────────────────────────────────
 /**
- * Centralised sale logic — must be called inside a Firestore transaction.
- * Updates auction → SOLD and creates / upserts EscrowTransaction.
+ * Called inside a Firestore transaction — writes auction + escrow updates only.
+ * Returns notification data; the CALLER is responsible for firing notifications
+ * AFTER the transaction commits to prevent duplicate sends on tx retries.
  */
-export async function processAuctionSale(
+export function processAuctionSale(
   transaction: FirebaseFirestore.Transaction,
   auction: {
     id: string; title: string; sellerId: string;
@@ -28,7 +38,7 @@ export async function processAuctionSale(
   seller: { id: string; isVerifiedSeller: boolean },
   winner: { id: string; email: string | null; name: string | null },
   finalPrice: number,
-) {
+): SaleNotifyPayload {
   if (auction.reservePrice && finalPrice < auction.reservePrice) {
     throw new Error('Reserve price not met.');
   }
@@ -38,21 +48,26 @@ export async function processAuctionSale(
 
   const auctionRef = db.collection('auctions').doc(auction.id);
   transaction.update(auctionRef, {
-    status:          'SOLD' as AuctionStatus,
-    winnerId:        winner.id,
-    commissionRate:  rate,
+    status:           'SOLD' as AuctionStatus,
+    winnerId:         winner.id,
+    commissionRate:   rate,
     commissionEarned: fee,
-    updatedAt:       now,
+    updatedAt:        now,
   });
 
-  // Escrow doc ID = auctionId for idempotent upsert
+  // Always escrow the full final price regardless of seller verification status.
+  // Previously unverified sellers only had fee+delivery held, leaving buyers with
+  // almost no protection on large purchases. Commission is extracted on release.
   const deliveryCharge = auction.deliveryCharge ?? 0;
-  const escrowAmount   = seller.isVerifiedSeller ? finalPrice : fee + deliveryCharge;
-  const escrowRef      = db.collection('escrowTransactions').doc(auction.id);
+  const escrowAmount   = finalPrice + deliveryCharge;
+
+  const escrowRef = db.collection('escrowTransactions').doc(auction.id);
+  // set() without merge so a second call can never silently re-open a closed escrow
   transaction.set(escrowRef, {
     id:               auction.id,
     auctionId:        auction.id,
     buyerId:          winner.id,
+    sellerId:         auction.sellerId,
     amount:           escrowAmount,
     status:           'PENDING',
     paymentMethod:    null,
@@ -60,70 +75,71 @@ export async function processAuctionSale(
     verificationType: null,
     createdAt:        now,
     updatedAt:        now,
-  }, { merge: true });
+  });
 
-  // Non-blocking post-sale notifications (fire-and-forget outside the transaction)
-  if (winner.email) {
-    sendAuctionWonEmail(winner.email, auction.title, finalPrice, auction.id)
-      .catch((e) => log.error('auction-logic: winner email failed', e, { auctionId: auction.id }));
+  // Return payload — notifications fired by caller AFTER commit
+  return { winnerId: winner.id, winnerEmail: winner.email, auctionId: auction.id, title: auction.title, finalPrice };
+}
+
+// ─── sendSaleNotifications ───────────────────────────────────────────────────
+function sendSaleNotifications(payload: SaleNotifyPayload) {
+  if (payload.winnerEmail) {
+    sendAuctionWonEmail(payload.winnerEmail, payload.title, payload.finalPrice, payload.auctionId)
+      .catch((e) => log.error('auction-logic: winner email failed', e, { auctionId: payload.auctionId }));
   }
-  rtdbPush(RTDB_PATHS.userNotifications(winner.id), {
+  rtdbPush(RTDB_PATHS.userNotifications(payload.winnerId), {
     event:     FIREBASE_EVENTS.AUCTION_WON,
-    auctionId: auction.id,
-    title:     auction.title,
-    amount:    finalPrice,
-  }).catch((e) => log.error('auction-logic: winner RTDB notification failed', e, { auctionId: auction.id }));
+    auctionId: payload.auctionId,
+    title:     payload.title,
+    amount:    payload.finalPrice,
+  }).catch((e) => log.error('auction-logic: winner RTDB notification failed', e, { auctionId: payload.auctionId }));
 }
 
 // ─── closeAuctionIfEnded ─────────────────────────────────────────────────────
 export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
   try {
-    await db.runTransaction(async (tx) => {
+    const notifyPayload = await db.runTransaction(async (tx) => {
       const aRef  = db.collection('auctions').doc(auctionId);
       const aSnap = await tx.get(aRef);
-      if (!aSnap.exists) return;
-      
+      if (!aSnap.exists) return null;
+
       const a = aSnap.data()!;
-      if (a.status !== 'ACTIVE') return;
+      if (a.status !== 'ACTIVE') return null;
 
       const now     = new Date();
       const endTime = a.endTime?.toDate ? a.endTime.toDate() : new Date(a.endTime);
-      if (now < endTime) return;
+      if (now < endTime) return null;
 
-      // Read winner from the transactionally-locked auction doc itself.
-      // BiddingService denormalises every bid onto `currentBidderId` /
-      // `currentPrice`, so we never need a non-transactional bids query
-      // here — that would expose a lost-update race against late bids.
-      const winnerId: string | null = a.currentBidderId ?? null;
-      const finalPrice: number | null = a.currentPrice ?? null;
+      // Winner is denormalised onto the auction doc — transactionally safe;
+      // a collection query here would not be locked and could race late bids.
+      const winnerId:    string | null = a.currentBidderId ?? null;
+      const finalPrice:  number | null = a.currentPrice    ?? null;
 
       if (!winnerId || !finalPrice) {
         tx.update(aRef, { status: 'EXPIRED', updatedAt: now });
-        return;
+        return null;
       }
 
-      // FETCH WINNER & SELLER DATA via tx.get so they're locked in this tx.
       const [winnerSnap, sellerSnap] = await Promise.all([
         tx.get(db.collection('users').doc(winnerId)),
-        tx.get(db.collection('users').doc(a.sellerId))
+        tx.get(db.collection('users').doc(a.sellerId)),
       ]);
 
       const winnerData = winnerSnap.data() || {};
       const sellerData = sellerSnap.data() || {};
 
-      await processAuctionSale(
+      return processAuctionSale(
         tx,
         { id: auctionId, title: a.title, sellerId: a.sellerId,
           deliveryCharge: a.deliveryCharge, reservePrice: a.reservePrice },
         { id: a.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
-        {
-          id: winnerId,
-          email: winnerData.email ?? null,
-          name: winnerData.name ?? 'Winner'
-        },
+        { id: winnerId, email: winnerData.email ?? null, name: winnerData.name ?? 'Winner' },
         finalPrice,
       );
     });
+
+    // Fire notifications only after the transaction has committed successfully
+    if (notifyPayload) sendSaleNotifications(notifyPayload);
   } catch (e) {
     log.error('[auction-logic] closeAuctionIfEnded failed', e, { auctionId });
   }
@@ -131,18 +147,21 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
 
 // ─── closeAllEndedAuctions ───────────────────────────────────────────────────
 export async function closeAllEndedAuctions(): Promise<void> {
-  // Fetch only a reasonable batch to avoid timeout/memory issues in cron
   const snap = await db.collection('auctions')
     .where('status', '==', 'ACTIVE')
     .where('endTime', '<=', new Date())
-    .limit(50) 
+    .limit(50)
     .get();
 
   if (snap.empty) return;
 
-  // Execute in sequence or small controlled chunks in production
-  // to avoid Firestore transaction contention on the same indices
-  for (const doc of snap.docs) {
-    await closeAuctionIfEnded(doc.id);
+  // Process with a concurrency cap to balance throughput against Firestore
+  // transaction contention. 10 concurrent is safe; sequential was too slow
+  // (50 × ~500ms = ~25s, dangerously close to 60s Cloud Run timeout).
+  const CONCURRENCY = 10;
+  const ids = snap.docs.map((d) => d.id);
+
+  for (let i = 0; i < ids.length; i += CONCURRENCY) {
+    await Promise.all(ids.slice(i, i + CONCURRENCY).map((id) => closeAuctionIfEnded(id)));
   }
 }

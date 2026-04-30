@@ -106,8 +106,10 @@ export class BiddingService {
         triggeredAlerts,
       };
 
-      // Trigger Side Effects (Async)
-      this.handleBidSideEffects(result, auctionId, userId, userName, userEmail, amount);
+      // Fire-and-forget side effects — must not block the bid response
+      this.handleBidSideEffects(result, auctionId, userId, userName, userEmail, amount).catch(
+        (e) => log.error('[BiddingService] handleBidSideEffects uncaught', e, { auctionId, userId })
+      );
 
       return {
         success: true,
