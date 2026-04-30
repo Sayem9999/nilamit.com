@@ -81,4 +81,8 @@ const nextConfig: NextConfig = {
 export default withSentryConfig(withNextIntl(nextConfig), {
   silent: !process.env.CI,
   widenClientFileUpload: true,
+  // 🛡️ Disable source map upload until SENTRY_AUTH_TOKEN is added to Secret Manager
+  sourcemaps: {
+    disable: true,
+  },
 });
