@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import { CheckCircle2, ShieldCheck, Building2, Phone, Mail, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -18,14 +19,14 @@ interface VerificationBadgeProps {
   className?: string;
 }
 
-export default function VerificationBadge({
+const VerificationBadge = memo(({
   isPhoneVerified,
   emailVerified,
   isVerifiedSeller,
   showText = true,
   size = "md",
   className = "",
-}: VerificationBadgeProps) {
+}: VerificationBadgeProps) => {
   const t = useTranslations("Social");
 
   let level = 0;
@@ -136,4 +137,7 @@ export default function VerificationBadge({
       </Tooltip>
     </TooltipProvider>
   );
-}
+});
+
+VerificationBadge.displayName = "VerificationBadge";
+export default VerificationBadge;

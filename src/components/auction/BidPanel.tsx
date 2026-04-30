@@ -23,7 +23,9 @@ import { ERROR_CODES } from "@/lib/constants";
 import { ErrorType, type ServiceResponse } from "@/lib/errors";
 import type { PlaceBidResult } from "@/types";
 import { VerificationGuard } from "../auth/VerificationGuard";
-import { PhoneVerificationPrompt, MFSLinkagePrompt } from "./components/BidPrompts";
+import dynamic from "next/dynamic";
+const PhoneVerificationPrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.PhoneVerificationPrompt), { ssr: false });
+const MFSLinkagePrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.MFSLinkagePrompt), { ssr: false });
 import { ViewerCount } from "./ViewerCount";
 
 interface BidPanelProps {

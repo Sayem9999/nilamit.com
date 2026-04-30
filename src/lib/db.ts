@@ -27,7 +27,7 @@ export function newId(): string {
   return db.collection('_').doc().id;
 }
 
-import { SellerPublic } from '@/types';
+import { SellerPublic, Message } from '@/types';
 
 /** Map a raw User document to the SellerPublic interface (No PII) */
 export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
@@ -57,6 +57,23 @@ export function toSellerPrivate(id: string, data: unknown): (SellerPublic & { ph
   return {
     ...publicData,
     phone: (d.phone as string) ?? null
+  };
+}
+
+/** Map a raw Message document to the Message interface */
+export function toMessage(id: string, data: unknown): Message {
+  const d = data as Record<string, unknown>;
+  const createdAt = d.createdAt instanceof Timestamp ? d.createdAt.toDate() : (d.createdAt ? new Date(d.createdAt as string) : new Date());
+  
+  return {
+    id,
+    conversationId: (d.conversationId as string) ?? '',
+    content: (d.content as string) ?? '',
+    senderId: (d.senderId as string) ?? '',
+    imageUrl: (d.imageUrl as string) ?? null,
+    isSystemMessage: !!d.isSystemMessage,
+    isRead: !!d.isRead,
+    createdAt
   };
 }
 

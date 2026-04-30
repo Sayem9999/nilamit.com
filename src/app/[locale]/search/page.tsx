@@ -5,6 +5,7 @@ import LoadMore from "@/components/auction/LoadMore";
 import { getTranslations } from "next-intl/server";
 import { CATEGORIES, LOCATIONS } from "@/types";
 import Link from "next/link";
+import { getAuctions } from "@/actions/auction";
 
 export default async function SearchPage({
   searchParams,
@@ -34,7 +35,6 @@ export default async function SearchPage({
     limit: 24,
   };
 
-  const { getAuctions } = await import("@/actions/auction");
   const response = await getAuctions(filters);
   const auctions = (response.success && response.data) ? response.data.auctions : [];
 

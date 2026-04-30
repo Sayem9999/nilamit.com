@@ -18,12 +18,25 @@ export class AuctionService {
       }
 
       const auctionData = doc.data()!;
-      const sellerSnap = await db.collection('users').doc(auctionData.sellerId).get();
+      
+      const userRefs = [db.collection('users').doc(auctionData.sellerId)];
+      if (auctionData.winnerId) {
+        userRefs.push(db.collection('users').doc(auctionData.winnerId));
+      }
+      
+      const userSnaps = await db.getAll(...userRefs);
+      const sellerSnap = userSnaps[0];
+      const winnerSnap = userSnaps[1];
       
       const data = {
         ...auctionData,
         id: doc.id,
         seller: toSellerPrivate(sellerSnap.id, sellerSnap.data())!,
+        winner: winnerSnap?.exists ? { 
+          id: winnerSnap.id, 
+          name: winnerSnap.data()?.name || null, 
+          image: winnerSnap.data()?.image || null 
+        } : null,
         endTime: auctionData.endTime?.toDate ? auctionData.endTime.toDate() : new Date(auctionData.endTime),
       } as AuctionWithSeller;
 

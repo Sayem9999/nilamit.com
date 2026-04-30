@@ -10,7 +10,8 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { formatBDT } from "@/lib/format";
-import { MockPaymentGateway } from "@/components/payment/MockPaymentGateway";
+import dynamic from "next/dynamic";
+const MockPaymentGateway = dynamic(() => import("@/components/payment/MockPaymentGateway").then(mod => mod.MockPaymentGateway), { ssr: false });
 
 import { useSession } from "next-auth/react";
 

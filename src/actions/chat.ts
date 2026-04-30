@@ -1,6 +1,6 @@
 'use server';
 
-import { db } from '@/lib/db';
+import { db, toMessage } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { filterPII } from '@/lib/pii-filter';
 import { adminDB, rtdbPush } from '@/lib/firebase-admin';
@@ -113,20 +113,7 @@ export async function getAuctionChat(auctionId: string): Promise<ServiceResponse
     db.collection('auctions').doc(conv.auctionId).get(),
   ]);
 
-  const messages = messagesSnap.docs.map((d) => {
-    const m = d.data() as { content?: string; senderId: string; imageUrl?: string | null; isSystemMessage?: boolean; isRead?: boolean; createdAt: { toDate?: () => Date } | Date };
-    const createdAt = m.createdAt instanceof Date ? m.createdAt : m.createdAt?.toDate?.() ?? new Date();
-    return {
-      id: d.id,
-      conversationId: auctionId,
-      content: m.content ?? '',
-      senderId: m.senderId,
-      imageUrl: m.imageUrl ?? null,
-      isSystemMessage: Boolean(m.isSystemMessage),
-      isRead: Boolean(m.isRead),
-      createdAt,
-    };
-  });
+  const messages = messagesSnap.docs.map((d) => toMessage(d.id, d.data()));
 
   const auction = aSnap.data() ?? {};
   const [sellerSnap, winnerSnap] = await Promise.all([

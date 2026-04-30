@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { db, toMessage } from "@/lib/db";
+import { AuctionService } from "@/services/auction/auction-service";
 import { notFound, redirect } from "next/navigation";
 import ChatInterface from "@/components/social/ChatInterface";
 import { ChevronLeft, ShieldCheck, Info } from "lucide-react";
@@ -33,14 +34,11 @@ export default async function CoordinationPage({
   }
   const convData = convSnap.data() as Conversation;
 
-  const auctionSnap = await db.collection('auctions').doc(convData.auctionId).get();
-  const auction = auctionSnap.data() as Auction;
-
-  const sellerSnap = await db.collection('users').doc(auction.sellerId).get();
-  const seller = sellerSnap.data() as User;
-
-  const winnerSnap = await db.collection('users').doc(auction.winnerId || 'unknown').get();
-  const winner = (winnerSnap.exists ? winnerSnap.data() : {}) as User;
+  const auctionRes = await AuctionService.getById(convData.auctionId);
+  if (!auctionRes.success || !auctionRes.data) {
+    notFound();
+  }
+  const auction = auctionRes.data;
 
   const escrowSnap = await db.collection('escrowTransactions').doc(convData.auctionId).get();
   const escrow = (escrowSnap.exists ? escrowSnap.data() : null) as EscrowTransaction | null;
@@ -49,19 +47,13 @@ export default async function CoordinationPage({
   const dispute = (disputeSnap.empty ? null : disputeSnap.docs[0].data()) as Dispute | null;
 
   const messagesSnap = await db.collection('messages').where('conversationId', '==', id).orderBy('createdAt', 'asc').get();
-  const messages = messagesSnap.docs.map(d => {
-    const m = d.data() as Message;
-    return { ...m, id: d.id };
-  });
+  const messages = messagesSnap.docs.map(d => toMessage(d.id, d.data()));
 
   const conversation = {
     ...convData,
     id: convSnap.id,
     auction: {
       ...auction,
-      id: auctionSnap.id,
-      seller: { id: auction.sellerId, name: seller.name, image: seller.image },
-      winner: { id: auction.winnerId, name: winner.name, image: winner.image },
       escrowTransaction: escrow ? { ...escrow, id: escrowSnap.id, dispute } : null
     },
     messages
@@ -112,7 +104,7 @@ export default async function CoordinationPage({
               conversationId={conversation.id}
               initialMessages={conversation.messages.map((m) => ({
                 ...m,
-                createdAt: m.createdAt.toISOString(),
+                createdAt: m.createdAt instanceof Date ? m.createdAt.toISOString() : new Date(m.createdAt).toISOString(),
               }))}
               recipientName={recipient?.name || "User"}
               recipientImage={recipient?.image || null}

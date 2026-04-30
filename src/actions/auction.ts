@@ -15,14 +15,14 @@ import { cache } from 'react';
 /**
  * Server Action: Fetch auctions with optional filtering
  */
-export async function getAuctions(filters: AuctionFilters = {}): Promise<ServiceResponse<AuctionListResponse>> {
+export const getAuctions = cache(async (filters: AuctionFilters = {}): Promise<ServiceResponse<AuctionListResponse>> => {
   const response = await AuctionService.list(filters);
   if (!response.success) {
     log.error('[Action] getAuctions failed', undefined, { error: response.error?.message });
     return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to fetch auctions');
   }
   return successResponse(response.data!);
-}
+});
 
 /**
  * Server Action: Fetch a single auction by ID (Memoized)
@@ -72,10 +72,10 @@ export async function createAuction(input: unknown): Promise<ServiceResponse<{ a
 /**
  * Homepage specialty feeds — shown alongside trending/featured.
  */
-export async function getSpecializedFeeds(): Promise<ServiceResponse<{ 
+export const getSpecializedFeeds = cache(async (): Promise<ServiceResponse<{ 
   endingSoon: AuctionWithSeller[], 
   latestBids: LatestActivity[] 
-}>> {
+}>> => {
   try {
     const nowTs = new Date();
     const in48h = new Date(nowTs.getTime() + 48 * 60 * 60 * 1000);
@@ -149,4 +149,4 @@ export async function getSpecializedFeeds(): Promise<ServiceResponse<{
     log.error('[Action] getSpecializedFeeds failed', error);
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch feeds');
   }
-}
+});

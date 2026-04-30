@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import { ShieldCheck, Award, Star, Zap, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -16,12 +17,12 @@ interface TrustBadgeProps {
   className?: string;
 }
 
-export default function TrustBadge({
+const TrustBadge = memo(({
   score,
   showText = true,
   size = "md",
   className = "",
-}: TrustBadgeProps) {
+}: TrustBadgeProps) => {
   const t = useTranslations("Social");
 
   // Tier Mapping
@@ -103,4 +104,7 @@ export default function TrustBadge({
       </Tooltip>
     </TooltipProvider>
   );
-}
+});
+
+TrustBadge.displayName = "TrustBadge";
+export default TrustBadge;
