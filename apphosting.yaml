@@ -1,13 +1,3 @@
-# ═══════════════════════════════════════════════════════════════
-# Firebase App Hosting — Backend Configuration
-# ═══════════════════════════════════════════════════════════════
-# Docs: https://firebase.google.com/docs/app-hosting/configure
-#
-# BEFORE FIRST DEPLOY — add every secret listed below:
-#   echo -n "your-value" | gcloud secrets create SECRET_NAME \
-#     --data-file=- --project=YOUR_PROJECT_ID
-# ═══════════════════════════════════════════════════════════════
-
 runConfig:
   minInstances: 1
   maxInstances: 10
@@ -17,54 +7,47 @@ runConfig:
   timeoutSeconds: 60
 
 env:
-  # ─── Node / Next.js ──────────────────────────────────────────
   - variable: NODE_ENV
     value: production
 
-  # ─── Auth.js ─────────────────────────────────────────────────
   - variable: AUTH_SECRET
-    secret: AUTH_SECRET     # openssl rand -base64 32
+    secret: AUTH_SECRET
 
   - variable: AUTH_URL
     value: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
 
-  # ─── Google OAuth (optional) ─────────────────────────────────
   - variable: GOOGLE_CLIENT_ID
     secret: GOOGLE_CLIENT_ID
 
   - variable: GOOGLE_CLIENT_SECRET
     secret: GOOGLE_CLIENT_SECRET
 
-  # ─── Admin ───────────────────────────────────────────────────
   - variable: ADMIN_EMAILS
-    secret: ADMIN_EMAILS    # comma-separated admin emails
+    secret: ADMIN_EMAILS
 
-  # ─── Cron Security ───────────────────────────────────────────
   - variable: CRON_SECRET
-    secret: CRON_SECRET     # openssl rand -hex 32
+    secret: CRON_SECRET
 
-  # ─── Firebase Admin SDK (server-side) ────────────────────────
   - variable: FIREBASE_PROJECT_ID
-    secret: FIREBASE_PROJECT_ID         # e.g. nilamit-app
+    secret: FIREBASE_PROJECT_ID
 
   - variable: FIREBASE_CLIENT_EMAIL
-    secret: FIREBASE_CLIENT_EMAIL       # service account email
+    secret: FIREBASE_CLIENT_EMAIL
 
   - variable: FIREBASE_PRIVATE_KEY
-    secret: FIREBASE_PRIVATE_KEY        # service account private key (with \n newlines)
+    secret: FIREBASE_PRIVATE_KEY
 
   - variable: FIREBASE_DATABASE_URL
-    secret: FIREBASE_DATABASE_URL       # https://{project}-default-rtdb.firebaseio.com
+    secret: FIREBASE_DATABASE_URL
 
   - variable: FIREBASE_STORAGE_BUCKET
-    secret: FIREBASE_STORAGE_BUCKET     # {project}.firebasestorage.app
+    secret: FIREBASE_STORAGE_BUCKET
 
-  # ─── Firebase Client SDK (browser — NEXT_PUBLIC_*) ───────────
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    secret: FIREBASE_WEB_API_KEY        # Web API key from Firebase Console
+    secret: FIREBASE_WEB_API_KEY
 
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    secret: FIREBASE_PROJECT_ID         # reuse server secret
+    secret: FIREBASE_PROJECT_ID
 
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
     secret: FIREBASE_MESSAGING_SENDER_ID
@@ -73,31 +56,20 @@ env:
     secret: FIREBASE_APP_ID
 
   - variable: NEXT_PUBLIC_FIREBASE_DATABASE_URL
-    secret: FIREBASE_DATABASE_URL       # reuse server secret
+    secret: FIREBASE_DATABASE_URL
 
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    secret: FIREBASE_STORAGE_BUCKET     # reuse server secret
+    secret: FIREBASE_STORAGE_BUCKET
 
-  # ─── App URL (used in email links) ───────────────────────────
   - variable: NEXT_PUBLIC_APP_URL
     value: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
 
-  # ─── SMS Gateway ─────────────────────────────────────────────
-  # SMS provider intentionally omitted until a real gateway is provisioned.
-  # The factory in src/lib/sms-gateway.ts is lazy and will hard-fail at first
-  # sendSMS() call in production until SMS_PROVIDER + the matching token
-  # secret (GREENWEB_TOKEN, BULKSMS_API_KEY+BULKSMS_SENDER_ID) are added here.
-
-  # ─── Upstash Redis (rate limiting) ──────────────────────────
-  # Without these, all rate limiters fail-closed in production (requests blocked).
-  # Get credentials from upstash.com → your Redis database → REST API.
   - variable: UPSTASH_REDIS_REST_URL
     secret: UPSTASH_REDIS_REST_URL
 
   - variable: UPSTASH_REDIS_REST_TOKEN
     secret: UPSTASH_REDIS_REST_TOKEN
 
-  # ─── Sentry ──────────────────────────────────────────────────
   - variable: SENTRY_DSN
     secret: SENTRY_DSN
 
@@ -106,3 +78,4 @@ env:
 
   - variable: SENTRY_AUTH_TOKEN
     secret: SENTRY_AUTH_TOKEN
+
