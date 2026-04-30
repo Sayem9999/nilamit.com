@@ -82,7 +82,7 @@ export function processAuctionSale(
 }
 
 // ─── sendSaleNotifications ───────────────────────────────────────────────────
-function sendSaleNotifications(payload: SaleNotifyPayload) {
+export function sendSaleNotifications(payload: SaleNotifyPayload) {
   if (payload.winnerEmail) {
     sendAuctionWonEmail(payload.winnerEmail, payload.title, payload.finalPrice, payload.auctionId)
       .catch((e) => log.error('auction-logic: winner email failed', e, { auctionId: payload.auctionId }));

@@ -1,6 +1,5 @@
-import { db, snapDocs, newId } from '@/lib/db';
+import { db, snapDocs, newId, toSellerPublic, toSellerPrivate } from '@/lib/db';
 import { Auction, AuctionFilters, AuctionWithSeller } from '@/types';
-import { toSellerPublic } from '@/lib/db';
 import { sanitizeObject } from '@/lib/sanitizer';
 import { filterPII } from '@/lib/pii-filter';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
@@ -24,7 +23,7 @@ export class AuctionService {
       const data = {
         ...auctionData,
         id: doc.id,
-        seller: toSellerPublic(sellerSnap.id, sellerSnap.data()),
+        seller: toSellerPrivate(sellerSnap.id, sellerSnap.data())!,
         endTime: auctionData.endTime?.toDate ? auctionData.endTime.toDate() : new Date(auctionData.endTime),
       } as AuctionWithSeller;
 
@@ -69,7 +68,8 @@ export class AuctionService {
 
       // Batch fetch sellers to avoid N+1
       const sellerIds = [...new Set(auctionDocs.map(a => a.sellerId))];
-      const sellerSnaps = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
+      const sellerRefs = sellerIds.map(id => db.collection('users').doc(id));
+      const sellerSnaps = sellerIds.length > 0 ? await db.getAll(...sellerRefs) : [];
       const sellerMap = new Map(sellerSnaps.map(s => [s.id, toSellerPublic(s.id, s.data())]));
 
       const auctions = auctionDocs.map(a => {

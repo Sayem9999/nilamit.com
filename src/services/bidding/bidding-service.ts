@@ -9,6 +9,7 @@ import { checkAndAwardBadges } from '@/actions/gamification';
 import { detectShillBidding } from '@/lib/moderation';
 import { log } from '@/lib/logger';
 import { validateBidPreconditions, computeAntiSnipeExtension } from './bid-rules';
+import { processAuctionSale, sendSaleNotifications } from '@/lib/auction-logic';
 
 interface BidSideEffectParams {
   bidId: string;
@@ -54,6 +55,7 @@ export class BiddingService {
         validateBidPreconditions({
           auctionStatus:   auction.status,
           endTime,
+          startTime:       auction.startTime,
           sellerId:        auction.sellerId,
           bidderId:        userId,
           currentPrice:    auction.currentPrice,
@@ -95,27 +97,16 @@ export class BiddingService {
         };
       });
 
-      // Alerts are fetched + deactivated AFTER the bid commits. They're
-      // notification triggers, not authoritative state, so a small window
-      // between commit and alert update is acceptable. Keeping them out of
-      // the transaction means we don't reintroduce a non-transactional query.
-      const triggeredAlerts = await this.processAlertsAfterBid(auctionId, userId, amount);
-
-      const result: BidSideEffectParams = {
-        ...txResult,
-        triggeredAlerts,
-      };
-
       // Fire-and-forget side effects — must not block the bid response
-      this.handleBidSideEffects(result, auctionId, userId, userName, userEmail, amount).catch(
+      this.handleBidSideEffects(txResult, auctionId, userId, userName, userEmail, amount).catch(
         (e) => log.error('[BiddingService] handleBidSideEffects uncaught', e, { auctionId, userId })
       );
 
       return {
         success: true,
-        bid: { id: result.bidId, amount, auctionId, bidderId: userId, createdAt: new Date() },
-        newEndTime: result.newEndTime,
-        antiSnipeTriggered: result.antiSnipeTriggered,
+        bid: { id: txResult.bidId, amount, auctionId, bidderId: userId, createdAt: new Date() },
+        newEndTime: txResult.newEndTime,
+        antiSnipeTriggered: txResult.antiSnipeTriggered,
       };
     }, { auctionId, userId, amount });
   }
@@ -156,7 +147,11 @@ export class BiddingService {
   /**
    * Handle all post-bid triggers like emails, push, and RTDB updates
    */
-  private static async handleBidSideEffects(result: BidSideEffectParams, auctionId: string, userId: string, userName: string, userEmail: string, amount: number) {
+  private static async handleBidSideEffects(txResult: Omit<BidSideEffectParams, 'triggeredAlerts'>, auctionId: string, userId: string, userName: string, userEmail: string, amount: number) {
+    // Alerts are fetched + deactivated OUTSIDE the critical path
+    const triggeredAlerts = await this.processAlertsAfterBid(auctionId, userId, amount);
+    const result: BidSideEffectParams = { ...txResult, triggeredAlerts };
+
     // 1. Fetch prev bidder email
     let prevBidderEmail: string | null = null;
     if (result.prevBidderId && result.prevBidderId !== userId) {
@@ -200,6 +195,51 @@ export class BiddingService {
     // 4. Async background tasks
     checkAndAwardBadges(userId, auctionId, amount, result.antiSnipeTriggered, result.auctionStartTime).catch((e) => log.error('bidding: badge check failed', e, { auctionId, userId }));
     detectShillBidding(auctionId, userId, result.sellerId, amount).catch((e) => log.error('bidding: shill detection failed', e, { auctionId, userId }));
+  }
+
+  /**
+   * Atomic BIN purchase: closes auction and initiates escrow.
+   */
+  static async executeBuyItNow(auctionId: string, userId: string, userName: string, userEmail: string | null): Promise<void> {
+    const notifyPayload = await db.runTransaction(async (tx) => {
+      const aRef = db.collection('auctions').doc(auctionId);
+      const aSnap = await tx.get(aRef);
+      if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
+
+      const auction = aSnap.data()!;
+      if (auction.status !== 'ACTIVE') throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
+
+      const now = new Date();
+      const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
+      
+      if (now < new Date(auction.startTime || 0)) throw new Error('AUCTION_NOT_STARTED');
+      if (now >= endTime) throw new Error(ERROR_CODES.AUCTION_ENDED);
+      if (auction.sellerId === userId) throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
+      if (!auction.buyItNowPrice) throw new Error('BUY_IT_NOW_NOT_AVAILABLE');
+
+      const sellerSnap = await tx.get(db.collection('users').doc(auction.sellerId));
+      const sellerData = sellerSnap.data() || {};
+
+      return processAuctionSale(
+        tx,
+        {
+          id: auctionId,
+          title: auction.title,
+          sellerId: auction.sellerId,
+          deliveryCharge: auction.deliveryCharge,
+          reservePrice: auction.reservePrice,
+        },
+        { id: auction.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
+        {
+          id:    userId,
+          email: userEmail,
+          name:  userName,
+        },
+        auction.buyItNowPrice,
+      );
+    });
+
+    if (notifyPayload) sendSaleNotifications(notifyPayload);
   }
 
   static async getAuctionBids(auctionId: string) {

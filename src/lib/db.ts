@@ -29,7 +29,7 @@ export function newId(): string {
 
 import { SellerPublic } from '@/types';
 
-/** Map a raw User document to the SellerPublic interface */
+/** Map a raw User document to the SellerPublic interface (No PII) */
 export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
   if (!data || typeof data !== 'object') return null;
   const d = data as Record<string, unknown>;
@@ -38,7 +38,6 @@ export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
     id,
     name: (d.name as string) ?? null,
     email: (d.email as string) ?? null,
-    phone: (d.phone as string) ?? null,
     image: (d.image as string) ?? null,
     reputationScore: (d.reputationScore as number) ?? 0,
     isPhoneVerified: !!d.isPhoneVerified,
@@ -47,6 +46,17 @@ export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
     winningStreak: (d.winningStreak as number) ?? 0,
     userLevel: (d.userLevel as number) ?? 1,
     isBanned: !!d.isBanned
+  };
+}
+
+/** Map a raw User document to the full Seller info (Including PII) */
+export function toSellerPrivate(id: string, data: unknown): (SellerPublic & { phone: string | null }) | null {
+  const publicData = toSellerPublic(id, data);
+  if (!publicData) return null;
+  const d = data as Record<string, unknown>;
+  return {
+    ...publicData,
+    phone: (d.phone as string) ?? null
   };
 }
 

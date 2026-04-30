@@ -183,16 +183,15 @@ export default async function SearchPage({
                 </div>
 
                 {/* Lazy Loading (Enterprise Scale) */}
-                {!query && (
-                  <LoadMore
-                    initialPage={1}
-                    filters={{ 
-                      category: catFilter, 
-                      sortBy: sortBy === 'endTime' ? 'endTime' : 'currentPrice',
-                      sortOrder: sortBy === 'price_asc' ? 'asc' : 'desc'
-                    }}
-                  />
-                )}
+                <LoadMore
+                  initialPage={1}
+                  filters={{ 
+                    search: query,
+                    category: catFilter, 
+                    sortBy: sortBy === 'endTime' ? 'endTime' : 'currentPrice',
+                    sortOrder: sortBy === 'price_asc' ? 'asc' : 'desc'
+                  }}
+                />
               </div>
             ) : (
               <div className="bg-white p-12 text-center rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center">

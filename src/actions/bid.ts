@@ -120,42 +120,12 @@ export async function executeBuyItNow(auctionId: string) {
     if (!privileges.success) return privileges as ServiceResponse<never>;
     const user = privileges.data!;
 
-    await db.runTransaction(async (tx) => {
-      const aRef = db.collection('auctions').doc(auctionId);
-      const aSnap = await tx.get(aRef);
-      if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
-
-      const auction = aSnap.data()!;
-      if (auction.status !== 'ACTIVE') throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
-
-      const now = new Date();
-      const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
-      if (now >= endTime) throw new Error(ERROR_CODES.AUCTION_ENDED);
-      if (auction.sellerId === userId) throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
-      if (!auction.buyItNowPrice) throw new Error('BUY_IT_NOW_NOT_AVAILABLE');
-
-      // Seller data needed by processAuctionSale for fee/escrow split
-      const sellerSnap = await tx.get(db.collection('users').doc(auction.sellerId));
-      const sellerData = sellerSnap.data() || {};
-
-      await processAuctionSale(
-        tx,
-        {
-          id: auctionId,
-          title: auction.title,
-          sellerId: auction.sellerId,
-          deliveryCharge: auction.deliveryCharge,
-          reservePrice: auction.reservePrice,
-        },
-        { id: auction.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
-        {
-          id:    userId,
-          email: typeof user.email === 'string' ? user.email : null,
-          name:  typeof user.name  === 'string' ? user.name  : 'Winner',
-        },
-        auction.buyItNowPrice,
-      );
-    });
+    await BiddingService.executeBuyItNow(
+      auctionId,
+      userId,
+      typeof user.name === 'string' ? user.name : 'Winner',
+      typeof user.email === 'string' ? user.email : null
+    );
 
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/dashboard');

@@ -10,6 +10,7 @@ import { AuctionStatus } from '@/types';
 import { createAuctionSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { cache } from 'react';
 
 /**
  * Server Action: Fetch auctions with optional filtering
@@ -24,15 +25,15 @@ export async function getAuctions(filters: AuctionFilters = {}): Promise<Service
 }
 
 /**
- * Server Action: Fetch a single auction by ID
+ * Server Action: Fetch a single auction by ID (Memoized)
  */
-export async function getAuction(id: string): Promise<ServiceResponse<Auction | null>> {
+export const getAuction = cache(async (id: string): Promise<ServiceResponse<Auction | null>> => {
   const response = await AuctionService.getById(id);
   if (!response.success) {
     return errorResponse(ErrorType.NOT_FOUND, response.error?.message || 'Auction not found');
   }
   return successResponse(response.data!);
-}
+});
 
 /**
  * Server Action: Create a new auction listing
@@ -99,7 +100,7 @@ export async function getSpecializedFeeds(): Promise<ServiceResponse<{
     if (sellerIds.length > 0) {
       const sellerRefs = sellerIds.map((id) => db.collection('users').doc(id));
       const sellerSnaps = await db.getAll(...sellerRefs);
-      sellerMap = new Map(sellerSnaps.map((s) => [s.id, toSellerPublic(s.id, s.data())]));
+      sellerMap = new Map(sellerSnaps.map(s => [s.id, toSellerPublic(s.id, s.data())!]));
     }
     const endingSoon = endingDocs.map((a) => ({
       ...a,

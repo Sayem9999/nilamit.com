@@ -114,7 +114,6 @@ export interface SellerPublic {
   id: string;
   name: string | null;
   email: string | null;
-  phone: string | null;
   image: string | null;
   reputationScore: number;
   isPhoneVerified: boolean;
@@ -227,17 +226,6 @@ export interface SellerPerformance {
   categoryPerformance: { category: string; revenue: number; count: number }[];
 }
 
-// ─── Standardized Server Action Result ────────────────────────────────────────
-export type ActionResult<T = void> =
-  | { success: true;  data: T }
-  | { success: false; error: string; code?: string };
-
-export function actionOk<T>(data: T): ActionResult<T> {
-  return { success: true, data };
-}
-export function actionError(error: string, code?: string): ActionResult<never> {
-  return { success: false, error, code };
-}
 
 export interface SystemConfig {
   id: string;
@@ -253,7 +241,7 @@ export interface SystemConfig {
 
 
 export type AuctionWithSeller = Auction & {
-  seller: SellerPublic;
+  seller: SellerPublic & { phone?: string | null };
   watchlist?: { userId: string }[];
 };
 
