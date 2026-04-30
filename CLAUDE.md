@@ -40,6 +40,10 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 10. **Admin pages must check `isAdmin` and redirect before fetching data.** If `requireAdmin()` throws, Next.js shows a 500 error page. Always use `auth()` check + `redirect('/login')` at the top of admin Server Components.
 
+11. **Authorized PII Gating** — Never return user phone numbers or emails in public actions or views. Use `AuctionService.getById(id, userId)` to gate sensitive data based on the viewer's role (seller or winner).
+
+12. **Secure Uploads** — All image uploads must use the `/api/upload` endpoint (magic-byte validation). Never allow direct client-side storage uploads for user content.
+
 ---
 
 ## Architecture

@@ -122,10 +122,11 @@ Deployment is handled by **Firebase App Hosting** — push to `main` triggers an
 
 - All Firestore writes go through Server Actions (Firebase Admin SDK) — client-side writes are forbidden in security rules
 - Rate limiting on all auth, bid, OTP, and upload endpoints via Upstash Redis (fail-closed in production)
+- **Authorized PII Gating** — Sensitive data (seller phone) is only revealed to the auction winner or the seller themselves; others see sanitized profiles
+- **Magic-Byte Image Validation** — Uploads are validated against actual file bytes (JPEG, PNG, WebP, GIF) to prevent script-in-image attacks
 - OTP generation uses `crypto.randomInt()` — cryptographically secure
 - Verification tokens stored as SHA-256 hashes
-- Content Security Policy, HSTS, X-Frame-Options, and other security headers on all responses
-- PII (phone numbers, emails) stripped from public-facing text fields
+- Content Security Policy, HSTS, X-Frame-Options, and other security headers enforced at the middleware level
 - Banned users blocked at middleware level within 5 minutes of admin action
 
 See [docs/SECURITY.md](docs/SECURITY.md) for the full security architecture.

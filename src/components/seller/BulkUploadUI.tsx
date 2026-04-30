@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { processBulkUpload } from "@/actions/bulk-upload";
+import Link from "next/link";
+import Papa from "papaparse";
 import {
   Upload,
   FileText,
@@ -11,6 +13,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { log } from "@/lib/logger";
 
 export default function BulkUploadUI() {
   const [isUploading, setIsUploading] = useState(false);
@@ -27,34 +30,59 @@ export default function BulkUploadUI() {
     if (!file) return;
 
     setIsUploading(true);
-    // Mimicking CSV parsing here for the prototype logic
-    // In a real app, use PapaParse or similar
-    const dummyRows = [
-      {
-        title: "Bulk Item 1",
-        description: "Batch listing",
-        category: "Electronics",
-        startingPrice: 1000,
-        durationHours: 48,
-      },
-      {
-        title: "Bulk Item 2",
-        description: "Batch listing",
-        category: "Home",
-        startingPrice: 500,
-        durationHours: 24,
-      },
-    ];
 
-    const res = await processBulkUpload(file.name, dummyRows);
-    setIsUploading(false);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: true,
+      complete: async (results) => {
+        interface CSVRow {
+          title?: string;
+          Title?: string;
+          description?: string;
+          Description?: string;
+          category?: string;
+          Category?: string;
+          startingPrice?: string | number;
+          StartingPrice?: string | number;
+          durationHours?: string | number;
+          DurationHours?: string | number;
+        }
 
-    if (res.success) {
-      setResult({ total: dummyRows.length, processed: res.data?.processed || 0, errorCount: res.data?.errors?.length || 0 });
-      toast.success("Bulk upload processed!");
-    } else {
-      toast.error(res.error?.message || "Upload failed");
-    }
+        const rows = (results.data as CSVRow[]).map((row) => ({
+          title: row.title || row.Title || "",
+          description: row.description || row.Description || "",
+          category: row.category || row.Category || "",
+          startingPrice: Number(row.startingPrice || row.StartingPrice || 0),
+          durationHours: Number(row.durationHours || row.DurationHours || 24),
+        }));
+
+        if (rows.length === 0) {
+          toast.error("The CSV file appears to be empty.");
+          setIsUploading(false);
+          return;
+        }
+
+        const res = await processBulkUpload(file.name, rows);
+        setIsUploading(false);
+
+        if (res.success) {
+          setResult({ 
+            total: rows.length, 
+            processed: res.data?.processed || 0, 
+            errorCount: res.data?.errors?.length || 0 
+          });
+          toast.success("Bulk upload processed!");
+        } else {
+          toast.error(res.error?.message || "Upload failed");
+        }
+      },
+      error: (error) => {
+        log.error("CSV Parsing failed", error);
+        toast.error("Failed to parse CSV file. Please check the format.");
+        setIsUploading(false);
+      },
+    });
   };
 
   return (
@@ -114,12 +142,12 @@ export default function BulkUploadUI() {
           )}
 
           <div className="mt-8 grid grid-cols-2 gap-4 w-full max-w-lg">
-            <a
-              href="#"
+            <Link
+              href="/api/bulk/template"
               className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition-colors"
             >
               <FileText className="w-4 h-4" /> Download Template
-            </a>
+            </Link>
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl text-sm text-gray-600">
               <AlertCircle className="w-4 h-4 text-amber-500" /> CSV only
             </div>

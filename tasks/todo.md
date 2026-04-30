@@ -31,3 +31,14 @@
 - [x] Build `ImageGallery` component.
 - [x] Integrate `ImageGallery` into `AuctionDisplay` for listings with multiple photos.
 - [x] Ensure all images are using optimized `next/image` tags.
+
+## 4. Production Hardening & Performance (v1.7)
+
+- [x] Implement **Authorized PII Gating** for seller/winner contact info.
+- [x] Implement **Magic-Byte Image Validation** (sniffing) for secure uploads.
+- [x] Implement global **Security Headers** (CSP, HSTS) at middleware level.
+- [x] Implement **Request-Level Caching** via React `cache()`.
+- [x] Implement **Memoization** for high-frequency list components.
+- [x] Implement **Lazy Loading** for heavy modals and gateways.
+- [x] Optimize **Shill Bidding Detection** for high-volume scalability.
+- [x] Add **Sort-Field Allowlisting** for public listing queries.

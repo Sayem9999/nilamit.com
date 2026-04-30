@@ -1,6 +1,6 @@
 # Security Architecture
 
-> Last Updated: April 29, 2026
+> Last Updated: April 30, 2026
 
 ---
 
@@ -103,7 +103,18 @@ The `processAuctionSale()` function in `src/lib/auction-logic.ts` checks reserve
 
 ### Shill Bid Detection
 
-`detectShillBidding()` runs asynchronously after each bid commit. It checks bid patterns for suspicious activity and can flag auctions for admin review.
+`detectShillBidding()` runs asynchronously after each bid commit. It checks bid patterns for suspicious activity and can flag auctions for admin review. The implementation is optimized using Firestore `count()` aggregations and a sliding window of the last 100 bids to prevent memory exhaustion on high-volume accounts.
+
+---
+
+## Upload Security
+
+All file uploads (auction images and chat attachments) are handled by the `/api/upload` endpoint.
+
+- **Authentication:** Only authenticated users with a verified phone number can upload.
+- **Magic-Byte Sniffing:** The server-side code uses `detectImageMime` to inspect the actual file bytes. It rejects any file that doesn't match a known image magic-byte pattern (JPEG, PNG, WebP, GIF), preventing polyglot file attacks or script-in-image exploits.
+- **Isolation:** Auction images are world-readable, but chat attachments are kept private and served via **7-day signed URLs**.
+- **Rate Limiting:** Every upload is gated by the `apiLimiter` (100 req/min) and tracked per user ID to prevent storage-budget exhaustion.
 
 ---
 
@@ -151,17 +162,31 @@ upgrade-insecure-requests
 
 `'unsafe-eval'` is **not** present. `'unsafe-inline'` on script-src is required for Next.js App Router hydration scripts (inline `<script>` tags). Nonce-based CSP would remove this requirement but requires per-request middleware changes.
 
-Additional headers:
-- `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
-- `X-Frame-Options: DENY`
-- `X-Content-Type-Options: nosniff`
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `Cross-Origin-Opener-Policy: same-origin`
-- `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+### Security Headers (Middleware)
+
+Headers are enforced globally in `src/middleware.ts` to ensure coverage even for dynamic routes and redirects:
+
+- `Content-Security-Policy`: Strict policy with `unsafe-eval` disabled and explicit allowlists for trusted third parties (Google Analytics, Vercel).
+- `Strict-Transport-Security`: max-age=31536000; includeSubDomains; preload (SSL Pinning).
+- `X-Frame-Options: DENY`: Prevents clickjacking.
+- `X-Content-Type-Options: nosniff`: Disables MIME sniffing.
+- `Referrer-Policy: strict-origin-when-cross-origin`.
+- `X-DNS-Prefetch-Control: on`.
+- `Permissions-Policy`: `camera=(), microphone=(), geolocation=()` — explicit denial of unused device capabilities.
 
 ---
 
-## PII Protection
+## Authorized PII Access
+
+Unlike static sanitization, Nilamit uses **Authorized PII Gating** for critical seller data:
+
+- **Seller Phone Numbers:** These are stored in the database but are **never** returned to the client by default.
+- **Authorization Logic:** The `AuctionService.getById` method requires a `viewerId`. The phone number is only included in the response if the `viewerId` matches the **seller** or the **winning buyer** of that auction.
+- **Public Views:** For all other users, a sanitized profile (via `toSellerPublic`) is returned, ensuring zero leakage of contact info in search results or public listing pages.
+
+---
+
+## PII Protection (Static)
 
 The `filterPII()` function in `src/lib/pii-filter.ts` strips the following from any user-generated text (descriptions, reviews, chat) before storage and display:
 

@@ -1,6 +1,6 @@
 # Nilamit Architecture
 
-> Last Updated: April 29, 2026
+> Last Updated: April 30, 2026
 
 ---
 
@@ -53,7 +53,7 @@ Actions never contain business logic. They are the authentication and validation
 Stateless business logic, decoupled from the HTTP layer:
 
 - **`BiddingService`** — `placeBid()` runs a serializable Firestore transaction. All bid validation, anti-snipe extension, and denormalization of `currentPrice`/`currentBidderId` onto the auction document happen here atomically.
-- **`AuctionService`** — listing queries with cursor pagination, single-auction fetch with seller hydration.
+- **`AuctionService`** — listing queries with cursor pagination, single-auction fetch with **Authorized PII Gating** (identity-aware hydration of seller/winner profiles).
 
 Services are also called directly by cron routes.
 
@@ -176,5 +176,7 @@ Delivery charge defaults to ৳0 unless set on the auction.
 - **Batch reads over N+1:** All admin hydration (disputes, treasury, active escrows) uses `db.getAll(...refs)` in 3 round-trips regardless of row count.
 - **Parallel fetches:** Unrelated reads use `Promise.all()`.
 - **Firestore aggregations:** Admin stats use `.count().get()` — counts 1000 docs for the cost of 1 read.
+- **Request-Level Caching:** Critical server actions (e.g., `getAuction`, `getAuctions`) are wrapped in React `cache()` to eliminate redundant database waterfalls within a single request lifecycle.
+- **Memoization:** High-frequency UI components (`AuctionCard`, `VerificationBadge`) are memoized via `React.memo` to optimize client-side rendering during search/filter operations.
+- **Lazy Loading:** Heavy interactive components (modals, payment gateways) use `next/dynamic` to minimize the initial JS bundle size.
 - **Denormalization:** Bid panel reads `currentPrice` and `currentBidderId` from the auction doc (already loaded), not from a separate bids query.
-- **Live ticker filtering:** Homepage bid feed fetches 25 bids, filters to ACTIVE-auction bids only, returns 10.
