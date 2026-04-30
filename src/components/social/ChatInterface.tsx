@@ -106,12 +106,21 @@ export default function ChatInterface({
 
     setIsUploading(true);
     try {
-      await ensureFirebaseAuth();
-      const storage  = getClientStorage();
-      const path     = `chat/${session.user.id}/${uuidv4()}.${file.name.split('.').pop()}`;
-      const fileRef  = storageRef(storage, path);
-      await uploadBytes(fileRef, file, { contentType: file.type });
-      const url      = await getDownloadURL(fileRef);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'chat');
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      const { url } = await response.json();
       await handleSend(undefined, url);
     } catch (err) {
       console.error('[Chat] Image upload failed:', err);

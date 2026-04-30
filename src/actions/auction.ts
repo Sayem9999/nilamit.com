@@ -27,8 +27,9 @@ export const getAuctions = cache(async (filters: AuctionFilters = {}): Promise<S
 /**
  * Server Action: Fetch a single auction by ID (Memoized)
  */
-export const getAuction = cache(async (id: string): Promise<ServiceResponse<Auction | null>> => {
-  const response = await AuctionService.getById(id);
+export const getAuction = cache(async (id: string): Promise<ServiceResponse<AuctionWithSeller | null>> => {
+  const session = await auth();
+  const response = await AuctionService.getById(id, session?.user?.id);
   if (!response.success) {
     return errorResponse(ErrorType.NOT_FOUND, response.error?.message || 'Auction not found');
   }

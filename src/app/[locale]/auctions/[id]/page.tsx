@@ -127,7 +127,9 @@ export default async function AuctionDetailPage({ params }: Props) {
       <Script
         id="auction-jsonld"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ 
+          __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c').replace(/>/g, '\\u003e') 
+        }}
       />
       <StickyBidBar
         currentPrice={auction.currentPrice}

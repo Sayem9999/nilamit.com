@@ -34,7 +34,7 @@ export default async function CoordinationPage({
   }
   const convData = convSnap.data() as Conversation;
 
-  const auctionRes = await AuctionService.getById(convData.auctionId);
+  const auctionRes = await AuctionService.getById(convData.auctionId, userId);
   if (!auctionRes.success || !auctionRes.data) {
     notFound();
   }

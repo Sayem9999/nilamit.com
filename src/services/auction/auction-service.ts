@@ -8,9 +8,9 @@ import type { CreateAuctionInputValidated } from '@/lib/schemas';
 
 export class AuctionService {
   /**
-   * Fetch a single auction with seller details
+   * Fetch a single auction by ID with hydrated seller/winner info
    */
-  static async getById(id: string): Promise<ServiceResponse<AuctionWithSeller>> {
+  static async getById(id: string, viewerId?: string | null): Promise<ServiceResponse<AuctionWithSeller>> {
     try {
       const doc = await db.collection('auctions').doc(id).get();
       if (!doc.exists) {
@@ -28,10 +28,15 @@ export class AuctionService {
       const sellerSnap = userSnaps[0];
       const winnerSnap = userSnaps[1];
       
+      // Authorization: Only allow the seller or the winner to see the seller's PII (phone)
+      const isAuthorized = viewerId && (viewerId === auctionData.sellerId || viewerId === auctionData.winnerId);
+      
       const data = {
         ...auctionData,
         id: doc.id,
-        seller: toSellerPrivate(sellerSnap.id, sellerSnap.data())!,
+        seller: isAuthorized 
+          ? toSellerPrivate(sellerSnap.id, sellerSnap.data())! 
+          : toSellerPublic(sellerSnap.id, sellerSnap.data())!,
         winner: winnerSnap?.exists ? { 
           id: winnerSnap.id, 
           name: winnerSnap.data()?.name || null, 
@@ -65,7 +70,11 @@ export class AuctionService {
       if (category && category !== 'all') query = query.where('category', '==', category);
       if (filters.location && filters.location !== 'all') query = query.where('location', '==', filters.location);
 
-      const orderField = sortBy === 'bids' ? 'bidCount' : (sortBy || 'endTime');
+      // Security: Allowlist sort fields to prevent inference attacks or invalid queries
+      const ALLOWED_SORT_FIELDS = ['currentPrice', 'endTime', 'bidCount', 'createdAt', 'bids'];
+      const orderField = ALLOWED_SORT_FIELDS.includes(sortBy || '') 
+        ? (sortBy === 'bids' ? 'bidCount' : sortBy) 
+        : 'endTime';
       
       const [totalSnap, auctionsSnap] = await Promise.all([
         query.count().get(),

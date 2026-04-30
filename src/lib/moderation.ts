@@ -24,11 +24,17 @@ export async function detectShillBidding(auctionId: string, bidderId: string, se
     const isNewAccount = ageHours < SUSPICIOUS_THRESHOLDS.ACCOUNT_AGE_HOURS;
 
     // 3. Check bidding history ratio
-    const allBidsSnap = await db.collection('bids').where('bidderId', '==', bidderId).get();
-    const totalBids = allBidsSnap.size;
+    const totalBidsSnap = await db.collection('bids').where('bidderId', '==', bidderId).count().get();
+    const totalBids = totalBidsSnap.data().count;
 
     if (totalBids >= SUSPICIOUS_THRESHOLDS.MIN_TOTAL_BIDS_TO_FLAG) {
-      // Find all unique auctions this user bid on
+      // 4. Check recent history (last 100 bids) to detect active shill patterns
+      const allBidsSnap = await db.collection('bids')
+        .where('bidderId', '==', bidderId)
+        .orderBy('createdAt', 'desc')
+        .limit(100)
+        .get();
+        
       const uniqueAuctionIds = [...new Set(allBidsSnap.docs.map(d => d.data().auctionId))];
       
       let bidsOnThisSeller = 0;
