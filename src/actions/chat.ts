@@ -99,7 +99,7 @@ export async function getAuctionChat(auctionId: string): Promise<ServiceResponse
 
   const convSnap = await db.collection('conversations').doc(auctionId).get();
   if (!convSnap.exists) return successResponse(null);
-  const conv = convSnap.data()! as { buyerId: string; sellerId: string; auctionId: string; lastMessageAt: { toDate?: () => Date } | Date; createdAt: { toDate?: () => Date } | Date };
+  const conv = convSnap.data()! as { buyerId: string; sellerId: string; auctionId: string; lastMessageAt: { toDate?: () => Date } | Date; createdAt: { toDate?: () => Date } | Date; updatedAt: { toDate?: () => Date } | Date };
 
   // SECURITY FIX: authorize BEFORE fetching messages
   if (conv.buyerId !== session.user.id && conv.sellerId !== session.user.id) return errorResponse(ErrorType.FORBIDDEN, 'Forbidden');
@@ -118,6 +118,7 @@ export async function getAuctionChat(auctionId: string): Promise<ServiceResponse
     const createdAt = m.createdAt instanceof Date ? m.createdAt : m.createdAt?.toDate?.() ?? new Date();
     return {
       id: d.id,
+      conversationId: auctionId,
       content: m.content ?? '',
       senderId: m.senderId,
       imageUrl: m.imageUrl ?? null,
@@ -137,6 +138,7 @@ export async function getAuctionChat(auctionId: string): Promise<ServiceResponse
 
   const lastMessageAt = conv.lastMessageAt instanceof Date ? conv.lastMessageAt : conv.lastMessageAt?.toDate?.() ?? new Date();
   const createdAt = conv.createdAt instanceof Date ? conv.createdAt : conv.createdAt?.toDate?.() ?? new Date();
+  const updatedAt = conv.updatedAt instanceof Date ? conv.updatedAt : conv.updatedAt?.toDate?.() ?? new Date();
 
   return successResponse({
     id: convSnap.id,
@@ -145,6 +147,7 @@ export async function getAuctionChat(auctionId: string): Promise<ServiceResponse
     sellerId: conv.sellerId,
     lastMessageAt,
     createdAt,
+    updatedAt,
     messages,
     auction: {
       id: conv.auctionId,

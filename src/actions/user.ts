@@ -43,8 +43,11 @@ export async function getPublicProfile(userId: string): Promise<ServiceResponse<
 
     if (!userSnap.exists) return successResponse(null);
 
+    const seller = toSellerPublic(userId, userSnap.data());
+    if (!seller) return successResponse(null);
+
     return successResponse({
-      ...toSellerPublic(userId, userSnap.data()),
+      ...seller,
       _count: {
         auctionsAsSeller: auctionCountSnap.data().count,
         bids:             bidCountSnap.data().count,

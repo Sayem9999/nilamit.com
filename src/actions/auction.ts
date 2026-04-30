@@ -5,7 +5,7 @@ import { db, snapDocs, toSellerPublic } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { AuctionService } from '@/services/auction/auction-service';
 import { ERROR_CODES } from '@/lib/constants';
-import type { Auction, AuctionFilters, AuctionWithSeller, AuctionListResponse, BidWithAuction } from '@/types';
+import type { Auction, AuctionFilters, AuctionWithSeller, AuctionListResponse, BidWithAuction, LatestActivity } from '@/types';
 import { AuctionStatus } from '@/types';
 import { createAuctionSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
@@ -73,7 +73,7 @@ export async function createAuction(input: unknown): Promise<ServiceResponse<{ a
  */
 export async function getSpecializedFeeds(): Promise<ServiceResponse<{ 
   endingSoon: AuctionWithSeller[], 
-  latestBids: BidWithAuction[] 
+  latestBids: LatestActivity[] 
 }>> {
   try {
     const nowTs = new Date();

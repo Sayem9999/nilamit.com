@@ -27,13 +27,13 @@ export default function LoadMore({
     setIsLoading(true);
     try {
       const response = await getAuctions({ ...filters, page, limit: 12 });
-      if (response.success && response.data.auctions.length > 0) {
+      if (response.success && response.data && response.data.auctions.length > 0) {
         setAuctions((prev) => [
           ...prev,
-          ...(response.data.auctions as unknown as AuctionWithSeller[]),
+          ...(response.data!.auctions as unknown as AuctionWithSeller[]),
         ]);
         setPage((prev) => prev + 1);
-        if (response.data.currentPage >= response.data.pages) {
+        if (response.data!.currentPage >= response.data!.pages) {
           setHasMore(false);
         }
       } else {

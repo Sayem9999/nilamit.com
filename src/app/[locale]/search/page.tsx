@@ -36,7 +36,7 @@ export default async function SearchPage({
 
   const { getAuctions } = await import("@/actions/auction");
   const response = await getAuctions(filters);
-  const auctions = response.success ? response.data.auctions : [];
+  const auctions = (response.success && response.data) ? response.data.auctions : [];
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">

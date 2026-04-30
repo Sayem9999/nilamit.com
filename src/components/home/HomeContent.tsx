@@ -4,12 +4,11 @@ import { useTranslations } from "next-intl";
 
 import { Variants } from "framer-motion";
 import { Megaphone, Star } from "lucide-react";
-import { AuctionWithSeller } from "@/types";
-import { SystemConfig } from "@/types";
+import { AuctionWithSeller, SystemConfig, LatestActivity } from "@/types";
 import AuctionCard from "@/components/auction/AuctionCard";
 
 // Sub-components
-import { LiveTicker, LatestActivity } from "./components/LiveTicker";
+import { LiveTicker } from "./components/LiveTicker";
 import { HeroSection } from "./components/HeroSection";
 import { TrendingSection } from "./components/TrendingSection";
 import { EndingSoonSection } from "./components/EndingSoonSection";

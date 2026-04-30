@@ -40,7 +40,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
     limit: 12,
   });
 
-  const { auctions, total, pages } = response.success 
+  const { auctions, total, pages } = (response.success && response.data)
     ? response.data 
     : { auctions: [] as AuctionWithSeller[], total: 0, pages: 0 };
 

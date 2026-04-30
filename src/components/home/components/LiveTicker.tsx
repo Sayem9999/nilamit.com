@@ -7,13 +7,7 @@ import { onChildAdded, ref, query, limitToLast } from "firebase/database";
 import { getClientDB } from "@/lib/firebase-client";
 import { RTDB_PATHS } from "@/lib/firebase-events";
 
-export interface LatestActivity {
-  id: string;
-  amount: number;
-  createdAt: Date;
-  bidder: { name: string | null };
-  auction: { id: string; title: string };
-}
+import { LatestActivity } from "@/types";
 
 interface LiveTickerProps {
   initialActivity: LatestActivity[];

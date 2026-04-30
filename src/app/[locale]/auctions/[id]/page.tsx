@@ -52,7 +52,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const response = await getAuction(id);
-  const auction = response.success ? response.data as AuctionWithBids : null;
+  const auction = (response.success && response.data) ? response.data as AuctionWithBids : null;
 
   if (!auction) return { title: "Auction Not Found" };
 
@@ -88,7 +88,7 @@ export default async function AuctionDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await auth();
   const response = await getAuction(id);
-  const auction = response.success ? response.data as AuctionWithBids : null;
+  const auction = (response.success && response.data) ? response.data as AuctionWithBids : null;
   const t = await getTranslations("Auction");
   if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
 
@@ -99,9 +99,9 @@ export default async function AuctionDetailPage({ params }: Props) {
     canReviewAuction(id).catch((e) => { log.error('[AuctionDetail] canReviewAuction failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
   ]);
 
-  const bids = (bidsRes.success ? bidsRes.data : []) as (Bid & { bidder: { id: string, name: string, image: string | null } })[];
-  const chat = chatRes.success ? chatRes.data : null;
-  const canReview = reviewRes.success ? reviewRes.data : false;
+  const bids = (bidsRes.success && bidsRes.data ? bidsRes.data : []) as (Bid & { bidder: { id: string, name: string, image: string | null } })[];
+  const chat = (chatRes.success && chatRes.data) ? chatRes.data : null;
+  const canReview = (reviewRes.success && reviewRes.data) ? reviewRes.data : false;
 
   const jsonLd = {
     "@context": "https://schema.org",

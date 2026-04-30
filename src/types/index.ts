@@ -360,3 +360,11 @@ export interface AuctionListResponse {
   pages: number;
   currentPage: number;
 }
+
+export interface LatestActivity {
+  id: string;
+  amount: number;
+  createdAt: Date;
+  bidder: { name: string | null };
+  auction: { id: string; title: string };
+}
