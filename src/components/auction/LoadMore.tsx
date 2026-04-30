@@ -1,15 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getAuctions } from "@/actions/auction";
 import type { AuctionWithSeller, AuctionFilters } from "@/types";
 import AuctionCard from "./AuctionCard";
 import { Loader2 } from "lucide-react";
 
 interface LoadMoreProps {
-  initialPage: number;
   filters: AuctionFilters;
-  locale: string;
 }
 
 export default function LoadMore({
@@ -19,8 +17,9 @@ export default function LoadMore({
   const [lastId, setLastId] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const observerTarget = useRef(null);
 
-  const loadNextPage = async () => {
+  const loadNextPage = useCallback(async () => {
     if (isLoading || !hasMore) return;
 
     setIsLoading(true);
@@ -43,34 +42,49 @@ export default function LoadMore({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters, lastId, hasMore, isLoading]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          loadNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [lastId, hasMore, isLoading, loadNextPage]);
 
   return (
-    <>
+    <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {auctions.map((auction) => (
           <AuctionCard key={auction.id} auction={auction} />
         ))}
       </div>
 
-      {hasMore && (
-        <div className="mt-12 flex justify-center">
-          <button
-            onClick={loadNextPage}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-8 py-3 bg-white border border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin text-primary-600" />
-                Loading...
-              </>
-            ) : (
-              "Load More Auctions"
-            )}
-          </button>
-        </div>
-      )}
-    </>
+      {/* Intersection Observer Target */}
+      <div ref={observerTarget} className="h-10 w-full flex justify-center items-center">
+        {isLoading && (
+          <div className="flex items-center gap-2 text-primary-600 font-medium">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>Loading more...</span>
+          </div>
+        )}
+        {!hasMore && auctions.length > 0 && (
+          <p className="text-gray-400 text-sm italic">You&apos;ve reached the end of the line.</p>
+        )}
+      </div>
+    </div>
   );
 }

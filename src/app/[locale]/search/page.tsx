@@ -184,7 +184,6 @@ export default async function SearchPage({
 
                 {/* Lazy Loading (Enterprise Scale) */}
                 <LoadMore
-                  initialPage={1}
                   filters={{ 
                     search: query,
                     category: catFilter, 

@@ -2,6 +2,7 @@ import { getAuctions } from "@/actions/auction";
 export const dynamic = "force-dynamic";
 
 import AuctionCard from "@/components/auction/AuctionCard";
+import LoadMore from "@/components/auction/LoadMore";
 import Link from "next/link";
 import { Search as SearchIcon, SlidersHorizontal, MapPin } from "lucide-react";
 import { CATEGORIES, LOCATIONS, AuctionWithSeller, AuctionStatus } from "@/types";
@@ -13,7 +14,6 @@ interface Props {
     search?: string;
     sortBy?: string;
     sortOrder?: string;
-    page?: string;
     status?: string;
     location?: string;
     locale?: string;
@@ -22,29 +22,27 @@ interface Props {
 
 export default async function AuctionsPage({ searchParams }: Props) {
   const params = await searchParams;
-  const page = parseInt(params.page || "1");
   const t = await getTranslations("Search");
   const tCat = await getTranslations("Categories");
   const tLoc = await getTranslations("Locations");
 
-  const response = await getAuctions({
+  const filters = {
     category: params.category,
     search: params.search,
     sortBy:
       (params.sortBy as "endTime" | "currentPrice" | "createdAt" | "bids") ||
       "endTime",
     sortOrder: (params.sortOrder as "asc" | "desc") || "asc",
-    page,
     status: (params.status as AuctionStatus) || "ACTIVE",
     location: params.location,
     limit: 12,
-  });
+  };
 
-  const { auctions, total } = (response.success && response.data)
+  const response = await getAuctions(filters);
+
+  const { auctions: initialAuctions, total } = (response.success && response.data)
     ? response.data 
-    : { auctions: [] as AuctionWithSeller[], total: 0, lastId: null as string | null };
-
-  const pages = Math.ceil(total / 12);
+    : { auctions: [] as AuctionWithSeller[], total: 0 };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -107,72 +105,32 @@ export default async function AuctionsPage({ searchParams }: Props) {
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  {cat.icon} {tCat(cat.slug)}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Sort */}
-          <div>
-            <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3">
-              {t("sortBy")}
-            </h3>
-            <div className="space-y-1">
-              {[
-                { value: "endTime", label: t("endingSoon") },
-                { value: "currentPrice", label: t("lowestPrice") },
-                { value: "createdAt", label: t("newest") },
-                { value: "bids", label: t("mostBids") },
-              ].map((sortOption) => (
-                <Link
-                  key={sortOption.value}
-                  href={`/auctions?${new URLSearchParams({
-                    ...(params.category ? { category: params.category } : {}),
-                    ...(params.search ? { search: params.search } : {}),
-                    sortBy: sortOption.value,
-                  }).toString()}`}
-                  className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                    params.sortBy === sortOption.value
-                      ? "bg-primary-50 text-primary-700 font-medium"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {sortOption.label}
+                  {tCat(cat.slug)}
                 </Link>
               ))}
             </div>
           </div>
 
           {/* Location */}
-          <div className="mt-6">
+          <div className="mb-6">
             <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
               <MapPin className="w-4 h-4" /> {t("location")}
             </h3>
             <div className="space-y-1">
               <Link
-                href={`/auctions?${new URLSearchParams({
-                  ...(params.category ? { category: params.category } : {}),
-                  ...(params.search ? { search: params.search } : {}),
-                  ...(params.sortBy ? { sortBy: params.sortBy } : {}),
-                }).toString()}`}
+                href="/auctions"
                 className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                   !params.location
                     ? "bg-primary-50 text-primary-700 font-medium"
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                {t("allBangladesh")}
+                {t("allLocations")}
               </Link>
               {LOCATIONS.map((loc) => (
                 <Link
                   key={loc.id}
-                  href={`/auctions?${new URLSearchParams({
-                    ...(params.category ? { category: params.category } : {}),
-                    ...(params.search ? { search: params.search } : {}),
-                    ...(params.sortBy ? { sortBy: params.sortBy } : {}),
-                    location: loc.id,
-                  }).toString()}`}
+                  href={`/auctions?location=${loc.id}`}
                   className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                     params.location === loc.id
                       ? "bg-primary-50 text-primary-700 font-medium"
@@ -186,47 +144,27 @@ export default async function AuctionsPage({ searchParams }: Props) {
           </div>
         </aside>
 
-        {/* Auction Grid */}
+        {/* Results Grid */}
         <div className="flex-1">
-          {auctions.length === 0 ? (
-            <div className="bg-white p-12 text-center rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center">
-              <SearchIcon className="w-12 h-12 text-gray-300 mb-4" />
-              <h3 className="font-heading font-semibold text-gray-900 mb-1">
+          {initialAuctions.length === 0 ? (
+            <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+              <SearchIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900">
                 {t("noResults")}
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-gray-500 max-w-xs mx-auto mt-2">
                 {t("noResultsDesc")}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
-              {auctions.map((auction: AuctionWithSeller) => (
-                <AuctionCard key={auction.id} auction={auction} />
-              ))}
-            </div>
-          )}
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {initialAuctions.map((auction) => (
+                  <AuctionCard key={auction.id} auction={auction} />
+                ))}
+              </div>
 
-          {/* Pagination */}
-          {pages > 1 && (
-            <div className="flex justify-center gap-2 mt-10">
-              {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                <Link
-                  key={p}
-                  href={`/auctions?${new URLSearchParams({
-                    ...(params.category ? { category: params.category } : {}),
-                    ...(params.search ? { search: params.search } : {}),
-                    ...(params.sortBy ? { sortBy: params.sortBy } : {}),
-                    page: p.toString(),
-                  }).toString()}`}
-                  className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-medium transition-colors ${
-                    p === page
-                      ? "bg-primary-600 text-white"
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  {p}
-                </Link>
-              ))}
+              <LoadMore filters={filters} />
             </div>
           )}
         </div>

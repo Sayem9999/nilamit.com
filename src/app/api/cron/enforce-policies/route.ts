@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import * as Sentry from "@sentry/nextjs";
 import { db } from '@/lib/db';
 import { AuctionService } from '@/services/auction/auction-service';
 import { calculateLevel } from '@/lib/gamification-engine';
@@ -87,8 +88,9 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(results);
-  } catch (err) {
-    log.error('Policy Enforcement Bot failed', err);
+  } catch (error) {
+    Sentry.captureException(error);
+    log.error('Cron: Policy enforcement failed', error);
     return new NextResponse('Internal Error', { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from 'next-intl/plugin';
 import { validateEnv } from "./src/lib/env";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // 🛡️ Validate environment variables on startup/build
 if (process.env.NODE_ENV !== 'test') {
@@ -36,15 +37,6 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
-    // Content-Security-Policy.
-    //
-    // Why 'unsafe-inline' on script-src: Next.js App Router emits inline
-    // hydration/streaming scripts; without explicit nonces (which would
-    // require middleware-injected per-request values) those would be blocked.
-    // Style 'unsafe-inline' is needed for Tailwind/shadcn runtime classes.
-    //
-    // Allowed third parties — keep this list tight; every entry is an
-    // attacker pivot if a bug lands on the site.
     const csp = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://www.gstatic.com",
@@ -85,5 +77,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Sync export — required for Firebase App Hosting build pipeline
-export default withNextIntl(nextConfig);
+// Wrap with Sentry and Intl
+export default withSentryConfig(withNextIntl(nextConfig), {
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+});

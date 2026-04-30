@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { db } from '@/lib/db';
 import { EscrowTransaction, EscrowStatus } from '@/types';
 import { ServiceResponse, successResponse, errorResponse, ErrorType } from '@/lib/errors';
@@ -69,6 +70,9 @@ export class PaymentService {
         return successResponse(fullData);
       });
     } catch (err) {
+      Sentry.captureException(err, {
+        extra: { transactionId, automationToken, amount, provider }
+      });
       log.error('Payment: verification failed', err, { transactionId });
       return errorResponse(ErrorType.INTERNAL, 'Payment processing failed');
     }
