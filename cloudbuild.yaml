@@ -25,6 +25,8 @@ steps:
     args: ["run", "build"]
     secretEnv:
       - AUTH_SECRET
+      - SENTRY_AUTH_TOKEN
+      - SENTRY_DSN
     waitFor:
       - install
 
@@ -33,6 +35,10 @@ availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/AUTH_SECRET/versions/latest
       env: AUTH_SECRET
+    - versionName: projects/$PROJECT_ID/secrets/SENTRY_AUTH_TOKEN/versions/latest
+      env: SENTRY_AUTH_TOKEN
+    - versionName: projects/$PROJECT_ID/secrets/SENTRY_DSN/versions/latest
+      env: SENTRY_DSN
 
 # ── Build options ──────────────────────────────────────────────
 options:
