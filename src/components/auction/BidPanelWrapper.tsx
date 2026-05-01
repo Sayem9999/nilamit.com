@@ -14,6 +14,8 @@ interface BidPanelProps {
   sellerId: string;
   reservePrice?: number | null;
   buyItNowPrice?: number | null;
+  proxyMaxBid?: number | null;
+  proxyBidderId?: string | null;
   onBidPlaced?: () => void;
 }
 

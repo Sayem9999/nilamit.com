@@ -88,7 +88,13 @@ export interface Auction {
   currentPrice: number;
   /** Top bidder, denormalised so the bid transaction can read the previous winner via tx.get(). */
   currentBidderId?: string | null;
+  /** Hidden maximum bid for proxy bidding. */
+  proxyMaxBid?: number | null;
+  /** User ID of the current proxy leader. */
+  proxyBidderId?: string | null;
   reservePrice?: number | null;
+  /** Whether the currentPrice has met the reservePrice. */
+  isReserveMet?: boolean;
   buyItNowPrice?: number | null;
   minBidIncrement: number;
   startTime: Date;
@@ -102,6 +108,7 @@ export interface Auction {
   deliveryStatus?: OrderStatus;
   trackingNumber?: string | null;
   sellerId: string;
+  condition?: 'NEW' | 'USED' | 'REFURBISHED' | null;
   winnerId?: string | null;
   originalWinnerId?: string | null;
   bidCount?: number;
@@ -289,6 +296,7 @@ export interface AuctionFilters {
   status?: AuctionStatus;
   category?: string;
   location?: string;
+  condition?: 'NEW' | 'USED' | 'REFURBISHED';
   search?: string;
   sortBy?: 'endTime' | 'currentPrice' | 'createdAt' | 'bids';
   sortOrder?: 'asc' | 'desc';

@@ -7,13 +7,25 @@ interface AuctionWithScore extends Auction {
   _score: number;
 }
 
-export async function getSmartSearchResults(query: string) {
-  if (!query?.trim()) return [];
+export async function getSmartSearchResults(query: string, filters: { category?: string, location?: string, condition?: string } = {}) {
+  if (!query?.trim() && !filters.category && !filters.location && !filters.condition) return [];
 
   const q = query.toLowerCase();
 
-  const snap = await db.collection('auctions')
-    .where('status', '==', 'ACTIVE')
+  let auctionsQuery = db.collection('auctions')
+    .where('status', '==', 'ACTIVE');
+  
+  if (filters.category && filters.category !== 'all') {
+    auctionsQuery = auctionsQuery.where('category', '==', filters.category);
+  }
+  if (filters.location && filters.location !== 'all') {
+    auctionsQuery = auctionsQuery.where('location', '==', filters.location);
+  }
+  if (filters.condition && filters.condition !== 'all') {
+    auctionsQuery = auctionsQuery.where('condition', '==', filters.condition);
+  }
+
+  const snap = await auctionsQuery
     .orderBy('endTime', 'asc')
     .limit(200)
     .get();
@@ -22,13 +34,14 @@ export async function getSmartSearchResults(query: string) {
 
   const results: AuctionWithScore[] = auctions
     .filter((a) => {
+      if (!q) return true;
       const title = (a.title ?? '').toLowerCase();
       const desc  = (a.description ?? '').toLowerCase();
       return title.includes(q) || desc.includes(q);
     })
     .map((a) => {
-      const titleScore = (a.title ?? '').toLowerCase().includes(q) ? 100 : 0;
-      const descScore  = (a.description ?? '').toLowerCase().includes(q) ? 50 : 0;
+      const titleScore = q && (a.title ?? '').toLowerCase().includes(q) ? 100 : 0;
+      const descScore  = q && (a.description ?? '').toLowerCase().includes(q) ? 50 : 0;
       const bidScore   = (a.bidCount ?? 0) * 5;
       return { ...a, _score: titleScore + descScore + bidScore };
     })

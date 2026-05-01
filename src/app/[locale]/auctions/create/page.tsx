@@ -41,6 +41,7 @@ export default function CreateAuctionPage() {
     location: "mirpur",
     reservePrice: undefined as number | undefined,
     buyItNowPrice: undefined as number | undefined,
+    condition: "USED" as 'NEW' | 'USED' | 'REFURBISHED',
   });
   const [suggestion, setSuggestion] = useState<SmartPricingResult | null>(null);
   const [loadingSuggestion, setLoadingSuggestion] = useState(false);
@@ -192,6 +193,27 @@ export default function CreateAuctionPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">
+                {t("itemCondition") || "Item Condition"}
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {['NEW', 'USED', 'REFURBISHED'].map((cond) => (
+                  <button
+                    key={cond}
+                    type="button"
+                    onClick={() => updateForm("condition", cond)}
+                    className={`py-2 text-xs font-medium rounded-lg border transition-all ${
+                      form.condition === cond 
+                        ? "bg-primary-50 border-primary-200 text-primary-700 shadow-sm" 
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {cond}
+                  </button>
+                ))}
               </div>
             </div>
             <div>
@@ -399,6 +421,12 @@ export default function CreateAuctionPage() {
                 <strong className="text-gray-700">{t("itemLoc")}:</strong>{" "}
                 <span className="text-gray-600 uppercase font-semibold">
                   {tLoc(form.location)}
+                </span>
+              </div>
+              <div>
+                <strong className="text-gray-700">{t("itemCondition") || "Condition"}:</strong>{" "}
+                <span className="text-gray-600 font-medium">
+                  {form.condition}
                 </span>
               </div>
               <div>

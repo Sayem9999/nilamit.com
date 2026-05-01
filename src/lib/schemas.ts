@@ -121,6 +121,7 @@ export const createAuctionSchema = z
     reservePrice:    priceSchema.optional(),
     buyItNowPrice:   priceSchema.optional(),
     location:        z.string().trim().max(120).optional(),
+    condition:       z.enum(['NEW', 'USED', 'REFURBISHED']).optional(),
   })
   .superRefine((d, ctx) => {
     const start = new Date(d.startTime);

@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import Image from "next/image";
-import { Clock, Users, Zap, MapPin, Package } from "lucide-react";
+import { Clock, Users, Zap, MapPin, Package, Shield } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -72,6 +72,16 @@ export const AuctionCard = memo(({
             <span className="glass px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-primary-700 border border-primary-100/50 shadow-sm flex items-center gap-1.5 backdrop-blur-md">
               {tCat(auction.category || 'other')}
             </span>
+            {auction.condition && (
+              <span className="glass px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-gray-700 border border-gray-200/50 shadow-sm flex items-center gap-1.5 backdrop-blur-md">
+                ✨ {auction.condition}
+              </span>
+            )}
+            {auction.reservePrice && (auction.isReserveMet === false || auction.currentPrice < (auction.reservePrice || 0)) && (
+              <span className="bg-amber-500/90 text-white px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md backdrop-blur-md flex items-center gap-1.5 border border-amber-400/50">
+                <Shield className="w-3 h-3" /> Reserve not met
+              </span>
+            )}
           </div>
 
           {/* Watchlist Button */}

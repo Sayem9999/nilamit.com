@@ -28,13 +28,19 @@ export class AuctionService {
       const sellerSnap = userSnaps[0];
       const winnerSnap = userSnaps[1];
       
-      // Authorization: Only allow the seller or the winner to see the seller's PII (phone)
-      const isAuthorized = viewerId && (viewerId === auctionData.sellerId || viewerId === auctionData.winnerId);
+      // ─── DATA GATING ────────────────────────────────────────────────────────
+      const isSeller = viewerId === auctionData.sellerId;
+      const isWinner = viewerId === auctionData.winnerId;
+      const isProxyOwner = viewerId === auctionData.proxyBidderId;
       
       const data = {
         ...auctionData,
         id: doc.id,
-        seller: isAuthorized 
+        // Hidden proxy fields are ONLY visible to the bidder who placed them
+        proxyMaxBid: isProxyOwner ? auctionData.proxyMaxBid : undefined,
+        proxyBidderId: isProxyOwner ? auctionData.proxyBidderId : undefined,
+        
+        seller: (isSeller || isWinner)
           ? toSellerPrivate(sellerSnap.id, sellerSnap.data())! 
           : toSellerPublic(sellerSnap.id, sellerSnap.data())!,
         winner: winnerSnap?.exists ? { 
@@ -164,6 +170,7 @@ export class AuctionService {
         reservePrice: sanitizedInput.reservePrice ?? null,
         buyItNowPrice: sanitizedInput.buyItNowPrice ?? null,
         location: sanitizedInput.location ?? null,
+        condition: sanitizedInput.condition ?? null,
         sellerId: userId,
         winnerId: null,
         status: 'ACTIVE',

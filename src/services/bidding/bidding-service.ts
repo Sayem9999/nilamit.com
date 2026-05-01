@@ -46,12 +46,11 @@ export class BiddingService {
         const aSnap = await tx.get(aRef);
         if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
 
-        const auction = aSnap.data()!;
+        const auction = aSnap.data()! as Auction;
         const now     = new Date();
         const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
+        const increment = auction.minBidIncrement ?? 10;
 
-        // Validate against the transactionally-locked currentPrice. Two
-        // concurrent bids cannot both pass this check — one will retry.
         validateBidPreconditions({
           auctionStatus:   auction.status,
           endTime,
@@ -60,28 +59,70 @@ export class BiddingService {
           bidderId:        userId,
           currentPrice:    auction.currentPrice,
           startingPrice:   auction.startingPrice,
-          minBidIncrement: auction.minBidIncrement,
+          minBidIncrement: increment,
           amount,
           now,
         });
 
-        // Previous top bidder is read from the auction doc itself (locked by tx).
         const prevBidderId: string | null = auction.currentBidderId ?? null;
+        const existingProxy = auction.proxyMaxBid ?? 0;
+        const existingProxyBidder = auction.proxyBidderId ?? null;
 
-        // Create bid
+        let newCurrentPrice = auction.currentPrice;
+        let newCurrentBidderId = auction.currentBidderId;
+        let newProxyMaxBid = auction.proxyMaxBid ?? 0;
+        let newProxyBidderId = auction.proxyBidderId ?? null;
+
+        // ─── PROXY BIDDING LOGIC ───
+        if (!newCurrentBidderId) {
+          // First bid ever
+          newCurrentPrice = auction.startingPrice;
+          newCurrentBidderId = userId;
+          newProxyMaxBid = amount;
+          newProxyBidderId = userId;
+        } else if (userId === existingProxyBidder) {
+          // Current leader is topping up their own proxy
+          if (amount > existingProxy) {
+            newProxyMaxBid = amount;
+          } else {
+            throw new Error('You already have a higher or equal max bid.');
+          }
+        } else {
+          // Competitive bidding
+          if (amount > existingProxy) {
+            // New bidder overtakes the old proxy
+            newCurrentPrice = Math.min(amount, existingProxy + increment);
+            newCurrentBidderId = userId;
+            newProxyMaxBid = amount;
+            newProxyBidderId = userId;
+          } else {
+            // New bidder fails to overtake the old proxy
+            newCurrentPrice = Math.min(existingProxy, amount + increment);
+            // newCurrentBidderId remains the existingProxyBidder
+            newCurrentBidderId = existingProxyBidder;
+            // newProxyMaxBid remains the same
+          }
+        }
+
+        // ─── RESERVE PRICE CHECK ───
+        const isReserveMet = auction.reservePrice ? newCurrentPrice >= auction.reservePrice : true;
+
+        // Create bid record (audit trail)
         const bidId  = newId();
         const bidRef = db.collection('bids').doc(bidId);
-        tx.set(bidRef, { id: bidId, amount, auctionId, bidderId: userId, createdAt: now });
+        tx.set(bidRef, { id: bidId, amount, auctionId, bidderId: userId, createdAt: now, isProxy: true });
 
-        // Anti-sniping extends from the current `endTime` (not `now`) so a
-        // bidder cannot SHORTEN the auction by bidding early in the soft-close window.
+        // Anti-sniping
         const { newEndTime, triggered: antiSnipeTriggered } = computeAntiSnipeExtension({ endTime, now });
 
         tx.update(aRef, {
-          currentPrice:    amount,
-          currentBidderId: userId,                                 // denormalised for the next bid's tx read
+          currentPrice:    newCurrentPrice,
+          currentBidderId: newCurrentBidderId,
+          proxyMaxBid:     newProxyMaxBid,
+          proxyBidderId:   newProxyBidderId,
+          isReserveMet,
           endTime:         newEndTime,
-          wasExtended:     antiSnipeTriggered ? true : auction.wasExtended,
+          wasExtended:     antiSnipeTriggered ? true : (auction.wasExtended || false),
           bidCount:        (auction.bidCount ?? 0) + 1,
           updatedAt:       now,
         });

@@ -11,11 +11,11 @@ export default async function SearchPage({
   searchParams,
   params,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; sort?: string; location?: string; circleId?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; sort?: string; location?: string; circleId?: string; condition?: string }>;
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const { q, category, sort, location } = await searchParams;
+  const { q, category, sort, location, condition } = await searchParams;
   const t = await getTranslations("Search");
   const tCat = await getTranslations("Categories");
   const tLoc = await getTranslations("Locations");
@@ -30,6 +30,7 @@ export default async function SearchPage({
     search: query,
     category: catFilter !== "All" ? catFilter : undefined,
     location: locFilter || undefined,
+    condition: (condition && condition !== "All") ? condition : undefined,
     sortBy: sortByValue as "endTime" | "currentPrice" | "createdAt" | "bids",
     sortOrder: (sortBy === "price_asc" ? "asc" : "desc") as "asc" | "desc",
     limit: 24,
@@ -70,7 +71,7 @@ export default async function SearchPage({
                 </h3>
                 <div className="space-y-1">
                   <Link
-                    href={`/${locale}/search?q=${query}&category=All&sort=${sortBy}&location=${locFilter}`}
+                    href={`/${locale}/search?q=${query}&category=All&sort=${sortBy}&location=${locFilter}&condition=${condition || ''}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       catFilter === "All"
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -82,7 +83,7 @@ export default async function SearchPage({
                   {CATEGORIES.map((cat) => (
                     <Link
                       key={cat.slug}
-                      href={`/${locale}/search?q=${query}&category=${cat.slug}&sort=${sortBy}&location=${locFilter}`}
+                      href={`/${locale}/search?q=${query}&category=${cat.slug}&sort=${sortBy}&location=${locFilter}&condition=${condition || ''}`}
                       className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                         catFilter === cat.slug
                           ? "bg-primary-50 text-primary-700 font-medium"
@@ -102,7 +103,7 @@ export default async function SearchPage({
                 </h3>
                 <div className="space-y-1 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
                   <Link
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=`}
+                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=&condition=${condition || ''}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       !locFilter
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -114,7 +115,7 @@ export default async function SearchPage({
                   {LOCATIONS.map((loc) => (
                     <Link
                       key={loc.id}
-                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${loc.id}`}
+                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${loc.id}&condition=${condition || ''}`}
                       className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                         locFilter === loc.id
                           ? "bg-primary-50 text-primary-700 font-medium"
@@ -122,6 +123,28 @@ export default async function SearchPage({
                       }`}
                     >
                       {tLoc(loc.id)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Condition Filter */}
+              <div className="mb-6">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                  {t("condition") || "Condition"}
+                </h3>
+                <div className="space-y-1">
+                  {['All', 'NEW', 'USED', 'REFURBISHED'].map((cond) => (
+                    <Link
+                      key={cond}
+                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${locFilter}&condition=${cond === 'All' ? '' : cond}`}
+                      className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                        (condition === cond || (!condition && cond === 'All'))
+                          ? "bg-primary-50 text-primary-700 font-medium"
+                          : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {cond === 'All' ? t("allConditions") || "All Conditions" : cond}
                     </Link>
                   ))}
                 </div>

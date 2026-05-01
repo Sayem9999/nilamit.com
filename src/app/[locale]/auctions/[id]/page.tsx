@@ -277,6 +277,8 @@ export default async function AuctionDetailPage({ params }: Props) {
             sellerId={auction.sellerId}
             reservePrice={auction.reservePrice}
             buyItNowPrice={auction.buyItNowPrice}
+            proxyMaxBid={auction.proxyMaxBid}
+            proxyBidderId={auction.proxyBidderId}
           />
 
           {/* Seller Info */}

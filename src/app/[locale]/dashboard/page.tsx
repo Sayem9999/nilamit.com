@@ -57,7 +57,13 @@ export default async function DashboardPage({
     id: string;
     auctionId: string;
     lastMessageAt: Date | number;
-    auction: { title: string; images: string[]; id: string; escrowTransaction?: { status: string; id: string } };
+    auction: { 
+      title: string; 
+      images: string[]; 
+      id: string; 
+      escrowTransaction?: { status: string; id: string };
+      logistics?: { status: string; trackingId: string };
+    };
     messages: { id: string; content: string; createdAt: Date; senderId: string }[];
   };
 
@@ -276,6 +282,7 @@ export default async function DashboardPage({
             images: a.images || [], 
             id: conv.auctionId,
             escrowTransaction: { status: escrow.status, id: conv.auctionId },
+            logistics: a.logistics ? { status: a.logistics.status, trackingId: a.logistics.trackingId } : undefined,
           },
           messages: messageSnaps[i].empty
             ? []
@@ -510,9 +517,18 @@ export default async function DashboardPage({
                            <p className="text-sm text-gray-500 line-clamp-1 mt-1 font-medium italic">
                              {(conv as CoordinationItem).messages?.[0]?.content || t("noMessagesYet")}
                            </p>
-                            <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
-                              {t("sharedLogistics")}
-                            </p>
+                            {(conv as CoordinationItem).auction.logistics?.status ? (
+                              <div className="flex items-center gap-2 mt-2 bg-blue-50 px-2 py-0.5 rounded-lg w-fit">
+                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                                <span className="text-[10px] font-black text-blue-700 uppercase tracking-tight">
+                                  {(conv as CoordinationItem).auction.logistics?.status.replace(/_/g, ' ')}
+                                </span>
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
+                                {t("sharedLogistics")}
+                              </p>
+                            )}
                          </div>
                          <MessageSquare className="w-5 h-5 text-gray-300 group-hover:text-primary-400 transition-colors" />
                       </Link>

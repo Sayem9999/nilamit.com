@@ -37,6 +37,8 @@ interface BidPanelProps {
   sellerId: string;
   reservePrice?: number | null;
   buyItNowPrice?: number | null;
+  proxyMaxBid?: number | null;
+  proxyBidderId?: string | null;
   onBidPlaced?: () => void;
 }
 
@@ -49,6 +51,8 @@ export function BidPanel({
   sellerId,
   reservePrice,
   buyItNowPrice,
+  proxyMaxBid,
+  proxyBidderId,
   onBidPlaced,
 }: BidPanelProps) {
   const { data: session } = useSession();
@@ -248,6 +252,16 @@ export function BidPanel({
               }`}>
                 {displayPrice < reservePrice ? "Reserve not met" : "Reserve met"}
               </p>
+            )}
+            {proxyMaxBid && proxyBidderId === session?.user?.id && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-100 rounded-lg">
+                <p className="text-[10px] text-blue-600 font-bold uppercase tracking-tight flex items-center gap-1">
+                  <Shield className="w-3 h-3" /> You are the high bidder
+                </p>
+                <p className="text-xs text-blue-700 font-medium">
+                  Your max bid: <span className="font-bold">{formatBDT(proxyMaxBid)}</span>
+                </p>
+              </div>
             )}
           </div>
 
