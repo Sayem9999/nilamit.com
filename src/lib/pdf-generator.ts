@@ -52,7 +52,7 @@ export function generateInvoice(data: InvoiceData) {
   doc.text(data.sellerPhone, 110, 84);
   
   // Item Table
-  doc.setFillColor(245);
+  doc.setFillColor(245, 245, 245);
   doc.rect(margin, 100, 170, 10, 'F');
   doc.setFont("helvetica", "bold");
   doc.text("DESCRIPTION", margin + 5, 106);
