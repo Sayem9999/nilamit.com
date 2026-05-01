@@ -30,11 +30,11 @@ export const emailSchema = z
  */
 export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters').max(128, 'Password is too long');
 
-/** Bangladesh mobile in E.164 form, e.g. +8801712345678 */
+/** Bangladesh mobile: accepts local (01...) or international (+8801...) form. */
 export const bdPhoneSchema = z
   .string()
   .trim()
-  .regex(/^\+8801\d{9}$/, 'Invalid Bangladesh phone number');
+  .regex(/^(?:\+88)?01\d{9}$/, 'Invalid Bangladesh phone number');
 
 /** 6-digit numeric OTP. */
 export const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be 6 digits');
@@ -51,8 +51,7 @@ const nameSchema = z
 // ─── Auth ──────────────────────────────────────────────────────────────────
 
 export const registerSchema = z.object({
-  firstName: nameSchema,
-  lastName:  nameSchema,
+  name:      nameSchema,
   email:     emailSchema,
   password:  passwordSchema,
 });

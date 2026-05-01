@@ -19,7 +19,7 @@ function hashOTP(otp: string): string {
 export async function registerUser(data: unknown) {
   const parsed = registerSchema.safeParse(data);
   if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
-  const { firstName, lastName, email, password } = parsed.data;
+  const { name, email, password } = parsed.data;
 
   const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success: rateLimitSuccess } = await loginLimiter.limit(`register_${ip}`);
@@ -33,7 +33,7 @@ export async function registerUser(data: unknown) {
     const ref  = db.collection('users').doc();
     const now  = new Date();
     await ref.set({
-      id: ref.id, name: `${firstName} ${lastName}`.trim(), email,
+      id: ref.id, name, email,
       password: hashedPassword, emailVerified: null, image: null, phone: null,
       isPhoneVerified: false, isVerifiedSeller: false, reputationScore: 0,
       winningStreak: 0, userLevel: 1, createdAt: now, updatedAt: now,

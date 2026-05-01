@@ -40,7 +40,7 @@ export default function RegisterPage() {
   };
 
   const handleVerifyOTP = () => {
-    if (otp.length < 4) return;
+    if (otp.length < 6) return;
     setError("");
     setStep("details");
   };
@@ -71,11 +71,9 @@ export default function RegisterPage() {
           setError(result.error?.message || t("errorGeneric"));
         }
       } else {
-        // Email Signup Path
         const { registerUser } = await import("@/actions/auth");
         const result = await registerUser({
-          firstName: formData.name.split(' ')[0],
-          lastName: formData.name.split(' ').slice(1).join(' ') || '.',
+          name: formData.name,
           email: formData.email,
           password: formData.password
         });
@@ -297,15 +295,15 @@ export default function RegisterPage() {
                 <div className="space-y-6">
                   <input
                     type="text"
-                    maxLength={4}
-                    placeholder="0000"
+                    maxLength={6}
+                    placeholder="000000"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                     className="w-full bg-gray-50 border border-gray-100 rounded-3xl px-4 py-6 text-5xl font-black tracking-[0.5em] text-center focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
                   />
                   <button
                     onClick={handleVerifyOTP}
-                    disabled={otp.length !== 4}
+                    disabled={otp.length !== 6}
                     className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all"
                   >
                     {t("verifyContinue")}
