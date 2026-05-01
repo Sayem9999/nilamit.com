@@ -30,7 +30,7 @@ export function parseInventoryCSV(csvString: string): Promise<ParseResult> {
         const data: BulkAuctionInput[] = [];
         const errors: { row: number; message: string }[] = [];
 
-        results.data.forEach((row: Record<string, unknown>, index: number) => {
+        (results.data as Record<string, unknown>[]).forEach((row, index) => {
           const parsed = BulkAuctionSchema.safeParse(row);
           if (parsed.success) {
             data.push(parsed.data);
