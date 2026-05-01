@@ -1,0 +1,633 @@
+﻿
+ERROR: build step 3 "asia-southeast1-docker.pkg.dev/serverless-runtimes/google-22-full/builder/nodejs:nodejs_20260414_RC00_lightweight" failed: step exited with non-zero status: 51
+ERROR
+Finished Step #3 - "build"
+Step #3 - "build": [31;1mERROR: [0mfailed to build: exit status 1
+Step #3 - "build": {"reason":"Failed Framework Build","code":"fah/failed-framework-build","userFacingMessage":"Your application failed to run the framework build command 'npm exec --prefix /layers/google.nodejs.firebasenextjs/npm_modules apphosting-adapter-nextjs-build' successfully. Please check the raw log to address the error and confirm that your application builds locally before redeploying.","rawLog":"(error ID: d0a693a9):\n[Env] ?  Configuration validated for: production\nOverriding Next Config to add configs optmized for Firebase App Hosting\nSuccessfully created next.config.ts with Firebase App Hosting overrides\n\n\u003e nilamit.app@0.2.0 build\n\u003e next build\n\n[Env] ?  Configuration validated for: production\n? Next.js 16.1.6 (Turbopack)\n- Experiments (use with caution):\n  ? clientTraceMetadata\n  ? optimizePackageImports\n\n? The \"middleware\" file convention is deprecated. Please use \"proxy\" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy\n  Creating an optimized production build ...\n[Env] ?  Configuration validated for: production\n? Compiled successfully in 71s\n  Running next.config.js provided runAfterProductionCompile ...\n? Completed runAfterProductionCompile in 624ms\n  Running TypeScript ...\nFailed to compile.\n\n./src/app/[locale]/admin/tabs/TreasuryTab.tsx:42:17\nType error: Conversion of type 'HydratedEscrowRow[]' to type 'TreasuryLog[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  Property 'seller' is missing in type 'HydratedEscrowRow' but required in type 'TreasuryLog'.\n\n\u001b[0m \u001b[90m 40 |\u001b[39m       ])\u001b[33m;\u001b[39m\n \u001b[90m 41 |\u001b[39m       \u001b[36mif\u001b[39m (auditRes\u001b[33m.\u001b[39msuccess \u001b[33m\u0026\u0026\u001b[39m auditRes\u001b[33m.\u001b[39mdata) {\n\u001b[31m\u001b[1m\u003e\u001b[22m\u001b[39m\u001b[90m 42 |\u001b[39m         setLogs(auditRes\u001b[33m.\u001b[39mdata \u001b[36mas\u001b[39m \u001b[33mTreasuryLog\u001b[39m[])\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                 \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 43 |\u001b[39m       }\n \u001b[90m 44 |\u001b[39m       \u001b[36mif\u001b[39m (escrowRes\u001b[33m.\u001b[39msuccess \u001b[33m\u0026\u0026\u001b[39m escrowRes\u001b[33m.\u001b[39mdata) {\n \u001b[90m 45 |\u001b[39m         setActiveEscrows(escrowRes\u001b[33m.\u001b[39mdata \u001b[36mas\u001b[39m \u001b[33mActiveEscrow\u001b[39m[])\u001b[33m;\u001b[39m\u001b[0m\nNext.js build worker exited with code: 1 and signal: null\nRestoring original next config in project root\n/layers/google.nodejs.firebasenextjs/npm_modules/node_modules/@apphosting/common/dist/index.js:64\n                reject(new Error(`Build process exited with error code ${code}.`));\n                       ^\n\nError: Build process exited with error code 1.\n    at ChildProcess.\u003canonymous\u003e (/layers/google.nodejs.firebasenextjs/npm_modules/node_modules/@apphosting/common/dist/index.js:64:24)\n    at ChildProcess.emit (node:events:519:28)\n    at ChildProcess._handle.onexit (node:internal/child_process:293:12)\n\nNode.js v22.22.2","isUserAttributed":true}
+Step #3 - "build": failed to build: (error ID: d633962f):
+Step #3 - "build": --------------------------------------------------------------------------------
+Step #3 - "build": Done "npm exec --prefix /layers/google.nodejs.firebasenextjs/npm_m..." (1m34.846491207s)
+Step #3 - "build": Node.js v22.22.2
+Step #3 - "build": 
+Step #3 - "build":     at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+Step #3 - "build":     at ChildProcess.emit (node:events:519:28)
+Step #3 - "build":     at ChildProcess.<anonymous> (/layers/google.nodejs.firebasenextjs/npm_modules/node_modules/@apphosting/common/dist/index.js:64:24)
+Step #3 - "build": Error: Build process exited with error code 1.
+Step #3 - "build": 
+Step #3 - "build":                        ^
+Step #3 - "build":                 reject(new Error(`Build process exited with error code ${code}.`));
+Step #3 - "build": /layers/google.nodejs.firebasenextjs/npm_modules/node_modules/@apphosting/common/dist/index.js:64
+Step #3 - "build": Restoring original next config in project root
+Step #3 - "build": Next.js build worker exited with code: 1 and signal: null
+Step #3 - "build":  [90m 45 |[39m         setActiveEscrows(escrowRes[33m.[39mdata [36mas[39m [33mActiveEscrow[39m[])[33m;[39m[0m
+Step #3 - "build":  [90m 44 |[39m       [36mif[39m (escrowRes[33m.[39msuccess [33m&&[39m escrowRes[33m.[39mdata) {
+Step #3 - "build":  [90m 43 |[39m       }
+Step #3 - "build":  [90m    |[39m                 [31m[1m^[22m[39m
+Step #3 - "build": [31m[1m>[22m[39m[90m 42 |[39m         setLogs(auditRes[33m.[39mdata [36mas[39m [33mTreasuryLog[39m[])[33m;[39m
+Step #3 - "build":  [90m 41 |[39m       [36mif[39m (auditRes[33m.[39msuccess [33m&&[39m auditRes[33m.[39mdata) {
+Step #3 - "build": [0m [90m 40 |[39m       ])[33m;[39m
+Step #3 - "build": 
+Step #3 - "build":   Property 'seller' is missing in type 'HydratedEscrowRow' but required in type 'TreasuryLog'.
+Step #3 - "build": Type error: Conversion of type 'HydratedEscrowRow[]' to type 'TreasuryLog[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+Step #3 - "build": ./src/app/[locale]/admin/tabs/TreasuryTab.tsx:42:17
+Step #3 - "build": 
+Step #3 - "build": Failed to compile.
+Step #3 - "build":   Running TypeScript ...
+Step #3 - "build": ? Completed runAfterProductionCompile in 624ms
+Step #3 - "build":   Running next.config.js provided runAfterProductionCompile ...
+Step #3 - "build": ? Compiled successfully in 71s
+Step #3 - "build": [Env] ?  Configuration validated for: production
+Step #3 - "build":   Creating an optimized production build ...
+Step #3 - "build": ? The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+Step #3 - "build": 
+Step #3 - "build":   ? optimizePackageImports
+Step #3 - "build":   ? clientTraceMetadata
+Step #3 - "build": - Experiments (use with caution):
+Step #3 - "build": ? Next.js 16.1.6 (Turbopack)
+Step #3 - "build": [Env] ?  Configuration validated for: production
+Step #3 - "build": 
+Step #3 - "build": > next build
+Step #3 - "build": > nilamit.app@0.2.0 build
+Step #3 - "build": 
+Step #3 - "build": Successfully created next.config.ts with Firebase App Hosting overrides
+Step #3 - "build": Overriding Next Config to add configs optmized for Firebase App Hosting
+Step #3 - "build": [Env] ?  Configuration validated for: production
+Step #3 - "build": Running "npm exec --prefix /layers/google.nodejs.firebasenextjs/npm_modules apphosting-adapter-nextjs-build"
+Step #3 - "build": --------------------------------------------------------------------------------
+Step #3 - "build": Done "npm ci --quiet --no-fund --no-audit (NODE_ENV=production)" (48.717473209s)
+Step #3 - "build": added 1031 packages in 49s
+Step #3 - "build": 
+Step #3 - "build": Running "npm ci --quiet --no-fund --no-audit (NODE_ENV=production)"
+Step #3 - "build": --------------------------------------------------------------------------------
+Step #3 - "build": Installing application dependencies.
+Step #3 - "build": ***** CACHE MISS: "npm_modules"
+Step #3 - "build": === Node.js - Npm Using Runner (google.nodejs.npm@1.1.1) ===
+Step #3 - "build": Installing nextjs adaptor 14.0.21
+Step #3 - "build": ***** CACHE MISS: "npm_modules"
+Step #3 - "build": Using NEXTJS_ADAPTER_VERSION: "14.0.21"
+Step #3 - "build": === Node.js - Firebasenextjs Using Runner (google.nodejs.firebasenextjs@0.0.1) ===
+Step #3 - "build": Installing the heapsize.sh exec.d script.
+Step #3 - "build": 2026/05/01 10:41:28 [DEBUG] GET https://dl.google.com/runtimes/ubuntu2204/nodejs/nodejs-22.22.2.tar.gz
+Step #3 - "build": Installing Node.js v22.22.2.
+Step #3 - "build": ***** CACHE MISS: "nodejs"
+Step #3 - "build": 2026/05/01 10:41:28 [DEBUG] GET https://dl.google.com/runtimes/ubuntu2204/nodejs/version.json
+Step #3 - "build": Adding image label google.runtime-version: nodejs22
+Step #3 - "build": 2026/05/01 10:41:28 [DEBUG] GET https://dl.google.com/runtimes/ubuntu2204/nodejs/version.json
+Step #3 - "build": Nodejs version not specified, using the latest available Nodejs runtime for the stack "ubuntu2204"
+Step #3 - "build": === Node.js - Runtime Using Runner (google.nodejs.runtime@1.0.0) ===
+Step #3 - "build": target distro name/version labels not found, reading /etc/os-release file
+Step #3 - "build": [36m===> BUILDING[0m
+Step #3 - "build": [36m===> RESTORING[0m
+Step #3 - "build": google.nodejs.firebasebundle 0.0.1
+Step #3 - "build": google.nodejs.npm            1.1.1
+Step #3 - "build": google.nodejs.firebasenextjs 0.0.1
+Step #3 - "build": google.nodejs.runtime        1.0.0
+Step #3 - "build": 4 of 6 buildpacks participating
+Step #3 - "build": target distro name/version labels not found, reading /etc/os-release file
+Step #3 - "build": [36m===> DETECTING[0m
+Step #3 - "build": Image with name "asia-southeast1-docker.pkg.dev/nilamit-52073/firebaseapphosting-images/nilamit:build-2026-05-01-013" not found
+Step #3 - "build": [36m===> ANALYZING[0m
+Step #3 - "build": [33;1mWarning: [0mNo cached data will be used, no cache specified.
+Step #3 - "build": Already have image (with digest): asia-southeast1-docker.pkg.dev/serverless-runtimes/google-22-full/builder/nodejs:nodejs_20260414_RC00_lightweight
+Starting Step #3 - "build"
+Finished Step #2 - "pre-buildpack"
+Step #2 - "pre-buildpack": Passing build environment variable BUILDER_OUTPUT to buildpacks
+Step #2 - "pre-buildpack": Passing build environment variable GOOGLE_BUILDABLE to buildpacks
+Step #2 - "pre-buildpack": Passing build environment variable ANGULAR_ADAPTER_VERSION to buildpacks
+Step #2 - "pre-buildpack": Passing build environment variable NEXTJS_ADAPTER_VERSION to buildpacks
+Step #2 - "pre-buildpack": Passing build environment variable FIREBASE_APP_HOSTING to buildpacks
+Step #2 - "pre-buildpack": Passing build environment variable FIREBASE_OUTPUT_BUNDLE_DIR to buildpacks
+Step #2 - "pre-buildpack": Passing build environment variable APPHOSTINGYAML_FILEPATH to buildpacks
+Step #2 - "pre-buildpack": Passing build environment variable X_GOOGLE_TARGET_PLATFORM to buildpacks
+Step #2 - "pre-buildpack": Preparing directory /platform/env
+Step #2 - "pre-buildpack": Preparing directory /builder/outputs
+Step #2 - "pre-buildpack": Preparing directory /builder/home
+Step #2 - "pre-buildpack": Preparing directory /workspace
+Step #2 - "pre-buildpack": Preparing directory /layers
+Step #2 - "pre-buildpack": asia-southeast1-docker.pkg.dev/serverless-runtimes/google-22-full/builder/nodejs:nodejs_20260414_RC00_lightweight
+Step #2 - "pre-buildpack": Status: Downloaded newer image for asia-southeast1-docker.pkg.dev/serverless-runtimes/google-22-full/builder/nodejs:nodejs_20260414_RC00_lightweight
+Step #2 - "pre-buildpack": Digest: sha256:739052836b95d0b416c32f2af0197ac3d4529841d19377da1c7d2350e89de317
+Step #2 - "pre-buildpack": 4f4fb700ef54: Pull complete
+Step #2 - "pre-buildpack": e6178d2c0976: Pull complete
+Step #2 - "pre-buildpack": 34ce8ba30961: Pull complete
+Step #2 - "pre-buildpack": 78613c92ea9e: Pull complete
+Step #2 - "pre-buildpack": 141edec40997: Pull complete
+Step #2 - "pre-buildpack": bf9f17fe63e1: Pull complete
+Step #2 - "pre-buildpack": fe0a88c014e5: Pull complete
+Step #2 - "pre-buildpack": a3ff78f24474: Pull complete
+Step #2 - "pre-buildpack": efcb0284b17c: Pull complete
+Step #2 - "pre-buildpack": 21b7eaf3838c: Pull complete
+Step #2 - "pre-buildpack": 83a616838a6a: Pull complete
+Step #2 - "pre-buildpack": fcc9024d1365: Pull complete
+Step #2 - "pre-buildpack": 4f4fb700ef54: Download complete
+Step #2 - "pre-buildpack": 4f4fb700ef54: Verifying Checksum
+Step #2 - "pre-buildpack": bf9f17fe63e1: Download complete
+Step #2 - "pre-buildpack": bf9f17fe63e1: Verifying Checksum
+Step #2 - "pre-buildpack": 7b73ea3bc7a0: Pull complete
+Step #2 - "pre-buildpack": 34ce8ba30961: Download complete
+Step #2 - "pre-buildpack": 34ce8ba30961: Verifying Checksum
+Step #2 - "pre-buildpack": a3ff78f24474: Download complete
+Step #2 - "pre-buildpack": a3ff78f24474: Verifying Checksum
+Step #2 - "pre-buildpack": e6178d2c0976: Download complete
+Step #2 - "pre-buildpack": e6178d2c0976: Verifying Checksum
+Step #2 - "pre-buildpack": 78613c92ea9e: Download complete
+Step #2 - "pre-buildpack": 78613c92ea9e: Verifying Checksum
+Step #2 - "pre-buildpack": 141edec40997: Download complete
+Step #2 - "pre-buildpack": 141edec40997: Verifying Checksum
+Step #2 - "pre-buildpack": a2e36cfc8715: Pull complete
+Step #2 - "pre-buildpack": fe0a88c014e5: Download complete
+Step #2 - "pre-buildpack": fe0a88c014e5: Verifying Checksum
+Step #2 - "pre-buildpack": 21b7eaf3838c: Download complete
+Step #2 - "pre-buildpack": 21b7eaf3838c: Verifying Checksum
+Step #2 - "pre-buildpack": efcb0284b17c: Download complete
+Step #2 - "pre-buildpack": fcc9024d1365: Download complete
+Step #2 - "pre-buildpack": fcc9024d1365: Verifying Checksum
+Step #2 - "pre-buildpack": 7b73ea3bc7a0: Download complete
+Step #2 - "pre-buildpack": 7b73ea3bc7a0: Verifying Checksum
+Step #2 - "pre-buildpack": 83a616838a6a: Download complete
+Step #2 - "pre-buildpack": 83a616838a6a: Verifying Checksum
+Step #2 - "pre-buildpack": a2e36cfc8715: Download complete
+Step #2 - "pre-buildpack": a2e36cfc8715: Verifying Checksum
+Step #2 - "pre-buildpack": 4f4fb700ef54: Waiting
+Step #2 - "pre-buildpack": e6178d2c0976: Waiting
+Step #2 - "pre-buildpack": 34ce8ba30961: Waiting
+Step #2 - "pre-buildpack": 78613c92ea9e: Waiting
+Step #2 - "pre-buildpack": 141edec40997: Waiting
+Step #2 - "pre-buildpack": bf9f17fe63e1: Waiting
+Step #2 - "pre-buildpack": fe0a88c014e5: Waiting
+Step #2 - "pre-buildpack": a3ff78f24474: Waiting
+Step #2 - "pre-buildpack": 4f4fb700ef54: Pulling fs layer
+Step #2 - "pre-buildpack": e6178d2c0976: Pulling fs layer
+Step #2 - "pre-buildpack": 34ce8ba30961: Pulling fs layer
+Step #2 - "pre-buildpack": 78613c92ea9e: Pulling fs layer
+Step #2 - "pre-buildpack": 141edec40997: Pulling fs layer
+Step #2 - "pre-buildpack": bf9f17fe63e1: Pulling fs layer
+Step #2 - "pre-buildpack": fe0a88c014e5: Pulling fs layer
+Step #2 - "pre-buildpack": a3ff78f24474: Pulling fs layer
+Step #2 - "pre-buildpack": efcb0284b17c: Pulling fs layer
+Step #2 - "pre-buildpack": 21b7eaf3838c: Pulling fs layer
+Step #2 - "pre-buildpack": 83a616838a6a: Pulling fs layer
+Step #2 - "pre-buildpack": fcc9024d1365: Pulling fs layer
+Step #2 - "pre-buildpack": 7b73ea3bc7a0: Pulling fs layer
+Step #2 - "pre-buildpack": a2e36cfc8715: Pulling fs layer
+Step #2 - "pre-buildpack": ee64996bf436: Already exists
+Step #2 - "pre-buildpack": 9174e796c391: Already exists
+Step #2 - "pre-buildpack": 70792468e643: Already exists
+Step #2 - "pre-buildpack": nodejs_20260414_RC00_lightweight: Pulling from serverless-runtimes/google-22-full/builder/nodejs
+Step #2 - "pre-buildpack": Pulling image: asia-southeast1-docker.pkg.dev/serverless-runtimes/google-22-full/builder/nodejs:nodejs_20260414_RC00_lightweight
+Starting Step #2 - "pre-buildpack"
+Finished Step #1 - "preparer"
+Step #1 - "preparer": 
+Step #1 - "preparer":   source: Firebase System
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   value: '{"apiKey":"AIzaSyAOwypGtSAeCsZpHogZx7Jt_MPX2nh3GZM","appId":"1:884637735592:web:2c65a7758121291263409d","authDomain":"nilamit-52073.firebaseapp.com","databaseURL":"https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app","messagingSenderId":"884637735592","projectId":"nilamit-52073","storageBucket":"nilamit-52073.firebasestorage.app"}'
+Step #1 - "preparer": - variable: FIREBASE_WEBAPP_CONFIG
+Step #1 - "preparer":   source: Firebase System
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   value: '{"databaseURL":"https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app","projectId":"nilamit-52073","storageBucket":"nilamit-52073.firebasestorage.app"}'
+Step #1 - "preparer": - variable: FIREBASE_CONFIG
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/GREENWEB_TOKEN/versions/1
+Step #1 - "preparer": - variable: GREENWEB_TOKEN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   value: greenweb
+Step #1 - "preparer": - variable: SMS_PROVIDER
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/SENTRY_AUTH_TOKEN/versions/1
+Step #1 - "preparer": - variable: SENTRY_AUTH_TOKEN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/SENTRY_DSN/versions/2
+Step #1 - "preparer": - variable: NEXT_PUBLIC_SENTRY_DSN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/SENTRY_DSN/versions/2
+Step #1 - "preparer": - variable: SENTRY_DSN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/UPSTASH_REDIS_REST_TOKEN/versions/2
+Step #1 - "preparer": - variable: UPSTASH_REDIS_REST_TOKEN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/UPSTASH_REDIS_REST_URL/versions/2
+Step #1 - "preparer": - variable: UPSTASH_REDIS_REST_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/APP_URL/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_APP_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_STORAGE_BUCKET/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_DATABASE_URL/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_DATABASE_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_APP_ID/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_MESSAGING_SENDER_ID/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_PROJECT_ID/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_WEB_API_KEY/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_STORAGE_BUCKET/versions/1
+Step #1 - "preparer": - variable: FIREBASE_STORAGE_BUCKET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_DATABASE_URL/versions/1
+Step #1 - "preparer": - variable: FIREBASE_DATABASE_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_PRIVATE_KEY/versions/1
+Step #1 - "preparer": - variable: FIREBASE_PRIVATE_KEY
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_CLIENT_EMAIL/versions/1
+Step #1 - "preparer": - variable: FIREBASE_CLIENT_EMAIL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_PROJECT_ID/versions/1
+Step #1 - "preparer": - variable: FIREBASE_PROJECT_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/CRON_SECRET/versions/1
+Step #1 - "preparer": - variable: CRON_SECRET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/ADMIN_EMAILS/versions/2
+Step #1 - "preparer": - variable: ADMIN_EMAILS
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/GOOGLE_CLIENT_SECRET/versions/1
+Step #1 - "preparer": - variable: GOOGLE_CLIENT_SECRET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/GOOGLE_CLIENT_ID/versions/1
+Step #1 - "preparer": - variable: GOOGLE_CLIENT_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/APP_URL/versions/1
+Step #1 - "preparer": - variable: AUTH_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/AUTH_SECRET/versions/2
+Step #1 - "preparer": - variable: AUTH_SECRET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   value: production
+Step #1 - "preparer": - variable: NODE_ENV
+Step #1 - "preparer": env:
+Step #1 - "preparer":   cpuAlwaysAllocated: null
+Step #1 - "preparer":   vpcAccess: null
+Step #1 - "preparer":   minInstances: 1
+Step #1 - "preparer":   maxInstances: 10
+Step #1 - "preparer":   concurrency: 80
+Step #1 - "preparer":   memoryMiB: 1024
+Step #1 - "preparer":   cpu: 1
+Step #1 - "preparer": runConfig:
+Step #1 - "preparer": 2026/05/01 10:41:22 Final app hosting schema:
+Step #1 - "preparer": 
+Step #1 - "preparer":   source: Firebase System
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   value: '{"apiKey":"AIzaSyAOwypGtSAeCsZpHogZx7Jt_MPX2nh3GZM","appId":"1:884637735592:web:2c65a7758121291263409d","authDomain":"nilamit-52073.firebaseapp.com","databaseURL":"https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app","messagingSenderId":"884637735592","projectId":"nilamit-52073","storageBucket":"nilamit-52073.firebasestorage.app"}'
+Step #1 - "preparer": - variable: FIREBASE_WEBAPP_CONFIG
+Step #1 - "preparer":   source: Firebase System
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   value: '{"databaseURL":"https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app","projectId":"nilamit-52073","storageBucket":"nilamit-52073.firebasestorage.app"}'
+Step #1 - "preparer": - variable: FIREBASE_CONFIG
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/GREENWEB_TOKEN/versions/1
+Step #1 - "preparer": - variable: GREENWEB_TOKEN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   value: greenweb
+Step #1 - "preparer": - variable: SMS_PROVIDER
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/SENTRY_AUTH_TOKEN/versions/1
+Step #1 - "preparer": - variable: SENTRY_AUTH_TOKEN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/SENTRY_DSN/versions/2
+Step #1 - "preparer": - variable: NEXT_PUBLIC_SENTRY_DSN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/SENTRY_DSN/versions/2
+Step #1 - "preparer": - variable: SENTRY_DSN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/UPSTASH_REDIS_REST_TOKEN/versions/2
+Step #1 - "preparer": - variable: UPSTASH_REDIS_REST_TOKEN
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/UPSTASH_REDIS_REST_URL/versions/2
+Step #1 - "preparer": - variable: UPSTASH_REDIS_REST_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/APP_URL/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_APP_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_STORAGE_BUCKET/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_DATABASE_URL/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_DATABASE_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_APP_ID/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_MESSAGING_SENDER_ID/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_PROJECT_ID/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_WEB_API_KEY/versions/1
+Step #1 - "preparer": - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_STORAGE_BUCKET/versions/1
+Step #1 - "preparer": - variable: FIREBASE_STORAGE_BUCKET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_DATABASE_URL/versions/1
+Step #1 - "preparer": - variable: FIREBASE_DATABASE_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_PRIVATE_KEY/versions/1
+Step #1 - "preparer": - variable: FIREBASE_PRIVATE_KEY
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_CLIENT_EMAIL/versions/1
+Step #1 - "preparer": - variable: FIREBASE_CLIENT_EMAIL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/FIREBASE_PROJECT_ID/versions/1
+Step #1 - "preparer": - variable: FIREBASE_PROJECT_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/CRON_SECRET/versions/1
+Step #1 - "preparer": - variable: CRON_SECRET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/ADMIN_EMAILS/versions/2
+Step #1 - "preparer": - variable: ADMIN_EMAILS
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/GOOGLE_CLIENT_SECRET/versions/1
+Step #1 - "preparer": - variable: GOOGLE_CLIENT_SECRET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/GOOGLE_CLIENT_ID/versions/1
+Step #1 - "preparer": - variable: GOOGLE_CLIENT_ID
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/APP_URL/versions/1
+Step #1 - "preparer": - variable: AUTH_URL
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   secret: projects/884637735592/secrets/AUTH_SECRET/versions/2
+Step #1 - "preparer": - variable: AUTH_SECRET
+Step #1 - "preparer":   source: apphosting.yaml
+Step #1 - "preparer":   - RUNTIME
+Step #1 - "preparer":   - BUILD
+Step #1 - "preparer":   availability:
+Step #1 - "preparer":   value: production
+Step #1 - "preparer": - variable: NODE_ENV
+Step #1 - "preparer": env:
+Step #1 - "preparer":   cpuAlwaysAllocated: null
+Step #1 - "preparer":   vpcAccess: null
+Step #1 - "preparer":   minInstances: 1
+Step #1 - "preparer":   maxInstances: 10
+Step #1 - "preparer":   concurrency: 80
+Step #1 - "preparer":   memoryMiB: 1024
+Step #1 - "preparer":   cpu: 1
+Step #1 - "preparer": runConfig:
+Step #1 - "preparer": 2026/05/01 10:41:22 Final app hosting schema:
+Step #1 - "preparer": 2026/05/01 10:41:22 Accessed secret projects/884637735592/secrets/GREENWEB_TOKEN/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:22 Accessed secret projects/884637735592/secrets/SENTRY_AUTH_TOKEN/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:22 Accessed secret projects/884637735592/secrets/SENTRY_DSN/versions/2 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:22 Accessed secret projects/884637735592/secrets/SENTRY_DSN/versions/2 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:22 Accessed secret projects/884637735592/secrets/UPSTASH_REDIS_REST_TOKEN/versions/2 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:21 Accessed secret projects/884637735592/secrets/UPSTASH_REDIS_REST_URL/versions/2 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:21 Accessed secret projects/884637735592/secrets/APP_URL/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:21 Accessed secret projects/884637735592/secrets/FIREBASE_STORAGE_BUCKET/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:21 Accessed secret projects/884637735592/secrets/FIREBASE_DATABASE_URL/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:21 Accessed secret projects/884637735592/secrets/FIREBASE_APP_ID/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:20 Accessed secret projects/884637735592/secrets/FIREBASE_MESSAGING_SENDER_ID/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:20 Accessed secret projects/884637735592/secrets/FIREBASE_PROJECT_ID/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:20 Accessed secret projects/884637735592/secrets/FIREBASE_WEB_API_KEY/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:20 Accessed secret projects/884637735592/secrets/FIREBASE_STORAGE_BUCKET/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:20 Accessed secret projects/884637735592/secrets/FIREBASE_DATABASE_URL/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:20 Accessed secret projects/884637735592/secrets/FIREBASE_PRIVATE_KEY/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:19 Accessed secret projects/884637735592/secrets/FIREBASE_CLIENT_EMAIL/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:19 Accessed secret projects/884637735592/secrets/FIREBASE_PROJECT_ID/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:19 Accessed secret projects/884637735592/secrets/CRON_SECRET/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:19 Accessed secret projects/884637735592/secrets/ADMIN_EMAILS/versions/2 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:19 Accessed secret projects/884637735592/secrets/GOOGLE_CLIENT_SECRET/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:19 Accessed secret projects/884637735592/secrets/GOOGLE_CLIENT_ID/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:18 Accessed secret projects/884637735592/secrets/APP_URL/versions/1 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:18 Accessed secret projects/884637735592/secrets/AUTH_SECRET/versions/2 for the rest of the current build
+Step #1 - "preparer": 2026/05/01 10:41:18 Pinned secret projects/nilamit-52073/secrets/GREENWEB_TOKEN/versions/latest to projects/884637735592/secrets/GREENWEB_TOKEN/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:18 Pinned secret projects/nilamit-52073/secrets/SENTRY_AUTH_TOKEN/versions/latest to projects/884637735592/secrets/SENTRY_AUTH_TOKEN/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:18 Pinned secret projects/nilamit-52073/secrets/SENTRY_DSN/versions/latest to projects/884637735592/secrets/SENTRY_DSN/versions/2 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:17 Pinned secret projects/nilamit-52073/secrets/SENTRY_DSN/versions/latest to projects/884637735592/secrets/SENTRY_DSN/versions/2 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:17 Pinned secret projects/nilamit-52073/secrets/UPSTASH_REDIS_REST_TOKEN/versions/latest to projects/884637735592/secrets/UPSTASH_REDIS_REST_TOKEN/versions/2 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:17 Pinned secret projects/nilamit-52073/secrets/UPSTASH_REDIS_REST_URL/versions/latest to projects/884637735592/secrets/UPSTASH_REDIS_REST_URL/versions/2 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:17 Pinned secret projects/nilamit-52073/secrets/APP_URL/versions/latest to projects/884637735592/secrets/APP_URL/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:17 Pinned secret projects/nilamit-52073/secrets/FIREBASE_STORAGE_BUCKET/versions/latest to projects/884637735592/secrets/FIREBASE_STORAGE_BUCKET/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:16 Pinned secret projects/nilamit-52073/secrets/FIREBASE_DATABASE_URL/versions/latest to projects/884637735592/secrets/FIREBASE_DATABASE_URL/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:16 Pinned secret projects/nilamit-52073/secrets/FIREBASE_APP_ID/versions/latest to projects/884637735592/secrets/FIREBASE_APP_ID/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:16 Pinned secret projects/nilamit-52073/secrets/FIREBASE_MESSAGING_SENDER_ID/versions/latest to projects/884637735592/secrets/FIREBASE_MESSAGING_SENDER_ID/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:16 Pinned secret projects/nilamit-52073/secrets/FIREBASE_PROJECT_ID/versions/latest to projects/884637735592/secrets/FIREBASE_PROJECT_ID/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:15 Pinned secret projects/nilamit-52073/secrets/FIREBASE_WEB_API_KEY/versions/latest to projects/884637735592/secrets/FIREBASE_WEB_API_KEY/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:15 Pinned secret projects/nilamit-52073/secrets/FIREBASE_STORAGE_BUCKET/versions/latest to projects/884637735592/secrets/FIREBASE_STORAGE_BUCKET/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:15 Pinned secret projects/nilamit-52073/secrets/FIREBASE_DATABASE_URL/versions/latest to projects/884637735592/secrets/FIREBASE_DATABASE_URL/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:15 Pinned secret projects/nilamit-52073/secrets/FIREBASE_PRIVATE_KEY/versions/latest to projects/884637735592/secrets/FIREBASE_PRIVATE_KEY/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:15 Pinned secret projects/nilamit-52073/secrets/FIREBASE_CLIENT_EMAIL/versions/latest to projects/884637735592/secrets/FIREBASE_CLIENT_EMAIL/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:14 Pinned secret projects/nilamit-52073/secrets/FIREBASE_PROJECT_ID/versions/latest to projects/884637735592/secrets/FIREBASE_PROJECT_ID/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:14 Pinned secret projects/nilamit-52073/secrets/CRON_SECRET/versions/latest to projects/884637735592/secrets/CRON_SECRET/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:14 Pinned secret projects/nilamit-52073/secrets/ADMIN_EMAILS/versions/latest to projects/884637735592/secrets/ADMIN_EMAILS/versions/2 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:14 Pinned secret projects/nilamit-52073/secrets/GOOGLE_CLIENT_SECRET/versions/latest to projects/884637735592/secrets/GOOGLE_CLIENT_SECRET/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:13 Pinned secret projects/nilamit-52073/secrets/GOOGLE_CLIENT_ID/versions/latest to projects/884637735592/secrets/GOOGLE_CLIENT_ID/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:13 Pinned secret projects/nilamit-52073/secrets/APP_URL/versions/latest to projects/884637735592/secrets/APP_URL/versions/1 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:13 Pinned secret projects/nilamit-52073/secrets/AUTH_SECRET/versions/latest to projects/884637735592/secrets/AUTH_SECRET/versions/2 for the rest of the current build and run
+Step #1 - "preparer": 2026/05/01 10:41:13 FIREBASE_CONFIG has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 GREENWEB_TOKEN has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 SMS_PROVIDER has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 SENTRY_AUTH_TOKEN has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 NEXT_PUBLIC_SENTRY_DSN has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 SENTRY_DSN has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 UPSTASH_REDIS_REST_TOKEN has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 UPSTASH_REDIS_REST_URL has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 NEXT_PUBLIC_APP_URL has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 NEXT_PUBLIC_FIREBASE_DATABASE_URL has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 NEXT_PUBLIC_FIREBASE_APP_ID has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 NEXT_PUBLIC_FIREBASE_PROJECT_ID has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 NEXT_PUBLIC_FIREBASE_API_KEY has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 FIREBASE_STORAGE_BUCKET has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 FIREBASE_DATABASE_URL has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 FIREBASE_PRIVATE_KEY has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 FIREBASE_CLIENT_EMAIL has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 FIREBASE_PROJECT_ID has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 CRON_SECRET has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 ADMIN_EMAILS has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 GOOGLE_CLIENT_SECRET has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 GOOGLE_CLIENT_ID has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 AUTH_URL has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 AUTH_SECRET has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": 2026/05/01 10:41:13 NODE_ENV has no availability specified, applying the default of 'BUILD' and 'RUNTIME'
+Step #1 - "preparer": asia-southeast1-docker.pkg.dev/serverless-runtimes/utilities/preparer:base_20260226_18_04_RC00
+Step #1 - "preparer": Status: Downloaded newer image for asia-southeast1-docker.pkg.dev/serverless-runtimes/utilities/preparer:base_20260226_18_04_RC00
+Step #1 - "preparer": Digest: sha256:cc6a7fbe7cf88f3e56b9c3a94ea83714507a4f6ffcc0c27d1824fe1133f33aa0
+Step #1 - "preparer": ec754079ef19: Pull complete
+Step #1 - "preparer": ec754079ef19: Download complete
+Step #1 - "preparer": ec754079ef19: Verifying Checksum
+Step #1 - "preparer": ec754079ef19: Pulling fs layer
+Step #1 - "preparer": base_20260226_18_04_RC00: Pulling from serverless-runtimes/utilities/preparer
+Step #1 - "preparer": Pulling image: asia-southeast1-docker.pkg.dev/serverless-runtimes/utilities/preparer:base_20260226_18_04_RC00
+Starting Step #1 - "preparer"
+Finished Step #0 - "ubuntu"
+Step #0 - "ubuntu": Already have image (with digest): gcr.io/cloud-builders/gcloud
+Starting Step #0 - "ubuntu"
+BUILD
+97c0e5a10ded55285a3f4628295250e6110d6d7f
+GitCommit:
+HEAD is now at 97c0e5a chore: remove temporary build logs
+ * branch            97c0e5a10ded55285a3f4628295250e6110d6d7f -> FETCH_HEAD
+From https://github.com/Sayem9999/nilamit.com
+FETCHSOURCE
+starting build "8835c74c-ac5e-42fc-bae9-8c425f0e962d"
+
+

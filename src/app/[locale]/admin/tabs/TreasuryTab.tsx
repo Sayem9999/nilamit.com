@@ -12,9 +12,11 @@ interface TreasuryLog {
   amount: number;
   verificationType: string;
   providerRef: string | null;
-  auction: { title: string };
+  auction: { 
+    title: string;
+    seller: { name: string | null; phone: string | null };
+  };
   buyer: { name: string | null; email: string | null; phone: string | null };
-  seller: { name: string | null; phone: string | null };
 }
 
 interface ActiveEscrow {
@@ -83,8 +85,8 @@ export function TreasuryTab() {
         amount: log.amount,
         buyerName: log.buyer.name || "Valued Buyer",
         buyerPhone: log.buyer.phone || "N/A",
-        sellerName: log.seller?.name || "Verified Seller",
-        sellerPhone: log.seller?.phone || "N/A"
+        sellerName: log.auction.seller?.name || "Verified Seller",
+        sellerPhone: log.auction.seller?.phone || "N/A"
       });
       doc.save(`invoice-${log.id.slice(-8)}.pdf`);
       toast.success("Invoice generated!");
