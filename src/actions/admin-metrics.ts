@@ -25,6 +25,7 @@ export interface KeyMetrics {
   topCategories: { category: string; count: number }[];
   dailyBids: { date: string; count: number }[];
   dailySignups: { date: string; count: number }[];
+  dailyGMV: { date: string; amount: number }[];
 }
 
 function dayKey(date: Date): string {
@@ -102,6 +103,7 @@ export async function getKeyMetrics(): Promise<ServiceResponse<KeyMetrics>> {
 
     const dailyBidsMap = initDailyMap(now, 30);
     const dailySignupsMap = initDailyMap(now, 30);
+    const dailyGMVMap = initDailyMap(now, 30);
 
     recentBidsSnap.docs.forEach((d) => {
       const date = d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt);
@@ -113,6 +115,15 @@ export async function getKeyMetrics(): Promise<ServiceResponse<KeyMetrics>> {
       const date = d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt);
       const key = dayKey(date);
       if (dailySignupsMap.has(key)) dailySignupsMap.set(key, (dailySignupsMap.get(key) || 0) + 1);
+    });
+
+    soldAuctionsSnap.docs.forEach((doc) => {
+      const data = doc.data();
+      const updatedAt = data.updatedAt?.toDate?.() ?? new Date(data.updatedAt || 0);
+      const key = dayKey(updatedAt);
+      if (dailyGMVMap.has(key)) {
+        dailyGMVMap.set(key, (dailyGMVMap.get(key) || 0) + Number(data.currentPrice || 0));
+      }
     });
 
     // Rates & Averages
@@ -145,6 +156,7 @@ export async function getKeyMetrics(): Promise<ServiceResponse<KeyMetrics>> {
       topCategories,
       dailyBids: Array.from(dailyBidsMap).map(([date, count]) => ({ date, count })),
       dailySignups: Array.from(dailySignupsMap).map(([date, count]) => ({ date, count })),
+      dailyGMV: Array.from(dailyGMVMap).map(([date, amount]) => ({ date, amount })),
     };
 
     return successResponse(metrics);

@@ -230,6 +230,42 @@ export function MetricsTab() {
             </span>
           </div>
         </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-heading font-semibold text-gray-900">
+                Daily Revenue (GMV)
+              </h3>
+              <p className="text-xs text-gray-400">Last 30 days</p>
+            </div>
+            <div className="flex items-center gap-1.5 text-sm font-medium text-amber-600">
+              <DollarSign className="w-4 h-4" />
+              ৳{metrics.totalGMV.toLocaleString()} total
+            </div>
+          </div>
+          <div className="flex items-end gap-[2px] h-24">
+            {metrics.dailyGMV.map((d, i) => {
+              const max = Math.max(...metrics.dailyGMV.map((m) => m.amount), 1);
+              return (
+                <div
+                  key={i}
+                  className="flex-1 rounded-t-sm bg-amber-500 transition-all hover:opacity-80"
+                  style={{ height: `${Math.max((d.amount / max) * 100, 2)}%` }}
+                  title={`${d.date}: ৳${d.amount.toLocaleString()}`}
+                />
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-2 text-[10px] text-gray-400">
+            <span>{metrics.dailyGMV[0]?.date.slice(5)}</span>
+            <span>
+              {metrics.dailyGMV[
+                metrics.dailyGMV.length - 1
+              ]?.date.slice(5)}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Category Breakdown */}
