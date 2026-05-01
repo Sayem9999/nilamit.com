@@ -13,6 +13,7 @@ import { DisputesTab } from "./tabs/DisputesTab";
 import { TreasuryTab } from "./tabs/TreasuryTab";
 import { Users, Package, TrendingUp, DollarSign } from "lucide-react";
 import { SystemConfig } from "@/types";
+import AdminLiveFeed from "./live/AdminLiveFeed";
 
 function OverviewTab({
   stats,
@@ -141,7 +142,6 @@ function StatCard({
   );
 }
 
-import { AdminLiveFeed } from "./live/AdminLiveFeed";
 
 export default async function AdminPage() {
   // Gate: redirect to login if not authenticated or not an admin.
