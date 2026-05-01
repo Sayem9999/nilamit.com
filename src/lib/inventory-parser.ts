@@ -37,7 +37,7 @@ export function parseInventoryCSV(csvString: string): Promise<ParseResult> {
           } else {
             errors.push({
               row: index + 1,
-              message: parsed.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+              message: parsed.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
             });
           }
         });
