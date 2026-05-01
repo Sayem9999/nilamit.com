@@ -46,7 +46,8 @@ export class BiddingService {
         const aSnap = await tx.get(aRef);
         if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
 
-        const auction = aSnap.data()! as Auction;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const auction: any = aSnap.data()!;
         const now     = new Date();
         const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
         const increment = auction.minBidIncrement ?? 10;

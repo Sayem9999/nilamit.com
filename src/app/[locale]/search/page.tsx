@@ -30,7 +30,7 @@ export default async function SearchPage({
     search: query,
     category: catFilter !== "All" ? catFilter : undefined,
     location: locFilter || undefined,
-    condition: (condition && condition !== "All") ? condition : undefined,
+    condition: (condition && condition !== "All") ? condition as 'NEW' | 'USED' | 'REFURBISHED' : undefined,
     sortBy: sortByValue as "endTime" | "currentPrice" | "createdAt" | "bids",
     sortOrder: (sortBy === "price_asc" ? "asc" : "desc") as "asc" | "desc",
     limit: 24,
