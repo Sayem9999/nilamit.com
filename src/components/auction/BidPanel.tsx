@@ -68,6 +68,7 @@ export function BidPanel({
     // If the user's bid is now too low, or if they were resting on the previous 
     // minimum and hasn't manually entered a custom amount, bump them to the new min.
     if (bidAmount < minBid || bidAmount === prevMinBidRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBidAmount(minBid);
     }
     prevMinBidRef.current = minBid;
@@ -89,7 +90,7 @@ export function BidPanel({
     prevBidCountRef.current = newBids.length;
   }, [newBids.length, playGavel]);
 
-  const minBid = displayPrice + minBidIncrement;
+
   const quickBids = [
     minBid,
     minBid + minBidIncrement * 2,
