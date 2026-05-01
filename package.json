@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@auth/firebase-adapter": "^2.7.4",
+    "@emnapi/core": "1.10.0",
+    "@emnapi/runtime": "1.10.0",
     "@sentry/nextjs": "^10.49.0",
     "@swc/helpers": "^0.5.21",
     "@tailwindcss/postcss": "^4",
@@ -70,9 +72,5 @@
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix"
     ]
-  },
-  "optionalDependencies": {
-    "@emnapi/core": "1.10.0",
-    "@emnapi/runtime": "1.10.0"
   }
 }
