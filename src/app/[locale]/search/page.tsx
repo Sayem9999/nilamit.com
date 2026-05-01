@@ -7,6 +7,8 @@ import { CATEGORIES, LOCATIONS } from "@/types";
 import Link from "next/link";
 import { getAuctions } from "@/actions/auction";
 
+export const dynamic = "force-dynamic";
+
 export default async function SearchPage({
   searchParams,
   params,

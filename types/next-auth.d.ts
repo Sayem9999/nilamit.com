@@ -1,5 +1,4 @@
-﻿import { DefaultSession } from "next-auth";
-import { AdapterUser as BaseAdapterUser } from "@auth/core/adapters";
+import { DefaultSession, User as NextAuthUser } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
@@ -8,27 +7,39 @@ declare module "next-auth" {
       isVerifiedSeller: boolean;
       isAdmin?: boolean;
       isPhoneVerified?: boolean;
+      emailVerified?: Date | null;
       phone?: string | null;
       reputationScore?: number;
+      isBanned?: boolean;
+      userLevel?: number;
+      xp?: number;
+      winningStreak?: number;
     } & DefaultSession["user"];
   }
-  interface User {
-    id: string;
+
+  interface User extends NextAuthUser {
     isVerifiedSeller: boolean;
     isAdmin?: boolean;
     isPhoneVerified?: boolean;
     phone?: string | null;
     reputationScore?: number;
+    isBanned?: boolean;
+    userLevel?: number;
+    xp?: number;
+    winningStreak?: number;
   }
 }
 
-declare module "@auth/core/adapters" {
-  interface AdapterUser extends BaseAdapterUser {
-    id: string;
+declare module "next-auth/adapters" {
+  interface AdapterUser extends NextAuthUser {
     isVerifiedSeller: boolean;
     isAdmin?: boolean;
     isPhoneVerified?: boolean;
     phone?: string | null;
     reputationScore?: number;
+    isBanned?: boolean;
+    userLevel?: number;
+    xp?: number;
+    winningStreak?: number;
   }
 }

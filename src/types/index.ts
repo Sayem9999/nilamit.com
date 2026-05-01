@@ -109,6 +109,7 @@ export interface Auction {
   trackingNumber?: string | null;
   sellerId: string;
   condition?: 'NEW' | 'USED' | 'REFURBISHED' | null;
+  logistics?: Logistics;
   winnerId?: string | null;
   originalWinnerId?: string | null;
   bidCount?: number;
@@ -140,6 +141,17 @@ export interface Bid {
   auctionId: string;
   bidderId: string;
   createdAt: Date;
+}
+
+export interface Logistics {
+  status: string;
+  trackingId: string;
+  history: {
+    status: string;
+    timestamp: Date;
+    location?: string;
+    description?: string;
+  }[];
 }
 
 export interface EscrowTransaction {

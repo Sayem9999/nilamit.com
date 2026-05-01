@@ -28,9 +28,9 @@ const envSchema = z.object({
   // --- INFRASTRUCTURE ---
   // Optional so the build phase succeeds before secrets are injected at runtime.
   // ratelimit.ts handles missing Redis gracefully (fail-closed in production).
-  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
-  CRON_SECRET: z.string().min(16).optional(),
+  UPSTASH_REDIS_REST_URL: z.preprocess(v => v === '' ? undefined : v, z.string().url().optional()),
+  UPSTASH_REDIS_REST_TOKEN: z.preprocess(v => v === '' ? undefined : v, z.string().optional()),
+  CRON_SECRET: z.preprocess(v => v === '' ? undefined : v, z.string().min(16).optional()),
   
   // --- OPTIONAL / EXTERNAL ---
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),

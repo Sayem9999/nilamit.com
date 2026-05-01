@@ -1,0 +1,148 @@
+﻿
+> nilamit.app@0.2.0 build
+> next build
+
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[Env] ΓÜá∩╕Å  Missing/Invalid environment variables during BUILD:
+  ΓÇó AUTH_SECRET: AUTH_SECRET must be at least 32 characters
+  ΓÇó FIREBASE_CLIENT_EMAIL: Invalid email address
+  ΓÇó UPSTASH_REDIS_REST_URL: Invalid URL
+  ΓÇó CRON_SECRET: Too small: expected string to have >=16 characters
+Continuing build anyway...
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local, .env
+- Experiments (use with caution):
+  ┬╖ clientTraceMetadata
+  ┬╖ optimizePackageImports
+
+ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: 
+https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+
+[Env] ΓÜá∩╕Å  Missing/Invalid environment variables during BUILD:
+  ΓÇó AUTH_SECRET: AUTH_SECRET must be at least 32 characters
+  ΓÇó FIREBASE_CLIENT_EMAIL: Invalid email address
+  ΓÇó UPSTASH_REDIS_REST_URL: Invalid URL
+  ΓÇó CRON_SECRET: Too small: expected string to have >=16 characters
+Continuing build anyway...
+
+Γ£ô Compiled successfully in 58s
+  Running next.config.js provided runAfterProductionCompile ...
+Γ£ô Completed runAfterProductionCompile in 2172ms
+  Running TypeScript ...
+  Collecting page data using 3 workers ...
+[ERROR] 2026-05-01T12:50:46.682Z: [RateLimit] CRITICAL: UPSTASH_REDIS_REST_URL/TOKEN missing in production. All 
+rate-limited endpoints will REJECT requests. undefined
+ΓÜá Using edge runtime on a page currently disables static generation for that page
+
+[Env] ΓÜá∩╕Å  Missing/Invalid environment variables during BUILD:
+  ΓÇó AUTH_SECRET: AUTH_SECRET must be at least 32 characters
+  ΓÇó FIREBASE_CLIENT_EMAIL: Invalid email address
+  ΓÇó UPSTASH_REDIS_REST_URL: Invalid URL
+  ΓÇó CRON_SECRET: Too small: expected string to have >=16 characters
+Continuing build anyway...
+
+
+[Env] ΓÜá∩╕Å  Missing/Invalid environment variables during BUILD:
+  ΓÇó AUTH_SECRET: AUTH_SECRET must be at least 32 characters
+  ΓÇó FIREBASE_CLIENT_EMAIL: Invalid email address
+  ΓÇó UPSTASH_REDIS_REST_URL: Invalid URL
+  ΓÇó CRON_SECRET: Too small: expected string to have >=16 characters
+Continuing build anyway...
+
+
+[Env] ΓÜá∩╕Å  Missing/Invalid environment variables during BUILD:
+  ΓÇó AUTH_SECRET: AUTH_SECRET must be at least 32 characters
+  ΓÇó FIREBASE_CLIENT_EMAIL: Invalid email address
+  ΓÇó UPSTASH_REDIS_REST_URL: Invalid URL
+  ΓÇó CRON_SECRET: Too small: expected string to have >=16 characters
+Continuing build anyway...
+
+[ERROR] 2026-05-01T12:50:52.442Z: [RateLimit] CRITICAL: UPSTASH_REDIS_REST_URL/TOKEN missing in production. All 
+rate-limited endpoints will REJECT requests. undefined
+  Generating static pages using 3 workers (0/11) ...
+  Generating static pages using 3 workers (2/11) 
+[ERROR] 2026-05-01T12:50:53.016Z: [RateLimit] CRITICAL: UPSTASH_REDIS_REST_URL/TOKEN missing in production. All 
+rate-limited endpoints will REJECT requests. undefined
+  Generating static pages using 3 workers (5/11) 
+  Generating static pages using 3 workers (8/11) 
+Γ£ô Generating static pages using 3 workers (11/11) in 340.2ms
+  Finalizing page optimization ...
+ΓÜá Failed to copy traced files for C:\nilamit.com\.next\server\app\[locale]\admin\disputes\page.js Error: EINVAL: 
+invalid argument, copyfile 'C:\nilamit.com\.next\server\chunks\ssr\[externals]_node:inspector_7a4283c6._.js' -> 
+'C:\nilamit.com\.next\standalone\.next\server\chunks\ssr\[externals]_node:inspector_7a4283c6._.js'
+    at ignore-listed frames {
+  errno: -4071,
+  code: 'EINVAL',
+  syscall: 'copyfile',
+  path: 'C:\\nilamit.com\\.next\\server\\chunks\\ssr\\[externals]_node:inspector_7a4283c6._.js',
+  dest: 'C:\\nilamit.com\\.next\\standalone\\.next\\server\\chunks\\ssr\\[externals]_node:inspector_7a4283c6._.js'
+}
+ΓÜá Failed to copy traced files for C:\nilamit.com\.next\server\app\api\auth\[...nextauth]\route.js Error: EINVAL: 
+invalid argument, copyfile 'C:\nilamit.com\.next\server\chunks\[externals]_node:inspector_7a4283c6._.js' -> 
+'C:\nilamit.com\.next\standalone\.next\server\chunks\[externals]_node:inspector_7a4283c6._.js'
+    at ignore-listed frames {
+  errno: -4071,
+  code: 'EINVAL',
+  syscall: 'copyfile',
+  path: 'C:\\nilamit.com\\.next\\server\\chunks\\[externals]_node:inspector_7a4283c6._.js',
+  dest: 'C:\\nilamit.com\\.next\\standalone\\.next\\server\\chunks\\[externals]_node:inspector_7a4283c6._.js'
+}
+
+Route (app)
+Γöî Γùï /
+Γö£ Γùï /_not-found
+Γö£ ╞Æ /[locale]
+Γö£ ╞Æ /[locale]/admin
+Γö£ ╞Æ /[locale]/admin/disputes
+Γö£ ╞Æ /[locale]/admin/live
+Γö£ ╞Æ /[locale]/auctions
+Γö£ ╞Æ /[locale]/auctions/[id]
+Γö£ ╞Æ /[locale]/auctions/create
+Γö£ ╞Æ /[locale]/banned
+Γö£ ╞Æ /[locale]/contact
+Γö£ ╞Æ /[locale]/dashboard
+Γö£ ╞Æ /[locale]/dashboard/coordination/[id]
+Γö£ ╞Æ /[locale]/faq
+Γö£ ╞Æ /[locale]/forgot-password
+Γö£ ╞Æ /[locale]/how-it-works
+Γö£ ╞Æ /[locale]/leaderboard
+Γö£ ╞Æ /[locale]/login
+Γö£ ╞Æ /[locale]/privacy
+Γö£ ╞Æ /[locale]/profile
+Γö£ ╞Æ /[locale]/register
+Γö£ ╞Æ /[locale]/safety
+Γö£ ╞Æ /[locale]/search
+Γö£ ╞Æ /[locale]/seller/[id]
+Γö£ ╞Æ /[locale]/seller/inventory/bulk
+Γö£ ╞Æ /[locale]/social
+Γö£ ╞Æ /[locale]/terms
+Γö£ ╞Æ /api/auth/[...nextauth]
+Γö£ ╞Æ /api/bulk/template
+Γö£ ╞Æ /api/cron/close-auctions
+Γö£ ╞Æ /api/cron/closing-soon
+Γö£ ╞Æ /api/cron/enforce-policies
+Γö£ ╞Æ /api/cron/process-alerts
+Γö£ ╞Æ /api/cron/process-auctions
+Γö£ ╞Æ /api/firebase/token
+Γö£ ╞Æ /api/health
+Γö£ ╞Æ /api/og
+Γö£ ╞Æ /api/payments/callback
+Γö£ ╞Æ /api/upload
+Γö£ ╞Æ /api/uploadthing
+Γö£ Γùï /robots.txt
+Γöö Γùï /sitemap.xml
+
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

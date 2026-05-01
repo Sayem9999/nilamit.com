@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { Shield, Star, Calendar, Package, Gavel } from "lucide-react";
