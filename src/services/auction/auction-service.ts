@@ -1,5 +1,5 @@
 import { db, snapDocs, newId, toSellerPublic, toSellerPrivate } from '@/lib/db';
-import { Auction, AuctionFilters, AuctionWithSeller } from '@/types';
+import { Auction, AuctionFilters, AuctionWithSeller, SellerPublic, Bid, LatestActivity } from '@/types';
 import { sanitizeObject } from '@/lib/sanitizer';
 import { filterPII } from '@/lib/pii-filter';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
@@ -99,10 +99,15 @@ export class AuctionService {
       const sellerSnaps = sellerIds.length > 0 ? await db.getAll(...sellerIds.map(id => db.collection('users').doc(id))) : [];
       const sellerMap = new Map(sellerSnaps.map(s => [s.id, toSellerPublic(s.id, s.data())]));
 
-      // Sync Watchlist: If viewerId exists, check which auctions they've watchlisted
+      // Sync Watchlist: If viewerId exists, check only the auctions currently being displayed.
+      // Firestore 'in' queries are capped at 30 items (our default limit is 12).
       let watchlistSet = new Set<string>();
       if (viewerId && auctionDocs.length > 0) {
-        const watchlistSnap = await db.collection('users').doc(viewerId).collection('watchlist').get();
+        const auctionIds = auctionDocs.map(a => a.id).slice(0, 30);
+        const watchlistSnap = await db.collection('users').doc(viewerId)
+          .collection('watchlist')
+          .where('auctionId', 'in', auctionIds)
+          .get();
         watchlistSet = new Set(watchlistSnap.docs.map(d => d.data().auctionId));
       }
 
@@ -221,6 +226,83 @@ export class AuctionService {
     } catch (err) {
       log.error('Failed to create second chance offer', err, { auctionId });
       return errorResponse(ErrorType.INTERNAL, 'Failed to process second chance offer');
+    }
+  }
+
+  /**
+   * Fetch specialized homepage feeds (ending soon and latest bids)
+   */
+  static async getSpecializedFeeds(): Promise<ServiceResponse<{ 
+    endingSoon: AuctionWithSeller[], 
+    latestBids: LatestActivity[] 
+  }>> {
+    try {
+      const nowTs = new Date();
+      const in48h = new Date(nowTs.getTime() + 48 * 60 * 60 * 1000);
+
+      const [endingSoonSnap, latestBidsSnap] = await Promise.all([
+        db.collection('auctions')
+          .where('status', '==', 'ACTIVE')
+          .where('endTime', '>', nowTs)
+          .where('endTime', '<=', in48h)
+          .orderBy('endTime', 'asc')
+          .limit(8)
+          .get(),
+        db.collection('bids')
+          .orderBy('createdAt', 'desc')
+          .limit(100)
+          .get(),
+      ]);
+
+      const endingDocs = snapDocs<Auction>(endingSoonSnap);
+      const sellerIds = [...new Set(endingDocs.map((a) => a.sellerId))];
+      let sellerMap = new Map<string, SellerPublic>();
+      if (sellerIds.length > 0) {
+        const sellerSnaps = await db.getAll(...sellerIds.map(id => db.collection('users').doc(id)));
+        sellerMap = new Map(sellerSnaps.map(s => [s.id, toSellerPublic(s.id, s.data())!]));
+      }
+
+      const endingSoon = endingDocs.map((a) => ({
+        ...a,
+        seller: sellerMap.get(a.sellerId)!,
+        endTime: (a.endTime as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.endTime as unknown as Date),
+      })) as AuctionWithSeller[];
+
+      const bidDocs = latestBidsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Bid));
+      const bidderIds = [...new Set(bidDocs.map((b) => b.bidderId))];
+      const auctionIds = [...new Set(bidDocs.map((b) => b.auctionId))];
+      
+      let biddersMap = new Map<string, { name: string | null }>();
+      let auctionsMap = new Map<string, { id: string; title: string; status: string }>();
+
+      if (bidderIds.length > 0 && auctionIds.length > 0) {
+        const bidderSnaps = await db.getAll(...bidderIds.map(id => db.collection('users').doc(id)));
+        const auctionSnaps = await db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id)));
+        
+        biddersMap = new Map(bidderSnaps.map((s) => [s.id, { name: (s.data()?.name as string | null) ?? null }]));
+        auctionsMap = new Map(auctionSnaps.map((s) => [s.id, { id: s.id, title: (s.data()?.title as string | undefined) ?? 'Unknown', status: (s.data()?.status as string | undefined) ?? '' }]));
+      }
+
+      const latestBids: LatestActivity[] = bidDocs
+        .filter((b) => auctionsMap.get(b.auctionId)?.status === 'ACTIVE')
+        .slice(0, 10)
+        .map((b) => {
+          const createdAtRaw = b.createdAt as unknown as { toDate?: () => Date } | Date;
+          const createdAt = createdAtRaw instanceof Date ? createdAtRaw : createdAtRaw?.toDate?.() ?? new Date();
+          const auctionEntry = auctionsMap.get(b.auctionId) ?? { id: b.auctionId, title: 'Unknown' };
+          return {
+            id: b.id,
+            amount: b.amount,
+            createdAt,
+            bidder: biddersMap.get(b.bidderId) ?? { name: null },
+            auction: { id: auctionEntry.id, title: auctionEntry.title },
+          };
+        });
+
+      return successResponse({ endingSoon, latestBids });
+    } catch (error) {
+      log.error('AuctionService.getSpecializedFeeds failed', error);
+      return errorResponse(ErrorType.INTERNAL, 'Failed to fetch specialized feeds');
     }
   }
 }

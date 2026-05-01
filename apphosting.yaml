@@ -14,7 +14,7 @@ env:
     secret: AUTH_SECRET
 
   - variable: AUTH_URL
-    value: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
+    secret: APP_URL
 
   - variable: GOOGLE_CLIENT_ID
     secret: GOOGLE_CLIENT_ID
@@ -62,7 +62,7 @@ env:
     secret: FIREBASE_STORAGE_BUCKET
 
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
+    secret: APP_URL
 
   - variable: UPSTASH_REDIS_REST_URL
     secret: UPSTASH_REDIS_REST_URL

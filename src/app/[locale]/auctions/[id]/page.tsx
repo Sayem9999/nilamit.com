@@ -27,10 +27,11 @@ import { canReviewAuction } from "@/actions/review";
 // Static imports — `dynamic({ ssr: false })` is no longer permitted from
 // Server Components in Next.js 16, and these are all client components so
 // Next handles the client/server boundary on its own.
-import { BidHistory } from "@/components/auction/BidHistory";
-import { ReviewForm } from "@/components/review/ReviewForm";
-import { ReportModal } from "@/components/auction/ReportModal";
-import ChatInterface from "@/components/social/ChatInterface";
+// Dynamic imports for heavy interactive components to optimize initial load
+const BidHistory = dynamic(() => import("@/components/auction/BidHistory").then(mod => mod.BidHistory), { ssr: false });
+const ReviewForm = dynamic(() => import("@/components/review/ReviewForm").then(mod => mod.ReviewForm), { ssr: false });
+const ReportModal = dynamic(() => import("@/components/auction/ReportModal").then(mod => mod.ReportModal), { ssr: false });
+const ChatInterface = dynamic(() => import("@/components/social/ChatInterface"), { ssr: false });
 
 import { AuctionWithBids, AuctionStatus } from "@/types";
 import { auth } from "@/lib/auth";

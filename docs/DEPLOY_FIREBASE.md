@@ -240,6 +240,10 @@ echo -n "GOCSPX-..." \
 echo -n "https://xxx@xxx.ingest.sentry.io/xxx" \
   | gcloud secrets create SENTRY_DSN --data-file=- --project=$PROJECT_ID
 
+# Sentry Auth Token (required for source map uploads during build)
+echo -n "sntrys_..." \
+  | gcloud secrets create SENTRY_AUTH_TOKEN --data-file=- --project=$PROJECT_ID
+
 # Resend email (for notification emails)
 echo -n "re_..." \
   | gcloud secrets create RESEND_API_KEY --data-file=- --project=$PROJECT_ID
@@ -488,7 +492,7 @@ Without Sentry, production errors are invisible.
 
 1. Create a project at [sentry.io](https://sentry.io) — platform: **Next.js**
 2. Copy your DSN
-3. The secret was created in Step 6. Now uncomment the Sentry lines in `apphosting.yaml`:
+3. The secrets were created in Step 6. Now add the Sentry lines to `apphosting.yaml`:
 
 ```yaml
   - variable: SENTRY_DSN
@@ -496,6 +500,9 @@ Without Sentry, production errors are invisible.
 
   - variable: NEXT_PUBLIC_SENTRY_DSN
     secret: SENTRY_DSN
+
+  - variable: SENTRY_AUTH_TOKEN
+    secret: SENTRY_AUTH_TOKEN
 ```
 
 4. Commit and push
@@ -628,6 +635,7 @@ curl -X POST \
 |---|---|---|
 | Build fails: "Secret not found" | Secret not created in Secret Manager | Run Step 6 for the missing secret |
 | Build fails: "Permission denied" | Cloud Build SA missing secretAccessor role | Re-run Step 7 |
+| Build fails at "preparer" | Missing secret or insufficient IAM for compute SA | Ensure `firebase-app-hosting-compute` has `secretmanager.secretAccessor` |
 | `/api/health` returns `db: error` | Wrong `FIREBASE_PRIVATE_KEY` format | Ensure the key has `\n` (not real newlines) in Secret Manager |
 | Auth redirect loop | `AUTH_URL` doesn't match deployment domain | Update `apphosting.yaml` Step 11 and push |
 | Google sign-in fails | Redirect URI not authorized | Add App Hosting URL to OAuth client in GCP Console (Step 9) |

@@ -55,18 +55,28 @@ export function BidPanel({
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
   const { play: playGavel } = useSound("/sounds/gavel.mp3");
   const t = useTranslations("BidPanel");
-  const [latestPrice, setLatestPrice] = useState(currentPrice);
-  const [latestEndTime] = useState(new Date(endTime));
-  const [bidAmount, setBidAmount] = useState(currentPrice + minBidIncrement);
+  const { newBids, currentEndTime } = useAuctionBids(auctionId);
+  const displayPrice = newBids.length > 0 ? newBids[0].amount : currentPrice;
+  const displayEndTime = currentEndTime ? new Date(currentEndTime) : new Date(endTime);
+
+  const minBid = displayPrice + minBidIncrement;
+
+  // 🔄 Sync bid amount when global price changes
+  const prevMinBidRef = useRef(minBid);
+  const [bidAmount, setBidAmount] = useState(minBid);
+  useEffect(() => {
+    // If the user's bid is now too low, or if they were resting on the previous 
+    // minimum and hasn't manually entered a custom amount, bump them to the new min.
+    if (bidAmount < minBid || bidAmount === prevMinBidRef.current) {
+      setBidAmount(minBid);
+    }
+    prevMinBidRef.current = minBid;
+  }, [minBid, bidAmount]);
+
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<ServiceResponse<PlaceBidResult | null> | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showMFSModal, setShowMFSModal] = useState(false);
-
-  const { newBids, currentEndTime } = useAuctionBids(auctionId);
-
-  const displayPrice = newBids.length > 0 ? newBids[0].amount : latestPrice;
-  const displayEndTime = currentEndTime ? new Date(currentEndTime) : latestEndTime;
 
   // Track previous bid count via ref so we only fire the gavel on an actual
   // increase. Depending on `playGavel` would re-fire whenever useSound returns
@@ -120,9 +130,7 @@ export function BidPanel({
           colors: ['#6366f1', '#a855f7', '#ec4899']
         });
 
-        const newPrice = bidAmount;
-        setLatestPrice(newPrice);
-        setBidAmount(newPrice + minBidIncrement);
+        setBidAmount(bidAmount + minBidIncrement);
         onBidPlaced?.();
       }
       if (res.error?.code === ERROR_CODES.PHONE_NOT_VERIFIED) {

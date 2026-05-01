@@ -40,16 +40,10 @@ export async function getAdminStats() {
     createdAt: user.createdAt,
   }));
 
-  // 3. Revenue calculation
-  // Currently scans SOLD auctions. Consider a dedicated stats document for scaling.
-  const soldAuctionsSnap = await db.collection('auctions')
-    .where('status', '==', AuctionStatus.SOLD)
-    .select('commissionEarned')
-    .get();
-
-  const totalRevenue = soldAuctionsSnap.docs.reduce((sum, doc) => {
-    return sum + Number(doc.data().commissionEarned ?? 0);
-  }, 0);
+  // 3. Revenue calculation: Use the aggregated stats document (O(1) read)
+  // instead of scanning all SOLD auctions (O(N) read).
+  const statsSnap = await db.collection('stats').doc('global').get();
+  const totalRevenue = Number(statsSnap.data()?.totalRevenue ?? 0);
 
   try {
     const stats = {

@@ -1,6 +1,6 @@
 # 🚀 Nilamit: Platform Summary
 
-> Last Updated: April 29, 2026
+> Last Updated: April 30, 2026
 
 **Nilamit** is a premium, real-time C2C (Consumer-to-Consumer) auction marketplace purpose-built for the unique landscape of Bangladesh. It combines enterprise-grade data integrity with social-proof mechanisms and hyper-local discovery.
 
@@ -28,8 +28,9 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 ---
 
 ## 💻 Technology Stack
-- **Framework**: Next.js 15 (App Router).
+- **Framework**: Next.js 16 (App Router).
 - **Database**: Firebase Firestore (NoSQL).
+- **Monitoring**: Sentry (Errors, Performance, Session Replay).
 - **Real-time**: Firebase Realtime Database for instant bid updates and alerts.
 - **Localization**: English-First experience with Bengali support via `next-intl`.
 - **UI/UX**: Tailwind CSS 4, shadcn/ui, and Framer Motion for a premium, mobile-responsive aesthetic.

@@ -199,13 +199,25 @@ This prevents buyers and sellers from circumventing the escrow system by transac
 
 ---
 
+## Observability & Monitoring
+
+The platform uses **Sentry** as the primary security monitoring and stability layer.
+
+- **Error Tracking:** Real-time alerting for server-side exceptions (5xx) and client-side crashes.
+- **Performance Monitoring:** Distributed tracing for high-value transactions like `placeBid` and `executeBuyItNow`.
+- **Session Replay:** Visual replay for errors and user reports, helping identify UX blockers or attempted exploits (GDPR-compliant scrubbing enabled).
+- **Sensitive Data Scrubbing:** The `sentry.scrub.ts` module automatically filters PII (emails, phones) and secrets (API keys) from reports before they leave the application environment.
+
+---
+
 ## Secrets Management
 
-In production (Firebase App Hosting), all secrets are stored in **Google Secret Manager** and injected at container start — never baked into the image.
+In production (Firebase App Hosting), all secrets are managed via **Google Secret Manager (GSM)** and injected at build/runtime.
 
-The `FIREBASE_PRIVATE_KEY` secret is never written to any log. The `sentry-scrub.ts` module scrubs known secret patterns from error reports before they reach Sentry.
-
-Local `.env` files are gitignored via `.env*` in `.gitignore`. The `AUTH_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` values in `.env` must be rotated if that file was ever committed to git history.
+- **Role-Based Access (IAM):** Only dedicated service accounts (Cloud Build, App Hosting Compute) have `roles/secretmanager.secretAccessor` permission.
+- **Build-time Injection:** `SENTRY_AUTH_TOKEN` is injected during the build phase to facilitate secure source map uploads without exposing the token in the container image.
+- **Runtime Injection:** Environment variables like `FIREBASE_PRIVATE_KEY` and `AUTH_SECRET` are pulled from GSM at startup.
+- **Local Development:** `.env` files are strictly gitignored via `.env*`. The `AUTH_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` values must be rotated if any `.env` file is accidentally committed.
 
 To generate a new `AUTH_SECRET`:
 ```bash

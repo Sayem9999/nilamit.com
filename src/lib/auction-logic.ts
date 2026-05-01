@@ -1,5 +1,6 @@
 import 'server-only';
 import { db } from '@/lib/db';
+import { FieldValue } from 'firebase-admin/firestore';
 import { sendAuctionWonEmail } from '@/lib/firebase-email';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
@@ -61,6 +62,14 @@ export function processAuctionSale(
   // almost no protection on large purchases. Commission is extracted on release.
   const deliveryCharge = auction.deliveryCharge ?? 0;
   const escrowAmount   = finalPrice + deliveryCharge;
+
+  // ─── Aggregator: Increment Global Revenue ──────────────────────────────────
+  // Track platform revenue in a single document to avoid O(N) scans in Admin UI.
+  const statsRef = db.collection('stats').doc('global');
+  transaction.set(statsRef, {
+    totalRevenue: FieldValue.increment(fee),
+    updatedAt: now
+  }, { merge: true });
 
   const escrowRef = db.collection('escrowTransactions').doc(auction.id);
   // set() without merge so a second call can never silently re-open a closed escrow
