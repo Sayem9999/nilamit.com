@@ -218,7 +218,7 @@ export async function getAdminDisputes() {
  * TreasuryTab's manual override controls. Atomic: updates escrow + any
  * associated dispute doc together, then recalculates reputation.
  */
-export async function resolveAdminDispute(transactionId: string, resolution: 'RELEASE' | 'REFUND') {
+export async function resolveAdminDispute(transactionId: string, resolution: 'RELEASE' | 'REFUND' | 'HOLD') {
   await requireAdmin();
 
   try {
@@ -232,29 +232,36 @@ export async function resolveAdminDispute(transactionId: string, resolution: 'RE
         throw new Error(`Cannot resolve escrow in ${t.status} state`);
       }
 
-      const finalEscrow = resolution === 'RELEASE' ? 'RELEASED' : 'REFUNDED';
+      let finalEscrow = t.status;
+      if (resolution === 'RELEASE') finalEscrow = 'RELEASED';
+      else if (resolution === 'REFUND') finalEscrow = 'REFUNDED';
+      else if (resolution === 'HOLD') finalEscrow = 'HELD';
+
       const now = new Date();
       tx.update(txRef, { status: finalEscrow, updatedAt: now });
 
-      // Pull seller before any writes that need it
       const aSnap = await tx.get(db.collection('auctions').doc(t.auctionId));
       const sellerId = aSnap.data()?.sellerId ?? null;
 
-      // If a dispute doc exists for this tx, close it in the same transaction
       const disputeSnap = await db.collection('disputes')
         .where('transactionId', '==', transactionId)
         .where('status', '==', 'OPEN')
         .limit(1).get();
+
       if (!disputeSnap.empty) {
         const dRef = disputeSnap.docs[0].ref;
+        let disputeStatus = 'OPEN';
+        if (resolution === 'RELEASE') disputeStatus = 'RESOLVED_SELLER';
+        else if (resolution === 'REFUND') disputeStatus = 'RESOLVED_BUYER';
+        else if (resolution === 'HOLD') disputeStatus = 'UNDER_INVESTIGATION';
+
         tx.update(dRef, {
-          status: resolution === 'RELEASE' ? 'RESOLVED_SELLER' : 'RESOLVED_BUYER',
+          status: disputeStatus,
           resolution: `Admin override: ${resolution}`,
           updatedAt: now,
         });
       }
 
-      // If we refunded, cancel the auction so it isn't shown as a successful sale
       if (resolution === 'REFUND') {
         tx.update(db.collection('auctions').doc(t.auctionId), { status: 'CANCELLED', updatedAt: now });
       }
@@ -262,8 +269,10 @@ export async function resolveAdminDispute(transactionId: string, resolution: 'RE
       return { sellerId, buyerId: t.buyerId };
     });
 
-    if (result.sellerId) await recalculateUserReputation(result.sellerId);
-    await recalculateUserReputation(result.buyerId);
+    if (resolution !== 'HOLD') {
+      if (result.sellerId) await recalculateUserReputation(result.sellerId);
+      await recalculateUserReputation(result.buyerId);
+    }
 
     revalidatePath('/admin');
     return successResponse(null);

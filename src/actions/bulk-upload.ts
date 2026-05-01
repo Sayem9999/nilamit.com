@@ -12,17 +12,9 @@ const VALID_CATEGORIES = CATEGORIES.map((c) => c.slug);
 const MAX_BULK_ROWS    = 1000;
 const BATCH_SIZE       = 499; // Firestore max is 500 ops per batch
 
-const BulkRowSchema = z.object({
-  title:         z.string().min(3).max(100),
-  description:   z.string().min(10).max(2000),
-  category:      z.string().refine((v) => VALID_CATEGORIES.includes(v as never), 'Invalid category'),
-  startingPrice: z.number().positive().max(10_000_000),
-  durationHours: z.number().positive().max(720),
-});
+import { BulkAuctionSchema, type BulkAuctionInput } from '@/lib/inventory-parser';
 
-type BulkUploadRow = z.infer<typeof BulkRowSchema>;
-
-export async function processBulkUpload(fileName: string, rows: BulkUploadRow[]) {
+export async function processBulkUpload(fileName: string, rows: BulkAuctionInput[]) {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
@@ -31,7 +23,8 @@ export async function processBulkUpload(fileName: string, rows: BulkUploadRow[])
   }
 
   const userSnap = await db.collection('users').doc(session.user.id).get();
-  if (!userSnap.data()?.isVerifiedSeller) {
+  const userData = userSnap.data();
+  if (!userData?.isVerifiedSeller) {
     return errorResponse(ErrorType.FORBIDDEN, 'Only verified sellers can bulk upload.');
   }
 
@@ -47,17 +40,10 @@ export async function processBulkUpload(fileName: string, rows: BulkUploadRow[])
   let processed = 0;
   const errors: string[] = [];
 
-  // Use Firestore batch writes — reduces 1000 sequential round-trips to ~2 batch commits
   let batch     = db.batch();
   let batchCount = 0;
 
   for (const [i, row] of rows.entries()) {
-    const validation = BulkRowSchema.safeParse(row);
-    if (!validation.success) {
-      errors.push(`Row ${i + 1}: ${validation.error.issues[0]?.message}`);
-      continue;
-    }
-
     try {
       const auctionId = newId();
       const rowNow    = new Date();
@@ -70,24 +56,25 @@ export async function processBulkUpload(fileName: string, rows: BulkUploadRow[])
         category:         row.category,
         startingPrice:    row.startingPrice,
         currentPrice:     row.startingPrice,
-        minBidIncrement:  10,
-        images:           [],
+        minBidIncrement:  row.minIncrement || 100,
+        images:           row.images || [],
         startTime:        rowNow,
-        endTime:          new Date(rowNow.getTime() + row.durationHours * 3_600_000),
+        endTime:          new Date(rowNow.getTime() + (row.durationHours || 24) * 3_600_000),
         status:           'ACTIVE',
         sellerId:         session.user.id,
+        sellerName:       userData.name || 'Verified Seller',
         winnerId:         null,
         isFeatured:       false,
         wasExtended:      false,
-        commissionRate:   0,
+        commissionRate:   userData.commissionRate || 5,
         commissionEarned: null,
         deliveryCharge:   0,
         deliveryStatus:   'PENDING',
         trackingNumber:   null,
         bidCount:         0,
-        reservePrice:     null,
-        buyItNowPrice:    null,
-        location:         null,
+        reservePrice:     row.reservePrice || null,
+        buyItNowPrice:    row.buyNowPrice || null,
+        location:         row.location || 'Dhaka',
         createdAt:        rowNow,
         updatedAt:        rowNow,
       });
@@ -95,7 +82,6 @@ export async function processBulkUpload(fileName: string, rows: BulkUploadRow[])
       batchCount++;
       processed++;
 
-      // Commit in chunks of BATCH_SIZE and update progress every 50 rows
       if (batchCount === BATCH_SIZE) {
         await batch.commit();
         batch      = db.batch();

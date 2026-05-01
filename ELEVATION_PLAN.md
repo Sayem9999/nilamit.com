@@ -1,0 +1,27 @@
+# Nilamit Elevation Plan: Production Stabilization & Scaling
+
+This document outlines the strategic roadmap for hardening the Nilamit platform for enterprise-grade reliability and premium user experience.
+
+### Phase 1: Real-time UX Hardening (COMPLETED)
+- [x] **Optimistic Bidding**: Implement `optimisticBid` in `BidPanel.tsx` for instant feedback.
+- [x] **Connection Monitoring**: Add `isConnected` heartbeat listener to auction pages.
+- [x] **Auth Completion**: Implement real email OTP for "Forgot Password" flow.
+- [x] **UI Consistency**: Ensure all OTP fields mention "6-digit" (en/bn).
+
+### Phase 2: Seller Tools & Inventory Management (COMPLETED)
+- [x] **Bulk Upload MVP**:
+    - [x] Implement a CSV/Excel parser in `src/lib/inventory-parser.ts`.
+    - [x] Create a "Bulk List" UI component for elite sellers.
+    - [x] Implement `processBulkUpload` server action with batching.
+
+### Phase 3: Administrative Control & Moderation (IN PROGRESS)
+- [x] **Real-time Moderator Feed**:
+    - [x] Implement a `/admin/live` feed using RTDB to monitor all bids.
+- [x] **Seller Verification**:
+    - [x] Standardize verification workflow with custom commission rates.
+- [ ] **Dispute Resolution**:
+    - [ ] Add "Hold Payment" and "Refund" buttons to the admin dispute view.
+
+### Phase 4: Financial Integrity & Reporting (Upcoming)
+- [ ] **Automated Invoicing**: Generate PDF invoices for winners and commission reports for sellers.
+- [ ] **Revenue Dashboard**: Real-time charts showing platform earnings and daily GMV.

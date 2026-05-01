@@ -141,6 +141,8 @@ function StatCard({
   );
 }
 
+import { AdminLiveFeed } from "./live/AdminLiveFeed";
+
 export default async function AdminPage() {
   // Gate: redirect to login if not authenticated or not an admin.
   // requireAdmin() inside the actions would throw a plain Error which Next.js
@@ -184,6 +186,7 @@ export default async function AdminPage() {
       metrics={<MetricsTab />}
       treasury={<TreasuryTab />}
       disputes={<DisputesTab />}
+      live={<AdminLiveFeed />}
     />
   );
 }

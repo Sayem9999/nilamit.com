@@ -254,6 +254,18 @@ export default function RegisterPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center">
+                      <span className="text-gray-400 font-bold text-lg">N</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={t("nameLabel")}
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-4 py-5 text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
+                    />
+                  </div>
+                  <div className="relative group">
                     <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
                     <input
                       type="tel"
@@ -265,7 +277,7 @@ export default function RegisterPage() {
                   </div>
                   <button
                     onClick={handleRequestOTP}
-                    disabled={isPending || phone.length < 11}
+                    disabled={isPending || phone.length < 11 || formData.name.length < 2}
                     className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
                   >
                     {isPending ? (
@@ -333,17 +345,7 @@ export default function RegisterPage() {
                 </div>
                 
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("nameLabel")}</label>
-                    <input
-                      required
-                      type="text"
-                      placeholder="e.g. Sayem Ahmed"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
-                    />
-                  </div>
+
 
                   <div>
                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("emailLabel")} ({t("maybeLater")})</label>

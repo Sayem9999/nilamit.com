@@ -61,9 +61,20 @@ export function UsersTab() {
   }, [cursorStack, debouncedSearch]);
 
   const handleToggleVerified = (userId: string, currentStatus: boolean) => {
+    let commissionRate = 5;
+    if (!currentStatus) {
+      const input = prompt("Enter commission rate (%) for this seller:", "5");
+      if (input === null) return;
+      commissionRate = parseFloat(input);
+      if (isNaN(commissionRate)) {
+        alert("Invalid commission rate");
+        return;
+      }
+    }
+
     startTransition(async () => {
-      const action = currentStatus ? revokeVerifiedSeller : grantVerifiedSeller;
-      const result = await action(userId);
+      const action = currentStatus ? () => revokeVerifiedSeller(userId) : () => grantVerifiedSeller(userId, commissionRate);
+      const result = await action();
       if (result.success) {
         setUsers((prev) =>
           prev.map((u) =>

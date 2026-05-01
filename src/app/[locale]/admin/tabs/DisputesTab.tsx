@@ -63,21 +63,30 @@ export function DisputesTab() {
     load();
   }, []);
 
-  const handleResolve = (id: string, resolution: 'RELEASE' | 'REFUND') => {
-    const actionLabel = resolution === 'RELEASE' ? "Release Funds to Seller" : "Refund Buyer";
-    if (!confirm(`Are you sure you want to ${actionLabel.toLowerCase()}? This action is permanent and affects user reputation.`)) return;
+  const handleResolve = (id: string, resolution: 'RELEASE' | 'REFUND' | 'HOLD') => {
+    const labels = {
+      RELEASE: "Release Funds to Seller",
+      REFUND: "Refund Buyer",
+      HOLD: "Hold Payment for Investigation"
+    };
+    const actionLabel = labels[resolution];
+    if (!confirm(`Are you sure you want to ${actionLabel.toLowerCase()}?`)) return;
 
     startTransition(async () => {
       try {
         const res = await resolveAdminDispute(id, resolution);
         if (res.success) {
-          toast.success(`Dispute resolved: ${actionLabel}`);
-          setDisputes(prev => prev.filter(d => d.id !== id));
+          toast.success(`Dispute updated: ${actionLabel}`);
+          if (resolution !== 'HOLD') {
+            setDisputes(prev => prev.filter(d => d.id !== id));
+          } else {
+            load(); // Reload to show updated status if we keep it in the list
+          }
         } else {
-          toast.error(res.error?.message || "Failed to resolve dispute");
+          toast.error(res.error?.message || "Failed to update dispute");
         }
       } catch (error) {
-        toast.error((error as Error).message || "Failed to resolve dispute");
+        toast.error((error as Error).message || "Failed to update dispute");
       }
     });
   };
@@ -115,7 +124,11 @@ export function DisputesTab() {
                <div className="flex flex-col lg:flex-row justify-between gap-6">
                  <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                       <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold uppercase rounded tracking-wider">Under Review</span>
+                       <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded tracking-wider ${
+                         tx.status === 'HELD' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                       }`}>
+                         {tx.status === 'HELD' ? 'Under Investigation' : 'Dispute Open'}
+                       </span>
                        <span className="text-[10px] text-gray-400 font-mono uppercase">ID: {tx.id.substring(0,8)}</span>
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">{tx.auction.title}</h3>
@@ -157,13 +170,22 @@ export function DisputesTab() {
                        <Scale className="w-4 h-4" /> Release to Seller
                     </button>
 
-                    <button
-                       onClick={() => handleResolve(tx.id, 'REFUND')}
-                       disabled={isPending}
-                       className="w-full py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                    >
-                       <RefreshCw className="w-4 h-4" /> Full Refund to Buyer
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                         onClick={() => handleResolve(tx.id, 'HOLD')}
+                         disabled={isPending || tx.status === 'HELD'}
+                         className="py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-[10px] hover:bg-gray-50 transition-all flex items-center justify-center gap-1"
+                      >
+                         <ShieldCheck className="w-3 h-3" /> Hold
+                      </button>
+                      <button
+                         onClick={() => handleResolve(tx.id, 'REFUND')}
+                         disabled={isPending}
+                         className="py-3 bg-white border border-gray-200 text-red-600 rounded-xl font-bold text-[10px] hover:bg-red-50 transition-all flex items-center justify-center gap-1"
+                      >
+                         <RefreshCw className="w-3 h-3" /> Refund
+                      </button>
+                    </div>
 
                     <div className="pt-2">
                        <button

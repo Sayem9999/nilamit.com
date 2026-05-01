@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { processBulkUpload } from "@/actions/bulk-upload";
 import Link from "next/link";
-import Papa from "papaparse";
+import { parseInventoryCSV } from "@/lib/inventory-parser";
 import {
   Upload,
   FileText,
@@ -30,59 +30,46 @@ export default function BulkUploadUI() {
     if (!file) return;
 
     setIsUploading(true);
+    setResult(null);
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      dynamicTyping: true,
-      complete: async (results) => {
-        interface CSVRow {
-          title?: string;
-          Title?: string;
-          description?: string;
-          Description?: string;
-          category?: string;
-          Category?: string;
-          startingPrice?: string | number;
-          StartingPrice?: string | number;
-          durationHours?: string | number;
-          DurationHours?: string | number;
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const text = e.target?.result as string;
+        const { data, errors: parseErrors } = await parseInventoryCSV(text);
+
+        if (parseErrors.length > 0) {
+          toast.error(`Found ${parseErrors.length} validation errors in your file.`);
+          console.error("[BulkUpload] Validation errors:", parseErrors);
+          // For now, we continue if there's at least some data, or we can block
         }
 
-        const rows = (results.data as CSVRow[]).map((row) => ({
-          title: row.title || row.Title || "",
-          description: row.description || row.Description || "",
-          category: row.category || row.Category || "",
-          startingPrice: Number(row.startingPrice || row.StartingPrice || 0),
-          durationHours: Number(row.durationHours || row.DurationHours || 24),
-        }));
-
-        if (rows.length === 0) {
-          toast.error("The CSV file appears to be empty.");
+        if (data.length === 0) {
+          toast.error("No valid rows found to upload.");
           setIsUploading(false);
           return;
         }
 
-        const res = await processBulkUpload(file.name, rows);
+        const res = await processBulkUpload(file.name, data);
         setIsUploading(false);
 
         if (res.success) {
           setResult({ 
-            total: rows.length, 
+            total: data.length, 
             processed: res.data?.processed || 0, 
-            errorCount: res.data?.errors?.length || 0 
+            errorCount: (res.data?.errors?.length || 0) + parseErrors.length 
           });
           toast.success("Bulk upload processed!");
         } else {
           toast.error(res.error?.message || "Upload failed");
         }
-      },
-      error: (error) => {
-        log.error("CSV Parsing failed", error);
-        toast.error("Failed to parse CSV file. Please check the format.");
-        setIsUploading(false);
-      },
-    });
+      };
+      reader.readAsText(file);
+    } catch (err) {
+      log.error("Bulk upload failed", err);
+      toast.error("An unexpected error occurred.");
+      setIsUploading(false);
+    }
   };
 
   return (

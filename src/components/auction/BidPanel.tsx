@@ -55,8 +55,10 @@ export function BidPanel({
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
   const { play: playGavel } = useSound("/sounds/gavel.mp3");
   const t = useTranslations("BidPanel");
-  const { newBids, currentEndTime } = useAuctionBids(auctionId);
-  const displayPrice = newBids.length > 0 ? newBids[0].amount : currentPrice;
+  const { newBids, currentEndTime, isConnected } = useAuctionBids(auctionId);
+  const [optimisticBid, setOptimisticBid] = useState<number | null>(null);
+
+  const displayPrice = optimisticBid ?? (newBids.length > 0 ? newBids[0].amount : currentPrice);
   const displayEndTime = currentEndTime ? new Date(currentEndTime) : new Date(endTime);
 
   const minBid = displayPrice + minBidIncrement;
@@ -86,9 +88,14 @@ export function BidPanel({
   useEffect(() => {
     if (newBids.length > prevBidCountRef.current) {
       playGavel();
+      // If a real bid came in that matches or exceeds our optimistic bid, clear it
+      if (optimisticBid && newBids[0]?.amount >= optimisticBid) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setOptimisticBid(null);
+      }
     }
     prevBidCountRef.current = newBids.length;
-  }, [newBids.length, playGavel]);
+  }, [newBids, playGavel, optimisticBid]);
 
 
   const quickBids = [
@@ -119,11 +126,15 @@ export function BidPanel({
       return;
     }
 
+    // ⚡ Optimistic UI: Update locally before server response
+    setOptimisticBid(bidAmount);
+    playGavel();
+
     startTransition(async () => {
       const res = await placeBid(auctionId, bidAmount);
       setResult(res);
+      
       if (res.success) {
-        playGavel();
         confetti({
           particleCount: 150,
           spread: 70,
@@ -133,19 +144,23 @@ export function BidPanel({
 
         setBidAmount(bidAmount + minBidIncrement);
         onBidPlaced?.();
-      }
-      if (res.error?.code === ERROR_CODES.PHONE_NOT_VERIFIED) {
-        setShowPhoneModal(true);
-      }
-      
-      // Automatic Overbid Suggestion: If outbid during flight, suggest the new minimum
-      const newMin = (res.error?.details as { newMinimum?: number } | undefined)?.newMinimum;
-      if (res.error?.code === ERROR_CODES.BID_TOO_LOW && newMin) {
-        setBidAmount(newMin);
-      }
-      
-      if (res.error?.code === "MFS_LINKAGE_REQUIRED" || res.error?.code === ERROR_CODES.ELITE_DEPOSIT_REQUIRED) {
-        setShowMFSModal(true);
+        // We don't clear optimisticBid here; we wait for the RTDB hook to sync it
+      } else {
+        // 🚨 Rollback on error
+        setOptimisticBid(null);
+        
+        if (res.error?.code === ERROR_CODES.PHONE_NOT_VERIFIED) {
+          setShowPhoneModal(true);
+        }
+        
+        const newMin = (res.error?.details as { newMinimum?: number } | undefined)?.newMinimum;
+        if (res.error?.code === ERROR_CODES.BID_TOO_LOW && newMin) {
+          setBidAmount(newMin);
+        }
+        
+        if (res.error?.code === "MFS_LINKAGE_REQUIRED" || res.error?.code === ERROR_CODES.ELITE_DEPOSIT_REQUIRED) {
+          setShowMFSModal(true);
+        }
       }
     });
   };
@@ -201,9 +216,18 @@ export function BidPanel({
           <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg">
             <Clock className="w-4 h-4" />
             <CountdownTimer endTime={displayEndTime} />
-          </div>
         </div>
       </div>
+    </div>
+      
+      {!isConnected && (
+        <div className="mb-4 bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-center gap-3 animate-pulse">
+          <div className="w-2 h-2 bg-amber-400 rounded-full" />
+          <p className="text-xs text-amber-700 font-medium">
+            Live connection lost. Attempting to reconnect...
+          </p>
+        </div>
+      )}
 
       {isExpired ? (
         <div className="text-center py-6">

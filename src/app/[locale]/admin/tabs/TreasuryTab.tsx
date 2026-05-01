@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute } from '@/actions/admin';
 import { ShieldCheck, Download, ExternalLink, Smartphone, Clock, Scale, RotateCcw } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
+import { generateInvoice } from '@/lib/pdf-generator';
 import toast from 'react-hot-toast';
 
 interface TreasuryLog {
@@ -12,7 +13,8 @@ interface TreasuryLog {
   verificationType: string;
   providerRef: string | null;
   auction: { title: string };
-  buyer: { name: string | null; email: string | null };
+  buyer: { name: string | null; email: string | null; phone: string | null };
+  seller: { name: string | null; phone: string | null };
 }
 
 interface ActiveEscrow {
@@ -72,6 +74,26 @@ export function TreasuryTab() {
     }
   };
 
+  const handleDownloadInvoice = (log: TreasuryLog) => {
+    try {
+      const doc = generateInvoice({
+        invoiceNumber: log.id.slice(-8).toUpperCase(),
+        date: new Date(),
+        auctionTitle: log.auction.title,
+        amount: log.amount,
+        buyerName: log.buyer.name || "Valued Buyer",
+        buyerPhone: log.buyer.phone || "N/A",
+        sellerName: log.seller?.name || "Verified Seller",
+        sellerPhone: log.seller?.phone || "N/A"
+      });
+      doc.save(`invoice-${log.id.slice(-8)}.pdf`);
+      toast.success("Invoice generated!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to generate invoice");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -100,7 +122,7 @@ export function TreasuryTab() {
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Buyer</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Amount</th>
                 <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Verification</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Gateway Ref</th>
+                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -130,11 +152,15 @@ export function TreasuryTab() {
                         {log.verificationType || 'Manual'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-mono font-bold bg-gray-100 px-2 py-0.5 rounded text-gray-600">
-                          {log.providerRef || 'N/A'}
-                        </span>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => handleDownloadInvoice(log)}
+                          className="p-2 text-gray-400 hover:text-primary-600 transition"
+                          title="Download Invoice"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
                         {log.providerRef && (
                            <ExternalLink className="w-3 h-3 text-gray-300 cursor-pointer hover:text-emerald-500" />
                         )}

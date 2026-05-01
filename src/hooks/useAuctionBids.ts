@@ -14,12 +14,19 @@ export type RealTimeBid = {
 export function useAuctionBids(auctionId: string) {
   const [newBids,        setNewBids]        = useState<RealTimeBid[]>([]);
   const [currentEndTime, setCurrentEndTime] = useState<Date | string | null>(null);
+  const [isConnected,     setIsConnected]    = useState(true);
 
   useEffect(() => {
     let mounted = true;
     const db = getClientDB();
 
-    // Subscribe to latest bid state (server uses rtdbSet → overwrites on each bid)
+    // Monitor Firebase Connection State
+    const connectedRef = ref(db, ".info/connected");
+    const unsubConn = onValue(connectedRef, (snap) => {
+      if (mounted) setIsConnected(!!snap.val());
+    });
+
+    // Subscribe to latest bid state
     const bidRef = ref(db, RTDB_PATHS.auctionBid(auctionId));
     const unsubBid = onValue(bidRef, (snapshot) => {
       if (!mounted) return;
@@ -32,23 +39,27 @@ export function useAuctionBids(auctionId: string) {
           endTime:    data.endTime,
           bidderName: data.bidderName ?? 'Someone',
         };
-        // Production: Keep only the last 10 bids to avoid memory bloat on active pages
         setNewBids(prev => [bid, ...prev].slice(0, 10));
         if (data.endTime) setCurrentEndTime(data.endTime);
       } else if (
         data.event === FIREBASE_EVENTS.AUCTION_SOLD ||
         data.event === FIREBASE_EVENTS.AUCTION_CLOSED
       ) {
-        // Reflect sold/closed state
         if (data.endTime) setCurrentEndTime(data.endTime);
+      }
+    }, (error) => {
+      if (mounted) {
+        console.error("[useAuctionBids] Subscription error:", error);
+        setIsConnected(false);
       }
     });
 
     return () => {
       mounted = false;
+      unsubConn();
       unsubBid();
     };
   }, [auctionId]);
 
-  return { newBids, currentEndTime };
+  return { newBids, currentEndTime, isConnected };
 }

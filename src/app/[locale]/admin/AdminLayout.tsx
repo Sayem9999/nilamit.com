@@ -11,6 +11,7 @@ import {
   Users,
   Scale,
   ShieldCheck,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,8 @@ type Tab =
   | "system"
   | "users"
   | "treasury"
-  | "disputes";
+  | "disputes"
+  | "live";
 
 interface AdminLayoutProps {
   overview: React.ReactNode;
@@ -33,6 +35,7 @@ interface AdminLayoutProps {
   users?: React.ReactNode;
   treasury?: React.ReactNode;
   disputes?: React.ReactNode;
+  live?: React.ReactNode;
 }
 
 export function AdminLayout({
@@ -44,12 +47,14 @@ export function AdminLayout({
   users,
   treasury,
   disputes,
+  live,
 }: AdminLayoutProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const tabs = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "live", label: "Live Activity", icon: TrendingUp },
     { id: "moderation", label: "Moderation", icon: ShieldAlert },
     { id: "users", label: "Users", icon: Users },
     { id: "metrics", label: "Metrics", icon: Banknote },
@@ -122,6 +127,7 @@ export function AdminLayout({
       <main className="flex-1 p-4 lg:p-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto">
           {activeTab === "overview" && overview}
+          {activeTab === "live" && (live || <Placeholder tab="Live Monitor" />)}
           {activeTab === "moderation" &&
             (moderation || <Placeholder tab="Moderation" />)}
           {activeTab === "metrics" &&

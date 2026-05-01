@@ -79,3 +79,9 @@ env:
   - variable: SENTRY_AUTH_TOKEN
     secret: SENTRY_AUTH_TOKEN
 
+  - variable: SMS_PROVIDER
+    value: greenweb
+
+  - variable: GREENWEB_TOKEN
+    secret: GREENWEB_TOKEN
+

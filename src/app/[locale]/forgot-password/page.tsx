@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { Gavel, Loader2, ArrowRight, Smartphone, Mail, CheckCircle, ShieldCheck } from "lucide-react";
+import { Gavel, Loader2, ArrowRight, Smartphone, Mail, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -28,8 +28,8 @@ export default function ForgotPasswordPage() {
         const { requestStandaloneOTP } = await import("@/actions/phone");
         result = await requestStandaloneOTP(identifier);
       } else {
-        // Mock email OTP for now
-        result = { success: true }; 
+        const { sendEmailOTP } = await import("@/actions/phone");
+        result = await sendEmailOTP(identifier);
       }
 
       if (result.success) {
@@ -133,8 +133,12 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{t("enterPhoneTitle")}</h3>
-                  <p className="text-sm text-gray-500 font-medium">{t("enterPhoneDesc")}</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {method === "phone" ? t("enterPhoneTitle") : t("enterEmailTitle")}
+                  </h3>
+                  <p className="text-sm text-gray-500 font-medium">
+                    {method === "phone" ? t("enterPhoneDesc") : t("enterEmailDesc")}
+                  </p>
                 </div>
 
                 <div className="space-y-4">
