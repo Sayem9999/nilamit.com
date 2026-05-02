@@ -14,9 +14,17 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const pathname = req.nextUrl.pathname;
-  // Trust NEXTAUTH_URL as the canonical origin in deployed environments;
-  // fall through to req.url locally so dev with arbitrary host:port works.
-  const redirectBase = process.env.NEXTAUTH_URL ?? req.url;
+  
+  // Dynamically determine the redirect base to avoid hardcoded domain redirects
+  // if the production domain (nilamit.com) isn't live yet.
+  const host = req.headers.get('host') || 'localhost:3000';
+  const protocol = req.headers.get('x-forwarded-proto') || 'http';
+  const currentOrigin = `${protocol}://${host}`;
+  
+  // Prefer NEXTAUTH_URL only if it doesn't point to the unpurchased domain
+  const redirectBase = (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('nilamit.com'))
+    ? process.env.NEXTAUTH_URL
+    : currentOrigin;
 
   // 0. Global Security: Redirect banned users
   const isBanned = (req.auth?.user as { isBanned?: boolean })?.isBanned;

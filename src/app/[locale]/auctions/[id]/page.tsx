@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!auction) return { title: "Auction Not Found" };
 
-  const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://nilamit.com";
+  const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://nilamit--nilamit-52073.asia-southeast1.hosted.app";
   const ogUrl = new URL(`${baseUrl}/api/og`);
   ogUrl.searchParams.set("title", auction.title);
   ogUrl.searchParams.set("price", auction.currentPrice.toString());

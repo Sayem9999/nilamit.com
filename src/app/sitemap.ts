@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://nilamit.com';
+  const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "") || 'https://nilamit--nilamit-52073.asia-southeast1.hosted.app';
 
   return [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
