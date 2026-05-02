@@ -71,6 +71,18 @@ export function validateEnv(): Env {
     return {} as Env; // Browser access should use NEXT_PUBLIC directly
   }
 
+  // GLOBAL SANITIZATION: Mutate process.env directly to fix corrupted values injected by Secret Manager
+  // This ensures that even third-party libraries using process.env directly get sanitized values.
+  const urlKeys = ['NEXT_PUBLIC_APP_URL', 'NEXTAUTH_URL', 'AUTH_URL', 'APP_URL'];
+  urlKeys.forEach(key => {
+    const val = process.env[key];
+    if (typeof val === 'string' && val.includes('?http')) {
+      const sanitized = val.trim().replace(/^[^h]+/, '');
+      console.log(`[Env] 🪄  Globally sanitizing process.env.${key}: "${val}" -> "${sanitized}"`);
+      process.env[key] = sanitized;
+    }
+  });
+
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
@@ -127,3 +139,8 @@ export const env = new Proxy({} as Env, {
     return (validated as unknown as Record<string, unknown>)[prop];
   }
 });
+
+// Trigger validation/sanitization immediately on load
+if (typeof window === 'undefined') {
+  validateEnv();
+}
