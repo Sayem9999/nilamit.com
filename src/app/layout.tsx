@@ -24,7 +24,7 @@ if (typeof window === "undefined") {
 const DOMAIN = "https://nilamit--nilamit-52073.asia-southeast1.hosted.app";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || DOMAIN),
+  metadataBase: new URL((process.env.NEXT_PUBLIC_APP_URL || DOMAIN).replace(/^\?/, "")),
   title: {
     default: "Nilamit — Bangladesh's Trusted Auction Marketplace",
     template: "%s | Nilamit",
