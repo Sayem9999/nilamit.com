@@ -2,9 +2,10 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import AuctionCard from "@/components/auction/AuctionCard";
-import { Shield, Star, Calendar, Package, Gavel } from "lucide-react";
+import { Star, ShieldCheck, MapPin, Calendar, Gavel, History, Award, MessageSquare, ExternalLink, Share2, AlertCircle, Shield, Package, CheckCircle, TrendingUp } from 'lucide-react';
 import Image from "next/image";
 import { type User, type Auction, type Review, type AuctionWithSeller } from "@/types";
+import { formatBDT } from "@/lib/format";
 
 interface Props {
   params: Promise<{ locale: string; id: string }>;
@@ -18,6 +19,13 @@ export default async function SellerProfilePage({ params }: Props) {
   const sellerData = sellerSnap.data() as User;
   
   const bidsSnap = await db.collection('bids').where('bidderId', '==', id).get();
+  
+  // Calculate success rate
+  const totalTransactions = (sellerData.salesCount || 0) + (sellerData.defectCount || 0);
+  const successRate = totalTransactions > 0 
+    ? (((sellerData.salesCount || 0) / totalTransactions) * 100).toFixed(0) 
+    : "100";
+
   const seller = {
     id: sellerSnap.id,
     name: sellerData.name,
@@ -31,6 +39,11 @@ export default async function SellerProfilePage({ params }: Props) {
     ratingCount: sellerData.ratingCount,
     emailVerified: sellerData.emailVerified,
     isBanned: sellerData.isBanned,
+    isTopRated: sellerData.isTopRated,
+    isRetailer: !!sellerData.isRetailer,
+    salesCount: sellerData.salesCount || 0,
+    defectCount: sellerData.defectCount || 0,
+    bio: sellerData.bio,
     _count: { bids: bidsSnap.size },
   };
 
@@ -53,14 +66,18 @@ export default async function SellerProfilePage({ params }: Props) {
         email: sellerData.email ?? null,
         phone: sellerData.phone ?? null,
         image: seller.image,
-        isVerifiedSeller: seller.isVerifiedSeller,
-        winningStreak: seller.winningStreak,
-        userLevel: seller.userLevel,
+        isVerifiedSeller: sellerData.isVerifiedSeller,
+        isRetailer: !!sellerData.isRetailer,
+        isTopRated: sellerData.isTopRated,
+        winningStreak: sellerData.winningStreak,
+        userLevel: sellerData.userLevel,
         rating: seller.reputationScore,
         ratingCount: seller.ratingCount,
-        isPhoneVerified: seller.isPhoneVerified,
-        emailVerified: seller.emailVerified,
-        isBanned: seller.isBanned,
+        isPhoneVerified: sellerData.isPhoneVerified,
+        emailVerified: sellerData.emailVerified,
+        isBanned: sellerData.isBanned,
+        salesCount: seller.salesCount,
+        defectCount: seller.defectCount,
       },
       _count: { bids: abidsSnap.size },
     };
@@ -91,126 +108,204 @@ export default async function SellerProfilePage({ params }: Props) {
       ? (
           reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
         ).toFixed(1)
-      : null;
+      : (seller.reputationScore / 20).toFixed(1); // Fallback to internal score conversion
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Profile Header */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 mb-8">
-        <div className="flex items-start gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-indigo-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-            {seller.image ? (
-              <Image
-                src={seller.image}
-                alt=""
-                width={80}
-                height={80}
-                className="object-cover"
-              />
-            ) : (
-              <span className="text-2xl font-bold text-indigo-600">
-                {(seller.name || "?")[0].toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="font-heading font-bold text-2xl text-gray-900">
-                {seller.name || "Anonymous"}
-              </h1>
-              {seller.isVerifiedSeller && (
-                <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full">
-                  <Shield className="w-3 h-3" /> Verified
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" /> Joined{" "}
-                {new Date(seller.createdAt).toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Package className="w-4 h-4" /> {auctions.length} listings
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Gavel className="w-4 h-4" /> {seller._count.bids} bids
-              </span>
-              {avgRating && (
-                <span className="flex items-center gap-1.5">
-                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />{" "}
-                  {avgRating} ({reviews.length} reviews)
-                </span>
-              )}
-            </div>
-            <div className="mt-4 flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-400">
-                Reputation
-              </span>
-              <div className="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-500 rounded-full"
-                  style={{ width: `${Math.min(seller.reputationScore, 100)}%` }}
-                />
+    <div className="min-h-screen bg-gray-50/50 pb-12">
+      {/* Premium Storefront Header */}
+      <div className="relative bg-white border-b border-gray-100 overflow-hidden pt-12">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50/40 via-transparent to-accent-50/20" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100/20 rounded-full blur-3xl -mr-48 -mt-48" />
+        
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row gap-8 items-end -mb-8 pb-16">
+            {/* Seller Avatar */}
+            <div className="relative group">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-2 shadow-2xl shadow-primary-200/50 relative z-10">
+                <div className="w-full h-full rounded-[2rem] overflow-hidden bg-gray-100 flex items-center justify-center">
+                  {seller.image ? (
+                    <Image src={seller.image} alt={seller.name || ""} fill className="object-cover" />
+                  ) : (
+                    <span className="text-4xl font-bold text-primary-300">{(seller.name || "?")[0]}</span>
+                  )}
+                </div>
               </div>
-              <span className="text-xs font-bold text-indigo-600">
-                {seller.reputationScore}
-              </span>
+              {seller.isTopRated && (
+                <div className="absolute -top-4 -right-4 z-20 animate-bounce-subtle">
+                  <div className="bg-amber-400 text-white p-3 rounded-2xl shadow-lg border-2 border-white">
+                    <Award className="w-6 h-6" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Seller Info */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex flex-col md:flex-row md:items-center gap-3 mb-3">
+                <h1 className="text-3xl md:text-4xl font-heading font-black text-gray-900 tracking-tight">
+                  {seller.name}
+                </h1>
+                <div className="flex items-center justify-center md:justify-start gap-2">
+                  {seller.isVerifiedSeller && (
+                    <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100 flex items-center gap-1.5 shadow-sm">
+                      <Shield className="w-3 h-3" /> VERIFIED SELLER
+                    </span>
+                  )}
+                  {seller.isTopRated && (
+                    <div className="flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full border border-yellow-200 text-[10px] font-black uppercase tracking-wider animate-in fade-in zoom-in duration-500">
+                      <Star className="w-3 h-3 fill-yellow-400" />
+                      Top Rated
+                    </div>
+                  )}
+                  {seller.isRetailer && (
+                    <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200 text-[10px] font-black uppercase tracking-wider animate-in fade-in zoom-in duration-500 delay-75">
+                      <ShieldCheck className="w-3 h-3" />
+                      Business Retailer
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <p className="text-gray-500 text-sm max-w-2xl mb-6 font-medium">
+                {seller.bio || `Welcome to ${seller.name}'s official storefront. Providing quality auctions and trusted service in Bangladesh since ${new Date(seller.createdAt).getFullYear()}.`}
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-sm">
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Calendar className="w-4 h-4 text-primary-500" />
+                  <span className="font-bold">Member Since {new Date(seller.createdAt).getFullYear()}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-500">
+                  <MapPin className="w-4 h-4 text-primary-500" />
+                  <span className="font-bold">Bangladesh</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="flex">
+                    {[1,2,3,4,5].map(i => (
+                      <Star key={i} className={`w-4 h-4 ${i <= Number(avgRating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />
+                    ))}
+                  </div>
+                  <span className="font-black text-gray-900 ml-1">{avgRating}</span>
+                  <span className="text-gray-400 font-bold">({seller.ratingCount} reviews)</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Reviews */}
-      {reviews.length > 0 && (
-        <div className="mb-8">
-          <h2 className="font-heading font-bold text-lg text-gray-900 mb-4">
-            Reviews
-          </h2>
-          <div className="grid gap-3">
-            {reviews.map((review) => (
-              <div
-                key={review.id}
-                className="bg-white rounded-xl border border-gray-100 p-4"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star
-                        key={s}
-                        className={`w-3.5 h-3.5 ${s <= review.rating ? "text-amber-400 fill-amber-400" : "text-gray-200"}`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs text-gray-400">
-                    by {review.from.name || "Anonymous"}
-                  </span>
-                </div>
-                {review.comment && (
-                  <p className="text-sm text-gray-600">{review.comment}</p>
-                )}
-              </div>
-            ))}
+      {/* Trust Dashboard Grid */}
+      <div className="max-w-7xl mx-auto px-4 mt-16 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Items Sold</p>
+            <p className="text-3xl font-black text-gray-900 font-heading">{seller.salesCount}</p>
+          </div>
+          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Success Rate</p>
+            <p className="text-3xl font-black text-emerald-500 font-heading">{successRate}%</p>
+          </div>
+          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Reputation</p>
+            <p className="text-3xl font-black text-primary-600 font-heading">{seller.reputationScore}</p>
+          </div>
+          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Bids</p>
+            <p className="text-3xl font-black text-indigo-500 font-heading">{seller._count.bids}</p>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Auctions */}
-      <h2 className="font-heading font-bold text-lg text-gray-900 mb-4">
-        {auctions.length > 0 ? "Listings" : "No listings yet"}
-      </h2>
-      {auctions.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {auctions.map((auction) => (
-            <AuctionCard
-              key={auction.id}
-              auction={auction}
-            />
-          ))}
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Listings Area */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black text-gray-900 font-heading tracking-tight flex items-center gap-3">
+                <Package className="w-6 h-6 text-primary-600" />
+                Active Auctions
+              </h2>
+              <span className="text-sm font-bold text-gray-400">{auctions.length} Items Found</span>
+            </div>
+
+            {auctions.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {auctions.map((auction) => (
+                  <AuctionCard key={auction.id} auction={auction} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-[2rem] border border-dashed border-gray-200 p-12 text-center">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-8 h-8 text-gray-300" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">No active listings</h3>
+                <p className="text-gray-500 text-sm mt-1">This seller doesn&apos;t have any items for sale right now.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar / Reviews & Info */}
+          <div className="space-y-8">
+            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-8">
+              <h2 className="text-xl font-black text-gray-900 font-heading mb-6 flex items-center gap-2">
+                <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                Recent Feedback
+              </h2>
+              
+              {reviews.length > 0 ? (
+                <div className="space-y-6">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="border-b border-gray-50 pb-6 last:border-0 last:pb-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex">
+                          {[1,2,3,4,5].map(s => (
+                            <Star key={s} className={`w-3 h-3 ${s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />
+                          ))}
+                        </div>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-auto">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 font-medium mb-2">&quot;{review.comment}&quot;</p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-gray-100 overflow-hidden">
+                          {review.from.image && <Image src={review.from.image} alt="" width={20} height={20} />}
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">{review.from.name || "Anonymous"}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 italic">No feedback received yet.</p>
+              )}
+            </div>
+
+            <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
+              <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+              <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
+              
+              <h3 className="text-lg font-black font-heading mb-4 relative z-10 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-indigo-400" />
+                Nilamit Guarantee
+              </h3>
+              <p className="text-indigo-100 text-sm leading-relaxed mb-6 relative z-10">
+                All transactions with this seller are protected by our secure escrow system. Funds are only released when you confirm delivery.
+              </p>
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-indigo-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest">Safe Checkout</p>
+                  <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-tight">bKash • Nagad • Rocket</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

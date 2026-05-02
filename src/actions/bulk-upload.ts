@@ -66,7 +66,6 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
         winnerId:         null,
         isFeatured:       false,
         wasExtended:      false,
-        commissionRate:   userData.commissionRate || 5,
         commissionEarned: null,
         deliveryCharge:   0,
         deliveryStatus:   'PENDING',

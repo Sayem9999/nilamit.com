@@ -44,8 +44,12 @@ export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
     isPhoneVerified: !!d.isPhoneVerified,
     emailVerified: d.emailVerified instanceof Timestamp ? d.emailVerified.toDate() : (d.emailVerified ? new Date(d.emailVerified as string) : null),
     isVerifiedSeller: !!d.isVerifiedSeller,
+    isRetailer: !!d.isRetailer,
+    isTopRated: !!d.isTopRated,
     winningStreak: (d.winningStreak as number) ?? 0,
     userLevel: (d.userLevel as number) ?? 1,
+    salesCount: (d.salesCount as number) ?? 0,
+    defectCount: (d.defectCount as number) ?? 0,
     isBanned: !!d.isBanned
   };
 }

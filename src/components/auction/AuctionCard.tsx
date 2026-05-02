@@ -111,7 +111,11 @@ export const AuctionCard = memo(({
           </h3>
 
           <div className="flex items-center gap-2 mt-1.5">
-            <div className="flex items-center gap-1.5 min-w-0">
+            <Link 
+              href={`/seller/${auction.sellerId}`} 
+              className="flex items-center gap-1.5 min-w-0 hover:text-primary-600 transition-colors relative z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
               <span className="text-xs font-semibold text-gray-600 truncate">
                 {auction.seller.name || t("seller")}
               </span>
@@ -122,7 +126,7 @@ export const AuctionCard = memo(({
                 size="sm"
                 showText={false}
               />
-            </div>
+            </Link>
             {(auction.seller.rating ?? 0) > 0 && (
               <TrustBadge 
                 rating={auction.seller.rating ?? 0} 

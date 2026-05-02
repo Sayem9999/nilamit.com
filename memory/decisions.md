@@ -1,6 +1,6 @@
 # ⚖️ Decisions: Project Governance & Versions
 
-> Last Updated: April 29, 2026
+> Last Updated: May 2, 2026
 
 ## Core Decisions
 - **Mobile-First Orientation**: Target Bangladeshi market on low-bandwidth (3G/4G). No feature ships without mobile viewport validation.
@@ -9,6 +9,12 @@
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
 ## Version History
+- **v2.1.0 (Account Professionalization & Sync)**:
+    - **Bifurcated Registration**: Separation of Personal and Business accounts at entry with distinct UI themes and data models.
+    - **eBay-style Trust Architecture**: Implementation of "Top Rated" (Gold Shield) and "Business Retailer" status based on sales volume and defect rates (≤ 5%).
+    - **Advanced Bidding Logic**: Integration of Proxy Bidding (Auto-Max) and Second Chance Offers.
+    - **Admin Simplification**: Removed redundant global commission settings; platform now exclusively uses tiered logic.
+    - **Session Synchronization**: Updated session objects to include real-time performance metrics (salesCount, defectCount).
 - **v1.8.0 (Treasury Automation & Sync)**:
     - **Platform Treasury**: Unified platform accounts (bKash/Nagad) managed via Admin dashboard.
     - **Automated Escrow Engine**: Transitioned from manual simulation to automated `HELD` verification logic.
@@ -25,14 +31,9 @@
 - **v1.5**:
     - Comprehensive hardening of the bidding transaction engine.
     - Admin dashboard enhancements (Moderation, System, Users).
-- **v1.3**:
-    - Finalized Admin Tab functionality.
-- **v1.2**:
-    - Bulk image upload via Uploadthing.
-    - Auction reporting system implemented.
 
 ## Policy Choices
-- **PSSA 2024 Compliance**: Platform provides English-First experience with professional Bengali support to ensure transparency.
+- **PSSA 2024 Compliance**: Platform provides English-First experience with professional Bengali support.
 - **English-First Standard (v1.8.0)**: Core design, documentation, and technical terminology are English-first.
 - **Trust-Based Escrow**: Success fees and delivery charges are held from buyers if the seller isn't Verified.
 - **Anti-Sniping (Soft Close)**: 2-minute auto-extension on late bids.

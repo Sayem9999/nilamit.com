@@ -16,7 +16,7 @@ export async function getSystemConfig(): Promise<ServiceResponse<SystemConfig>> 
         announcement: null, showAnnouncement: false,
         treasuryBkash: null, treasuryNagad: null,
         updatedAt: new Date(),
-      });
+      } as SystemConfig);
     }
     return successResponse({ ...snap.data(), id: snap.id } as SystemConfig);
   } catch (e) {
@@ -29,6 +29,7 @@ export async function updateSystemConfig(data: {
   heroTitle?: string; heroSubtitle?: string; heroImage?: string;
   announcement?: string; showAnnouncement?: boolean;
   treasuryBkash?: string; treasuryNagad?: string;
+  defaultCommissionRate?: number;
 }): Promise<ServiceResponse<null>> {
   try {
     await requireAdmin();

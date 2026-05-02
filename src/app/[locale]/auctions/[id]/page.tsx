@@ -17,11 +17,13 @@ import {
   Eye,
   Shield,
   User,
+  Star,
   CheckCircle,
   TrendingUp,
   DollarSign,
   Truck,
   Info,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { canReviewAuction } from "@/actions/review";
@@ -316,6 +318,12 @@ export default async function AuctionDetailPage({ params }: Props) {
                   {auction.seller?.isVerifiedSeller && (
                     <Shield className="w-4 h-4 text-blue-500 fill-blue-500/10" />
                   )}
+                  {auction.seller?.isTopRated && (
+                    <div className="flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
+                      <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                      <span className="text-[10px] font-bold text-amber-700">TOP RATED</span>
+                    </div>
+                  )}
                 </p>
                 
                 {/* Contact Gating Logic */}
@@ -417,11 +425,30 @@ export default async function AuctionDetailPage({ params }: Props) {
                    <span className="text-sm font-semibold text-slate-700">{formatBDT(auction.deliveryCharge || 0)}</span>
                 </div>
 
-                <div className="pt-2 border-t border-primary-100 flex justify-between items-center">
-                   <span className="text-sm font-bold text-slate-900">{t("totalAdvance")}</span>
-                   <span className="text-lg font-black text-blue-600">
-                     {formatBDT((auction.commissionEarned || 0) + (auction.deliveryCharge || 0))}
-                   </span>
+                <div className="p-4 border-t border-primary-100 flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-primary-900 uppercase">{t("netToYou")}</span>
+                    <span className="text-xl font-black text-primary-700">{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</span>
+                  </div>
+                  
+                  {/* Second Chance Offer Action */}
+                  {session?.user?.id === auction.sellerId && auction.status === AuctionStatus.SOLD && (
+                    <form action={async () => {
+                      'use server';
+                      const { triggerSecondChanceOffer } = await import('@/actions/auction');
+                      const res = await triggerSecondChanceOffer(id);
+                      if (res.success) {
+                          // Revalidation handled in action
+                      }
+                    }}>
+                      <button
+                        type="submit"
+                        className="w-full py-2.5 bg-white border border-primary-200 text-primary-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        <RefreshCw className="w-3 h-3" /> Offer Second Chance
+                      </button>
+                    </form>
+                  )}
                 </div>
                 
                 <div className="p-2 bg-blue-50 rounded text-[10px] text-blue-700 flex items-start gap-2">

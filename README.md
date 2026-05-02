@@ -6,8 +6,8 @@
 
 ---
 
-### 🚀 Status: Production Ready (v2.0 - Final)
-**Completion: 100%** — All Core, Security, Scalability, and Elite features (Gamification, Automation, Enforcement) are finalized.
+### 🚀 Status: Production Ready (v2.1 - Account Professionalization)
+**Completion: 100%** — All Core, Security, Scalability, and Professional Retailer features (Bifurcated Registration, eBay-style Trust, Proxy Bidding) are finalized.
 
 ---
 
@@ -78,15 +78,18 @@ Nilamit v2.0 implements a **Service-Layer Architecture** to ensure long-term mai
 
 ## Key Features
 
-- **Real-time bidding** — Firestore transactions with anti-sniping (2-minute soft close on last-second bids)
+- **Real-time bidding** — Firestore transactions with anti-sniping and **Proxy Bidding** (Automatic Max Bids)
+- **Bifurcated Registration** — Separate entry paths for **Personal** and **Business (Retailer)** accounts with distinct UI themes
+- **eBay-style Trust** — **"Top Rated"** gold shields and **"Business Retailer"** badges based on sales volume and defect rates (≤5%)
 - **Phone verification gate** — All bidding and listing requires verified Bangladesh mobile number (+88)
 - **Escrow system** — PENDING → HELD → RELEASED → REFUNDED lifecycle with dispute resolution
 - **Buy It Now** — Atomic instant purchase at seller-set price
-- **Admin dashboard** — Moderation, user management, treasury audit, dispute resolution
+- **Admin dashboard** — Moderation, user management, treasury audit, and **Professional Logistics** auditing
 - **Gamification** — Badges, winning streaks, user levels, leaderboard
 - **Real-time chat** — Buyer/seller coordination unlocked by escrow payment
 - **Price alerts** — OUTBID, TARGET_REACHED, ENDING_SOON notifications
-- **Bulk upload** — CSV-driven mass auction creation for power sellers
+- **Bulk upload** — CSV-driven mass auction creation for **Verified Retailers**
+- **Second Chance Offer** — Sellers can offer items to underbidders on closed auctions
 - **i18n** — Full English and Bengali support
 - **PII filtering** — Phone numbers and emails stripped from public listings automatically
 

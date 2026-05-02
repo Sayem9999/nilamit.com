@@ -8,7 +8,12 @@ import {
   banUser,
   unbanUser,
 } from "@/actions/admin-users";
-import { Shield, ShieldOff, Users, CheckCircle, Search, Ban } from "lucide-react";
+import { 
+  Package, Gavel, History, TrendingUp, Star, Award, ShieldCheck, 
+  Settings, LayoutDashboard, Store, Wallet, AlertCircle, ArrowRight,
+  MessageSquare, ExternalLink, Share2, MapPin, Search, PlusCircle, CheckCircle,
+  Heart, RefreshCw, LogOut, Shield, ShieldOff, Users, Ban
+} from "lucide-react";
 import Image from "next/image";
 
 export function UsersTab() {
@@ -19,6 +24,12 @@ export function UsersTab() {
     image: string | null;
     isVerifiedSeller: boolean;
     isPhoneVerified: boolean;
+    winningStreak: number;
+    userLevel: number;
+    isRetailer: boolean;
+    isTopRated: boolean;
+    salesCount: number;
+    defectCount: number;
     rating: number;
     ratingCount: number;
     createdAt: Date;
@@ -62,19 +73,8 @@ export function UsersTab() {
   }, [cursorStack, debouncedSearch]);
 
   const handleToggleVerified = (userId: string, currentStatus: boolean) => {
-    let commissionRate = 5;
-    if (!currentStatus) {
-      const input = prompt("Enter commission rate (%) for this seller:", "5");
-      if (input === null) return;
-      commissionRate = parseFloat(input);
-      if (isNaN(commissionRate)) {
-        alert("Invalid commission rate");
-        return;
-      }
-    }
-
     startTransition(async () => {
-      const action = currentStatus ? () => revokeVerifiedSeller(userId) : () => grantVerifiedSeller(userId, commissionRate);
+      const action = currentStatus ? () => revokeVerifiedSeller(userId) : () => grantVerifiedSeller(userId);
       const result = await action();
       if (result.success) {
         setUsers((prev) =>
@@ -150,7 +150,7 @@ export function UsersTab() {
                   Rating
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">
-                  Trades
+                  Sales
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">
                   Bids
@@ -211,13 +211,21 @@ export function UsersTab() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <span className="font-bold text-gray-900">{user.rating}</span>
-                      <span className="text-amber-400">★</span>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-gray-900">{user.rating}</span>
+                        <span className="text-amber-400">★</span>
+                      </div>
+                      <span className="text-[10px] text-gray-400">{user.ratingCount} reviews</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {user.ratingCount}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-gray-900">{user.salesCount || 0}</span>
+                      {user.isTopRated && (
+                        <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Top Rated</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-xs">
                     {user._count.bids}

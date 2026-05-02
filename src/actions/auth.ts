@@ -35,7 +35,8 @@ export async function registerUser(data: unknown) {
     await ref.set({
       id: ref.id, name, email,
       password: hashedPassword, emailVerified: null, image: null, phone: null,
-      isPhoneVerified: false, isVerifiedSeller: false, rating: 3.5, ratingCount: 0,
+      isPhoneVerified: false, isVerifiedSeller: false, isRetailer: !!parsed.data.isRetailer,
+      rating: 3.5, ratingCount: 0,
       winningStreak: 0, userLevel: 1, createdAt: now, updatedAt: now,
     });
 
@@ -50,7 +51,7 @@ export async function registerUser(data: unknown) {
 export async function signupWithPhone(data: unknown) {
   const parsed = phoneSignupSchema.safeParse(data);
   if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
-  const { name, phone, otp, password, email } = parsed.data;
+  const { name, phone, otp, password, email, isRetailer } = parsed.data;
   const normalizedPhone = normalizePhone(phone);
 
   // Rate-limit BEFORE consuming the OTP — prevents OTP DOS and IP-rotation abuse
@@ -77,7 +78,8 @@ export async function signupWithPhone(data: unknown) {
       id: ref.id, name, phone: normalizedPhone, password: hashedPassword,
       email: email ?? null,
       emailVerified: null, image: null,
-      isPhoneVerified: true, isVerifiedSeller: false, rating: 3.5, ratingCount: 0,
+      isPhoneVerified: true, isVerifiedSeller: false, isRetailer: !!isRetailer,
+      rating: 3.5, ratingCount: 0,
       winningStreak: 0, userLevel: 1, createdAt: now, updatedAt: now,
     });
     return successResponse(null);

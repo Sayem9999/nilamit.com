@@ -2,7 +2,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import AuctionCard from "@/components/auction/AuctionCard";
-import { Package, Heart, RefreshCw, LogOut, CheckCircle, MessageSquare } from "lucide-react";
+import { 
+  Package, Gavel, History, TrendingUp, Star, Award, ShieldCheck, 
+  Settings, LayoutDashboard, Store, Wallet, AlertCircle, ArrowRight,
+  MessageSquare, ExternalLink, Share2, MapPin, Search, PlusCircle, CheckCircle,
+  Heart, RefreshCw, LogOut
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import type { AuctionWithSeller } from "@/types";
@@ -11,7 +16,8 @@ import { getTranslations } from "next-intl/server";
 import { getSystemConfig } from "@/actions/admin-content";
 import {
   ChevronRight,
-  Trophy
+  Trophy,
+  Shield
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -356,9 +362,17 @@ export default async function DashboardPage({
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                <Package className="w-4 h-4" />
                 {t("myListings")}
               </Link>
+              {session.user.isVerifiedSeller && (
+                 <Link
+                  href={`/${locale}/auctions/create?bulk=true`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 border border-transparent hover:border-emerald-100`}
+                >
+                  <Package className="w-4 h-4" />
+                  Bulk Inventory
+                </Link>
+              )}
               <Link
                 href={`/${locale}/dashboard?tab=coordination`}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
@@ -400,6 +414,65 @@ export default async function DashboardPage({
                   {t("viewLeaderboard")}
                   <ChevronRight className="w-3 h-3" />
                 </Link>
+
+                {/* Seller Performance Sync */}
+                {session.user.isVerifiedSeller && (
+                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seller Status</span>
+                      {session.user.isTopRated ? (
+                        <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+                          <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                          <span className="text-[9px] font-black text-amber-700">TOP RATED</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                          <Shield className="w-2.5 h-2.5 text-blue-500 fill-blue-500/10" />
+                          <span className="text-[9px] font-black text-blue-700">VERIFIED</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white p-2 rounded-xl border border-gray-50">
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Sales</p>
+                        <p className="text-sm font-black text-gray-900">{session.user.salesCount || 0}</p>
+                      </div>
+                      <div className="bg-white p-2 rounded-xl border border-gray-50">
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Defect Rate</p>
+                        <p className={`text-sm font-black ${
+                          (session.user.defectCount / (session.user.salesCount + session.user.defectCount || 1)) > 0.03 
+                            ? "text-red-600" 
+                            : "text-emerald-600"
+                        }`}>
+                          {((session.user.defectCount || 0) / (session.user.salesCount + session.user.defectCount || 1) * 100).toFixed(1)}%
+                        </p>
+                      </div>
+                    </div>
+
+                    {!session.user.isTopRated && (
+                      <div className="p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        <p className="text-[9px] text-gray-500 leading-tight">
+                          <span className="font-bold">Goal:</span> 10 sales & &lt;5% defect rate for <span className="text-amber-600 font-bold">Top Rated</span> status.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Retailer Specific Tools */}
+                    <div className="pt-3">
+                      <Link
+                        href={`/${locale}/seller/inventory/bulk`}
+                        className="flex items-center justify-between w-full py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md shadow-indigo-100 group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Package className="w-3 h-3 text-indigo-200 group-hover:scale-110 transition-transform" />
+                          <span>Bulk Upload</span>
+                        </div>
+                        <ArrowRight className="w-3 h-3 opacity-50" />
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

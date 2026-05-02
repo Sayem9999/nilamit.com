@@ -19,6 +19,11 @@ export interface User {
   winningStreak: number;
   xp: number;
   userLevel: number;
+  isTopRated: boolean;
+  isRetailer: boolean;
+  salesCount: number;
+  defectCount: number;
+  bio?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,9 +38,14 @@ export interface SellerPublic {
   isPhoneVerified: boolean;
   emailVerified: Date | null;
   isVerifiedSeller: boolean;
+  isRetailer: boolean;
   winningStreak: number;
   userLevel: number;
+  isTopRated: boolean;
+  salesCount: number;
+  defectCount: number;
   isBanned: boolean;
+  bio?: string | null;
 }
 
 export interface PublicProfile extends SellerPublic {

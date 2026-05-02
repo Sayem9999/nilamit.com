@@ -8,8 +8,9 @@ import { useTranslations, useLocale } from "next-intl";
 export default function RegisterPage() {
   const t = useTranslations("Auth");
   const locale = useLocale();
+  const [step, setStep] = useState<"account-type" | "phone" | "otp" | "details">("account-type");
+  const [accountType, setAccountType] = useState<"personal" | "business">("personal");
   const [signupMethod, setSignupMethod] = useState<"phone" | "email">("phone");
-  const [step, setStep] = useState<"phone" | "otp" | "details">("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [formData, setFormData] = useState({
@@ -63,6 +64,7 @@ export default function RegisterPage() {
           otp,
           password: formData.password,
           email: formData.email,
+          isRetailer: accountType === "business"
         });
 
         if (result.success) {
@@ -75,7 +77,8 @@ export default function RegisterPage() {
         const result = await registerUser({
           name: formData.name,
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          isRetailer: accountType === "business"
         });
 
         if (result.success) {
@@ -140,53 +143,114 @@ export default function RegisterPage() {
           {/* Progress Bar */}
           <div className="h-1.5 w-full bg-gray-50 flex">
             <div className={`h-full bg-primary-600 transition-all duration-500 ${
-              signupMethod === 'email' ? 'w-full' : (step === 'phone' ? 'w-1/3' : step === 'otp' ? 'w-2/3' : 'w-full')
+              step === 'account-type' ? 'w-1/4' : (signupMethod === 'email' ? 'w-full' : (step === 'phone' ? 'w-1/2' : step === 'otp' ? 'w-3/4' : 'w-full'))
             }`} />
           </div>
 
           <div className="p-8">
+            {step === "account-type" && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="mb-8">
+                  <h3 className="text-2xl font-black text-gray-900 mb-1">Choose account type</h3>
+                  <p className="text-sm text-gray-500 font-medium tracking-tight">Join Nilamit as a buyer or business retailer.</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <button
+                    onClick={() => {
+                      setAccountType("personal");
+                      setStep("phone");
+                    }}
+                    className="w-full p-6 bg-white border-2 border-gray-100 rounded-[2rem] text-left hover:border-primary-500 hover:bg-primary-50/30 transition-all group relative"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-primary-100 transition-colors">
+                        <Smartphone className="w-6 h-6 text-gray-400 group-hover:text-primary-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900">Personal Account</h4>
+                        <p className="text-xs text-gray-500 font-medium">For casual bidding and selling.</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-200 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setAccountType("business");
+                      setStep("phone");
+                    }}
+                    className="w-full p-6 bg-white border-2 border-gray-100 rounded-[2rem] text-left hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group relative"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                        <Gavel className="w-6 h-6 text-gray-400 group-hover:text-indigo-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900">Business Account</h4>
+                        <p className="text-xs text-gray-500 font-medium">For retailers and high-volume sales.</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-200 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Signup Method Tabs */}
             {step === "phone" && (
-              <div className="flex bg-gray-50/50 p-1 mb-8 rounded-2xl border border-gray-100">
-                <button
-                  onClick={() => setSignupMethod("phone")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all ${
-                    signupMethod === "phone"
-                      ? "bg-white text-primary-600 shadow-sm border border-gray-100"
-                      : "text-gray-400 hover:text-gray-900 uppercase tracking-widest text-[10px]"
-                  }`}
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <button 
+                  onClick={() => setStep("account-type")} 
+                  className="mb-4 text-[10px] font-black text-gray-400 hover:text-primary-600 uppercase tracking-widest flex items-center gap-1 transition-colors"
                 >
-                  <Smartphone className="w-4 h-4" />
-                  {t("phoneBtn")}
+                  <ArrowRight className="w-3 h-3 rotate-180" /> Back to Account Selection
                 </button>
-                <button
-                  onClick={() => setSignupMethod("email")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all ${
-                    signupMethod === "email"
-                      ? "bg-white text-primary-600 shadow-sm border border-gray-100"
-                      : "text-gray-400 hover:text-gray-900 uppercase tracking-widest text-[10px]"
-                  }`}
-                >
-                  <Mail className="w-4 h-4" />
-                  {t("emailBtn")}
-                </button>
+                <div className="flex bg-gray-50/50 p-1 mb-8 rounded-2xl border border-gray-100">
+                  <button
+                    onClick={() => setSignupMethod("phone")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all ${
+                      signupMethod === "phone"
+                        ? "bg-white text-primary-600 shadow-sm border border-gray-100"
+                        : "text-gray-400 hover:text-gray-900 uppercase tracking-widest text-[10px]"
+                    }`}
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    {t("phoneBtn")}
+                  </button>
+                  <button
+                    onClick={() => setSignupMethod("email")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all ${
+                      signupMethod === "email"
+                        ? "bg-white text-primary-600 shadow-sm border border-gray-100"
+                        : "text-gray-400 hover:text-gray-900 uppercase tracking-widest text-[10px]"
+                    }`}
+                  >
+                    <Mail className="w-4 h-4" />
+                    {t("emailBtn")}
+                  </button>
+                </div>
               </div>
             )}
 
             {signupMethod === "email" && step === "phone" ? (
                <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{t("emailSignupTitle")}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {accountType === "business" ? "Business Email Signup" : t("emailSignupTitle")}
+                  </h3>
                   <p className="text-sm text-gray-500 font-medium">{t("emailSignupDesc")}</p>
                 </div>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("nameLabel")}</label>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">
+                      {accountType === "business" ? "Shop Name / Rep Name" : t("nameLabel")}
+                    </label>
                     <input
                       required
                       type="text"
-                      placeholder="e.g. Sayem Ahmed"
+                      placeholder={accountType === "business" ? "e.g. Dhaka Electronics" : "e.g. Sayem Ahmed"}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
@@ -239,7 +303,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="w-full bg-gray-900 hover:bg-black disabled:bg-gray-200 text-white font-bold py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+                  className={`w-full ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-200 text-white font-bold py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2`}
                 >
                   {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : t("signUpBtn")}
                 </button>
@@ -249,7 +313,9 @@ export default function RegisterPage() {
                 {step === "phone" && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{t("enterPhoneTitle")}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {accountType === "business" ? "Business Phone Signup" : t("enterPhoneTitle")}
+                  </h3>
                   <p className="text-sm text-gray-500 font-medium">{t("enterPhoneDesc")}</p>
                 </div>
                 <div className="space-y-4">
@@ -259,7 +325,7 @@ export default function RegisterPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder={t("nameLabel")}
+                      placeholder={accountType === "business" ? "Shop Name" : t("nameLabel")}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-4 py-5 text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
@@ -278,7 +344,7 @@ export default function RegisterPage() {
                   <button
                     onClick={handleRequestOTP}
                     disabled={isPending || phone.length < 11 || formData.name.length < 2}
-                    className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+                    className={`w-full h-14 ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2`}
                   >
                     {isPending ? (
                       <Loader2 className="w-6 h-6 animate-spin" />
@@ -316,7 +382,7 @@ export default function RegisterPage() {
                   <button
                     onClick={handleVerifyOTP}
                     disabled={otp.length !== 6}
-                    className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all"
+                    className={`w-full h-14 ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all`}
                   >
                     {t("verifyContinue")}
                   </button>
@@ -345,8 +411,6 @@ export default function RegisterPage() {
                 </div>
                 
                 <div className="space-y-4">
-
-
                   <div>
                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("emailLabel")} ({t("maybeLater")})</label>
                     <input
@@ -392,7 +456,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-200 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                  className={`w-full h-14 ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-200 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest`}
                 >
                   {isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : t("signUpBtn")}
                 </button>

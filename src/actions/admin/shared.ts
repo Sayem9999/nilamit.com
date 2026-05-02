@@ -28,9 +28,12 @@ export async function batchHydrateEscrowRows(txDocs: AdminEscrowDoc[]): Promise<
   const auctionIds = [...new Set(txDocs.map((t) => t.auctionId))];
   const buyerIds   = [...new Set(txDocs.map((t) => t.buyerId))];
 
+  const auctionRefs = auctionIds.map((id) => db.collection('auctions').doc(id));
+  const buyerRefs   = buyerIds.map((id) => db.collection('users').doc(id));
+
   const [auctionSnaps, buyerSnaps] = await Promise.all([
-    db.getAll(...auctionIds.map((id) => db.collection('auctions').doc(id))),
-    db.getAll(...buyerIds.map((id) => db.collection('users').doc(id))),
+    auctionRefs.length > 0 ? db.getAll(...auctionRefs) : Promise.resolve([]),
+    buyerRefs.length > 0   ? db.getAll(...buyerRefs)   : Promise.resolve([]),
   ]);
 
   const auctionMap = new Map(auctionSnaps.map((s) => [s.id, s.data() ?? {}]));

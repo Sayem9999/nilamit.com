@@ -2,6 +2,22 @@
 
 All notable changes to the Nilamit platform will be documented in this file.
 
+## [2.1.0] - 2026-05-02 (Current)
+
+### Added 🆕
+- **Bifurcated Registration**: Separation of Personal and Business accounts at entry with tailored UI themes (Charcoal vs Indigo).
+- **eBay-style Trust Architecture**: Integrated **"Top Rated"** gold shields and **"Business Retailer"** badges based on sales volume and defect rates (≤ 5%).
+- **Advanced Bidding Logic**: Implementation of **Proxy Bidding** (Auto-Max) and **Second Chance Offers**.
+- **Session Performance Metrics**: Live tracking of `salesCount` and `defectCount` synchronized with user sessions.
+- **Retailer Tooling**: Dashboard-integrated tools for verified businesses, including bulk inventory management.
+
+### Removed 🔥
+- **Centralized Commission Config**: Deleted redundant global admin setting in favor of logic-driven tiered rates (2.5%, 1.5%, 1%) defined in `lib/auction-logic.ts`.
+
+### Fixed 🐛
+- **UI/UX Synchronization**: Unified labels and themes across the platform to distinguish between personal and commercial transactions.
+- **TypeScript Alignment**: Achieved 100% type safety for new retailer and trust features across the entire platform surface.
+
 ## [2.0.0] - 2026-05-02
 
 ### Added 🆕

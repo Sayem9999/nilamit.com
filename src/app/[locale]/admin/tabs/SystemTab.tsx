@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, AlertTriangle, AlertCircle, Download, FileText } from 'lucide-react';
+import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Settings, Percent } from 'lucide-react';
 import { adminWipeTestData, exportTransactionsCSV } from '@/actions/admin-system';
+import { getSystemConfig, updateSystemConfig } from '@/actions/admin-content';
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 export function SystemTab() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -10,6 +13,32 @@ export function SystemTab() {
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const res = await getSystemConfig();
+      if (res.success && res.data) {
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  const handleUpdateConfig = async () => {
+    setIsSavingConfig(true);
+    try {
+      const res = await updateSystemConfig({});
+      if (res.success) {
+        toast.success('System configuration updated');
+      } else {
+        toast.error(res.error?.message || 'Update failed');
+      }
+    } catch {
+      toast.error('An error occurred');
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
 
   const handleWipe = async () => {
     setIsPending(true);
@@ -57,6 +86,7 @@ export function SystemTab() {
 
   return (
     <div className="space-y-6">
+
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="bg-primary-50 p-3 rounded-xl">

@@ -3,6 +3,8 @@
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { useLocale } from "next-intl";
 import { createAuction } from "@/actions/auction";
 import { getSmartPricingSuggestion, type SmartPricingResult } from "@/actions/pricing";
 import { CATEGORIES, LOCATIONS } from "@/types";
@@ -23,6 +25,7 @@ type Step = "details" | "pricing" | "schedule" | "review";
 export default function CreateAuctionPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("Auction");
   const tCat = useTranslations("Categories");
   const tLoc = useTranslations("Locations");
@@ -102,9 +105,19 @@ export default function CreateAuctionPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="font-heading font-bold text-2xl text-gray-900 mb-2">
-        {t("createTitle")}
-      </h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="font-heading font-bold text-2xl text-gray-900">
+          {t("createTitle")}
+        </h1>
+        {session.user.isVerifiedSeller && (
+          <Link 
+            href={`/${locale}/seller/inventory/bulk`}
+            className="text-xs font-bold text-primary-600 hover:text-primary-700 bg-primary-50 px-3 py-1.5 rounded-lg border border-primary-100 transition-all"
+          >
+            Switch to Bulk Upload
+          </Link>
+        )}
+      </div>
       <p className="text-sm text-gray-500 mb-8">{t("createSubtitle")}</p>
 
       {/* Step Indicator */}

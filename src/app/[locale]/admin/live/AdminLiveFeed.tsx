@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { ref, onChildAdded, query, limitToLast, off } from "firebase/database";
+import { getAdminStats } from "@/actions/admin";
 import { getClientDB } from "@/lib/firebase-client";
 import { RTDB_PATHS } from "@/lib/firebase-events";
 import { formatBDT } from "@/lib/format";
@@ -29,8 +30,19 @@ interface GlobalBid {
   timestamp: number;
 }
 
+interface AdminStats {
+  totalUsers: number;
+  verifiedUsers: number;
+  totalAuctions: number;
+  activeAuctions: number;
+  totalBids: number;
+  totalRevenue: number;
+  recentUsers: unknown[];
+}
+
 export default function AdminLiveFeed() {
   const [bids, setBids] = useState<GlobalBid[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLive, setIsLive] = useState(true);
   const locale = useLocale();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -52,10 +64,14 @@ export default function AdminLiveFeed() {
       };
 
       setBids(prev => {
-        // Prevent duplicates
         if (prev.find(b => b.id === newBid.id)) return prev;
         return [newBid, ...prev].slice(0, 100);
       });
+    });
+
+    // Fetch initial stats
+    getAdminStats().then(res => {
+      if (res.success) setStats(res.data);
     });
 
     return () => {
@@ -102,16 +118,16 @@ export default function AdminLiveFeed() {
               <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Quick Stats</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Bids Today</span>
-                  <span className="font-bold text-gray-900">1,284</span>
+                  <span className="text-sm text-gray-500">Total Bids</span>
+                  <span className="font-bold text-gray-900">{stats?.totalBids?.toLocaleString() || "..."}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Active Traders</span>
-                  <span className="font-bold text-gray-900">412</span>
+                  <span className="text-sm text-gray-500">Total Auctions</span>
+                  <span className="font-bold text-gray-900">{stats?.totalAuctions?.toLocaleString() || "..."}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Total GMV</span>
-                  <span className="font-bold text-primary-600">৳8.4M</span>
+                  <span className="text-sm text-gray-500">Total Revenue</span>
+                  <span className="font-bold text-primary-600">{stats ? formatBDT(stats.totalRevenue) : "..."}</span>
                 </div>
               </div>
             </div>

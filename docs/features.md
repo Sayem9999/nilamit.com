@@ -1,4 +1,5 @@
 # 🚀 Nilamit Platform Features
+# 🚀 Nilamit Platform Features
 
 > Last Updated: April 29, 2026
 
@@ -6,14 +7,18 @@ Nilamit is a high-performance, real-time C2C auction marketplace designed for tr
 
 ## 1. Real-time Auction Engine
 - **One-Time Soft-Close**: Automatically extends auction time *once* by 2 minutes if a bid is placed in the final window, ensuring fair price discovery.
+- **Proxy Bidding (Auto-Max)**: Users can set a maximum bid, and the system automatically outbids competitors up to that limit.
 - **Proactive Alerts**: Firebase RTDB notifications for outbid status and custom target-price hits.
-- **Multimodal Onboarding**: Unauthenticated browsing with signup options via **Email, Google, or Phone (OTP)**.
+- **Bifurcated Onboarding**: Separate entry paths for **Personal** and **Business** accounts at signup, each with tailored UI themes (Charcoal vs Indigo).
 
 ## 2. Social Proof & Trust Architecture (StarMap)
 - **Trust Constellation (StarMap)**: A dynamic D3.js engine mapping the marketplace's "Social Fabric."
   - **Node Physics**: Nodes scaled by `reputationScore` with aura effects for Verified Merchants.
   - **Link Semantics**: Distinction between `SALE` (confirmed transaction) and `INTEREST` (shared bidding history).
   - **Interactive Discovery**: Floating tooltips and direct navigation to seller profiles via social nodes.
+- **eBay-style Performance Status**:
+  - **Top Rated Plus (Gold Shield)**: Earned by sellers with 10+ completed sales and a defect rate ≤ 5%. Provides 10% commission discounts.
+  - **Business Retailer (Indigo Shield)**: Professional account status for registered shops and bulk sellers.
 - **Elite Leaderboards**: Global stratification for performance-based badges and high-stakes trade recognition.
 - **Win-First Privacy**: Seller contact details are strictly hidden until an auction is won.
 
@@ -45,5 +50,6 @@ Nilamit is a high-performance, real-time C2C auction marketplace designed for tr
 ## 8. Admin Conflict Management
 - **Centralized Dispute Hub**: Real-time auditing of reported conflicts between Buyers and Sellers.
 - **Atomic Resolutions**: Direct administrative tools to release or refund funds using protected Firestore transactions.
-- **Dynamic Reputation Governance**: Automated reputation adjustments based on dispute outcomes.
+- **Dynamic Reputation Governance**: Automated reputation adjustments and **Defect Tracking** based on dispute outcomes.
 - **Global Health Metrics**: High-level monitoring of total users, bids, and revenue streams.
+- **Second Chance Management**: Tooling to monitor and validate private offers sent to underbidders.

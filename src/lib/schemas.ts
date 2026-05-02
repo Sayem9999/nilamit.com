@@ -51,18 +51,20 @@ const nameSchema = z
 // ─── Auth ──────────────────────────────────────────────────────────────────
 
 export const registerSchema = z.object({
-  name:      nameSchema,
-  email:     emailSchema,
-  password:  passwordSchema,
+  name:       nameSchema,
+  email:      emailSchema,
+  password:   passwordSchema,
+  isRetailer: z.boolean().default(false),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const phoneSignupSchema = z.object({
-  name:     nameSchema,
-  phone:    bdPhoneSchema,
-  otp:      otpSchema,
-  password: passwordSchema,
-  email:    emailSchema.optional(),
+  name:       nameSchema,
+  phone:      bdPhoneSchema,
+  otp:        otpSchema,
+  password:   passwordSchema,
+  email:      emailSchema.optional(),
+  isRetailer: z.boolean().default(false),
 });
 export type PhoneSignupInput = z.infer<typeof phoneSignupSchema>;
 

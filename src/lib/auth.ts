@@ -184,6 +184,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.userLevel        = user.userLevel ?? 1;
         token.xp               = user.xp ?? 0;
         token.winningStreak    = user.winningStreak ?? 0;
+        token.isRetailer       = user.isRetailer ?? false;
+        token.isTopRated       = user.isTopRated ?? false;
+        token.salesCount       = user.salesCount ?? 0;
+        token.defectCount      = user.defectCount ?? 0;
         token.phone            = user.phone ?? null;
         token.emailVerified    = user.emailVerified ?? null;
         token.lastDbRefresh    = Date.now();
@@ -209,6 +213,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.xp               = u.xp;
             token.winningStreak    = u.winningStreak;
             token.isBanned         = u.isBanned;
+            token.isRetailer       = u.isRetailer;
+            token.isTopRated       = u.isTopRated;
+            token.salesCount       = u.salesCount ?? 0;
+            token.defectCount      = u.defectCount ?? 0;
             token.phone            = u.phone ?? null;
             token.emailVerified    = u.emailVerified ?? null;
             token.lastDbRefresh    = Date.now();
@@ -239,6 +247,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.winningStreak    = token.winningStreak as any;
         session.user.phone            = token.phone as any;
         session.user.emailVerified    = token.emailVerified as any;
+        session.user.isRetailer       = token.isRetailer as any;
+        session.user.isTopRated       = token.isTopRated as any;
+        session.user.salesCount       = token.salesCount as any;
+        session.user.defectCount      = token.defectCount as any;
         /* eslint-enable @typescript-eslint/no-explicit-any */
       }
       return session;

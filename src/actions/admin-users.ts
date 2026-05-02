@@ -6,12 +6,11 @@ import { User } from '@/types';
 import { revalidatePath } from 'next/cache';
 import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
-export async function grantVerifiedSeller(userId: string, commissionRate: number = 5) {
+export async function grantVerifiedSeller(userId: string) {
   try {
     const session = await requireAdmin();
     await db.collection('users').doc(userId).update({
       isVerifiedSeller: true, 
-      commissionRate,
       updatedAt: new Date(),
     });
     

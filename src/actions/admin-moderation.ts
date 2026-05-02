@@ -1,9 +1,10 @@
 'use server';
 
-import { db, snapDocs } from '@/lib/db';
+import { db, snapDocs, FieldValue } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 import { Auction, User, Report } from '@/types';
+import { updateSellerPerformance } from '@/lib/seller-performance';
 import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 export async function getAdminReports(status?: string, page = 1, limit = 20) {
@@ -151,9 +152,20 @@ export async function suspendAuction(auctionId: string, reportId: string, reason
     const session = await requireAdmin();
 
     const batch = db.batch();
-    batch.update(db.collection('auctions').doc(auctionId), {
+    const aRef = db.collection('auctions').doc(auctionId);
+    const aSnap = await aRef.get();
+    const auctionData = aSnap.data();
+
+    batch.update(aRef, {
       status: 'CANCELLED', updatedAt: new Date(),
     });
+
+    if (auctionData?.sellerId) {
+      batch.update(db.collection('users').doc(auctionData.sellerId), {
+        defectCount: FieldValue.increment(1),
+        updatedAt: new Date(),
+      });
+    }
 
     if (reportId) {
       batch.update(db.collection('reports').doc(reportId), {
@@ -172,6 +184,11 @@ export async function suspendAuction(auctionId: string, reportId: string, reason
     });
 
     await batch.commit();
+
+    if (auctionData?.sellerId) {
+      await updateSellerPerformance(auctionData.sellerId);
+    }
+
     revalidatePath('/admin');
     return successResponse(null);
   } catch (e) {

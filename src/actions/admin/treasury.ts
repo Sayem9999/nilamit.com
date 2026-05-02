@@ -24,9 +24,9 @@ export async function getTreasuryAudit() {
   try {
     const data = await batchHydrateEscrowRows(txDocs);
     return successResponse(data);
-  } catch (_e) {
-    log.error('[admin] getTreasuryAudit failed', _e);
-    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch treasury audit');
+  } catch (e) {
+    log.error('[admin] getTreasuryAudit failed', e);
+    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Failed to fetch treasury audit');
   }
 }
 
@@ -47,8 +47,8 @@ export async function getAdminActiveEscrows() {
   try {
     const data = await batchHydrateEscrowRows(txDocs);
     return successResponse(data);
-  } catch (_e) {
-    log.error('[admin] getAdminActiveEscrows failed', _e);
-    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch active escrows');
+  } catch (e) {
+    log.error('[admin] getAdminActiveEscrows failed', e);
+    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Failed to fetch active escrows');
   }
 }

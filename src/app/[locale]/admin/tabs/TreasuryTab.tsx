@@ -42,9 +42,14 @@ export function TreasuryTab() {
       ]);
       if (auditRes.success && auditRes.data) {
         setLogs(auditRes.data as TreasuryLog[]);
+      } else if (!auditRes.success) {
+        toast.error(auditRes.error?.message || "Failed to load treasury audit");
       }
+
       if (escrowRes.success && escrowRes.data) {
         setActiveEscrows(escrowRes.data as ActiveEscrow[]);
+      } else if (!escrowRes.success) {
+        toast.error(escrowRes.error?.message || "Failed to load active escrows");
       }
     } catch (e: unknown) {
       console.error(e);

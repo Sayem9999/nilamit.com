@@ -127,16 +127,13 @@ export function AdminLayout({
       <main className="flex-1 p-4 lg:p-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto">
           {activeTab === "overview" && overview}
-          {activeTab === "live" && (live || <Placeholder tab="Live Monitor" />)}
-          {activeTab === "moderation" &&
-            (moderation || <Placeholder tab="Moderation" />)}
-          {activeTab === "metrics" &&
-            (metrics || <Placeholder tab="Metrics" />)}
-          {activeTab === "content" &&
-            (content || <Placeholder tab="Content" />)}
-          {activeTab === "users" && (users || <Placeholder tab="Users" />)}
-          {activeTab === "treasury" && (treasury || <Placeholder tab="Treasury" />)}
-          {activeTab === "disputes" && (disputes || <Placeholder tab="Disputes" />)}
+          {activeTab === "live" && live}
+          {activeTab === "moderation" && moderation}
+          {activeTab === "metrics" && metrics}
+          {activeTab === "content" && content}
+          {activeTab === "users" && users}
+          {activeTab === "treasury" && treasury}
+          {activeTab === "disputes" && disputes}
           {activeTab === "system" && system}
         </div>
       </main>
