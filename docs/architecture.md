@@ -39,42 +39,38 @@ Browser (React 19)
 
 ### Layer 2 — Server Actions (`src/actions/`)
 
-Thin controllers. Each action:
-1. Calls `auth()` to verify session
-2. Validates input through a Zod schema from `src/lib/schemas.ts`
-3. Calls the appropriate Service or library function
-4. Calls `revalidatePath()` on success
-5. Returns a typed `ServiceResponse<T>` — never throws to the client
+Thin controllers acting as the API boundary. Each action:
+1. Calls `auth()` or `requireAdmin()` to verify session/permissions.
+2. Validates input through a Zod schema from `src/lib/schemas.ts`.
+3. Delegates business logic to the appropriate Domain Service.
+4. Calls `revalidatePath()` or `revalidateTag()` on success.
+5. Returns a standardized `ServiceResponse<T>` — never throws to the client.
 
-Actions never contain business logic. They are the authentication and validation boundary.
+**Scalability Pattern:** Large action files (like `admin.ts`) are decomposed into domain-specific modules in sub-directories (e.g., `src/actions/admin/stats.ts`, `src/actions/admin/disputes.ts`) and unified via barrel exports.
 
 ### Layer 3 — Domain Services (`src/services/`)
 
-Stateless business logic, decoupled from the HTTP layer:
+Pure business logic, decoupled from the HTTP/Action layer:
 
-- **`BiddingService`** — `placeBid()` runs a serializable Firestore transaction. All bid validation, anti-snipe extension, and denormalization of `currentPrice`/`currentBidderId` onto the auction document happen here atomically.
-- **`AuctionService`** — listing queries with cursor pagination, single-auction fetch with **Authorized PII Gating** (identity-aware hydration of seller/winner profiles).
+- **`BiddingService`** — Handles atomic bid placement, anti-snipe extensions, and denomination logic.
+- **`AdminService`** — Centralizes administrative logic: dashboard aggregations, manual escrow overrides, and user verification workflows.
+- **`AuctionService`** — Manages complex listing queries, filtering, and PII-aware hydration.
 
-Services are also called directly by cron routes.
+Services are designed to be callable by Server Actions, Cron routes, and background workers alike.
 
 ### Layer 4 — Infrastructure (`src/lib/`)
 
 | File | Responsibility |
 |---|---|
-| `auth.ts` | NextAuth config, inline FirestoreAdapter (JWT strategy), session/JWT callbacks |
-| `auth.config.ts` | Edge-safe NextAuth subset used in middleware |
-| `admin-guard.ts` | Single `requireAdmin()` guard — all admin actions import from here |
-| `db.ts` | Firestore proxy singleton, `docData()`, `snapDocs()`, `newId()`, `toSellerPublic()` |
-| `firebase-admin.ts` | Admin SDK init (throws on missing secrets), `rtdbPush()`, `rtdbSet()` |
-| `firebase-client.ts` | Browser SDK for Auth, Storage, Analytics |
+| `auth.ts` | NextAuth config, FirestoreAdapter (JWT strategy), session synchronization |
+| `admin-guard.ts` | Hardened `requireAdmin()` guard — verifies session against real-time DB state |
+| `db.ts` | Firestore proxy singleton and document mapping utilities |
+| `logger.ts` | Structured logging with Sentry integration and performance tracing |
 | `ratelimit.ts` | Upstash-backed limiters — fail-closed in production |
-| `auction-logic.ts` | `processAuctionSale()` — reserve check, commission calc, escrow creation, winner notification |
-| `schemas.ts` | All Zod schemas for trust-boundary inputs |
-| `sanitizer.ts` | HTML/XSS stripping via DOMPurify |
-| `pii-filter.ts` | Phone/email/bypass-keyword redaction in public text |
-| `errors.ts` | `ServiceResponse<T>`, `errorResponse()`, `successResponse()`, `ErrorType` enum |
-| `env.ts` | Zod env validation — soft-fails during build, throws at runtime |
-| `cron-utils.ts` | `verifyCronSecret()`, `withRetry()`, `cronSuccess()`, `cronError()` |
+| `auction-logic.ts` | Core sale processing: commissions, escrow creation, and notifications |
+| `schemas.ts` | Centralized Zod validation schemas for all platform entry points |
+| `errors.ts` | Standardized `ServiceResponse<T>` and `AppError` architecture |
+| `env.ts` | Robust environment validation and sanitization for production secrets |
 
 ---
 

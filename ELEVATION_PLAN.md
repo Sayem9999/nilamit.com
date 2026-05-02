@@ -25,3 +25,11 @@ This document outlines the strategic roadmap for hardening the Nilamit platform 
 ### Phase 4: Financial Integrity & Reporting (COMPLETED)
 - [x] **Automated Invoicing**: Generate PDF invoices for winners and commission reports for sellers.
 - [x] **Revenue Dashboard**: Real-time charts showing platform earnings and daily GMV.
+
+### Phase 5: Production-Grade Architectural Hardening (COMPLETED)
+- [x] **Service-Layer Refactor**: Decouple business logic from Server Actions into `src/services/`.
+- [x] **Modular Domain Design**: Break down monolithic action and type files into domain-specific sub-modules.
+- [x] **Hardened Authorization**: Implement real-time DB-backed `requireAdmin` verification.
+- [x] **Structured Observability**: Deploy leveled logging with Sentry integration and performance tracing.
+- [x] **Environment Resiliency**: Standardize Zod-based config validation and aggressive URL sanitization.
+

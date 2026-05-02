@@ -22,10 +22,11 @@ Nilamit is a financial marketplace handling real money (bKash/Nagad escrow). The
 Every request passes through four security layers before touching data:
 
 ```
-1. Middleware         → ban check, auth redirect, i18n routing
-2. Server Action      → session check, Zod validation, rate limiting
-3. Service layer      → business rule enforcement, ownership checks
-4. Firestore rules    → all client writes blocked unconditionally
+1. Middleware         → Ban check, auth redirect, i18n routing
+2. Auth Guard         → Real-time DB check for admin/ban status (src/lib/admin-guard.ts)
+3. Server Action      → Session check, Zod validation, rate limiting
+4. Service Layer      → Business rule enforcement, ownership checks
+5. Firestore Rules    → All client writes blocked unconditionally
 ```
 
 ---
@@ -36,15 +37,17 @@ Every request passes through four security layers before touching data:
 
 Auth.js v5 with JWT strategy. Sessions are stateless (not stored in DB). The JWT is signed with `AUTH_SECRET` (32+ byte random value, validated at startup).
 
-### Token Refresh
+### Token Refresh & Synchronization
 
 The JWT callback re-reads the user document from Firestore every **5 minutes** (or on `trigger === 'update'`). This ensures security-critical fields (`isBanned`, `isPhoneVerified`, `isVerifiedSeller`) propagate within 5 minutes of an admin action.
 
-### Admin Authorization
+### Admin Authorization (Hardened)
 
-Admin status is **derived exclusively from the `ADMIN_EMAILS` environment variable** — never from user-supplied data or a database field. The `requireAdmin()` function in `src/lib/admin-guard.ts` is the single canonical gate. It normalizes email to lowercase before comparison.
+Admin status is **derived exclusively from the `ADMIN_EMAILS` environment variable**—never from user-supplied data or a database field. 
 
-All admin-only Server Actions call `requireAdmin()`. Inline re-implementations of the admin check are prohibited.
+**Hardened Security Gate:** The `requireAdmin()` function in `src/lib/admin-guard.ts` performs a mandatory **live database check** before granting access to sensitive actions. This ensures that if an administrator is banned or their role is revoked, their access is terminated immediately, even if their session JWT is still valid.
+
+All admin-only Server Actions call `requireAdmin()`. Inline re-implementations of the admin check are strictly prohibited.
 
 ### Password Hashing
 

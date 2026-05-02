@@ -51,17 +51,28 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```
 src/
-├── actions/        # Server Actions — auth gate, validation, revalidation
-├── services/       # Domain logic — BiddingService, AuctionService
+├── actions/        # API entry points (Server Actions) — auth gate, validation, revalidation
+│   ├── admin/      # Modular administrative actions (Stats, Disputes, Treasury, etc.)
+├── services/       # Pure business logic — AdminService, BiddingService, AuctionService
 ├── app/            # App Router — pages, API routes, cron endpoints
 │   ├── [locale]/   # i18n-wrapped pages (en/bn)
 │   └── api/        # REST endpoints (upload, cron, health, firebase token)
-├── components/     # React components — domain-driven, memoized
-├── lib/            # Infrastructure — auth, db, rate-limiting, sanitization
+├── components/     # React components — domain-driven, memoized, lazy-loaded
+├── lib/            # Infrastructure — auth, db, ratelimit, logger, sanitization
+├── types/          # Domain-driven modular type system (enums, user, auction, finance, etc.)
 ├── hooks/          # Custom hooks — useAuctionBids, useSound
-├── context/        # React context — SettingsContext
-└── types/          # Shared TypeScript types
+└── context/        # React context — SettingsContext
 ```
+
+---
+
+## Architecture & Scalability
+
+Nilamit v2.0 implements a **Service-Layer Architecture** to ensure long-term maintainability:
+- **Modular Server Actions**: Large action files are split into domain-specific modules with barrel-export patterns.
+- **Pure Service Layer**: Complex business logic is decoupled from the UI layer into dedicated services, facilitating easier unit testing and reuse in background jobs.
+- **Domain-Driven Types**: A structured type system replaces monolithic type definitions, reducing circular dependencies and improving build performance.
+- **Production-Grade Observability**: Integrated structured logging with Sentry integration and performance tracing across critical bidding paths.
 
 ---
 
