@@ -71,7 +71,7 @@ export default function AdminLiveFeed() {
 
     // Fetch initial stats
     getAdminStats().then(res => {
-      if (res.success) setStats(res.data);
+      if (res.success && res.data) setStats(res.data);
     });
 
     return () => {

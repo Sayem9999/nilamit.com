@@ -183,14 +183,14 @@ export default async function DashboardPage({
   } else if (currentTab === "escrow") {
     const res = await EscrowService.getBuyerEscrows(userId);
     if (res.success) {
-      escrowTransactions = res.data;
+      escrowTransactions = res.data ?? [];
     }
 
   // ─── COORDINATION HUB ──────────────────────────────────────────────────────
   } else if (currentTab === "coordination") {
     const res = await CoordinationService.getActiveCoordination(userId);
     if (res.success) {
-      coordinationItems = res.data;
+      coordinationItems = res.data ?? [];
     }
   }
 
@@ -434,7 +434,7 @@ export default async function DashboardPage({
                     {escrowTransactions.map((tx) => (
                       <EscrowActionCard 
                         key={tx.id} 
-                        transaction={tx as EscrowListItem} 
+                        transaction={tx as HydratedEscrowTransaction} 
                         treasuryNumbers={{
                           bkash: systemConfig.treasuryBkash,
                           nagad: systemConfig.treasuryNagad

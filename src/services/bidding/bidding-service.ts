@@ -65,13 +65,13 @@ export class BiddingService {
           title: string;
         };
         const now     = new Date();
-        const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
+        const endTime = (auction.endTime as { toDate?: () => Date })?.toDate ? (auction.endTime as { toDate: () => Date }).toDate() : new Date(auction.endTime as string | number | Date);
         const increment = auction.minBidIncrement ?? 10;
 
         validateBidPreconditions({
           auctionStatus:   auction.status,
           endTime,
-          startTime:       auction.startTime,
+          startTime:       auction.startTime as Date | string,
           sellerId:        auction.sellerId,
           bidderId:        userId,
           currentPrice:    auction.currentPrice,
@@ -169,7 +169,7 @@ export class BiddingService {
           antiSnipeTriggered,
           prevBidderId,
           auctionTitle:    auction.title,
-          auctionStartTime: auction.startTime?.toDate ? auction.startTime.toDate() : new Date(auction.startTime),
+          auctionStartTime: (auction.startTime as { toDate?: () => Date })?.toDate ? (auction.startTime as { toDate: () => Date }).toDate() : new Date(auction.startTime as string | number | Date),
           sellerId:        auction.sellerId,
         };
       });

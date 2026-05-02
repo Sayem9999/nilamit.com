@@ -25,6 +25,7 @@ export const EscrowStatus = {
   REFUNDED:         'REFUNDED',
   DISPUTED:         'DISPUTED',
   FEE_REFUNDED:     'FEE_REFUNDED',
+  VERIFICATION_PENDING: 'VERIFICATION_PENDING',
 } as const;
 export type EscrowStatus = typeof EscrowStatus[keyof typeof EscrowStatus];
 

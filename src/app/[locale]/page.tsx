@@ -15,10 +15,7 @@ export default async function HomePage({
     trendingRes,
     specializedRes,
     featuredRes,
-    totalUsersSnap,
-    totalBidsSnap,
-    totalAuctionsSnap,
-    verifiedSellersSnap,
+    globalStatsSnap,
   ] = await Promise.all([
     getAuctions({ sortBy: "bids", sortOrder: "desc", limit: 8 }),
     getSpecializedFeeds(),
@@ -31,7 +28,7 @@ export default async function HomePage({
   const latestBids = specializedRes.success ? specializedRes.data!.latestBids : [];
   const featuredAuctions = featuredRes.success ? featuredRes.data!.auctions : [];
 
-  const statsData = specializedRes.success ? (totalUsersSnap.data() || {}) : {};
+  const statsData = (globalStatsSnap.exists ? globalStatsSnap.data() : {}) || {};
   const totalUsers = Number(statsData.totalUsers ?? 0);
   const totalBids = Number(statsData.totalBids ?? 0);
   const totalAuctions = Number(statsData.totalAuctions ?? 0);

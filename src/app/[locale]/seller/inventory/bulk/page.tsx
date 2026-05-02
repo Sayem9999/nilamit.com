@@ -46,7 +46,7 @@ export default function BulkUploadPage() {
       skipEmptyLines: true,
       complete: (results) => {
         // Map CSV headers to our schema
-        const mapped = results.data.map((row: Record<string, string>) => ({
+        const mapped = (results.data as Record<string, string>[]).map((row) => ({
           title: row.title,
           description: row.description,
           category: row.category?.toLowerCase() || 'electronics',
@@ -79,7 +79,7 @@ export default function BulkUploadPage() {
         if (res.data!.failureCount === 0) {
           toast.success('All items listed successfully!');
         } else {
-          toast.warning(`Completed with ${res.data!.failureCount} failures.`);
+          toast(`Completed with ${res.data!.failureCount} failures.`, { icon: '⚠️' });
         }
       } else {
         toast.error(res.error?.message || 'Bulk upload failed');

@@ -17,7 +17,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import Link from "next/link";
-import { formatBDT } from "@/lib/utils";
+import { formatBDT } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 

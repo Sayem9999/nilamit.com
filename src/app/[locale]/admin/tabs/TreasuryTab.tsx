@@ -12,6 +12,7 @@ interface TreasuryLog {
   amount: number;
   verificationType: string;
   providerRef: string | null;
+  status: string;
   auction: { 
     title: string;
     seller: { name: string | null; phone: string | null };

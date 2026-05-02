@@ -131,7 +131,7 @@ export default async function CoordinationPage({
                   ...conversation.auction.escrowTransaction!,
                   auction: {
                     title: conversation.auction.title,
-                    seller: { name: conversation.auction.seller.name },
+                    seller: { name: conversation.auction.seller.name, image: conversation.auction.seller.image },
                     endTime: conversation.auction.endTime
                   }
                 }} 

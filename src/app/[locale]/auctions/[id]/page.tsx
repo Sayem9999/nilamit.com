@@ -36,7 +36,7 @@ import { ReviewForm } from "@/components/review/ReviewForm";
 import { ReportModal } from "@/components/auction/ReportModal";
 import ChatInterface from "@/components/social/ChatInterface";
 
-import { AuctionWithBids } from "@/types";
+import { AuctionWithBids, Bid } from "@/types";
 import { auth } from "@/lib/auth";
 import { WatchlistButton } from "@/components/auction/WatchlistButton";
 import { isWatched } from "@/actions/watchlist";

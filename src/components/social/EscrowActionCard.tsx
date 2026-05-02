@@ -1,10 +1,11 @@
+'use client';
+
 import { HydratedEscrowTransaction } from "@/types/finance";
 import { EscrowStatus } from "@/types/enums";
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { payEscrowAdvance, confirmItemReceived } from "@/actions/escrow";
-import { raiseDispute } from "@/actions/dispute";
 import { ShieldCheck, Clock, CreditCard, AlertTriangle, MessageSquare } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -291,7 +292,7 @@ export function EscrowActionCard({
         onSuccess={handlePaymentSuccess}
         amount={transaction.amount > 100000 ? 250 : 0} // Logic for advance (Current threshold check)
         provider={paymentProvider}
-        merchantNumber={paymentProvider === 'bkash' ? treasuryNumbers.bkash : treasuryNumbers.nagad}
+        merchantNumber={(paymentProvider === 'bkash' ? treasuryNumbers?.bkash : treasuryNumbers?.nagad) || ""}
       />
 
       <DisputeModal 

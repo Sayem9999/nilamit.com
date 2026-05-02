@@ -3,7 +3,7 @@
 import { useTransition } from 'react';
 import { triggerSecondChanceOffer } from '@/actions/auction';
 import { RefreshCw, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 
 interface SecondChanceButtonProps {
   auctionId: string;
