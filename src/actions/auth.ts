@@ -35,7 +35,7 @@ export async function registerUser(data: unknown) {
     await ref.set({
       id: ref.id, name, email,
       password: hashedPassword, emailVerified: null, image: null, phone: null,
-      isPhoneVerified: false, isVerifiedSeller: false, reputationScore: 0,
+      isPhoneVerified: false, isVerifiedSeller: false, rating: 3.5, ratingCount: 0,
       winningStreak: 0, userLevel: 1, createdAt: now, updatedAt: now,
     });
 
@@ -77,7 +77,7 @@ export async function signupWithPhone(data: unknown) {
       id: ref.id, name, phone: normalizedPhone, password: hashedPassword,
       email: email ?? null,
       emailVerified: null, image: null,
-      isPhoneVerified: true, isVerifiedSeller: false, reputationScore: 0,
+      isPhoneVerified: true, isVerifiedSeller: false, rating: 3.5, ratingCount: 0,
       winningStreak: 0, userLevel: 1, createdAt: now, updatedAt: now,
     });
     return successResponse(null);

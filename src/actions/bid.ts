@@ -6,7 +6,6 @@ import { headers } from 'next/headers';
 import { bidLimiter } from '@/lib/ratelimit';
 import { ERROR_CODES } from '@/lib/constants';
 import { BiddingService } from '@/services/bidding/bidding-service';
-import { processAuctionSale } from '@/lib/auction-logic';
 import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
 
@@ -48,14 +47,48 @@ export async function placeBid(auctionId: string, amount: number) {
     if (!privileges.success) return privileges as ServiceResponse<never>;
     const user = privileges.data!;
 
-    // Elite deposit check
-    if (amount >= 100000 && !user.isVerifiedSeller) {
-      const depositSnap = await db.collection('bidDeposits')
-        .where('bidderId', '==', userId)
-        .where('auctionId', '==', auctionId)
-        .where('status', '==', 'held')
-        .limit(1).get();
-      if (depositSnap.empty) return errorResponse(ErrorType.FORBIDDEN, 'Elite deposit required', ERROR_CODES.ELITE_DEPOSIT_REQUIRED);
+    // ─── TIER 2: MFS Linkage Check (৳50,000+) ────────────────────────────────
+    // Deter "fun bidders" by requiring a traceable payment account linked.
+    if (amount >= 50000 && !user.bkashNumber && !user.nagadNumber) {
+      return errorResponse(
+        ErrorType.FORBIDDEN,
+        'MFS account linkage required for high-stake bidding (৳50,000+). Please link bKash or Nagad in your profile.',
+        ERROR_CODES.MFS_LINKAGE_REQUIRED
+      );
+    }
+
+    // ─── TIER 3: Elite Trust Gate (৳150,000+) ────────────────────────────────
+    // For very high-value items, we require the user to be a "Vetted Seller"
+    // OR have high performance metrics (Rating + Volume).
+    const ELITE_THRESHOLD = 150000;
+    const MIN_RATING = 4.5;
+    const MIN_SALES = 5;
+
+    if (amount >= ELITE_THRESHOLD) {
+      const isVetted = user.isVerifiedSeller;
+      const currentRating = (user.rating as number) ?? 0;
+      const salesCount = (user.ratingCount as number) ?? 0;
+
+      // Trust Waiver Check
+      if (!isVetted && (currentRating < MIN_RATING || salesCount < MIN_SALES)) {
+        // Fallback: Check for a 1% Security Deposit
+        const requiredDeposit = Math.floor(amount * 0.01);
+        const depositSnap = await db.collection('bidDeposits')
+          .where('bidderId', '==', userId)
+          .where('auctionId', '==', auctionId)
+          .where('status', '==', 'held')
+          .get();
+
+        const totalHeld = depositSnap.docs.reduce((acc, doc) => acc + (doc.data().amount || 0), 0);
+
+        if (totalHeld < requiredDeposit) {
+          return errorResponse(
+            ErrorType.FORBIDDEN, 
+            `Elite auctions (৳150k+) require a 4.5★ rating or a 1% security deposit (৳${requiredDeposit.toLocaleString()}).`, 
+            ERROR_CODES.ELITE_DEPOSIT_REQUIRED
+          );
+        }
+      }
     }
 
     // Execute with high-level retry logic for contention handling

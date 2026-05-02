@@ -25,7 +25,7 @@ export async function getLeaderboardData() {
   });
 
   const buyersSnap = await db.collection('users')
-    .orderBy('reputationScore', 'desc')
+    .orderBy('rating', 'desc')
     .limit(5)
     .get();
 
@@ -36,7 +36,7 @@ export async function getLeaderboardData() {
       name: data.name,
       image: data.image,
       badges: data.badges || [],
-      _count: { auctionsAsWinner: data.reputationScore || 0 },
+      rating: data.rating || 3.5,
     };
   });
 
@@ -97,7 +97,7 @@ export default async function Leaderboard() {
       <Card>
         <CardHeader className="flex flex-row items-center gap-2 pb-2">
           <Trophy className="w-5 h-5 text-yellow-500" />
-          <CardTitle className="text-lg">Top Buyers</CardTitle>
+          <CardTitle className="text-lg">Top Rated Members</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="space-y-4">
@@ -125,7 +125,7 @@ export default async function Leaderboard() {
                 </div>
                 <div className="flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-600 dark:text-yellow-400 px-2.5 py-1 rounded-full text-sm font-bold">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  {user._count.auctionsAsWinner} Won
+                  {user.rating.toFixed(1)} ★
                 </div>
               </li>
             ))}

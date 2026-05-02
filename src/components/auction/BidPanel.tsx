@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef } from "react";
+import { useState, useTransition, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { placeBid, executeBuyItNow } from "@/actions/bid";
 import confetti from "canvas-confetti";
@@ -26,6 +26,7 @@ import { VerificationGuard } from "../auth/VerificationGuard";
 import dynamic from "next/dynamic";
 const PhoneVerificationPrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.PhoneVerificationPrompt), { ssr: false });
 const MFSLinkagePrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.MFSLinkagePrompt), { ssr: false });
+const EliteBarrierPrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.EliteBarrierPrompt), { ssr: false });
 import { ViewerCount } from "./ViewerCount";
 
 interface BidPanelProps {
@@ -84,6 +85,7 @@ export function BidPanel({
   const [result, setResult] = useState<ServiceResponse<PlaceBidResult | null> | null>(null);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showMFSModal, setShowMFSModal] = useState(false);
+  const [showEliteModal, setShowEliteModal] = useState(false);
 
   // Track previous bid count via ref so we only fire the gavel on an actual
   // increase. Depending on `playGavel` would re-fire whenever useSound returns
@@ -102,13 +104,13 @@ export function BidPanel({
   }, [newBids, playGavel, optimisticBid]);
 
 
-  const quickBids = [
+  const quickBids = useMemo(() => [
     minBid,
     minBid + minBidIncrement * 2,
     minBid + minBidIncrement * 5,
-  ];
+  ], [minBid, minBidIncrement]);
 
-  const handleBid = () => {
+  const handleBid = useCallback(() => {
     if (isPending) return;
     if (!session) {
       if (typeof window !== "undefined") {
@@ -117,7 +119,6 @@ export function BidPanel({
       return;
     }
     
-    // 🟢 Optimistic UI Pre-Validation: Catch errors instantly before 3G network roundtrip
     if (bidAmount < minBid) {
       setResult({
         success: false,
@@ -130,7 +131,6 @@ export function BidPanel({
       return;
     }
 
-    // ⚡ Optimistic UI: Update locally before server response
     setOptimisticBid(bidAmount);
     playGavel();
 
@@ -148,9 +148,7 @@ export function BidPanel({
 
         setBidAmount(bidAmount + minBidIncrement);
         onBidPlaced?.();
-        // We don't clear optimisticBid here; we wait for the RTDB hook to sync it
       } else {
-        // 🚨 Rollback on error
         setOptimisticBid(null);
         
         if (res.error?.code === ERROR_CODES.PHONE_NOT_VERIFIED) {
@@ -162,14 +160,18 @@ export function BidPanel({
           setBidAmount(newMin);
         }
         
-        if (res.error?.code === "MFS_LINKAGE_REQUIRED" || res.error?.code === ERROR_CODES.ELITE_DEPOSIT_REQUIRED) {
+        if (res.error?.code === "MFS_LINKAGE_REQUIRED") {
           setShowMFSModal(true);
+        }
+
+        if (res.error?.code === ERROR_CODES.ELITE_DEPOSIT_REQUIRED) {
+          setShowEliteModal(true);
         }
       }
     });
-  };
+  }, [isPending, session, bidAmount, minBid, playGavel, auctionId, minBidIncrement, onBidPlaced]);
 
-  const handleBuyItNow = () => {
+  const handleBuyItNow = useCallback(() => {
     if (isPending) return;
     if (!session) {
       if (typeof window !== "undefined") {
@@ -196,9 +198,9 @@ export function BidPanel({
         onBidPlaced?.();
       }
     });
-  };
+  }, [isPending, session, buyItNowPrice, auctionId, playGavel, onBidPlaced]);
 
-  const isOwnAuction = session?.user?.id === sellerId;
+  const isOwnAuction = useMemo(() => session?.user?.id === sellerId, [session?.user?.id, sellerId]);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -346,6 +348,13 @@ export function BidPanel({
 
       {showPhoneModal && <PhoneVerificationPrompt onClose={() => setShowPhoneModal(false)} />}
       {showMFSModal && <MFSLinkagePrompt onClose={() => setShowMFSModal(false)} />}
+      {showEliteModal && (
+        <EliteBarrierPrompt 
+          onClose={() => setShowEliteModal(false)} 
+          auctionId={auctionId}
+          amount={Number(bidAmount)}
+        />
+      )}
     </div>
   );
 }

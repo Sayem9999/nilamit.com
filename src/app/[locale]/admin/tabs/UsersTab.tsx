@@ -19,7 +19,8 @@ export function UsersTab() {
     image: string | null;
     isVerifiedSeller: boolean;
     isPhoneVerified: boolean;
-    reputationScore: number;
+    rating: number;
+    ratingCount: number;
     createdAt: Date;
     _count: { bids: number };
     isBanned: boolean;
@@ -146,10 +147,13 @@ export function UsersTab() {
                   Phone
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">
-                  Rep
+                  Rating
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">
-                  Activity
+                  Trades
+                </th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500">
+                  Bids
                 </th>
                 <th className="text-right px-4 py-3 font-medium text-gray-500">
                   Verified Seller
@@ -206,11 +210,17 @@ export function UsersTab() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-700 font-medium">
-                    {user.reputationScore}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-gray-900">{user.rating}</span>
+                      <span className="text-amber-400">★</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {user.ratingCount}
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-xs">
-                    {user._count.bids} bids
+                    {user._count.bids}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button

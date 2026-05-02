@@ -257,7 +257,7 @@ export class AuctionService {
           .get(),
         db.collection('bids')
           .orderBy('createdAt', 'desc')
-          .limit(100)
+          .limit(40) // Reduced from 100; highly active platform should have 10 active auctions in last 40 bids
           .get(),
       ]);
 

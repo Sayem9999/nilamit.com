@@ -111,21 +111,28 @@ export async function getAdminUsers(opts: {
     const pageDocs = hasMore ? allDocs.slice(0, limit) : allDocs;
     const nextCursor = hasMore ? pageDocs[pageDocs.length - 1].id : null;
 
-    const users = pageDocs.map((d) => ({ ...(d.data() as Record<string, unknown>), id: d.id })) as unknown as User[];
-
-    const pagedUsers = await Promise.all(users.map(async (user) => {
+    const pagedUsers = await Promise.all(pageDocs.map(async (doc) => {
+      const data = doc.data()!;
       const [bidCountSnap, auctionCountSnap] = await Promise.all([
-        db.collection('bids').where('bidderId', '==', user.id).count().get(),
-        db.collection('auctions').where('sellerId', '==', user.id).count().get(),
+        db.collection('bids').where('bidderId', '==', doc.id).count().get(),
+        db.collection('auctions').where('sellerId', '==', doc.id).count().get(),
       ]);
 
       return {
-        ...user,
+        id: doc.id,
+        name: (data.name as string) ?? null,
+        email: (data.email as string) ?? null,
+        image: (data.image as string) ?? null,
+        isVerifiedSeller: !!data.isVerifiedSeller,
+        isPhoneVerified: !!data.isPhoneVerified,
+        rating: (data.rating as number) ?? 0,
+        ratingCount: (data.ratingCount as number) ?? 0,
+        isBanned: !!data.isBanned,
+        createdAt: data.createdAt instanceof db.Timestamp ? data.createdAt.toDate() : new Date(data.createdAt as string),
         _count: {
           bids: bidCountSnap.data().count,
           auctionsAsSeller: auctionCountSnap.data().count,
         },
-        password: undefined,
       };
     }));
 

@@ -22,8 +22,9 @@ export function VerificationGuard({ children }: VerificationGuardProps) {
   const [showModal, setShowModal] = useState(false);
   const t = useTranslations("Auth");
 
-  // Check verification status
-  const isVerified = session?.user?.isPhoneVerified || !!session?.user?.emailVerified;
+  // Check verification and restriction status
+  const isBanned = session?.user?.isBanned;
+  const isVerified = (session?.user?.isPhoneVerified || !!session?.user?.emailVerified) && !isBanned;
 
   const handleClick = (e: React.MouseEvent) => {
     if (!session) {
@@ -65,10 +66,10 @@ export function VerificationGuard({ children }: VerificationGuardProps) {
             {/* Content */}
             <div className="p-8 text-center shadow-none">
               <h2 className="text-2xl font-heading font-bold text-gray-900 mb-2 shadow-none">
-                {t("verificationRequired")}
+                {isBanned ? t("accountRestricted") : t("verificationRequired")}
               </h2>
               <p className="text-gray-500 mb-8 shadow-none">
-                {t("verificationDesc")}
+                {isBanned ? t("bannedDesc") : t("verificationDesc")}
               </p>
 
               <div className="space-y-4 mb-8 shadow-none">

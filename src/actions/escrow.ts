@@ -6,7 +6,7 @@ import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
-import { recalculateUserReputation } from '@/lib/reputation';
+import { recalculateUserRating } from '@/lib/rating';
 import { createLogisticsOrder } from './logistics';
 import { log } from '@/lib/logger';
 import { randomUUID } from 'crypto';
@@ -116,8 +116,8 @@ export async function confirmItemReceived(transactionId: string) {
 
     if (sellerId) {
       await Promise.all([
-        recalculateUserReputation(sellerId),
-        recalculateUserReputation(session.user.id),
+        recalculateUserRating(sellerId),
+        recalculateUserRating(session.user.id),
         rtdbPush(RTDB_PATHS.userNotifications(sellerId), {
           event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Sale confirmed! Funds released.',
         }),

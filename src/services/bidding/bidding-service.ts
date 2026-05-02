@@ -145,7 +145,6 @@ export class BiddingService {
       );
 
       return {
-        success: true,
         bid: { id: txResult.bidId, amount, auctionId, bidderId: userId, createdAt: new Date() },
         newEndTime: txResult.newEndTime,
         antiSnipeTriggered: txResult.antiSnipeTriggered,

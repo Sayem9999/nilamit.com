@@ -69,7 +69,8 @@ export default function ProfilePage() {
   const user = (session.user as any) as { 
     id: string; 
     isPhoneVerified: boolean; 
-    reputationScore: number; 
+    rating: number; 
+    ratingCount: number;
     phone?: string; 
     email?: string;
     bkashNumber?: string;
@@ -270,7 +271,8 @@ export default function ProfilePage() {
                 {t_prof("reputationRank")}
               </p>
               <TrustBadge 
-                score={(user?.reputationScore as number) || 0} 
+                rating={(user?.rating as number) || 3.5} 
+                ratingCount={(user?.ratingCount as number) || 0}
                 size="lg"
               />
             </div>
@@ -279,7 +281,7 @@ export default function ProfilePage() {
                 {t_prof("trustPoints")}
               </p>
               <p className="text-2xl font-black text-gray-900 leading-none">
-                {(user?.reputationScore as number) || 0}
+                {((user?.rating as number) || 3.5).toFixed(1)} ★
               </p>
             </div>
           </div>

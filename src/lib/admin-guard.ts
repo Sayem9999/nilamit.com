@@ -7,6 +7,7 @@
 
 import 'server-only';
 import { auth } from '@/lib/auth';
+import { db } from '@/lib/db';
 import type { Session } from 'next-auth';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
@@ -25,15 +26,26 @@ export type AdminSession = Session & {
 
 /**
  * Throws an Error if the current session user is not an admin.
- * Returns the session (narrowed to non-null user) for convenience.
+ * Performs a mandatory database check to verify the role and ensures 
+ * the user is not banned, preventing JWT persistence bypass.
  */
 export async function requireAdmin(): Promise<AdminSession> {
   const session = await auth();
+  const userId = session?.user?.id;
   const userEmail = session?.user?.email?.toLowerCase();
 
-  if (!session?.user?.id || !userEmail || !ADMIN_EMAILS.includes(userEmail)) {
+  if (!userId || !userEmail || !ADMIN_EMAILS.includes(userEmail)) {
     throw new Error('Unauthorized: Admin access required.');
   }
+
+  // Mandatory DB verify — prevents stale JWTs from accessing admin functions
+  const userSnap = await db.collection('users').doc(userId).get();
+  const userData = userSnap.data();
+
+  if (!userSnap.exists || userData?.isBanned || !ADMIN_EMAILS.includes(userData?.email?.toLowerCase() || '')) {
+    throw new Error('Unauthorized: Admin privileges revoked or account restricted.');
+  }
+
   return session as AdminSession;
 }
 

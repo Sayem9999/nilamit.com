@@ -7,6 +7,7 @@ import { filterPII } from '@/lib/pii-filter';
 import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import type { Review, ReviewWithDetails } from '@/types';
+import { recalculateUserRating } from '@/lib/rating';
 
 export async function submitReview({
   auctionId, toId, rating, comment,
@@ -34,26 +35,15 @@ export async function submitReview({
   const review = {
     id: reviewId, auctionId, fromId, toId,
     rating: clampedRating,
-    comment: filterPII(comment) || null,
+    comment: comment?.trim() ? filterPII(comment) : null,
     createdAt: now,
   };
 
   try {
     await db.collection('reviews').doc(reviewId).set(review);
 
-    // Reputation: cap at the 100 most recent reviews to avoid unbounded scans.
-    // The formula rewards both quality (avg) and volume (log-scaled count).
-    const allReviewsSnap = await db.collection('reviews')
-      .where('toId', '==', toId)
-      .orderBy('createdAt', 'desc')
-      .limit(100)
-      .get();
-
-    const ratings  = allReviewsSnap.docs.map(d => d.data().rating as number);
-    const avg      = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
-    const newScore = Math.round((avg * 15) + (Math.log10(ratings.length + 1) * 20));
-
-    await db.collection('users').doc(toId).update({ reputationScore: newScore, updatedAt: now });
+    // Re-calculate the recipient's star rating
+    await recalculateUserRating(toId);
 
     revalidatePath(`/profile/${toId}`);
     revalidatePath(`/auctions/${auctionId}`);

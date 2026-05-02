@@ -123,9 +123,10 @@ export const AuctionCard = memo(({
                 showText={false}
               />
             </div>
-            {auction.seller.reputationScore > 0 && (
+            {(auction.seller.rating ?? 0) > 0 && (
               <TrustBadge 
-                score={auction.seller.reputationScore} 
+                rating={auction.seller.rating ?? 0} 
+                ratingCount={auction.seller.ratingCount ?? 0}
                 size="sm"
                 className="scale-95 origin-left"
               />

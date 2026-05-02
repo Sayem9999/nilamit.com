@@ -4,7 +4,7 @@ import { db, docData, snapDocs } from '@/lib/db';
 import { Dispute, EscrowTransaction, Auction, User } from '@/types';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { recalculateUserReputation } from '@/lib/reputation';
+import { recalculateUserRating } from '@/lib/rating';
 import { requireAdmin } from '@/lib/admin-guard';
 import { log } from '@/lib/logger';
 import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
@@ -86,8 +86,8 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
       createdAt: new Date(),
     });
 
-    if (sellerId) await recalculateUserReputation(sellerId);
-    await recalculateUserReputation(buyerId);
+    if (sellerId) await recalculateUserRating(sellerId);
+    await recalculateUserRating(buyerId);
 
     revalidatePath('/admin/disputes');
     revalidatePath('/dashboard/escrow');

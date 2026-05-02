@@ -107,7 +107,7 @@ export default async function DashboardPage({
           ...a, id: d.id,
           createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
           endTime:   a.endTime?.toDate?.()   || new Date(a.endTime),
-          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
+          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, rating: seller.rating, ratingCount: seller.ratingCount },
           _count: { bids: bidCountMap.get(d.id) ?? 0 },
           watchlist: [],
         };
@@ -145,7 +145,7 @@ export default async function DashboardPage({
           ...a, id: w.auctionId,
           createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
           endTime:   a.endTime?.toDate?.()   || new Date(a.endTime),
-          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
+          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, rating: seller.rating, ratingCount: seller.ratingCount },
           _count: { bids: bidCountMap.get(w.auctionId) ?? 0 },
           watchlist: [w],
         };
@@ -187,7 +187,7 @@ export default async function DashboardPage({
           ...a, id,
           createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
           endTime:   a.endTime?.toDate?.()   || new Date(a.endTime),
-          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, reputationScore: seller.reputationScore },
+          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, rating: seller.rating, ratingCount: seller.ratingCount },
           _count: { bids: bidCountMap.get(id) ?? 0 },
           watchlist: [],
         };
@@ -388,11 +388,11 @@ export default async function DashboardPage({
                 </div>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-3xl font-black text-gray-900">
-                    {Number(session.user.reputationScore) || 0}
+                    {(Number(session.user.rating) || 3.5).toFixed(1)}
                   </span>
-                  <span className="text-xs text-gray-400 font-bold ml-1">{t("reputationPoints")}</span>
+                  <span className="text-xs text-gray-400 font-bold ml-1">★</span>
                 </div>
-                <p className="text-[10px] text-gray-400 mb-3 font-medium">{t("trustPointsTitle")}</p>
+                <p className="text-[10px] text-gray-400 mb-3 font-medium">{session.user.ratingCount || 0} {t("tradesCompleted")}</p>
                 <Link
                   href={`/${locale}/leaderboard`}
                   className="flex items-center justify-between w-full py-2 px-3 bg-white border border-gray-100 hover:border-primary-200 hover:bg-primary-50 rounded-xl text-[10px] font-bold uppercase text-gray-600 hover:text-primary-600 transition-all"
