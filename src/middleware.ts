@@ -4,6 +4,8 @@ import NextAuth from 'next-auth';
 import { authConfig } from './lib/auth.config';
 import { locales } from './i18n';
 
+import { env } from './lib/env';
+
 const intlMiddleware = createMiddleware({
   locales,
   defaultLocale: 'en',
@@ -22,8 +24,8 @@ export default auth((req) => {
   const currentOrigin = `${protocol}://${host}`;
   
   // Prefer NEXTAUTH_URL only if it doesn't point to the unpurchased domain
-  const redirectBase = (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('nilamit.com'))
-    ? process.env.NEXTAUTH_URL
+  const redirectBase = (env.NEXTAUTH_URL && !env.NEXTAUTH_URL.includes('nilamit.com'))
+    ? env.NEXTAUTH_URL
     : currentOrigin;
 
   // 0. Global Security: Redirect banned users

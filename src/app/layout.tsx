@@ -23,8 +23,18 @@ if (typeof window === "undefined") {
 // ─── Fallback metadata (locale layout overrides these) ──────
 const DOMAIN = "https://nilamit--nilamit-52073.asia-southeast1.hosted.app";
 
+function getMetadataBase() {
+  const urlString = env.NEXT_PUBLIC_APP_URL || DOMAIN;
+  try {
+    return new URL(urlString);
+  } catch {
+    console.error(`[Layout] ❌ Invalid metadataBase URL: "${urlString}"`);
+    return new URL(DOMAIN);
+  }
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL || DOMAIN),
+  metadataBase: getMetadataBase(),
   title: {
     default: "Nilamit — Bangladesh's Trusted Auction Marketplace",
     template: "%s | Nilamit",

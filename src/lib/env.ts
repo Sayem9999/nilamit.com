@@ -12,6 +12,10 @@ const envSchema = z.object({
     (v) => typeof v === 'string' ? v.trim().replace(/^[^h]+/, '') : v,
     z.string().url().optional()
   ),
+  AUTH_URL: z.preprocess(
+    (v) => typeof v === 'string' ? v.trim().replace(/^[^h]+/, '') : v,
+    z.string().url().optional()
+  ),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
   ADMIN_EMAILS: z.string().transform((val) => val.split(',').map(e => e.trim().toLowerCase())),
   
@@ -84,10 +88,28 @@ export function validateEnv(): Env {
 
     if (isBuildPhase) {
       console.warn(`\n[Env] ⚠️  Missing/Invalid environment variables during BUILD:\n${errorMessages}\nContinuing build anyway...\n`);
-      return process.env as unknown as Env;
+      
+      // Even in build phase, sanitize critical URL variables to prevent crashing during build-time static generation
+      const sanitized = { ...process.env } as unknown as Env;
+      if (typeof process.env.NEXT_PUBLIC_APP_URL === 'string') {
+        sanitized.NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL.trim().replace(/^[^h]+/, '');
+      }
+      if (typeof process.env.NEXTAUTH_URL === 'string') {
+        sanitized.NEXTAUTH_URL = process.env.NEXTAUTH_URL.trim().replace(/^[^h]+/, '');
+      }
+      if (typeof process.env.AUTH_URL === 'string') {
+        sanitized.AUTH_URL = process.env.AUTH_URL.trim().replace(/^[^h]+/, '');
+      }
+      return sanitized;
     }
 
-    console.error(`\n[Env] ❌  Invalid environment configuration:\n${errorMessages}\n`);
+    const problematicKeys = Object.keys(errors);
+    const rawValues = problematicKeys.reduce((acc, key) => {
+      acc[key] = process.env[key];
+      return acc;
+    }, {} as Record<string, string | undefined>);
+
+    console.error(`\n[Env] ❌  Invalid environment configuration:\n${errorMessages}\nRaw values: ${JSON.stringify(rawValues)}\n`);
     throw new Error('Invalid environment configuration');
   }
 
