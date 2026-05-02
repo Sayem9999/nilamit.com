@@ -84,3 +84,38 @@ export const getSpecializedFeeds = cache(async (): Promise<ServiceResponse<{
 }>> => {
   return AuctionService.getSpecializedFeeds();
 });
+/**
+ * Server Action: Manually trigger a Second Chance Offer
+ * Only the seller of the auction can trigger this if the winner fails to pay.
+ */
+export async function triggerSecondChanceOffer(auctionId: string): Promise<ServiceResponse<void>> {
+  const session = await auth();
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated', ERROR_CODES.NOT_AUTHENTICATED);
+
+  try {
+    const auctionRes = await AuctionService.getById(auctionId, session.user.id);
+    if (!auctionRes.success) return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
+    
+    const auction = auctionRes.data!;
+    if (auction.sellerId !== session.user.id) {
+      return errorResponse(ErrorType.FORBIDDEN, 'Only the seller can offer a second chance.');
+    }
+
+    // Only allowed if SOLD but escrow failed or expired (simulated here)
+    if (auction.status !== AuctionStatus.SOLD) {
+      return errorResponse(ErrorType.CONFLICT, 'Only sold auctions can be offered second chance.');
+    }
+
+    const result = await AuctionService.createSecondChanceOffer(auctionId);
+    
+    if (result.success) {
+      revalidatePath(`/auctions/${auctionId}`);
+      revalidatePath('/dashboard');
+    }
+    
+    return result;
+  } catch (error) {
+    log.error('[Action] triggerSecondChanceOffer failed', error);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to create second chance offer');
+  }
+}

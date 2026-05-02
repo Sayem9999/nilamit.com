@@ -203,8 +203,8 @@ export class AuctionService {
         const auction = aSnap.data() as Auction;
         
         // Find second highest bidder (excluding the current non-paying winner)
-        const bidsSnap = await db.collection('auctions').doc(auctionId)
-          .collection('bids')
+        const bidsSnap = await db.collection('bids')
+          .where('auctionId', '==', auctionId)
           .orderBy('amount', 'desc')
           .limit(2)
           .get();

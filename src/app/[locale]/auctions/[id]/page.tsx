@@ -33,7 +33,7 @@ import { ReviewForm } from "@/components/review/ReviewForm";
 import { ReportModal } from "@/components/auction/ReportModal";
 import ChatInterface from "@/components/social/ChatInterface";
 
-import { AuctionWithBids, AuctionStatus } from "@/types";
+import { AuctionWithBids } from "@/types";
 import { auth } from "@/lib/auth";
 import { WatchlistButton } from "@/components/auction/WatchlistButton";
 import { isWatched } from "@/actions/watchlist";
@@ -45,7 +45,8 @@ import { Metadata } from "next";
 import Script from "next/script";
 import { getTranslations } from "next-intl/server";
 import { ErrorType, errorResponse } from "@/lib/errors";
-import { Bid } from "@/types";
+import { Bid, AuctionStatus } from "@/types";
+import { SecondChanceOfferButton } from "@/components/auction/SecondChanceOfferButton";
 
 interface Props {
   params: Promise<{ id: string; locale: string }>;
@@ -311,6 +312,12 @@ export default async function AuctionDetailPage({ params }: Props) {
                 {/* Contact Gating Logic */}
                 {auction.status === AuctionStatus.SOLD && (session?.user?.id === auction.winnerId || session?.user?.id === auction.sellerId) && (
                   <div className="mt-3 space-y-2">
+                    {session?.user?.id === auction.sellerId && (
+                      <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
+                        <p className="text-[10px] font-bold text-amber-800 uppercase mb-2">Buyer not responding?</p>
+                        <SecondChanceOfferButton auctionId={id} />
+                      </div>
+                    )}
                     <GatedContactInfo 
                       status={auction.escrowTransaction?.status}
                       transactionId={auction.escrowTransaction?.id}

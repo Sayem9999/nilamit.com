@@ -57,25 +57,25 @@ export default function LiveTicker() {
 
       <div className="flex-1 overflow-hidden relative h-full">
         <AnimatePresence mode="popLayout">
-          {items.slice(0, 1).map((item) => (
+          {items.map((item) => (
             <motion.div
               key={item.id}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -50, opacity: 0 }}
               transition={{ duration: 0.5, ease: "circOut" }}
-              className="absolute inset-0 flex items-center px-4"
+              className="inline-flex items-center px-4 whitespace-nowrap"
             >
               <Link 
-                href={`/auction/${item.auctionId}`}
-                className="flex items-center gap-3 text-xs hover:text-primary-400 transition-colors"
+                href={`/auctions/${item.auctionId}`}
+                className="flex items-center gap-2 text-[11px] hover:text-primary-400 transition-colors"
               >
                 <Trophy className="w-3 h-3 text-amber-500" />
-                <span className="font-bold text-gray-400">{item.bidderName}</span>
-                <span className="text-gray-600">bid</span>
-                <span className="font-black text-white">{item.amount} BDT</span>
-                <span className="text-gray-600">on</span>
-                <span className="truncate max-w-[150px] font-medium">{item.auctionTitle}</span>
+                <span className="font-bold text-gray-200">{item.bidderName}</span>
+                <span className="text-gray-500">placed</span>
+                <span className="font-black text-primary-400">{item.amount} BDT</span>
+                <span className="text-gray-500">on</span>
+                <span className="truncate max-w-[200px] font-medium text-white underline decoration-gray-700 underline-offset-4">{item.auctionTitle}</span>
               </Link>
             </motion.div>
           ))}
