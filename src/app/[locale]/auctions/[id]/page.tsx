@@ -29,11 +29,10 @@ import { canReviewAuction } from "@/actions/review";
 // Server Components in Next.js 16, and these are all client components so
 // Next handles the client/server boundary on its own.
 // Dynamic imports for heavy interactive components to optimize initial load
-import dynamic from "next/dynamic";
-const BidHistory = dynamic(() => import("@/components/auction/BidHistory").then(m => m.BidHistory), { ssr: false });
-const ReviewForm = dynamic(() => import("@/components/review/ReviewForm").then(m => m.ReviewForm), { ssr: false });
-const ReportModal = dynamic(() => import("@/components/auction/ReportModal").then(m => m.ReportModal), { ssr: false });
-const ChatInterface = dynamic(() => import("@/components/social/ChatInterface"), { ssr: false });
+import { BidHistory } from "@/components/auction/BidHistory";
+import { ReviewForm } from "@/components/review/ReviewForm";
+import { ReportModal } from "@/components/auction/ReportModal";
+import ChatInterface from "@/components/social/ChatInterface";
 
 import { AuctionWithBids } from "@/types";
 import { auth } from "@/lib/auth";
@@ -372,7 +371,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                   <UserBadge
                     level={auction.seller?.userLevel || 1}
                     streak={auction.seller?.winningStreak || 0}
-                    reputation={auction.seller?.reputationScore || 0}
+                    reputation={auction.seller?.rating || 0}
                   />
                   {auction.seller?.isPhoneVerified && (
                     <span className="flex items-center gap-1 text-green-600 text-[10px] font-bold uppercase tracking-tight">

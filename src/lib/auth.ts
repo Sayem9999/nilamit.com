@@ -124,6 +124,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return { id: user.id as string, email: user.email as string, name: user.name as string,
             image: user.image as string | null,
             isVerifiedSeller: Boolean(user.isVerifiedSeller), reputationScore: Number(user.reputationScore || 0),
+            rating: Number(user.rating || user.reputationScore || 0),
+            ratingCount: Number(user.ratingCount || 0),
             isPhoneVerified: Boolean(user.isPhoneVerified), emailVerified: user.emailVerified as Date | null,
             userLevel: Number(user.userLevel || 1), xp: Number(user.xp || 0), winningStreak: Number(user.winningStreak || 0),
             isBanned: Boolean(user.isBanned) };
@@ -154,6 +156,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return { id: user.id as string, email: user.email as string | null,
             name: user.name as string, image: user.image as string | null,
             isVerifiedSeller: Boolean(user.isVerifiedSeller), reputationScore: Number(user.reputationScore || 0),
+            rating: Number(user.rating || user.reputationScore || 0),
+            ratingCount: Number(user.ratingCount || 0),
             isPhoneVerified: Boolean(user.isPhoneVerified), emailVerified: user.emailVerified as Date | null,
             userLevel: Number(user.userLevel || 1), xp: Number(user.xp || 0), winningStreak: Number(user.winningStreak || 0),
             isBanned: Boolean(user.isBanned) };
@@ -173,6 +177,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isPhoneVerified  = user.isPhoneVerified ?? false;
         token.isVerifiedSeller = user.isVerifiedSeller ?? false;
         token.reputationScore  = user.reputationScore ?? 0;
+        token.rating           = user.rating ?? user.reputationScore ?? 0;
+        token.ratingCount      = user.ratingCount ?? 0;
         token.isAdmin          = user.isAdmin ?? false;
         token.isBanned         = user.isBanned ?? false;
         token.userLevel        = user.userLevel ?? 1;
@@ -197,6 +203,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.isPhoneVerified  = u.isPhoneVerified;
             token.isVerifiedSeller = u.isVerifiedSeller;
             token.reputationScore  = u.reputationScore;
+            token.rating           = u.rating ?? u.reputationScore;
+            token.ratingCount      = u.ratingCount;
             token.userLevel        = u.userLevel;
             token.xp               = u.xp;
             token.winningStreak    = u.winningStreak;
@@ -217,17 +225,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id              = token.id;
-        session.user.isPhoneVerified  = token.isPhoneVerified;
-        session.user.isVerifiedSeller = token.isVerifiedSeller;
-        session.user.reputationScore  = token.reputationScore;
-        session.user.isAdmin          = token.isAdmin;
-        session.user.isBanned         = token.isBanned;
-        session.user.userLevel        = token.userLevel;
-        session.user.xp               = token.xp;
-        session.user.winningStreak    = token.winningStreak;
-        session.user.phone            = token.phone;
-        session.user.emailVerified    = token.emailVerified;
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        session.user.id              = token.id as any;
+        session.user.isPhoneVerified  = token.isPhoneVerified as any;
+        session.user.isVerifiedSeller = token.isVerifiedSeller as any;
+        session.user.reputationScore  = token.reputationScore as any;
+        session.user.rating           = token.rating as any;
+        session.user.ratingCount      = token.ratingCount as any;
+        session.user.isAdmin          = token.isAdmin as any;
+        session.user.isBanned         = token.isBanned as any;
+        session.user.userLevel        = token.userLevel as any;
+        session.user.xp               = token.xp as any;
+        session.user.winningStreak    = token.winningStreak as any;
+        session.user.phone            = token.phone as any;
+        session.user.emailVerified    = token.emailVerified as any;
+        /* eslint-enable @typescript-eslint/no-explicit-any */
       }
       return session;
     },

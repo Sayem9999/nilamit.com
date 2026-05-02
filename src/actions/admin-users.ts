@@ -1,6 +1,6 @@
 'use server';
 
-import { db } from '@/lib/db';
+import { db, toDate } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
 import { User } from '@/types';
 import { revalidatePath } from 'next/cache';
@@ -128,7 +128,8 @@ export async function getAdminUsers(opts: {
         rating: (data.rating as number) ?? 0,
         ratingCount: (data.ratingCount as number) ?? 0,
         isBanned: !!data.isBanned,
-        createdAt: data.createdAt instanceof db.Timestamp ? data.createdAt.toDate() : new Date(data.createdAt as string),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        createdAt: toDate(data.createdAt as any),
         _count: {
           bids: bidCountSnap.data().count,
           auctionsAsSeller: auctionCountSnap.data().count,
