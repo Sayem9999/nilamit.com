@@ -7,6 +7,11 @@ import { z } from 'zod';
 const envSchema = z.object({
   // --- CORE ---
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  // --- AUTH ---
+  NEXTAUTH_URL: z.preprocess(
+    (v) => typeof v === 'string' ? v.trim().replace(/^[^h]+/, '') : v,
+    z.string().url().optional()
+  ),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
   ADMIN_EMAILS: z.string().transform((val) => val.split(',').map(e => e.trim().toLowerCase())),
   
@@ -33,7 +38,10 @@ const envSchema = z.object({
   CRON_SECRET: z.preprocess(v => v === '' ? undefined : v, z.string().min(16).optional()),
   
   // --- OPTIONAL / EXTERNAL ---
-  NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
+  NEXT_PUBLIC_APP_URL: z.preprocess(
+    (v) => typeof v === 'string' ? v.trim().replace(/^[^h]+/, '') : v,
+    z.string().url()
+  ).default('http://localhost:3000'),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   SENTRY_DSN: z.string().url().optional(),

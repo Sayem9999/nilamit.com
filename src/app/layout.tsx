@@ -11,7 +11,7 @@
  */
 
 import type { Metadata } from "next";
-import { validateEnv } from "@/lib/env";
+import { env, validateEnv } from "@/lib/env";
 
 // ─── Startup validation ──────────────────────────────────────
 // Runs once when the module is first imported (server start / build).
@@ -24,7 +24,7 @@ if (typeof window === "undefined") {
 const DOMAIN = "https://nilamit--nilamit-52073.asia-southeast1.hosted.app";
 
 export const metadata: Metadata = {
-  metadataBase: new URL((process.env.NEXT_PUBLIC_APP_URL || DOMAIN).replace(/^\?/, "")),
+  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL || DOMAIN),
   title: {
     default: "Nilamit — Bangladesh's Trusted Auction Marketplace",
     template: "%s | Nilamit",
