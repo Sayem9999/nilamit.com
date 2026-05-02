@@ -63,7 +63,7 @@ describe('createAuctionSchema — temporal rules', () => {
     title: 'Samsung Galaxy S24',
     description: 'Brand new in box, never used.',
     images: ['https://example.com/img.jpg'],
-    category: 'Electronics',
+    category: 'electronics',
     startingPrice: 10000,
     startTime: future(60_000),
     endTime: future(3_600_000),

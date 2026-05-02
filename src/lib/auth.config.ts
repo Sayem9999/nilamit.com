@@ -39,7 +39,7 @@ export const authConfig: NextAuthConfig = {
      */
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isBanned = auth?.user && 'isBanned' in auth.user ? (auth.user as { isBanned?: boolean }).isBanned : false;
+      const isBanned = auth?.user?.isBanned ?? false;
       const { pathname } = nextUrl;
 
       // 1. If banned, force them to the /banned page (unless they are already there or logging out)

@@ -168,16 +168,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, trigger }) {
       // First login — seed from freshly-authenticated user
       if (user) {
-        token.id               = user.id;
-        token.isPhoneVerified  = (user as unknown as Record<string, unknown>).isPhoneVerified  ?? false;
-        token.emailVerified    = (user as unknown as Record<string, unknown>).emailVerified    ?? null;
-        token.phone            = (user as unknown as Record<string, unknown>).phone            ?? null;
-        token.reputationScore  = (user as unknown as Record<string, unknown>).reputationScore  ?? 0;
-        token.isVerifiedSeller = (user as unknown as Record<string, unknown>).isVerifiedSeller ?? false;
-        token.userLevel        = (user as unknown as Record<string, unknown>).userLevel        ?? 1;
-        token.xp               = (user as unknown as Record<string, unknown>).xp               ?? 0;
-        token.winningStreak    = (user as unknown as Record<string, unknown>).winningStreak    ?? 0;
-        token.isBanned         = (user as unknown as Record<string, unknown>).isBanned         ?? false;
+        token.id               = user.id!;
+        token.isPhoneVerified  = user.isPhoneVerified ?? false;
+        token.isVerifiedSeller = user.isVerifiedSeller ?? false;
+        token.reputationScore  = user.reputationScore ?? 0;
+        token.isAdmin          = user.isAdmin ?? false;
+        token.isBanned         = user.isBanned ?? false;
+        token.userLevel        = user.userLevel ?? 1;
+        token.xp               = user.xp ?? 0;
+        token.winningStreak    = user.winningStreak ?? 0;
+        token.phone            = user.phone ?? null;
+        token.emailVerified    = user.emailVerified ?? null;
         token.lastDbRefresh    = Date.now();
       }
 
@@ -193,14 +194,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (snap.exists) {
             const u = snap.data()!;
             token.isPhoneVerified  = u.isPhoneVerified;
-            token.emailVerified    = u.emailVerified   ?? null;
-            token.phone            = u.phone           ?? null;
-            token.reputationScore  = u.reputationScore ?? 0;
-            token.isVerifiedSeller = u.isVerifiedSeller ?? false;
-            token.userLevel        = u.userLevel        ?? 1;
-            token.xp               = u.xp               ?? 0;
-            token.winningStreak    = u.winningStreak    ?? 0;
-            token.isBanned         = u.isBanned         ?? false;
+            token.isVerifiedSeller = u.isVerifiedSeller;
+            token.reputationScore  = u.reputationScore;
+            token.userLevel        = u.userLevel;
+            token.xp               = u.xp;
+            token.winningStreak    = u.winningStreak;
+            token.isBanned         = u.isBanned;
+            token.phone            = u.phone ?? null;
+            token.emailVerified    = u.emailVerified ?? null;
             token.lastDbRefresh    = Date.now();
           }
         } catch (e) {
@@ -215,18 +216,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        const u = session.user as unknown as Record<string, unknown>;
-        u.id              = token.id;
-        u.isPhoneVerified  = token.isPhoneVerified;
-        u.emailVerified    = token.emailVerified;
-        u.phone            = token.phone;
-        u.reputationScore  = token.reputationScore;
-        u.isVerifiedSeller = token.isVerifiedSeller;
-        u.userLevel        = token.userLevel;
-        u.xp               = token.xp;
-        u.winningStreak    = token.winningStreak;
-        u.isAdmin          = token.isAdmin;
-        u.isBanned         = token.isBanned;
+        session.user.id              = token.id;
+        session.user.isPhoneVerified  = token.isPhoneVerified;
+        session.user.isVerifiedSeller = token.isVerifiedSeller;
+        session.user.reputationScore  = token.reputationScore;
+        session.user.isAdmin          = token.isAdmin;
+        session.user.isBanned         = token.isBanned;
+        session.user.userLevel        = token.userLevel;
+        session.user.xp               = token.xp;
+        session.user.winningStreak    = token.winningStreak;
+        session.user.phone            = token.phone;
+        session.user.emailVerified    = token.emailVerified;
       }
       return session;
     },

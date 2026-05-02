@@ -34,7 +34,7 @@ export const passwordSchema = z.string().min(8, 'Password must be at least 8 cha
 export const bdPhoneSchema = z
   .string()
   .trim()
-  .regex(/^(?:\+88)?01\d{9}$/, 'Invalid Bangladesh phone number');
+  .regex(/^\+8801\d{9}$/, 'Invalid Bangladesh phone number');
 
 /** 6-digit numeric OTP. */
 export const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be 6 digits');

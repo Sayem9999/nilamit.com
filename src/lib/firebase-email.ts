@@ -49,7 +49,7 @@ export async function sendEmail({ to, subject, html, text, replyTo }: EmailPaylo
 
 // ─── Pre-built email senders ─────────────────────────────────────────────────
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? 'https://nilamit.app';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? 'https://nilamit--nilamit-52073.asia-southeast1.hosted.app';
 
 export async function sendOutbidEmail(
   email: string,

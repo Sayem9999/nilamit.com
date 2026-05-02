@@ -117,7 +117,7 @@ export function Navbar() {
                   </div>
                 </div>
               </div>
-              {(session?.user as { isAdmin?: boolean })?.isAdmin && (
+              {session?.user?.isAdmin && (
                 <Link
                   href={`/${locale}/admin`}
                   className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
@@ -156,18 +156,7 @@ export function Navbar() {
                       )}
                       <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                         {session.user?.name?.split(" ")[0]}
-                        {(
-                          session?.user as {
-                            isPhoneVerified?: boolean;
-                            emailVerified?: boolean;
-                          }
-                        )?.isPhoneVerified ||
-                        (
-                          session?.user as {
-                            isPhoneVerified?: boolean;
-                            emailVerified?: boolean;
-                          }
-                        )?.emailVerified ? (
+                        {session?.user?.isPhoneVerified || !!session?.user?.emailVerified ? (
                           <ShieldCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10" />
                         ) : (
                           <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
@@ -182,18 +171,7 @@ export function Navbar() {
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" /> {t("profile")}
                         </div>
-                        {(
-                          session?.user as {
-                            isPhoneVerified?: boolean;
-                            emailVerified?: boolean;
-                          }
-                        )?.isPhoneVerified ||
-                        (
-                          session?.user as {
-                            isPhoneVerified?: boolean;
-                            emailVerified?: boolean;
-                          }
-                        )?.emailVerified ? (
+                        {session?.user?.isPhoneVerified || !!session?.user?.emailVerified ? (
                           <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase">
                             {t("verified")}
                           </span>

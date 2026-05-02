@@ -21,7 +21,10 @@ if (typeof window === "undefined") {
 }
 
 // ─── Fallback metadata (locale layout overrides these) ──────
+const DOMAIN = "https://nilamit--nilamit-52073.asia-southeast1.hosted.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || DOMAIN),
   title: {
     default: "Nilamit — Bangladesh's Trusted Auction Marketplace",
     template: "%s | Nilamit",
@@ -33,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://nilamit.app",
+    url: DOMAIN,
     siteName: "Nilamit",
     title: "Nilamit — Bangladesh's Trusted Auction Marketplace",
     description: "Buy & sell through transparent, real-time bidding.",
