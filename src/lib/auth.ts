@@ -97,6 +97,7 @@ const TOKEN_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  trustHost: true,
   adapter: FirestoreAdapter(),
   providers: [
     ...(googleEnabled
