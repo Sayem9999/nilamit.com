@@ -9,11 +9,11 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   // --- AUTH ---
   NEXTAUTH_URL: z.preprocess(
-    (v) => typeof v === 'string' ? v.trim().replace(/^[^h]+/, '') : v,
+    (v) => typeof v === 'string' ? v.trim().replace(/^.*?(https?:\/\/)/, '$1') : v,
     z.string().url().optional()
   ),
   AUTH_URL: z.preprocess(
-    (v) => typeof v === 'string' ? v.trim().replace(/^[^h]+/, '') : v,
+    (v) => typeof v === 'string' ? v.trim().replace(/^.*?(https?:\/\/)/, '$1') : v,
     z.string().url().optional()
   ),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
@@ -43,7 +43,7 @@ const envSchema = z.object({
   
   // --- OPTIONAL / EXTERNAL ---
   NEXT_PUBLIC_APP_URL: z.preprocess(
-    (v) => typeof v === 'string' ? v.trim().replace(/^[^h]+/, '') : v,
+    (v) => typeof v === 'string' ? v.trim().replace(/^.*?(https?:\/\/)/, '$1') : v,
     z.string().url()
   ).default('http://localhost:3000'),
   GOOGLE_CLIENT_ID: z.string().optional(),
@@ -76,10 +76,14 @@ export function validateEnv(): Env {
   const urlKeys = ['NEXT_PUBLIC_APP_URL', 'NEXTAUTH_URL', 'AUTH_URL', 'APP_URL'];
   urlKeys.forEach(key => {
     const val = process.env[key];
-    if (typeof val === 'string' && val.includes('?http')) {
-      const sanitized = val.trim().replace(/^[^h]+/, '');
-      console.log(`[Env] 🪄  Globally sanitizing process.env.${key}: "${val}" -> "${sanitized}"`);
-      process.env[key] = sanitized;
+    if (typeof val === 'string' && (val.includes('http') || val.includes('\ufeff'))) {
+      // Aggressively strip anything before the "http" part of the URL
+      // This handles BOMs (\ufeff), "?", and other corruption artifacts.
+      const sanitized = val.trim().replace(/^.*?(https?:\/\/)/, '$1');
+      if (val !== sanitized) {
+        console.log(`[Env] 🪄  Aggressively sanitizing process.env.${key}: [length: ${val.length}] -> "${sanitized}"`);
+        process.env[key] = sanitized;
+      }
     }
   });
 
@@ -104,13 +108,13 @@ export function validateEnv(): Env {
       // Even in build phase, sanitize critical URL variables to prevent crashing during build-time static generation
       const sanitized = { ...process.env } as unknown as Env;
       if (typeof process.env.NEXT_PUBLIC_APP_URL === 'string') {
-        sanitized.NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL.trim().replace(/^[^h]+/, '');
+        sanitized.NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL.trim().replace(/^.*?(https?:\/\/)/, '$1');
       }
       if (typeof process.env.NEXTAUTH_URL === 'string') {
-        sanitized.NEXTAUTH_URL = process.env.NEXTAUTH_URL.trim().replace(/^[^h]+/, '');
+        sanitized.NEXTAUTH_URL = process.env.NEXTAUTH_URL.trim().replace(/^.*?(https?:\/\/)/, '$1');
       }
       if (typeof process.env.AUTH_URL === 'string') {
-        sanitized.AUTH_URL = process.env.AUTH_URL.trim().replace(/^[^h]+/, '');
+        sanitized.AUTH_URL = process.env.AUTH_URL.trim().replace(/^.*?(https?:\/\/)/, '$1');
       }
       return sanitized;
     }
