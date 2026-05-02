@@ -1,0 +1,30 @@
+# Nilamit
+
+> Bangladesh's Trusted C2C Auction & Bidding Marketplace. nilamit.app is a mobile-first, trust-focused C2C marketplace where users buy and sell through transparent, real-time bidding secured by phone verification and escrow.
+
+The platform is built on Next.js 16 with a Service-Layer Architecture, ensuring strict separation between API controllers (Server Actions) and business logic (Services). It leverages Firebase Firestore for persistence and Realtime Database for high-frequency bidding events and notifications.
+
+## Onboarding
+
+- [Contributor Guide](./docs/onboarding/contributor-guide.md): Language/framework foundations, architecture overview, and dev setup.
+- [Staff Engineer Guide](./docs/onboarding/staff-engineer-guide.md): Deep dive into architectural tradeoffs, domain models, and decision logs.
+- [Executive Guide](./docs/onboarding/executive-guide.md): Capability map, risk assessment, and technology investment thesis.
+- [Product Manager Guide](./docs/onboarding/product-manager-guide.md): User journey maps, feature capability map, and known limitations.
+
+## Architecture
+
+- [Architecture Overview](./docs/architecture.md): Layered SOA pattern, responsibilities, and data architecture.
+- [Security Architecture](./docs/SECURITY.md): Defense-in-depth, rate limiting, and PII gating strategies.
+- [Database Logic](./docs/logic.md): Firestore transactions, RTDB event bus, and denormalization patterns.
+
+## Getting Started
+
+- [Deployment Guide](./docs/DEPLOY_FIREBASE.md): Step-by-step instructions for Firebase App Hosting deployment.
+- [Environment Config](./docs/plan.md): Setup instructions for environment variables and secrets.
+- [Feature Roadmap](./docs/roadmap.md): Strategic milestones and completion status.
+
+## Optional
+
+- [Audit Report](./docs/AUDIT_REPORT.md): Security and performance audit findings.
+- [Style Guide](./docs/STYLE.md): Design system tokens, typography, and component patterns.
+- [Legal Framework](./docs/legalframework.md): Compliance and policy memory.

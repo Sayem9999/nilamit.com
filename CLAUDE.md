@@ -16,6 +16,14 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **Admin panel:** `/en/admin` — requires `isAdmin: true` in JWT (derived from `ADMIN_EMAILS=sayemf21@gmail.com`)
 
+## Documentation
+
+- **Wiki**: [docs/](file:///c:/nilamit.com/docs/) — Architecture, API, and setup guides.
+- **Onboarding**: [docs/onboarding/](file:///c:/nilamit.com/docs/onboarding/) — Audience-tailored guides for Contributors, Staff Engineers, Executives, and PMs.
+- **Design System**: [docs/STYLE.md](file:///c:/nilamit.com/docs/STYLE.md) — Visual tokens, typography, and component patterns.
+- **LLM Context**: [llms.txt](file:///c:/nilamit.com/llms.txt) — Project summary for coding agents.
+- **AGENTS.md**: [AGENTS.md](file:///c:/nilamit.com/AGENTS.md) — Comprehensive instructions for coding agents.
+
 ---
 
 ## CRITICAL RULES — Never Violate
