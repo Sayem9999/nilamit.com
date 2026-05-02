@@ -8,6 +8,13 @@
 - **Currency**: Strictly BDT (৳).
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
+- **v2.2.0 (Zero-Loss Logistics & Infrastructure Stabilization)**:
+    - **Zero-Loss Model**: Formalized the 120 BDT RTO (Return to Origin) deduction for frivolous rejections to protect sellers.
+    - **Escrow Hardening**: Synchronized the escrow lifecycle with automated logistics coordination.
+    - **Strict Type System**: Enforced `@typescript-eslint/no-explicit-any` across all services to prevent build-time regressions.
+    - **Hydrated State Consolidation**: Simplified frontend data fetching by using standardized hydrated interfaces (e.g., `HydratedEscrowTransaction`).
+    - **Infrastructure Resiliency**: Resolved 20+ sequential production build failures and optimized the Next.js standalone output configuration.
+
 ## Version History
 - **v2.1.0 (Account Professionalization & Sync)**:
     - **Bifurcated Registration**: Separation of Personal and Business accounts at entry with distinct UI themes and data models.

@@ -16,9 +16,11 @@ This directory contains the core application code for Nilamit. It is structured 
 - **Trust Metrics**: Use `salesCount` and `defectCount` to calculate `isTopRated` status (10+ sales, ≤5% defects).
 - **Controllers (Actions)**: Each action should be a thin wrapper around a service call. Use Zod for all input validation.
 - **Services**: All complex logic (transactions, calculations, tiered commissions) MUST live in services or `lib/auction-logic.ts`.
-- **Error Handling**: Actions must return `ServiceResponse` objects; never throw to the client.
+- **Zero-Loss Logistics**: All logistics coordination must respect the 120 BDT RTO deduction rule in the escrow service.
+- **Strict Typing**: Never use `any`. Use specific interfaces or `unknown` with type guards. Enforced by `@typescript-eslint/no-explicit-any`.
+- **Standardized Payloads**: All frontend components must use `Hydrated` types (e.g., `HydratedEscrowTransaction`) to ensure data consistency between frontend and backend.
 
 ## Boundaries
 - ✅ **Always do**: Use the Service layer for logic. Check `isRetailer` for role-based UI.
-- ⚠️ **Ask first**: Changing tiered commission logic in `lib/auction-logic.ts`.
-- 🚫 **Never do**: Add global administrative settings for logic that should be tiered or rule-based.
+- ⚠️ **Ask first**: Changing tiered commission logic or the 120 BDT RTO fee.
+- 🚫 **Never do**: Use `any`. Add global administrative settings for logic that should be rule-based.

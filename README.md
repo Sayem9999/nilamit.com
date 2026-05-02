@@ -6,8 +6,8 @@
 
 ---
 
-### 🚀 Status: Production Ready (v2.1 - Account Professionalization)
-**Completion: 100%** — All Core, Security, Scalability, and Professional Retailer features (Bifurcated Registration, eBay-style Trust, Proxy Bidding) are finalized.
+### 🚀 Status: Production Ready (v2.2 - Logistics & Infrastructure Stabilization)
+**Completion: 100%** — All Core, Security, Scalability, and Professional Retailer features (Bifurcated Registration, Zero-Loss Logistics, eBay-style Trust) are finalized and production-hardened.
 
 ---
 
@@ -88,6 +88,7 @@ Nilamit v2.0 implements a **Service-Layer Architecture** to ensure long-term mai
 - **Gamification** — Badges, winning streaks, user levels, leaderboard
 - **Real-time chat** — Buyer/seller coordination unlocked by escrow payment
 - **Price alerts** — OUTBID, TARGET_REACHED, ENDING_SOON notifications
+- **Zero-Loss Logistics** — Formalized 120 BDT RTO deduction for frivolous rejections to protect sellers from courier losses
 - **Bulk upload** — CSV-driven mass auction creation for **Verified Retailers**
 - **Second Chance Offer** — Sellers can offer items to underbidders on closed auctions
 - **i18n** — Full English and Bengali support

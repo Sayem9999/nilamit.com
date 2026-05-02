@@ -54,4 +54,10 @@
 - [x] **Public Trust Center**: Redesign profile/seller pages with Gamification components.
 - [x] **Automated Payment Stubs**: Automated escrow verification.
 - [x] **Policy Enforcement Bot**: Auto-ban "Non-Paying Winners" and trigger **Second Chance Offers**.
-- [x] **Live Auction Ticker**: homepage activity ticker (RTDB).
+
+## 7. Logistics & Stability (v2.2) [COMPLETED]
+- [x] **Zero-Loss Logistics**: Formalize 120 BDT RTO deduction to protect sellers.
+- [x] **Escrow Synchronization**: Hardened coordination service with hydrated state.
+- [x] **Infrastructure Stabilization**: Fixed 20+ sequential build/type errors.
+- [x] **Lint-Driven Quality**: Enforced zero-any policy across the service layer.
+- [x] **Production Deployment**: Successfully triggered and verified production build pipeline.

@@ -1,6 +1,6 @@
 # 🚀 Nilamit: Platform Summary
 
-> Last Updated: April 30, 2026
+> Last Updated: May 2, 2026
 
 **Nilamit** is a premium, real-time C2C (Consumer-to-Consumer) auction marketplace purpose-built for the unique landscape of Bangladesh. It combines enterprise-grade data integrity with social-proof mechanisms and hyper-local discovery.
 
@@ -16,14 +16,15 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 - **Multimodal Onboarding**: Unauthenticated browsing with signup options via **Email, Google, or Phone (OTP)**.
 
 ### 2. Trust & Coordination Hub
-- **Activity Gate**: Strict identity verification required before high-value interactions (Bidding, Selling, Chatting).
-- **MFS-Linked Escrow**: Mandatory **bKash/Nagad** linkage for paying advance fees.
-- **Win-First Privacy**: Seller contact information is only released to the **Winning Bidder** after the auction concludes.
-- **Coordination Engine**: Purpose-built for the **Cash on Delivery (COD)** culture. Nilamit handles the trust and success calculations, while users coordinate their own logistics.
+- **Activity Gate**: Strict identity verification required before high-value interactions.
+- **Zero-Loss Logistics**: 120 BDT RTO deduction to protect sellers from courier losses.
+- **eBay-style Trust**: "Top Rated" and "Business Retailer" badges based on performance metrics.
+- **Coordination Engine**: Purpose-built for COD culture with integrated financial security.
 
 ### 3. Finance & Monetization
 - **Success Fee Engine**: Automated, tiered platform fees (1% - 2.5%) calculated on successful sale.
-- **Escrow Settlements**: Regulated PENDING -> HELD -> RELEASED funds flow for secure C2C trade.
+- **Escrow Settlements**: Secure PENDING -> HELD -> RELEASED funds flow for C2C trade.
+- **Bidding Advancement**: Proxy Bidding (Auto-Max) and Second Chance Offer support.
 
 ---
 

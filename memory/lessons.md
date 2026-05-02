@@ -1,23 +1,29 @@
 # 💡 Lessons: Patterns & Anti-Patterns
 
-> Last Updated: April 29, 2026
+> Last Updated: May 2, 2026
 
 ## Patterns to Follow
 - **Transactional Bidding**: Always use `SELECT FOR UPDATE` to prevent race conditions.
 - **Bengali UI Localization**: Use the `.bn` CSS class for high-contrast Bengali text.
+- **Service-Layer Discipline**: Keep business logic in `services/` and thin wrappers in `actions/`.
+- **Hydrated State Patterns**: Use hydrated interfaces for frontend components to ensure full type safety for complex entities.
 
 ## Lessons Learned (Anti-Patterns)
 - **SVG Race Conditions**: 
     - *Issue*: Attaching D3 zoom hooks to an SVG before it is fully initialized leads to `ReferenceError`.
     - *Fix*: Ensure SVG selection and basic DOM structure are established before calling `.call(d3.zoom())`.
-- **Next.js 15 Polling vs WebSockets**:
-    - *Lesson*: High-frequency polling (5s) is acceptable for MVP but causes performance degradation during peak auctions. WebSockets (Firebase RTDB) is the preferred production path.
-- **Phone Verification latency**:
-    - *Lesson*: Do not gate browsing behind phone verification; only gate bidding/posting to reduce friction.
+- **Next.js 15/16 Routing & Boundaries**:
+    - *Lesson*: Mixing `next/dynamic` with `ssr: false` in Server Components causes build failures. 
+    - *Fix*: Always mark components containing client-side dynamics with `'use client';`.
+- **Strict Typing for Production**:
+    - *Lesson*: Using `any` in business logic services often hides critical data structure mismatches that only surface in production builds.
+    - *Fix*: Enforce `@typescript-eslint/no-explicit-any` and use specific interfaces for external data (e.g., Firestore Timestamps).
+- **Consolidated Promise Handling**:
+    - *Lesson*: Large `Promise.all` blocks with off-by-one destructuring block the TypeScript compiler.
+    - *Fix*: Consolidate related data into single objects or use named properties.
 - **Micro-Deposit Advance vs. Full Price**:
     - *Insight*: Full-price escrow creates buyer drop-off in the Bangladesh COD market.
     - *Solution*: Use a "Small Advance" (Success Fee + Delivery Charge) to unlock contact info, leaving the balance for COD settlement.
 - **Seller COD Liability**:
     - *Insight*: Sellers lose money on delivery fees when buyers flake.
-    - *Solution*: Use the platform-held Advance to reimburse the seller's courier fee in case of buyer-side cancellation.
-
+    - *Solution*: Use the platform-held Advance to reimburse the seller's courier fee in case of buyer-side cancellation (Zero-Loss Logistics).

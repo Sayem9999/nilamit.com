@@ -2,7 +2,19 @@
 
 All notable changes to the Nilamit platform will be documented in this file.
 
-## [2.1.0] - 2026-05-02 (Current)
+## [2.2.0] - 2026-05-03 (Current)
+
+### Added 🆕
+- **Zero-Loss Logistics Model**: Formalized the 120 BDT RTO (Return to Origin) deduction policy to protect sellers from courier fee losses during frivolous rejections.
+- **Hydrated State Patterns**: Introduced standardized hydrated interfaces for complex entities (e.g., `HydratedEscrowTransaction`) to ensure frontend data consistency.
+
+### Fixed 🐛
+- **Infrastructure Stabilization**: Resolved 20+ sequential production build failures related to client/server boundaries, module resolution, and TypeScript type mismatches.
+- **Strict Type Enforcement**: Eliminated `any` type casts across the service layer and enforced `@typescript-eslint/no-explicit-any`.
+- **Date Handling**: Hardened Firestore Timestamp to JS Date conversion logic in `BiddingService` to prevent build-time crashes.
+- **Landing Page Destructuring**: Resolved a critical `Promise.all` mismatch that blocked the production build.
+
+## [2.1.0] - 2026-05-02
 
 ### Added 🆕
 - **Bifurcated Registration**: Separation of Personal and Business accounts at entry with tailored UI themes (Charcoal vs Indigo).
