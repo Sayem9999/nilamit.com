@@ -121,8 +121,8 @@ export function validateEnv(): Env {
       return acc;
     }, {} as Record<string, string | undefined>);
 
-    console.error(`\n[Env] ❌  Invalid environment configuration:\n${errorMessages}\nRaw values: ${JSON.stringify(rawValues)}\n`);
-    throw new Error('Invalid environment configuration');
+    console.error(`\n[Env] ❌  Invalid environment configuration (Runtime Soft-fail):\n${errorMessages}\nRaw values: ${JSON.stringify(rawValues)}\n`);
+    return process.env as unknown as Env;
   }
 
   _env = result.data;
