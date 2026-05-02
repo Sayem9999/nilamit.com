@@ -23,10 +23,7 @@ export default async function HomePage({
     getAuctions({ sortBy: "bids", sortOrder: "desc", limit: 8 }),
     getSpecializedFeeds(),
     getAuctions({ limit: 4 }),
-    db.collection('users').count().get(),
-    db.collection('bids').count().get(),
-    db.collection('auctions').where('status', '==', 'ACTIVE').count().get(),
-    db.collection('users').where('isVerifiedSeller', '==', true).count().get(),
+    db.collection('stats').doc('global').get(),
   ]);
 
   const trendingAuctions = trendingRes.success ? trendingRes.data!.auctions : [];
@@ -34,10 +31,11 @@ export default async function HomePage({
   const latestBids = specializedRes.success ? specializedRes.data!.latestBids : [];
   const featuredAuctions = featuredRes.success ? featuredRes.data!.auctions : [];
 
-  const totalUsers = totalUsersSnap.data().count;
-  const totalBids = totalBidsSnap.data().count;
-  const totalAuctions = totalAuctionsSnap.data().count;
-  const verifiedSellers = verifiedSellersSnap.data().count;
+  const statsData = specializedRes.success ? (totalUsersSnap.data() || {}) : {};
+  const totalUsers = Number(statsData.totalUsers ?? 0);
+  const totalBids = Number(statsData.totalBids ?? 0);
+  const totalAuctions = Number(statsData.totalAuctions ?? 0);
+  const verifiedSellers = Number(statsData.totalVerifiedSellers ?? 0);
 
   return (
     <>

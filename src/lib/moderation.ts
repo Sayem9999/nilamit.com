@@ -28,32 +28,16 @@ export async function detectShillBidding(auctionId: string, bidderId: string, se
     const totalBids = totalBidsSnap.data().count;
 
     if (totalBids >= SUSPICIOUS_THRESHOLDS.MIN_TOTAL_BIDS_TO_FLAG) {
-      // 4. Check recent history (last 100 bids) to detect active shill patterns
-      const allBidsSnap = await db.collection('bids')
+      // 4. Check for active shill patterns using denormalized sellerId
+      // This is now O(1) since we don't need to fetch the auction for each bid.
+      const bidsOnThisSellerSnap = await db.collection('bids')
         .where('bidderId', '==', bidderId)
-        .orderBy('createdAt', 'desc')
-        .limit(100)
+        .where('sellerId', '==', sellerId)
+        .count()
         .get();
-        
-      const uniqueAuctionIds = [...new Set(allBidsSnap.docs.map(d => d.data().auctionId))];
-      
-      let bidsOnThisSeller = 0;
-      // Fetch seller info for each unique auction
-      const chunks = [];
-      for (let i = 0; i < uniqueAuctionIds.length; i += 10) {
-        chunks.push(uniqueAuctionIds.slice(i, i + 10));
-      }
 
-      for (const chunk of chunks) {
-        const auctionsSnap = await db.collection('auctions').where('id', 'in', chunk).get();
-        auctionsSnap.docs.forEach(doc => {
-          if (doc.data().sellerId === sellerId) {
-            bidsOnThisSeller++;
-          }
-        });
-      }
-
-      const ratio = bidsOnThisSeller / uniqueAuctionIds.length;
+      const bidsOnThisSeller = bidsOnThisSellerSnap.data().count;
+      const ratio = bidsOnThisSeller / totalBids;
 
       if (ratio >= SUSPICIOUS_THRESHOLDS.SAME_SELLER_BID_RATIO) {
         // Flag as potential shill bidding

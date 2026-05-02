@@ -49,10 +49,10 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       const ref = providerRef ?? `PAY-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 
       tx.update(txRef, {
-        status:           'HELD',
-        paymentMethod:    'bkash_automatic',
+        status:           'VERIFICATION_PENDING', // Security gate: Requires admin review of MFS statement
+        paymentMethod:    'mfs_manual',
         providerRef:      ref,
-        verificationType: 'AUTOMATIC',
+        verificationType: 'MANUAL',
         updatedAt:        new Date(),
       });
 

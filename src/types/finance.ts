@@ -1,10 +1,13 @@
 import { EscrowStatus, DisputeStatus } from './enums';
+import { Auction } from './auction';
 
 export interface EscrowTransaction {
   id: string;
   auctionId: string;
   buyerId: string;
+  sellerId: string; // Ensure this is present
   amount: number;
+  deliveryDeposit: number;
   status: EscrowStatus;
   paymentMethod?: string | null;
   providerRef?: string | null;
@@ -12,6 +15,11 @@ export interface EscrowTransaction {
   verificationType?: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface HydratedEscrowTransaction extends EscrowTransaction {
+  auction: Auction & { seller: { name: string | null; image: string | null } };
+  dispute: Dispute | null;
 }
 
 export interface Dispute {

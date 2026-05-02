@@ -48,7 +48,8 @@ import { Metadata } from "next";
 import Script from "next/script";
 import { getTranslations } from "next-intl/server";
 import { ErrorType, errorResponse } from "@/lib/errors";
-import { Bid, AuctionStatus } from "@/types";
+import SecondChanceButton from "@/components/auction/SecondChanceButton";
+import { AuctionStatus } from "@/types";
 import { SecondChanceOfferButton } from "@/components/auction/SecondChanceOfferButton";
 
 interface Props {
@@ -433,21 +434,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                   
                   {/* Second Chance Offer Action */}
                   {session?.user?.id === auction.sellerId && auction.status === AuctionStatus.SOLD && (
-                    <form action={async () => {
-                      'use server';
-                      const { triggerSecondChanceOffer } = await import('@/actions/auction');
-                      const res = await triggerSecondChanceOffer(id);
-                      if (res.success) {
-                          // Revalidation handled in action
-                      }
-                    }}>
-                      <button
-                        type="submit"
-                        className="w-full py-2.5 bg-white border border-primary-200 text-primary-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-50 transition-all flex items-center justify-center gap-2"
-                      >
-                        <RefreshCw className="w-3 h-3" /> Offer Second Chance
-                      </button>
-                    </form>
+                    <SecondChanceButton auctionId={id} />
                   )}
                 </div>
                 

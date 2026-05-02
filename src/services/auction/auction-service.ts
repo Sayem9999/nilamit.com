@@ -1,4 +1,4 @@
-import { db, snapDocs, newId, toSellerPublic, toSellerPrivate } from '@/lib/db';
+import { db, snapDocs, newId, toSellerPublic, toSellerPrivate, incrementGlobalStat } from '@/lib/db';
 import { Auction, AuctionFilters, AuctionWithSeller, SellerPublic, Bid, LatestActivity } from '@/types';
 import { sanitizeObject } from '@/lib/sanitizer';
 import { filterPII } from '@/lib/pii-filter';
@@ -181,6 +181,10 @@ export class AuctionService {
       };
 
       await db.collection('auctions').doc(id).set(auction);
+      
+      // Increment global stats (Fire and forget)
+      incrementGlobalStat('totalAuctions').catch(() => {});
+      
       log.info('Auction created successfully', { auctionId: id, sellerId: userId });
       
       return successResponse(auction);
@@ -200,29 +204,24 @@ export class AuctionService {
         const aSnap = await tx.get(aRef);
         if (!aSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
 
-        const auction = aSnap.data() as Auction;
+        const auction = aSnap.data() as Auction & { 
+          secondHighestBidderId?: string | null; 
+          secondHighestBidAmount?: number;
+        };
         
-        // Find second highest bidder (excluding the current non-paying winner)
-        const bidsSnap = await db.collection('bids')
-          .where('auctionId', '==', auctionId)
-          .orderBy('amount', 'desc')
-          .limit(2)
-          .get();
+        const secondBidderId = auction.secondHighestBidderId;
+        const secondAmount = auction.secondHighestBidAmount;
 
-        if (bidsSnap.docs.length < 2) {
-          return errorResponse(ErrorType.NOT_FOUND, 'No second bidder available');
+        if (!secondBidderId || !secondAmount) {
+          return errorResponse(ErrorType.NOT_FOUND, 'No eligible second bidder recorded');
         }
-
-        const secondBid = bidsSnap.docs[1].data();
-        const secondBidderId = secondBid.bidderId;
-        const secondAmount = secondBid.amount;
 
         tx.update(aRef, {
           status: 'OFFER_PENDING',
           currentBidderId: secondBidderId,
           currentPrice: secondAmount,
           updatedAt: new Date(),
-          originalWinnerId: auction.currentBidderId, // Track who failed to pay
+          originalWinnerId: auction.currentBidderId,
         });
 
         // Log the event

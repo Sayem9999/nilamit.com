@@ -114,3 +114,15 @@ function normalizeDoc<T>(id: string, data: FirebaseFirestore.DocumentData): T {
 
   return normalized as T;
 }
+
+/** Increment a global platform statistic atomically (O(1) cost/latency vs count()) */
+export async function incrementGlobalStat(field: 'totalUsers' | 'totalBids' | 'totalAuctions' | 'totalVerifiedSellers' | 'totalRevenue', amount = 1) {
+  try {
+    await db.collection('stats').doc('global').set({
+      [field]: FieldValue.increment(amount),
+      updatedAt: Timestamp.now()
+    }, { merge: true });
+  } catch (e) {
+    console.error(`[db] Failed to increment global stat ${field}`, e);
+  }
+}

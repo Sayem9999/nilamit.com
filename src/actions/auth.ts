@@ -1,6 +1,6 @@
 'use server';
 
-import { db } from '@/lib/db';
+import { db, incrementGlobalStat } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { verifyStandaloneOTP } from './phone';
 import { normalizePhone } from '@/lib/utils';
@@ -39,6 +39,9 @@ export async function registerUser(data: unknown) {
       rating: 3.5, ratingCount: 0,
       winningStreak: 0, userLevel: 1, createdAt: now, updatedAt: now,
     });
+    
+    // Increment global stats (Fire and forget)
+    incrementGlobalStat('totalUsers').catch(() => {});
 
     return successResponse(null);
   } catch (e) {
@@ -82,6 +85,10 @@ export async function signupWithPhone(data: unknown) {
       rating: 3.5, ratingCount: 0,
       winningStreak: 0, userLevel: 1, createdAt: now, updatedAt: now,
     });
+    
+    // Increment global stats (Fire and forget)
+    incrementGlobalStat('totalUsers').catch(() => {});
+
     return successResponse(null);
   } catch (e) {
     log.error('[auth] signupWithPhone', e);

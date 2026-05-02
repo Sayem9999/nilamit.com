@@ -31,6 +31,17 @@ export interface ChatData extends Conversation {
   };
 }
 
+export interface CoordinationHubItem extends Conversation {
+  auction: { 
+    id: string;
+    title: string; 
+    images: string[]; 
+    escrowTransaction?: { status: string; id: string };
+    logistics?: { status: string; trackingId: string };
+  };
+  messages: Message[];
+}
+
 export interface Report {
   id: string;
   auctionId: string;

@@ -65,6 +65,7 @@ export type AuctionWithSeller = Auction & {
   seller: SellerPublic & { phone?: string | null };
   winner?: { id: string; name: string | null; image: string | null } | null;
   watchlist?: { userId: string }[];
+  isWatchlisted?: boolean;
 };
 
 export type BidWithBidder = Bid & { 

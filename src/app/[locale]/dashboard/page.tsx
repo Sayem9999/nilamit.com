@@ -14,10 +14,14 @@ import type { AuctionWithSeller } from "@/types";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 import { getTranslations } from "next-intl/server";
 import { getSystemConfig } from "@/actions/admin-content";
+import { EscrowService } from "@/services/finance/escrow-service";
+import { CoordinationService } from "@/services/social/coordination-service";
+import { HydratedEscrowTransaction, CoordinationHubItem } from "@/types";
 import {
   ChevronRight,
   Trophy,
-  Shield
+  Shield,
+  BarChart3
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -59,33 +63,8 @@ export default async function DashboardPage({
   // Fetch relevant data based on tab
   let watchlistAuctions: AuctionWithSeller[] = [];
   let activeBids: AuctionWithSeller[] = [];
-
-  // Coordination/Escrow items can have slightly different shapes
-  type CoordinationItem = {
-    id: string;
-    auctionId: string;
-    lastMessageAt: Date | number;
-    auction: { 
-      title: string; 
-      images: string[]; 
-      id: string; 
-      escrowTransaction?: { status: string; id: string };
-      logistics?: { status: string; trackingId: string };
-    };
-    messages: { id: string; content: string; createdAt: Date; senderId: string }[];
-  };
-
-  type EscrowListItem = {
-    id: string;
-    auctionId: string;
-    amount: number;
-    status: string;
-    createdAt: Date;
-    auction: { id: string; title: string; images: string[]; seller: { name: string | null; image: string | null }; endTime: Date | string };
-    dispute: { id: string; reason: string } | null;
-  };
-
-  let escrowTransactions: (EscrowListItem | CoordinationItem)[] = [];
+  let escrowTransactions: HydratedEscrowTransaction[] = [];
+  let coordinationItems: CoordinationHubItem[] = [];
 
   // ─── LISTINGS ──────────────────────────────────────────────────────────────
   if (currentTab === "listings") {
@@ -202,103 +181,16 @@ export default async function DashboardPage({
 
   // ─── ESCROW ────────────────────────────────────────────────────────────────
   } else if (currentTab === "escrow") {
-    const escrowSnap = await db.collection('escrowTransactions')
-      .where('buyerId', '==', userId)
-      .orderBy('createdAt', 'desc')
-      .get();
-
-    if (!escrowSnap.empty) {
-      const escrowDocs = escrowSnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; auctionId: string; createdAt: FirebaseFirestore.Timestamp; [key: string]: unknown }));
-      const auctionIds = [...new Set(escrowDocs.map(e => e.auctionId))];
-
-      // Batch auctions + disputes in parallel
-      const [auctionSnaps, disputeSnaps] = await Promise.all([
-        db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id))),
-        Promise.all(escrowDocs.map(e =>
-          db.collection('disputes').where('transactionId', '==', e.id).limit(1).get()
-        )),
-      ]);
-      const auctionMap = new Map(auctionSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
-
-      // Batch sellers
-      const sellerIds = [...new Set(auctionSnaps.map(s => s.data()?.sellerId).filter(Boolean) as string[])];
-      const sellerMap = new Map<string, FirebaseFirestore.DocumentData>();
-      if (sellerIds.length > 0) {
-        const sellerSnaps = await db.getAll(...sellerIds.map(id => db.collection('users').doc(id)));
-        sellerSnaps.forEach(s => sellerMap.set(s.id, s.data() ?? {}));
-      }
-
-      escrowTransactions = escrowDocs.map((e, i) => {
-        const a = auctionMap.get(e.auctionId);
-        if (!a) return null;
-        const seller = sellerMap.get(a.sellerId as string) ?? {};
-        return {
-          ...e,
-          createdAt: e.createdAt?.toDate?.() || new Date(),
-          auction: { 
-            ...a, 
-            id: e.auctionId, 
-            images: a.images || [],
-            seller: { name: seller.name, image: seller.image },
-            endTime: a.endTime?.toDate?.() || new Date(a.endTime)
-          },
-          dispute: disputeSnaps[i].empty ? null : { ...disputeSnaps[i].docs[0].data(), id: disputeSnaps[i].docs[0].id },
-        } as EscrowListItem;
-      }).filter((x): x is EscrowListItem => x !== null);
+    const res = await EscrowService.getBuyerEscrows(userId);
+    if (res.success) {
+      escrowTransactions = res.data;
     }
 
   // ─── COORDINATION HUB ──────────────────────────────────────────────────────
   } else if (currentTab === "coordination") {
-    const [buyerConvSnap, sellerConvSnap] = await Promise.all([
-      db.collection('conversations').where('buyerId', '==', userId).get(),
-      db.collection('conversations').where('sellerId', '==', userId).get(),
-    ]);
-
-    const convMap = new Map<string, FirebaseFirestore.DocumentSnapshot>();
-    [...buyerConvSnap.docs, ...sellerConvSnap.docs].forEach(d => convMap.set(d.id, d));
-    const allConvs = Array.from(convMap.values()).map(d => ({ ...d.data(), id: d.id } as { id: string; auctionId: string; lastMessageAt: number; [key: string]: unknown }));
-
-    if (allConvs.length > 0) {
-      const auctionIds = [...new Set(allConvs.map(c => c.auctionId))];
-
-      // Batch auctions, escrows, and last messages in two passes
-      const [auctionSnaps, escrowSnaps, messageSnaps] = await Promise.all([
-        db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id))),
-        db.getAll(...auctionIds.map(id => db.collection('escrowTransactions').doc(id))),
-        Promise.all(allConvs.map(conv =>
-          db.collection('messages')
-            .where('conversationId', '==', conv.id)
-            .orderBy('createdAt', 'desc')
-            .limit(1)
-            .get()
-        )),
-      ]);
-      const auctionMap = new Map(auctionSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
-      const escrowMap  = new Map(escrowSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
-
-      escrowTransactions = allConvs.map((conv, i) => {
-        const a      = auctionMap.get(conv.auctionId);
-        const escrow = escrowMap.get(conv.auctionId);
-        if (!a || !escrow) return null;
-        if (escrow.status !== 'HELD' && escrow.status !== 'DISPUTED') return null;
-
-        return {
-          ...conv,
-          lastMessageAt: conv.lastMessageAt,
-          auction: {
-            title: a.title, 
-            images: a.images || [], 
-            id: conv.auctionId,
-            escrowTransaction: { status: escrow.status, id: conv.auctionId },
-            logistics: a.logistics ? { status: a.logistics.status, trackingId: a.logistics.trackingId } : undefined,
-          },
-          messages: messageSnaps[i].empty
-            ? []
-            : [{ ...messageSnaps[i].docs[0].data() as { content: string; createdAt: Date; senderId: string }, id: messageSnaps[i].docs[0].id }],
-        } as CoordinationItem;
-      }).filter((x): x is CoordinationItem => x !== null).sort((a, b) =>
-        (Number(b.lastMessageAt) || 0) - (Number(a.lastMessageAt) || 0)
-      );
+    const res = await CoordinationService.getActiveCoordination(userId);
+    if (res.success) {
+      coordinationItems = res.data;
     }
   }
 
@@ -461,6 +353,17 @@ export default async function DashboardPage({
                     {/* Retailer Specific Tools */}
                     <div className="pt-3">
                       <Link
+                        href={`/${locale}/retailer/dashboard`}
+                        className="flex items-center justify-between w-full py-2.5 px-3 bg-[#0a0a0b] hover:bg-black rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="w-3 h-3 text-indigo-400 group-hover:scale-110 transition-transform" />
+                          <span>Command Center</span>
+                        </div>
+                        <ArrowRight className="w-3 h-3 opacity-50" />
+                      </Link>
+
+                      <Link
                         href={`/${locale}/seller/inventory/bulk`}
                         className="flex items-center justify-between w-full py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md shadow-indigo-100 group"
                       >
@@ -557,19 +460,19 @@ export default async function DashboardPage({
                     {t("activeCoordination")} ({escrowTransactions.length})
                   </h2>
                 </div>
-                {escrowTransactions.length > 0 ? (
+                {coordinationItems.length > 0 ? (
                   <div className="grid grid-cols-1 gap-4">
-                    {escrowTransactions.map((conv) => (
+                    {coordinationItems.map((conv) => (
                       <Link 
                         key={conv.id} 
                         href={`/${locale}/dashboard/coordination/${conv.id}`}
                         className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-4"
                       >
                          <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                            {(conv as CoordinationItem).auction.images?.[0] ? (
+                            {conv.auction.images?.[0] ? (
                               <Image 
-                                src={(conv as CoordinationItem).auction.images[0]} 
-                                alt={(conv as CoordinationItem).auction.title} 
+                                src={conv.auction.images[0]} 
+                                alt={conv.auction.title} 
                                 width={64} 
                                 height={64} 
                                 className="w-full h-full object-cover" 
@@ -582,21 +485,21 @@ export default async function DashboardPage({
                          </div>
                          <div className="flex-1">
                            <div className="flex items-center justify-between">
-                              <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{(conv as CoordinationItem).auction.title}</h3>
+                              <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{conv.auction.title}</h3>
                               <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border bn ${
-                                (conv as CoordinationItem).auction.escrowTransaction?.status === 'DISPUTED' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                conv.auction.escrowTransaction?.status === 'DISPUTED' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                               }`}>
-                                {te(`status_${(conv as CoordinationItem).auction.escrowTransaction?.status || 'PENDING'}`)}
+                                {te(`status_${conv.auction.escrowTransaction?.status || 'PENDING'}`)}
                               </span>
                            </div>
                            <p className="text-sm text-gray-500 line-clamp-1 mt-1 font-medium italic">
-                             {(conv as CoordinationItem).messages?.[0]?.content || t("noMessagesYet")}
+                             {conv.messages?.[0]?.content || t("noMessagesYet")}
                            </p>
-                            {(conv as CoordinationItem).auction.logistics?.status ? (
+                            {conv.auction.logistics?.status ? (
                               <div className="flex items-center gap-2 mt-2 bg-blue-50 px-2 py-0.5 rounded-lg w-fit">
                                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
                                 <span className="text-[10px] font-black text-blue-700 uppercase tracking-tight">
-                                  {(conv as CoordinationItem).auction.logistics?.status.replace(/_/g, ' ')}
+                                  {conv.auction.logistics?.status.replace(/_/g, ' ')}
                                 </span>
                               </div>
                             ) : (

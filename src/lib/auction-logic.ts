@@ -1,6 +1,5 @@
 import 'server-only';
-import { db } from '@/lib/db';
-import { FieldValue } from 'firebase-admin/firestore';
+import { db, incrementGlobalStat } from '@/lib/db';
 import { sendAuctionWonEmail } from '@/lib/firebase-email';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
@@ -65,11 +64,8 @@ export function processAuctionSale(
 
   // ─── Aggregator: Increment Global Revenue ──────────────────────────────────
   // Track platform revenue in a single document to avoid O(N) scans in Admin UI.
-  const statsRef = db.collection('stats').doc('global');
-  transaction.set(statsRef, {
-    totalRevenue: FieldValue.increment(fee),
-    updatedAt: now
-  }, { merge: true });
+  // Fired outside the transaction as it is non-critical for auction finalization
+  incrementGlobalStat('totalRevenue', fee).catch(() => {});
 
   const escrowRef = db.collection('escrowTransactions').doc(auction.id);
   // set() without merge so a second call can never silently re-open a closed escrow
@@ -164,21 +160,23 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
 
 // ─── closeAllEndedAuctions ───────────────────────────────────────────────────
 export async function closeAllEndedAuctions(): Promise<void> {
+  // Increase limit to 200 to handle flash-sale surges.
+  // 200 auctions @ 10 concurrency = ~20-30s execution, safe for Cloud Run.
   const snap = await db.collection('auctions')
     .where('status', '==', 'ACTIVE')
     .where('endTime', '<=', new Date())
-    .limit(50)
+    .limit(200)
     .get();
 
   if (snap.empty) return;
 
-  // Process with a concurrency cap to balance throughput against Firestore
-  // transaction contention. 10 concurrent is safe; sequential was too slow
-  // (50 × ~500ms = ~25s, dangerously close to 60s Cloud Run timeout).
-  const CONCURRENCY = 10;
+  const CONCURRENCY = 15; // Slightly higher concurrency for faster drainage
   const ids = snap.docs.map((d) => d.id);
+  
+  log.info(`[Cron] Closing ${ids.length} ended auctions...`);
 
   for (let i = 0; i < ids.length; i += CONCURRENCY) {
-    await Promise.all(ids.slice(i, i + CONCURRENCY).map((id) => closeAuctionIfEnded(id)));
+    const chunk = ids.slice(i, i + CONCURRENCY);
+    await Promise.all(chunk.map((id) => closeAuctionIfEnded(id)));
   }
 }

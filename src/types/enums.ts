@@ -18,12 +18,13 @@ export const OrderStatus = {
 export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
 
 export const EscrowStatus = {
-  PENDING:      'PENDING',
-  HELD:         'HELD',
-  RELEASED:     'RELEASED',
-  REFUNDED:     'REFUNDED',
-  DISPUTED:     'DISPUTED',
-  FEE_REFUNDED: 'FEE_REFUNDED',
+  PENDING:          'PENDING',
+  COMMITMENT_PAID:  'COMMITMENT_PAID',
+  HELD:             'HELD',
+  RELEASED:         'RELEASED',
+  REFUNDED:         'REFUNDED',
+  DISPUTED:         'DISPUTED',
+  FEE_REFUNDED:     'FEE_REFUNDED',
 } as const;
 export type EscrowStatus = typeof EscrowStatus[keyof typeof EscrowStatus];
 

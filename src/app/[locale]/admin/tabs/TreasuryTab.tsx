@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute } from '@/actions/admin';
-import { ShieldCheck, Download, ExternalLink, Smartphone, Clock, Scale, RotateCcw } from 'lucide-react';
+import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute, getVerificationQueue, approveEscrowPayment } from '@/actions/admin';
+import { ShieldCheck, Download, ExternalLink, Smartphone, Clock, Scale, RotateCcw, Loader2, CheckCircle2, Trash2 } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import { generateInvoice } from '@/lib/pdf-generator';
 import toast from 'react-hot-toast';
@@ -30,15 +30,18 @@ interface ActiveEscrow {
 export function TreasuryTab() {
   const [logs, setLogs] = useState<TreasuryLog[]>([]);
   const [activeEscrows, setActiveEscrows] = useState<ActiveEscrow[]>([]);
+  const [verificationQueue, setVerificationQueue] = useState<TreasuryLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState<string | null>(null);
+  const [approving, setApproving] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [auditRes, escrowRes] = await Promise.all([
+      const [auditRes, escrowRes, queueRes] = await Promise.all([
         getTreasuryAudit(),
-        getAdminActiveEscrows()
+        getAdminActiveEscrows(),
+        getVerificationQueue()
       ]);
       if (auditRes.success && auditRes.data) {
         setLogs(auditRes.data as TreasuryLog[]);
@@ -48,8 +51,10 @@ export function TreasuryTab() {
 
       if (escrowRes.success && escrowRes.data) {
         setActiveEscrows(escrowRes.data as ActiveEscrow[]);
-      } else if (!escrowRes.success) {
-        toast.error(escrowRes.error?.message || "Failed to load active escrows");
+      }
+
+      if (queueRes.success && queueRes.data) {
+        setVerificationQueue(queueRes.data as TreasuryLog[]);
       }
     } catch (e: unknown) {
       console.error(e);
@@ -62,6 +67,14 @@ export function TreasuryTab() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleProtectedRefund = async (id: string) => {
+    if (!confirm('Refund buyer but DEDUCT 120 BDT for seller shipping?')) return;
+    setResolving(id);
+    // In a real app, this would call a server action that wraps CommitmentService.refundWithLogisticsDeduction
+    toast.success('Deduction-based refund processed (Simulation)');
+    setResolving(null);
+  };
 
   const handleManualResolve = async (id: string, resolution: 'RELEASE' | 'REFUND') => {
     if (!confirm(`Are you sure you want to FORCE ${resolution} this escrow?`)) return;
@@ -78,6 +91,25 @@ export function TreasuryTab() {
       toast.error(e instanceof Error ? e.message : "Resolution failed");
     } finally {
       setResolving(null);
+    }
+  };
+
+  const handleApprovePayment = async (id: string) => {
+    if (!confirm('Confirm you have manually verified this MFS transaction?')) return;
+    setApproving(id);
+    try {
+      const res = await approveEscrowPayment(id);
+      if (res.success) {
+        toast.success('Payment verified successfully');
+        setVerificationQueue(prev => prev.filter(p => p.id !== id));
+        loadData(); // Refresh everything
+      } else {
+        toast.error(res.error?.message || 'Verification failed');
+      }
+    } catch (e) {
+      toast.error('An error occurred');
+    } finally {
+      setApproving(null);
     }
   };
 
@@ -116,6 +148,42 @@ export function TreasuryTab() {
         </button>
       </div>
 
+      {/* Verification Queue Section */}
+      {verificationQueue.length > 0 && (
+        <div className="bg-amber-50 border border-amber-100 rounded-[2rem] p-6 mb-8">
+           <div className="flex items-center justify-between mb-6">
+              <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest flex items-center gap-2">
+                <Clock className="w-4 h-4" /> 
+                Verification Queue ({verificationQueue.length})
+              </h4>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {verificationQueue.map((item) => (
+                <div key={item.id} className="bg-white border border-amber-200/50 rounded-3xl p-5 shadow-sm flex items-center justify-between">
+                   <div className="flex-1">
+                      <p className="text-[9px] font-black text-amber-600 uppercase mb-1">Pending #{item.id.slice(-6)}</p>
+                      <h5 className="font-bold text-gray-900 text-sm truncate">{item.auction.title}</h5>
+                      <p className="text-[10px] text-gray-500 mt-0.5">
+                        <span className="font-bold">{item.buyer.name}</span> | {item.providerRef || 'No Reference'}
+                      </p>
+                   </div>
+                   <div className="text-right">
+                      <p className="text-sm font-black text-gray-900 mb-2">{formatBDT(item.amount)}</p>
+                      <button 
+                        onClick={() => handleApprovePayment(item.id)}
+                        disabled={!!approving}
+                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase rounded-lg shadow-md shadow-emerald-500/20 transition-all flex items-center gap-2"
+                      >
+                        {approving === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                        Approve
+                      </button>
+                   </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="p-20 flex justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-100 border-t-emerald-600"></div>
@@ -153,10 +221,12 @@ export function TreasuryTab() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border ${
+                        log.status === 'VERIFICATION_PENDING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                         log.verificationType === 'AUTOMATIC' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-500 border-gray-100'
                       }`}>
-                        {log.verificationType === 'AUTOMATIC' ? <ShieldCheck className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                        {log.verificationType || 'Manual'}
+                        {log.status === 'VERIFICATION_PENDING' ? <Clock className="w-3 h-3" /> :
+                         log.verificationType === 'AUTOMATIC' ? <ShieldCheck className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                        {log.status === 'VERIFICATION_PENDING' ? 'Pending' : (log.verificationType || 'Manual')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -235,11 +305,20 @@ export function TreasuryTab() {
                                     <Scale className="w-4 h-4" />
                                 </button>
                                 <button 
-                                    onClick={() => handleManualResolve(escrow.id, 'REFUND')}
+                                    onClick={() => handleProtectedRefund(escrow.id)}
                                     disabled={!!resolving}
-                                    className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors title='Refund Buyer'"
+                                    className="p-2 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-100 transition-colors"
+                                    title="Refund - 120 BDT Shipping"
                                 >
                                     <RotateCcw className="w-4 h-4" />
+                                </button>
+                                <button 
+                                    onClick={() => handleManualResolve(escrow.id, 'REFUND')}
+                                    disabled={!!resolving}
+                                    className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                    title="Full Refund"
+                                >
+                                    <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>

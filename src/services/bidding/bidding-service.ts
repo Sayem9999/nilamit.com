@@ -1,4 +1,4 @@
-import { db, newId, snapDocs } from '@/lib/db';
+import { db, newId, snapDocs, incrementGlobalStat } from '@/lib/db';
 import { PlaceBidResult, Alert } from '@/types';
 import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
@@ -46,8 +46,24 @@ export class BiddingService {
         const aSnap = await tx.get(aRef);
         if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const auction: any = aSnap.data()!;
+        const auction = aSnap.data() as {
+          status: string;
+          endTime: { toDate: () => Date } | Date;
+          startTime: { toDate: () => Date } | Date;
+          sellerId: string;
+          currentPrice: number;
+          startingPrice: number;
+          minBidIncrement?: number;
+          currentBidderId?: string | null;
+          proxyMaxBid?: number;
+          proxyBidderId?: string | null;
+          reservePrice?: number | null;
+          bidCount?: number;
+          wasExtended?: boolean;
+          secondHighestBidderId?: string | null;
+          secondHighestBidAmount?: number;
+          title: string;
+        };
         const now     = new Date();
         const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
         const increment = auction.minBidIncrement ?? 10;
@@ -73,6 +89,9 @@ export class BiddingService {
         let newCurrentBidderId = auction.currentBidderId;
         let newProxyMaxBid = auction.proxyMaxBid ?? 0;
         let newProxyBidderId = auction.proxyBidderId ?? null;
+        
+        let newSecondHighestBidderId = auction.secondHighestBidderId ?? null;
+        let newSecondHighestBidAmount = auction.secondHighestBidAmount ?? 0;
 
         // ─── PROXY BIDDING LOGIC ───
         if (!newCurrentBidderId) {
@@ -92,12 +111,18 @@ export class BiddingService {
           // Competitive bidding
           if (amount > existingProxy) {
             // New bidder overtakes the old proxy
+            newSecondHighestBidderId = existingProxyBidder;
+            newSecondHighestBidAmount = existingProxy;
+            
             newCurrentPrice = Math.min(amount, existingProxy + increment);
             newCurrentBidderId = userId;
             newProxyMaxBid = amount;
             newProxyBidderId = userId;
           } else {
             // New bidder fails to overtake the old proxy
+            newSecondHighestBidderId = userId;
+            newSecondHighestBidAmount = amount;
+
             newCurrentPrice = Math.min(existingProxy, amount + increment);
             // newCurrentBidderId remains the existingProxyBidder
             newCurrentBidderId = existingProxyBidder;
@@ -111,7 +136,15 @@ export class BiddingService {
         // Create bid record (audit trail)
         const bidId  = newId();
         const bidRef = db.collection('bids').doc(bidId);
-        tx.set(bidRef, { id: bidId, amount, auctionId, bidderId: userId, createdAt: now, isProxy: true });
+        tx.set(bidRef, { 
+          id: bidId, 
+          amount, 
+          auctionId, 
+          bidderId: userId, 
+          sellerId: auction.sellerId, // DENORMALIZATION for shill detection
+          createdAt: now, 
+          isProxy: true 
+        });
 
         // Anti-sniping
         const { newEndTime, triggered: antiSnipeTriggered } = computeAntiSnipeExtension({ endTime, now });
@@ -121,6 +154,8 @@ export class BiddingService {
           currentBidderId: newCurrentBidderId,
           proxyMaxBid:     newProxyMaxBid,
           proxyBidderId:   newProxyBidderId,
+          secondHighestBidderId: newSecondHighestBidderId,
+          secondHighestBidAmount: newSecondHighestBidAmount,
           isReserveMet,
           endTime:         newEndTime,
           wasExtended:     antiSnipeTriggered ? true : (auction.wasExtended || false),
@@ -143,6 +178,9 @@ export class BiddingService {
       this.handleBidSideEffects(txResult, auctionId, userId, userName, userEmail, amount).catch(
         (e) => log.error('[BiddingService] handleBidSideEffects uncaught', e, { auctionId, userId })
       );
+
+      // Increment global stats (Fire and forget)
+      incrementGlobalStat('totalBids').catch(() => {});
 
       return {
         bid: { id: txResult.bidId, amount, auctionId, bidderId: userId, createdAt: new Date() },

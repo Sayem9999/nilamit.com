@@ -1,5 +1,5 @@
-"use client";
-
+import { HydratedEscrowTransaction } from "@/types/finance";
+import { EscrowStatus } from "@/types/enums";
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,32 +12,27 @@ import { useTranslations, useLocale } from "next-intl";
 import { formatBDT } from "@/lib/format";
 import dynamic from "next/dynamic";
 const MockPaymentGateway = dynamic(() => import("@/components/payment/MockPaymentGateway").then(mod => mod.MockPaymentGateway), { ssr: false });
+import DisputeModal from "./DisputeModal";
 
 import { useSession } from "next-auth/react";
 
-interface EscrowTransaction {
-  id: string;
-  status: string;
-  amount: number;
-  auction: {
-    title: string;
-    seller: { name: string | null };
-    endTime: string | Date;
+interface EscrowActionCardProps {
+  transaction: HydratedEscrowTransaction;
+  treasuryNumbers?: {
+    bkash: string;
+    nagad: string;
   };
-  dispute?: { reason: string } | null;
 }
 
 export function EscrowActionCard({
   transaction,
   treasuryNumbers,
-}: {
-  transaction: EscrowTransaction;
-  treasuryNumbers: { bkash: string | null; nagad: string | null };
-}) {
+}: EscrowActionCardProps) {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [paymentProvider, setPaymentProvider] = useState<'bkash' | 'nagad'>('bkash');
+  const [isDisputeOpen, setIsDisputeOpen] = useState(false);
   const router = useRouter();
   const t = useTranslations("Escrow");
   const locale = useLocale();
@@ -92,25 +87,15 @@ export function EscrowActionCard({
     setLoading(false);
   };
 
-  const isPending = transaction.status === "PENDING";
-  const isHeld = transaction.status === "HELD";
-  const isReleased = transaction.status === "RELEASED";
-  const isDisputed = transaction.status === "DISPUTED";
-  const isRefunded = transaction.status === "REFUNDED";
+  const isPending = transaction.status === EscrowStatus.PENDING;
+  const isVerifying = transaction.status === EscrowStatus.VERIFICATION_PENDING;
+  const isHeld = transaction.status === EscrowStatus.HELD;
+  const isReleased = transaction.status === EscrowStatus.RELEASED;
+  const isDisputed = transaction.status === EscrowStatus.DISPUTED;
+  const isRefunded = transaction.status === EscrowStatus.REFUNDED;
 
-  const handleRaiseDispute = async () => {
-    const reason = window.prompt(t("disputePrompt"));
-    if (!reason) return;
-
-    setLoading(true);
-    const result = await raiseDispute(transaction.id, reason);
-    if (result.success) {
-      toast.success(t("disputeSubmitted"));
-      router.refresh();
-    } else {
-      toast.error(result.error?.message || t("disputeFailed"));
-    }
-    setLoading(false);
+  const handleRaiseDispute = () => {
+    setIsDisputeOpen(true);
   };
 
   return (
@@ -124,6 +109,7 @@ export function EscrowActionCard({
             {isReleased && t("fundsReleased")}
             {isHeld && t("paymentSecured")}
             {isPending && t("awaitingPayment")}
+            {isVerifying && "Verification in Progress"}
             {isDisputed && t("underDispute")}
             {isRefunded && t("refunded")}
           </CardTitle>
@@ -148,6 +134,15 @@ export function EscrowActionCard({
             <p className="text-sm text-slate-500 dark:text-slate-400 bn">
               {t("sellerLabel")}: {transaction.auction.seller.name || "N/A"}
             </p>
+
+            {/* Logistics Protection Badge */}
+            <div className="mt-3 flex items-center gap-2">
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest bn">Logistics Protected</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium bn italic">Covers RTO shipping up to 120 BDT</span>
+            </div>
 
             <div className="mt-4 flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
               <div className="flex items-center gap-1.5">
@@ -185,6 +180,24 @@ export function EscrowActionCard({
                 >
                    {loading ? t("processing") : (!hasMFS ? t("linkMFSBtn") : t("payAdvance"))}
                 </Button>
+                <div className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800">
+                  <AlertTriangle className="w-3 h-3 text-slate-400 mt-0.5" />
+                  <p className="text-[9px] text-slate-500 leading-tight bn">
+                    Rejections without cause (e.g. &quot;change of mind&quot;) will incur a 120 BDT deduction from refund to cover seller&apos;s shipping.
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {isVerifying && (
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-600">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="w-4 h-4 text-amber-500 animate-spin" />
+                  <p className="text-xs font-bold bn uppercase">Awaiting Admin Review</p>
+                </div>
+                <p className="text-[10px] leading-relaxed bn">
+                  Your payment reference is in our verification queue. Once an admin confirms the MFS statement, the auction will proceed to shipment.
+                </p>
               </div>
             )}
 
@@ -279,6 +292,12 @@ export function EscrowActionCard({
         amount={transaction.amount > 100000 ? 250 : 0} // Logic for advance (Current threshold check)
         provider={paymentProvider}
         merchantNumber={paymentProvider === 'bkash' ? treasuryNumbers.bkash : treasuryNumbers.nagad}
+      />
+
+      <DisputeModal 
+        transactionId={transaction.id}
+        isOpen={isDisputeOpen}
+        onClose={() => setIsDisputeOpen(false)}
       />
     </Card>
   );

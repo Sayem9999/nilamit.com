@@ -89,7 +89,7 @@ export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
 export const MAX_AUCTION_PRICE_BDT = 10_000_000;
 const MIN_AUCTION_PRICE_BDT        = 1;
 
-const priceSchema = z
+const priceSchema = z.coerce
   .number()
   .int('Price must be a whole number of taka')
   .min(MIN_AUCTION_PRICE_BDT, 'Price must be positive')
@@ -104,9 +104,7 @@ const imageUrlSchema = z
  * ISO-8601 datetime string. We accept the string form (cheap to send from the
  * client) and validate parseability at the boundary.
  */
-const isoDatetime = z
-  .string()
-  .refine((v) => !Number.isNaN(Date.parse(v)), 'Invalid date');
+const isoDatetime = z.coerce.date();
 
 const VALID_CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug);
 

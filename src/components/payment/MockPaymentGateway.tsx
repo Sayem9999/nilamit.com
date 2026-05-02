@@ -17,6 +17,7 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
   const [step, setStep] = useState<'details' | 'processing' | 'success'>('details');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [receiptRef, setReceiptRef] = useState('');
+  const [hasConsented, setHasConsented] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -30,11 +31,12 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
       setStep('details');
        
       setPhoneNumber('');
+      setHasConsented(false);
     }
   }, [isOpen]);
 
   const handlePay = () => {
-    if (phoneNumber.length < 11) return;
+    if (phoneNumber.length < 11 || !hasConsented) return;
     setStep('processing');
     
     // Simulate Gateway Logic (2 seconds)
@@ -116,18 +118,27 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
                       </div>
                     </label>
 
+                    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                      <input 
+                        type="checkbox" 
+                        id="policy-consent"
+                        checked={hasConsented}
+                        onChange={(e) => setHasConsented(e.target.checked)}
+                        className="mt-1 w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                      <label htmlFor="policy-consent" className="text-[10px] text-gray-500 leading-tight">
+                        I have read and agree to the <a href="/policy" target="_blank" className="text-gray-900 font-bold underline">Nilamit Trust & Safety Policy</a>. 
+                        I understand that rejections without cause may incur a <strong>120 BDT shipping deduction</strong> from my refund.
+                      </label>
+                    </div>
+
                     <button
                       onClick={handlePay}
-                      disabled={phoneNumber.length < 11}
+                      disabled={phoneNumber.length < 11 || !hasConsented}
                       className={`w-full py-4 ${currentColors.primary} ${currentColors.hover} text-white rounded-2xl font-black text-lg shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale`}
                     >
                       PAY NOW
                     </button>
-
-                    <p className="text-[10px] text-gray-400 text-center leading-relaxed px-4">
-                      By clicking Pay Now, you agree to the platform&apos;s automated escrow terms.
-                      This is a secure 256-bit encrypted transaction.
-                    </p>
                   </div>
                 </div>
               )}
