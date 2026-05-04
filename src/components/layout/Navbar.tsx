@@ -174,11 +174,12 @@ export function Navbar() {
                       </div>
                       <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
                     </button>
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[1.5rem] shadow-2xl border border-gray-100 p-1.5 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all translate-y-2 group-hover:translate-y-0 scale-95 group-hover:scale-100 origin-top-right">
-                      <div className="px-4 py-3 border-b border-gray-50 mb-1">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t("signedInAs") || "Signed in as"}</p>
-                        <p className="text-xs font-bold text-gray-900 truncate">{session.user?.email}</p>
-                      </div>
+                    <div className="absolute right-0 top-full pt-2 w-56 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all translate-y-2 group-hover:translate-y-0 scale-95 group-hover:scale-100 origin-top-right z-50">
+                      <div className="bg-white rounded-[1.5rem] shadow-2xl border border-gray-100 p-1.5 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-gray-50 mb-1">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t("signedInAs") || "Signed in as"}</p>
+                          <p className="text-xs font-bold text-gray-900 truncate">{session.user?.email}</p>
+                        </div>
                       <Link
                         href={`/${locale}/profile`}
                         className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition-all"
@@ -221,6 +222,7 @@ export function Navbar() {
                       </button>
                     </div>
                   </div>
+                </div>
                 </>
               ) : (
                 <Link
