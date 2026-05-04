@@ -6,9 +6,12 @@ import { getClientDB } from '@/lib/firebase-client';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 
 export type RealTimeBid = {
+  id:         string;
   amount:     number;
   endTime:    Date | string;
   bidderName: string;
+  bidderId:   string;
+  createdAt:  string;
 };
 
 export function useAuctionBids(auctionId: string) {
@@ -35,9 +38,12 @@ export function useAuctionBids(auctionId: string) {
 
       if (data.event === FIREBASE_EVENTS.NEW_BID) {
         const bid: RealTimeBid = {
+          id:         data.id || `rt_${Date.now()}`,
           amount:     data.amount,
           endTime:    data.endTime,
           bidderName: data.bidderName ?? 'Someone',
+          bidderId:   data.bidderId || 'unknown',
+          createdAt:  data.createdAt || new Date().toISOString(),
         };
         setNewBids(prev => [bid, ...prev].slice(0, 10));
         if (data.endTime) setCurrentEndTime(data.endTime);

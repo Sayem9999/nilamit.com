@@ -27,8 +27,20 @@ export async function updateProfile(data: unknown) {
   if (sanitized.image !== undefined) update.image = sanitized.image;
 
   await db.collection('users').doc(session.user.id).update(update);
+  
+  // Return only safe fields to the client
   const snap = await db.collection('users').doc(session.user.id).get();
-  return successResponse({ user: docData<User>(snap) });
+  const userData = snap.data();
+  if (!userData) return errorResponse(ErrorType.NOT_FOUND, 'User not found');
+
+  return successResponse({ 
+    user: {
+      id: snap.id,
+      name: userData.name || null,
+      image: userData.image || null,
+      email: userData.email || null,
+    } 
+  });
 }
 
 
@@ -63,23 +75,25 @@ export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string) {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
+  const { bdPhoneSchema } = await import('@/lib/schemas');
+  const parsedPhone = bdPhoneSchema.safeParse(number);
+  if (!parsedPhone.success) return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladeshi mobile number. Format: +8801XXXXXXXXX');
+  const validatedNumber = parsedPhone.data;
+
   const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success } = await apiLimiter.limit(`mfs_link_${session.user.id}_${ip}`);
   if (!success) return errorResponse(ErrorType.RATE_LIMIT, 'Too many requests. Please wait.');
 
-  const phoneRegex = /^01[3-9]\d{8}$/;
-  if (!phoneRegex.test(number)) return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladeshi mobile number.');
-
   try {
     const field = type === 'bkash' ? 'bkashNumber' : 'nagadNumber';
 
-    const existing = await db.collection('users').where(field, '==', number).limit(1).get();
+    const existing = await db.collection('users').where(field, '==', validatedNumber).limit(1).get();
     if (!existing.empty && existing.docs[0].id !== session.user.id) {
       return errorResponse(ErrorType.CONFLICT, 'This number is already linked to another account.');
     }
 
     await db.collection('users').doc(session.user.id).update({
-      [field]: number, updatedAt: new Date(),
+      [field]: validatedNumber, updatedAt: new Date(),
     });
     return successResponse(null);
   } catch (e) {

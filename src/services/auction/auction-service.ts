@@ -122,8 +122,10 @@ export class AuctionService {
         const rawEnd = a.endTime as any;
         const endTime = rawEnd?.toDate ? rawEnd.toDate() : new Date(rawEnd);
         
+        const { proxyMaxBid, proxyBidderId, ...safeData } = a;
+        
         return {
-          ...a,
+          ...safeData,
           seller: sellerMap.get(a.sellerId)!,
           endTime,
           isWatchlisted: watchlistSet.has(a.id)

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Gavel, TrendingUp, Clock } from "lucide-react";
+import { useAuctionBids } from "@/hooks/useAuctionBids";
 
 interface Bid {
   id: string;
@@ -16,13 +17,27 @@ interface BidHistoryProps {
   initialBids?: Bid[];
 }
 
-export function BidHistory({ initialBids = [] }: BidHistoryProps) {
-  const [bids] = useState<Bid[]>(initialBids);
+export function BidHistory({ auctionId, initialBids = [] }: BidHistoryProps) {
+  const { newBids } = useAuctionBids(auctionId);
+  
+  // Merge initial bids with real-time bids, deduplicating by ID and sorting by amount desc
+  const allBids: Bid[] = [
+    ...newBids.map(b => ({
+      id: b.id,
+      amount: b.amount,
+      createdAt: b.createdAt,
+      bidder: { name: b.bidderName, id: b.bidderId }
+    })),
+    ...initialBids
+  ].filter((bid, index, self) => 
+    index === self.findIndex((t) => t.id === bid.id)
+  ).sort((a, b) => b.amount - a.amount);
+
   const [showAll, setShowAll] = useState(false);
 
-  const displayed = showAll ? bids : bids.slice(0, 5);
+  const displayed = showAll ? allBids : allBids.slice(0, 5);
 
-  if (bids.length === 0) {
+  if (allBids.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
         <Gavel className="w-8 h-8 text-gray-300 mx-auto mb-2" />
@@ -38,7 +53,7 @@ export function BidHistory({ initialBids = [] }: BidHistoryProps) {
           <TrendingUp className="w-4 h-4 text-indigo-500" /> Bid History
         </h3>
         <span className="text-xs text-gray-400 font-medium">
-          {bids.length} bids
+          {allBids.length} bids
         </span>
       </div>
 
@@ -79,12 +94,12 @@ export function BidHistory({ initialBids = [] }: BidHistoryProps) {
         ))}
       </div>
 
-      {bids.length > 5 && (
+      {allBids.length > 5 && (
         <button
           onClick={() => setShowAll(!showAll)}
           className="w-full py-3 text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors border-t border-gray-50"
         >
-          {showAll ? "Show less" : `Show all ${bids.length} bids`}
+          {showAll ? "Show less" : `Show all ${allBids.length} bids`}
         </button>
       )}
     </div>

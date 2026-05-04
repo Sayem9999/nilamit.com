@@ -282,18 +282,21 @@ export class BiddingService {
 
       // RTDB Live State
       (async () => {
+        const now = new Date();
         await Promise.all([
           rtdbSet(RTDB_PATHS.auctionBid(auctionId), {
             event: FIREBASE_EVENTS.NEW_BID, amount,
             endTime: result.newEndTime.toISOString(), bidderName: userName ?? 'Someone',
+            bidderId: userId, createdAt: now.toISOString(),
           }),
           rtdbPush(RTDB_PATHS.auctionActivity(auctionId), {
             event: FIREBASE_EVENTS.NEW_BID, amount, bidderName: userName ?? 'Someone',
+            bidderId: userId, createdAt: now.toISOString(),
           }),
           rtdbPush(RTDB_PATHS.globalActivity(), {
             event: FIREBASE_EVENTS.NEW_BID, amount, 
             bidderName: userName ?? 'Someone', auctionTitle: result.auctionTitle,
-            auctionId, timestamp: Date.now()
+            auctionId, timestamp: now.getTime(), bidderId: userId,
           })
         ]);
       })().catch(e => log.error('bidding: RTDB state updates failed', e, { auctionId })),
