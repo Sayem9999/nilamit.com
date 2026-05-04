@@ -528,10 +528,10 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2">
                         <Image 
-                          src="https://cdn.nilamit.com/assets/bkash-logo.png" 
+                          src="https://www.logo.wine/a/logo/BKash/BKash-Logo.wine.svg" 
                           alt="bKash" 
-                          width={40} 
-                          height={40} 
+                          width={48} 
+                          height={48} 
                           className="object-contain" 
                           onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/40x40?text=bK' }} 
                         />
@@ -565,10 +565,10 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2">
                         <Image 
-                          src="https://cdn.nilamit.com/assets/nagad-logo.png" 
+                          src="https://www.logo.wine/a/logo/Nagad/Nagad-Logo.wine.svg" 
                           alt="Nagad" 
-                          width={40} 
-                          height={40} 
+                          width={48} 
+                          height={48} 
                           className="object-contain" 
                           onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/40x40?text=NG' }} 
                         />
