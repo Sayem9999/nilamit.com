@@ -52,18 +52,7 @@ export default auth((req) => {
   // 2. For all other routes, let next-intl handle the locales
   const response = intlMiddleware(req) || new NextResponse(null, { status: 200 });
 
-  // 3. Security Headers (Apply to ALL routes including /api)
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  response.headers.set('X-DNS-Prefetch-Control', 'on');
-  
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  }
-
-  // 4. API Early Return (Headers are now set)
+  // 3. API Early Return (Headers are already set globally in next.config.ts)
   if (pathname.startsWith('/api')) {
     return response;
   }

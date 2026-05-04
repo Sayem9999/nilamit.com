@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
+import { logoutAction } from "@/actions/auth";
 import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
 import { calculateLevelProgress } from "@/lib/gamification-engine";
 import {
@@ -156,38 +157,118 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20">
-      {/* Premium Header/Cover Area */}
-      <div className="relative h-48 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-700 overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-        <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0">
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="relative p-1.5 bg-white rounded-[2.5rem] shadow-2xl border-4 border-white/20 backdrop-blur-sm"
-          >
-            {session.user?.image ? (
-              <Image
-                src={session.user.image}
-                alt="Profile"
-                width={120}
-                height={120}
-                className="w-28 h-28 md:w-32 md:h-32 rounded-[2.2rem] object-cover"
-              />
-            ) : (
-              <div className="w-28 h-28 md:w-32 md:h-32 bg-primary-50 rounded-[2.2rem] flex items-center justify-center text-primary-600">
-                <User size={48} strokeWidth={1.5} />
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {/* Premium Header/Cover Area with Mesh Gradient */}
+      <div className="relative h-64 bg-primary-600 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-700 via-primary-600 to-indigo-700" />
+        <div className="absolute inset-0 opacity-20" 
+             style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm52-70c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM9 32c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm53 17c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM8 46c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm91-10c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM40 52c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm7 0c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm14-27c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm11 5c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-1 30c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-13 14c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-2 10c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-10-2c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-15-2c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-8-31c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm0-1c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")` }} 
+        />
+        
+        {/* Floating Abstract Shapes */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-48 -mt-48" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -ml-32 -mb-32" />
+        
+        <div className="max-w-5xl mx-auto px-4 h-full relative flex items-end">
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-[-2rem] w-full">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="relative p-1.5 bg-white rounded-[2.5rem] shadow-2xl z-20"
+            >
+              <div className="relative overflow-hidden rounded-[2.2rem] bg-gray-100 ring-4 ring-white shadow-inner">
+                {session.user?.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt="Profile"
+                    width={140}
+                    height={140}
+                    className="w-32 h-32 md:w-40 md:h-40 object-cover"
+                  />
+                ) : (
+                  <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center text-primary-600">
+                    <User size={64} strokeWidth={1} />
+                  </div>
+                )}
               </div>
-            )}
-            <div className="absolute -bottom-2 -right-2 p-2 bg-white rounded-2xl shadow-lg border border-gray-100">
-              <VerificationBadge
-                isPhoneVerified={user.isPhoneVerified}
-                emailVerified={(session.user as { emailVerified?: Date | string | null }).emailVerified || null}
-                isVerifiedSeller={!!(user as { isVerifiedSeller?: boolean }).isVerifiedSeller}
-                size="lg"
-              />
+              <div className="absolute -bottom-2 -right-2 p-2 bg-white rounded-2xl shadow-lg border border-gray-100 z-30">
+                <VerificationBadge
+                  isPhoneVerified={user.isPhoneVerified}
+                  emailVerified={(session.user as { emailVerified?: Date | string | null }).emailVerified || null}
+                  isVerifiedSeller={!!(user as { isVerifiedSeller?: boolean }).isVerifiedSeller}
+                  size="lg"
+                />
+              </div>
+            </motion.div>
+
+            <div className="flex-1 pb-4 text-center md:text-left z-10">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4"
+              >
+                <h1 className="text-3xl md:text-4xl font-black text-white drop-shadow-sm">
+                  {session.user?.name}
+                </h1>
+                {user.userLevel > 5 && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-[10px] font-black text-white uppercase tracking-wider mx-auto md:mx-0">
+                    <Trophy size={12} className="text-amber-400" /> {t_prof("eliteMember") || "Elite Member"}
+                  </div>
+                )}
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center justify-center md:justify-start gap-3 mt-2"
+              >
+                <div className="flex items-center gap-1.5 text-primary-100 font-bold text-sm bg-black/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
+                  <Mail size={14} />
+                  {session.user?.email}
+                </div>
+                {user.phone && (
+                  <div className="flex items-center gap-1.5 text-primary-100 font-bold text-sm bg-black/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
+                    <Smartphone size={14} />
+                    {maskPhone(user.phone)}
+                  </div>
+                )}
+              </motion.div>
             </div>
-          </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="pb-6"
+            >
+              <button 
+                onClick={async () => {
+                  try {
+                    // 1. Try standard Auth.js signout
+                    await signOut({ 
+                      callbackUrl: `${window.location.origin}/${locale}/login`,
+                      redirect: true 
+                    });
+                  } catch (e) {
+                    console.error("Client-side SignOut failed, trying Server Action", e);
+                    try {
+                      // 2. Try Server Action logout
+                      await logoutAction();
+                      window.location.href = `/${locale}/login`;
+                    } catch (e2) {
+                      console.error("Server-side logout failed, trying hard redirect", e2);
+                      // 3. Last resort: hard redirect to signout API
+                      window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}`)}`;
+                    }
+                  }
+                }}
+                className="group flex items-center gap-2 px-6 py-3 bg-white hover:bg-red-50 border border-transparent rounded-[1.5rem] text-sm font-black text-red-600 transition-all shadow-xl hover:shadow-red-500/10 active:scale-95"
+              >
+                <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" /> 
+                {t_nav("signout")}
+              </button>
+            </motion.div>
+          </div>
         </div>
       </div>
 
@@ -195,75 +276,47 @@ export default function ProfilePage() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-5xl mx-auto px-4 mt-20 md:mt-6 md:pl-48"
+        className="max-w-5xl mx-auto px-4 mt-16 pb-20"
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <motion.div variants={itemVariants} className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                {session.user?.name}
-              </h1>
-              {user.userLevel > 5 && (
-                <span className="bg-amber-100 text-amber-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
-                   <Trophy size={10} /> {t_prof("eliteMember") || "Elite Member"}
-                </span>
-              )}
-            </motion.div>
-            <motion.p variants={itemVariants} className="text-gray-500 font-medium flex items-center gap-2">
-              <Mail size={14} className="text-primary-500" />
-              {session.user?.email}
-            </motion.p>
-          </div>
-
-          <motion.div variants={itemVariants} className="flex gap-2">
-            <button 
-              onClick={() => signOut({ callbackUrl: `/${locale}` })}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-red-600 hover:bg-red-50 transition-all shadow-sm"
-            >
-              <LogOut size={16} /> {t_nav("signout")}
-            </button>
-          </motion.div>
-        </div>
-
         {/* Visionary Stats Grid */}
-        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-              <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Star className="text-primary-600 w-5 h-5 fill-primary-600/20" />
+        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+           <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+              <div className="w-12 h-12 bg-primary-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Star className="text-primary-600 w-6 h-6 fill-primary-600/20" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t_prof("reputation") || "Reputation"}</p>
-              <p className="text-xl font-black text-gray-900 leading-tight">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("reputation") || "Reputation"}</p>
+              <p className="text-2xl font-black text-gray-900 leading-tight">
                 {((user?.rating as number) || 3.5).toFixed(1)} <span className="text-xs text-gray-400 font-medium">/ 5.0</span>
               </p>
            </div>
 
-           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Zap className="text-purple-600 w-5 h-5 fill-purple-600/20" />
+           <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+              <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Zap className="text-purple-600 w-6 h-6 fill-purple-600/20" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t_prof("level") || "Level"}</p>
-              <p className="text-xl font-black text-gray-900 leading-tight">
-                {user.userLevel || 1} <span className="text-xs text-gray-400 font-medium">Rank</span>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("level") || "Level"}</p>
+              <p className="text-2xl font-black text-gray-900 leading-tight">
+                {user.userLevel || 1} <span className="text-xs text-gray-400 font-medium tracking-tight">Rank</span>
               </p>
            </div>
 
-           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-              <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Activity className="text-orange-600 w-5 h-5" />
+           <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+              <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Activity className="text-orange-600 w-6 h-6" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t_prof("xpPoints") || "XP Points"}</p>
-              <p className="text-xl font-black text-gray-900 leading-tight">
-                {user.xp || 0} <span className="text-xs text-gray-400 font-medium">Points</span>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("xpPoints") || "XP Points"}</p>
+              <p className="text-2xl font-black text-gray-900 leading-tight">
+                {user.xp || 0} <span className="text-xs text-gray-400 font-medium tracking-tight">XP</span>
               </p>
            </div>
 
-           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Trophy className="text-blue-600 w-5 h-5 fill-blue-600/20" />
+           <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+              <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Trophy className="text-blue-600 w-6 h-6 fill-blue-600/20" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t_prof("winningStreak") || "Win Streak"}</p>
-              <p className="text-xl font-black text-gray-900 leading-tight">
-                {user.winningStreak || 0} <span className="text-xs text-gray-400 font-medium">Auctions</span>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("winningStreak") || "Win Streak"}</p>
+              <p className="text-2xl font-black text-gray-900 leading-tight">
+                {user.winningStreak || 0} <span className="text-xs text-gray-400 font-medium tracking-tight">Wins</span>
               </p>
            </div>
         </motion.div>

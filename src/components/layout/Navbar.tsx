@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
+import { logoutAction } from "@/actions/auth";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -98,7 +99,7 @@ export function Navbar() {
                   {t("explore")}{" "}
                   <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
                 </button>
-                <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                <div className="absolute left-0 top-full pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 scale-95 group-hover:scale-100 origin-top-left">
                   <div className="w-56 bg-white border border-gray-100 rounded-2xl shadow-xl p-1.5 overflow-hidden">
                     <Link
                       href={`/${locale}/leaderboard`}
@@ -140,50 +141,80 @@ export function Navbar() {
                     <LayoutDashboard className="w-4 h-4" /> {t("dashboard")}
                   </Link>
                   <div className="relative group">
-                    <button className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors">
-                      {session.user?.image ? (
-                        <Image
-                          width={32}
-                          height={32}
-                          src={session.user.image}
-                          alt=""
-                          className="rounded-full"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-primary-600" />
-                        </div>
-                      )}
-                      <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                        {session.user?.name?.split(" ")[0]}
-                        {session?.user?.isPhoneVerified || !!session?.user?.emailVerified ? (
-                          <ShieldCheck className="w-3.5 h-3.5 text-blue-500 fill-blue-500/10" />
+                    <button className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-100/50 transition-all group">
+                      <div className="relative">
+                        {session.user?.image ? (
+                          <Image
+                            width={36}
+                            height={36}
+                            src={session.user.image}
+                            alt=""
+                            className="rounded-full ring-2 ring-white shadow-sm"
+                          />
                         ) : (
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                          <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
+                            <User className="w-5 h-5 text-primary-600" />
+                          </div>
                         )}
-                      </span>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center shadow-sm">
+                          {session?.user?.isPhoneVerified || !!session?.user?.emailVerified ? (
+                            <ShieldCheck className="w-2.5 h-2.5 text-blue-500 fill-blue-500" />
+                          ) : (
+                            <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="hidden lg:flex flex-col items-start leading-tight">
+                        <span className="text-xs font-black text-gray-900 uppercase tracking-tight">
+                          {session.user?.name?.split(" ")[0]}
+                        </span>
+                        <span className="text-[9px] font-bold text-gray-400 uppercase">
+                          {t("profile")}
+                        </span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
                     </button>
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-[1.5rem] shadow-2xl border border-gray-100 p-1.5 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all translate-y-2 group-hover:translate-y-0 scale-95 group-hover:scale-100 origin-top-right">
+                      <div className="px-4 py-3 border-b border-gray-50 mb-1">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t("signedInAs") || "Signed in as"}</p>
+                        <p className="text-xs font-bold text-gray-900 truncate">{session.user?.email}</p>
+                      </div>
                       <Link
                         href={`/${locale}/profile`}
-                        className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition-all"
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
                           <User className="w-4 h-4" /> {t("profile")}
                         </div>
                         {session?.user?.isPhoneVerified || !!session?.user?.emailVerified ? (
-                          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase">
+                          <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
                             {t("verified")}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md uppercase">
+                          <span className="text-[9px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
                             {t("unverified")}
                           </span>
                         )}
                       </Link>
                       <button
-                        onClick={() => signOut({ callbackUrl: `/${locale}` })}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                        onClick={async () => {
+                          try {
+                            await signOut({ 
+                              callbackUrl: `${window.location.origin}/${locale}/login`,
+                              redirect: true 
+                            });
+                          } catch (e) {
+                            console.error("Client-side SignOut failed, trying Server Action", e);
+                            try {
+                              await logoutAction();
+                              window.location.href = `/${locale}/login`;
+                            } catch (e2) {
+                              console.error("Server-side logout failed, trying hard redirect", e2);
+                              window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}`)}`;
+                            }
+                          }
+                        }}
+                        className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-xl transition-all font-bold"
                       >
                         <LogOut className="w-4 h-4" /> {t("signout")}
                       </button>
@@ -270,11 +301,25 @@ export function Navbar() {
                       {t("profile")}
                     </Link>
                     <button
-                      onClick={() => {
-                        signOut({ callbackUrl: `/${locale}` });
+                      onClick={async () => {
+                        try {
+                          await signOut({ 
+                            callbackUrl: `${window.location.origin}/${locale}/login`,
+                            redirect: true 
+                          });
+                        } catch (e) {
+                          console.error("Client-side SignOut failed, trying Server Action", e);
+                          try {
+                            await logoutAction();
+                            window.location.href = `/${locale}/login`;
+                          } catch (e2) {
+                            console.error("Server-side logout failed, trying hard redirect", e2);
+                            window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}`)}`;
+                          }
+                        }
                         setMobileMenuOpen(false);
                       }}
-                      className="block w-full text-left px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl"
+                      className="block w-full text-left px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all"
                     >
                       {t("signout")}
                     </button>

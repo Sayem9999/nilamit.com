@@ -59,13 +59,12 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 sm:pt-24 sm:pb-36">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="relative z-10"
-          >
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="relative z-10"
+            >
             <motion.div
               variants={itemVariants}
               className="inline-flex items-center gap-2 bg-primary-50 text-primary-700 border border-primary-100 rounded-full px-4 py-1.5 text-sm font-semibold mb-6 shadow-sm"
