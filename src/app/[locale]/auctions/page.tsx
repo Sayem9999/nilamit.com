@@ -20,12 +20,13 @@ interface Props {
   }>;
 }
 
-export default async function AuctionsPage({ searchParams }: Props) {
+export default async function AuctionsPage({ params: routeParams, searchParams }: { params: Promise<{ locale: string }>, searchParams: Props['searchParams'] }) {
+  const { locale } = await routeParams;
   const params = await searchParams;
   const t = await getTranslations("Search");
   const tCat = await getTranslations("Categories");
   const tLoc = await getTranslations("Locations");
-
+  
   const filters = {
     category: params.category,
     search: params.search,
@@ -86,7 +87,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
             </h3>
             <div className="space-y-1">
               <Link
-                href="/auctions"
+                href={`/${locale}/auctions`}
                 className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                   !params.category
                     ? "bg-primary-50 text-primary-700 font-medium"
@@ -98,7 +99,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
               {CATEGORIES.map((cat) => (
                 <Link
                   key={cat.slug}
-                  href={`/auctions?category=${cat.slug}`}
+                  href={`/${locale}/auctions?category=${cat.slug}`}
                   className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                     params.category === cat.slug
                       ? "bg-primary-50 text-primary-700 font-medium"
@@ -118,7 +119,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
             </h3>
             <div className="space-y-1">
               <Link
-                href="/auctions"
+                href={`/${locale}/auctions`}
                 className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                   !params.location
                     ? "bg-primary-50 text-primary-700 font-medium"
@@ -130,7 +131,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
               {LOCATIONS.map((loc) => (
                 <Link
                   key={loc.id}
-                  href={`/auctions?location=${loc.id}`}
+                  href={`/${locale}/auctions?location=${loc.id}`}
                   className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                     params.location === loc.id
                       ? "bg-primary-50 text-primary-700 font-medium"

@@ -37,7 +37,6 @@ export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
   return {
     id,
     name: (d.name as string) ?? null,
-    email: (d.email as string) ?? null,
     image: (d.image as string) ?? null,
     rating: (d.rating as number) ?? 0,
     ratingCount: (d.ratingCount as number) ?? 0,

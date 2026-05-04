@@ -4,11 +4,12 @@ import Link from "next/link";
 import { CATEGORIES } from "@/types";
 import { motion } from "framer-motion";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 export function CategoryGrid() {
   const t = useTranslations("Home");
   const tCat = useTranslations("Categories");
+  const locale = useLocale();
 
   return (
     <section className="py-16 sm:py-24 bg-white relative overflow-hidden">
@@ -31,7 +32,7 @@ export function CategoryGrid() {
           {CATEGORIES.filter((c) => c.slug !== "other").map((cat) => (
             <Link
               key={cat.slug}
-              href={`/auctions?category=${cat.slug}`}
+              href={`/${locale}/auctions?category=${cat.slug}`}
               className="group flex flex-col items-center bg-gray-50/50 hover:bg-white p-6 rounded-3xl transition-all border border-transparent hover:border-primary-100 hover:shadow-xl hover:shadow-primary-600/5"
             >
               <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-2xl group-hover:scale-110 transition-transform mb-4">

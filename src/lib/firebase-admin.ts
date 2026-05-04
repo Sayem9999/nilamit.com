@@ -36,14 +36,32 @@ export function getAdminApp(): App {
 
   // Robust private key parsing: handles literal newlines, escaped \n, 
   // and potential JSON-stringified wrappers from secret managers.
-  let privateKey = privateKeyRaw;
-  if (!privateKey.includes('\n') && privateKey.includes('\\n')) {
+  let privateKey = privateKeyRaw.trim();
+  
+  // Handle escaped quotes from environment variables
+  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    privateKey = privateKey.slice(1, -1);
+  }
+
+  // Handle escaped newlines
+  if (privateKey.includes('\\n')) {
     privateKey = privateKey.replace(/\\n/g, '\n');
   }
 
-  // Ensure key is wrapped correctly if it was stripped
+  // Ensure key is wrapped correctly if it was stripped or partially formatted
   if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+    // If it's a single line of base64 data, wrap it
     privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
+  } else if (!privateKey.includes('\n') && privateKey.length > 100) {
+    // If it has headers but no newlines, it's likely a single line that needs formatting
+    const body = privateKey
+      .replace('-----BEGIN PRIVATE KEY-----', '')
+      .replace('-----END PRIVATE KEY-----', '')
+      .replace(/\s/g, '');
+    
+    // Chunk the base64 body into 64-char lines as per PEM spec
+    const chunks = body.match(/.{1,64}/g) || [];
+    privateKey = `-----BEGIN PRIVATE KEY-----\n${chunks.join('\n')}\n-----END PRIVATE KEY-----`;
   }
 
   return initializeApp({

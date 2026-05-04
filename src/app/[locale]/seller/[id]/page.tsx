@@ -63,7 +63,6 @@ export default async function SellerProfilePage({ params }: Props) {
       seller: {
         id: seller.id,
         name: seller.name,
-        email: sellerData.email ?? null,
         phone: sellerData.phone ?? null,
         image: seller.image,
         isVerifiedSeller: sellerData.isVerifiedSeller,

@@ -31,7 +31,6 @@ export interface User {
 export interface SellerPublic {
   id: string;
   name: string | null;
-  email: string | null;
   image: string | null;
   rating: number;
   ratingCount: number;
