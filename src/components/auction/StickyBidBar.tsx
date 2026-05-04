@@ -10,10 +10,11 @@ import { Clock } from 'lucide-react';
 interface StickyBidBarProps {
   currentPrice: number;
   endTime: Date | string;
+  serverTime?: Date | string;
   targetId: string;
 }
 
-export function StickyBidBar({ currentPrice, endTime, targetId }: StickyBidBarProps) {
+export function StickyBidBar({ currentPrice, endTime, serverTime, targetId }: StickyBidBarProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export function StickyBidBar({ currentPrice, endTime, targetId }: StickyBidBarPr
                 <div className="h-4 w-[1px] bg-gray-200" />
                 <div className="flex items-center gap-1 text-xs text-gray-500 font-medium">
                   <Clock className="w-3 h-3" />
-                  <CountdownTimer endTime={endTime} className="!text-[11px] tabular-nums" />
+                  <CountdownTimer endTime={endTime} serverTime={serverTime} className="!text-[11px] tabular-nums" />
                 </div>
               </div>
             </div>

@@ -10,6 +10,7 @@ interface BidPanelProps {
   currentPrice: number;
   minBidIncrement: number;
   endTime: Date | string;
+  serverTime?: Date | string;
   isExpired: boolean;
   sellerId: string;
   reservePrice?: number | null;

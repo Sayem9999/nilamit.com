@@ -82,6 +82,40 @@ function FirestoreAdapter(): Adapter {
   };
 }
 
+/** Internal helper for reusable auth lookup logic */
+async function verifyUser(field: 'email' | 'phone', value: string, passwordRaw: string) {
+  try {
+    const snap = await db.collection('users').where(field, '==', value).limit(1).get();
+    if (snap.empty) return null;
+    
+    const user = { ...snap.docs[0].data(), id: snap.docs[0].id } as Record<string, unknown>;
+    if (!user.password) return null;
+    
+    const valid = await bcrypt.compare(passwordRaw, user.password as string);
+    if (!valid) return null;
+
+    return { 
+      id: user.id as string, 
+      email: user.email as string | null, 
+      name: user.name as string,
+      image: user.image as string | null,
+      isVerifiedSeller: Boolean(user.isVerifiedSeller), 
+      reputationScore: Number(user.reputationScore || 0),
+      rating: Number(user.rating || user.reputationScore || 0),
+      ratingCount: Number(user.ratingCount || 0),
+      isPhoneVerified: Boolean(user.isPhoneVerified), 
+      emailVerified: user.emailVerified as Date | null,
+      userLevel: Number(user.userLevel || 1), 
+      xp: Number(user.xp || 0), 
+      winningStreak: Number(user.winningStreak || 0),
+      isBanned: Boolean(user.isBanned) 
+    };
+  } catch (e) {
+    log.error(`[Auth] verifyUser failed for ${field}`, e);
+    return null;
+  }
+}
+
 // ─── Provider feature flags ─────────────────────────────────────
 const googleClientId     = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -112,27 +146,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const email    = (credentials.email as string).trim().toLowerCase();
-        const password = credentials.password as string;
-        try {
-          const snap = await db.collection('users').where('email', '==', email).limit(1).get();
-          if (snap.empty) return null;
-          const user = { ...snap.docs[0].data(), id: snap.docs[0].id } as Record<string, unknown>;
-          if (!user.password) return null;
-          const valid = await bcrypt.compare(password, user.password as string);
-          if (!valid) return null;
-          return { id: user.id as string, email: user.email as string, name: user.name as string,
-            image: user.image as string | null,
-            isVerifiedSeller: Boolean(user.isVerifiedSeller), reputationScore: Number(user.reputationScore || 0),
-            rating: Number(user.rating || user.reputationScore || 0),
-            ratingCount: Number(user.ratingCount || 0),
-            isPhoneVerified: Boolean(user.isPhoneVerified), emailVerified: user.emailVerified as Date | null,
-            userLevel: Number(user.userLevel || 1), xp: Number(user.xp || 0), winningStreak: Number(user.winningStreak || 0),
-            isBanned: Boolean(user.isBanned) };
-        } catch (e) {
-          log.error('[Auth] credentials authorize error', e);
-          return null;
-        }
+        return verifyUser('email', (credentials.email as string).trim().toLowerCase(), credentials.password as string);
       },
     }),
     Credentials({
@@ -144,27 +158,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.phone || !credentials?.password) return null;
-        const phone    = credentials.phone as string;
-        const password = credentials.password as string;
-        try {
-          const snap = await db.collection('users').where('phone', '==', phone).limit(1).get();
-          if (snap.empty) return null;
-          const user = { ...snap.docs[0].data(), id: snap.docs[0].id } as Record<string, unknown>;
-          if (!user.password) return null;
-          const valid = await bcrypt.compare(password, user.password as string);
-          if (!valid) return null;
-          return { id: user.id as string, email: user.email as string | null,
-            name: user.name as string, image: user.image as string | null,
-            isVerifiedSeller: Boolean(user.isVerifiedSeller), reputationScore: Number(user.reputationScore || 0),
-            rating: Number(user.rating || user.reputationScore || 0),
-            ratingCount: Number(user.ratingCount || 0),
-            isPhoneVerified: Boolean(user.isPhoneVerified), emailVerified: user.emailVerified as Date | null,
-            userLevel: Number(user.userLevel || 1), xp: Number(user.xp || 0), winningStreak: Number(user.winningStreak || 0),
-            isBanned: Boolean(user.isBanned) };
-        } catch (e) {
-          log.error('[Auth-Phone] authorize error', e);
-          return null;
-        }
+        return verifyUser('phone', credentials.phone as string, credentials.password as string);
       },
     }),
   ],

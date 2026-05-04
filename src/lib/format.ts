@@ -26,9 +26,9 @@ function formatBDTNumber(num: number): string {
   return result;
 }
 
-export function formatTimeRemaining(endTime: Date | string): string {
+export function formatTimeRemaining(endTime: Date | string, nowOverride?: Date): string {
   const end = new Date(endTime);
-  const now = new Date();
+  const now = nowOverride || new Date();
   const diff = end.getTime() - now.getTime();
 
   if (diff <= 0) return "Ended";
@@ -44,9 +44,9 @@ export function formatTimeRemaining(endTime: Date | string): string {
   return `${seconds}s`;
 }
 
-export function formatRelativeTime(date: Date | string): string {
+export function formatRelativeTime(date: Date | string, nowOverride?: Date): string {
   const d = new Date(date);
-  const now = new Date();
+  const now = nowOverride || new Date();
   const diff = now.getTime() - d.getTime();
   const seconds = Math.floor(diff / 1000);
 

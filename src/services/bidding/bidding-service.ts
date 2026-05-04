@@ -227,63 +227,86 @@ export class BiddingService {
    * Handle all post-bid triggers like emails, push, and RTDB updates
    */
   private static async handleBidSideEffects(txResult: Omit<BidSideEffectParams, 'triggeredAlerts'>, auctionId: string, userId: string, userName: string, userEmail: string, amount: number) {
-    // Alerts are fetched + deactivated OUTSIDE the critical path
-    const triggeredAlerts = await this.processAlertsAfterBid(auctionId, userId, amount);
+    // 1. Fetch side-effect data OUTSIDE critical transaction path
+    let triggeredAlerts: Alert[] = [];
+    let prevBidderEmail: string | null = null;
+
+    try {
+      [triggeredAlerts, prevBidderEmail] = await Promise.all([
+        this.processAlertsAfterBid(auctionId, userId, amount),
+        (async () => {
+          if (!txResult.prevBidderId || txResult.prevBidderId === userId) return null;
+          const pbSnap = await db.collection('users').doc(txResult.prevBidderId).get();
+          return pbSnap.data()?.email ?? null;
+        })()
+      ]);
+    } catch (e) {
+      log.error('[BiddingService] Failed to fetch side-effect data', e, { auctionId, userId });
+    }
+
     const result: BidSideEffectParams = { ...txResult, triggeredAlerts };
 
-    // 1. Fetch prev bidder email
-    let prevBidderEmail: string | null = null;
-    if (result.prevBidderId && result.prevBidderId !== userId) {
-      const pbSnap = await db.collection('users').doc(result.prevBidderId).get();
-      prevBidderEmail = pbSnap.data()?.email ?? null;
-    }
+    // 2. Fire-and-forget notifications (Parallelized & Isolated)
+    const tasks = [
+      // Outbid Email
+      (async () => {
+        if (prevBidderEmail && prevBidderEmail !== userEmail) {
+          await firebaseSendOutbidEmail(prevBidderEmail, result.auctionTitle, amount, auctionId);
+        }
+      })().catch(e => log.error('bidding: outbid email failed', e, { auctionId })),
 
-    // 2. Notifications
-    if (prevBidderEmail && prevBidderEmail !== userEmail) {
-      firebaseSendOutbidEmail(prevBidderEmail, result.auctionTitle, amount, auctionId).catch((e) => log.error('bidding: outbid email failed', e, { auctionId }));
-    }
+      // Price Alerts (RTDB)
+      (async () => {
+        if (result.triggeredAlerts.length > 0) {
+          await Promise.all(result.triggeredAlerts.map((alert: Alert) =>
+            rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
+              event: FIREBASE_EVENTS.PRICE_ALERT, auctionId,
+              auctionTitle: result.auctionTitle, amount, type: alert.type, threshold: alert.thresholdPrice,
+            })
+          ));
+        }
+      })().catch(e => log.error('bidding: price alert notifications failed', e, { auctionId })),
 
-    if (result.triggeredAlerts.length > 0) {
-      Promise.all(result.triggeredAlerts.map((alert: Alert) =>
-        rtdbPush(RTDB_PATHS.userNotifications(alert.userId), {
-          event: FIREBASE_EVENTS.PRICE_ALERT, auctionId,
-          auctionTitle: result.auctionTitle, amount, type: alert.type, threshold: alert.thresholdPrice,
-        })
-      )).catch((e) => log.error('bidding: price alert notifications failed', e, { auctionId }));
-    }
+      // Outbid RTDB + FCM
+      (async () => {
+        if (result.prevBidderId && result.prevBidderId !== userId) {
+          await Promise.all([
+            rtdbPush(RTDB_PATHS.userNotifications(result.prevBidderId), {
+              event: FIREBASE_EVENTS.OUTBID_ALERT, auctionId,
+              auctionTitle: result.auctionTitle, amount, newBidderName: userName ?? null,
+            }),
+            sendOutbidAlert(result.prevBidderId, result.auctionTitle, amount)
+          ]);
+        }
+      })().catch(e => log.error('bidding: outbid notifications failed', e, { auctionId })),
 
-    if (result.prevBidderId && result.prevBidderId !== userId) {
-      rtdbPush(RTDB_PATHS.userNotifications(result.prevBidderId), {
-        event: FIREBASE_EVENTS.OUTBID_ALERT, auctionId,
-        auctionTitle: result.auctionTitle, amount, newBidderName: userName ?? null,
-      }).catch((e) => log.error('bidding: outbid RTDB notification failed', e, { auctionId }));
+      // RTDB Live State
+      (async () => {
+        await Promise.all([
+          rtdbSet(RTDB_PATHS.auctionBid(auctionId), {
+            event: FIREBASE_EVENTS.NEW_BID, amount,
+            endTime: result.newEndTime.toISOString(), bidderName: userName ?? 'Someone',
+          }),
+          rtdbPush(RTDB_PATHS.auctionActivity(auctionId), {
+            event: FIREBASE_EVENTS.NEW_BID, amount, bidderName: userName ?? 'Someone',
+          }),
+          rtdbPush(RTDB_PATHS.globalActivity(), {
+            event: FIREBASE_EVENTS.NEW_BID, amount, 
+            bidderName: userName ?? 'Someone', auctionTitle: result.auctionTitle,
+            auctionId, timestamp: Date.now()
+          })
+        ]);
+      })().catch(e => log.error('bidding: RTDB state updates failed', e, { auctionId })),
 
-      sendOutbidAlert(result.prevBidderId, result.auctionTitle, amount).catch((e) => log.error('bidding: outbid FCM push failed', e, { auctionId }));
-    }
+      // Gamification & Moderation
+      checkAndAwardBadges(userId, auctionId, amount, result.antiSnipeTriggered, result.auctionStartTime)
+        .catch(e => log.error('bidding: badge check failed', e, { auctionId, userId })),
+      detectShillBidding(auctionId, userId, result.sellerId, amount)
+        .catch(e => log.error('bidding: shill detection failed', e, { auctionId, userId }))
+    ];
 
-    // 3. RTDB State
-    rtdbSet(RTDB_PATHS.auctionBid(auctionId), {
-      event: FIREBASE_EVENTS.NEW_BID, amount,
-      endTime: result.newEndTime.toISOString(), bidderName: userName ?? 'Someone',
-    }).catch((e) => log.error('bidding: auction bid RTDB set failed', e, { auctionId }));
-
-    rtdbPush(RTDB_PATHS.auctionActivity(auctionId), {
-      event: FIREBASE_EVENTS.NEW_BID, amount, bidderName: userName ?? 'Someone',
-    }).catch((e) => log.error('bidding: auction activity push failed', e, { auctionId }));
-
-    // Global Activity Ticker
-    rtdbPush(RTDB_PATHS.globalActivity(), {
-      event: FIREBASE_EVENTS.NEW_BID, 
-      amount, 
-      bidderName: userName ?? 'Someone',
-      auctionTitle: result.auctionTitle,
-      auctionId,
-      timestamp: Date.now()
-    }).catch((e) => log.error('bidding: global ticker push failed', e));
-
-    // 4. Async background tasks
-    checkAndAwardBadges(userId, auctionId, amount, result.antiSnipeTriggered, result.auctionStartTime).catch((e) => log.error('bidding: badge check failed', e, { auctionId, userId }));
-    detectShillBidding(auctionId, userId, result.sellerId, amount).catch((e) => log.error('bidding: shill detection failed', e, { auctionId, userId }));
+    // Wait for all non-critical tasks to at least start/settle
+    await Promise.allSettled(tasks);
   }
 
   /**

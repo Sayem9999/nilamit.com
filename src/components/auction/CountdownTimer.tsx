@@ -5,29 +5,39 @@ import { formatTimeRemaining } from "@/lib/format";
 
 interface CountdownTimerProps {
   endTime: Date | string;
+  serverTime?: Date | string;
   onExpired?: () => void;
   className?: string;
 }
 
 export const CountdownTimer = memo(({
   endTime,
+  serverTime,
   onExpired,
   className = "",
 }: CountdownTimerProps) => {
+  // Calculate offset once on mount to adjust for client/server clock drift
+  const [offset] = useState(() => {
+    if (!serverTime) return 0;
+    return new Date(serverTime).getTime() - Date.now();
+  });
+
   const computeState = useCallback(() => {
     const end = new Date(endTime);
-    const diff = end.getTime() - Date.now();
+    const now = Date.now() + offset;
+    const nowObj = new Date(now);
+    const diff = end.getTime() - now;
     
     if (diff <= 0) {
       return { timeLeft: "Ended", isUrgent: false, isExpired: true };
     }
     
     return {
-      timeLeft: formatTimeRemaining(endTime),
+      timeLeft: formatTimeRemaining(endTime, nowObj),
       isUrgent: diff < 60_000,
       isExpired: false,
     };
-  }, [endTime]);
+  }, [endTime, offset]);
 
   const [state, setState] = useState(computeState);
 

@@ -34,7 +34,17 @@ export function getAdminApp(): App {
     );
   }
 
-  const privateKey = privateKeyRaw.replace(/\\n/g, '\n');
+  // Robust private key parsing: handles literal newlines, escaped \n, 
+  // and potential JSON-stringified wrappers from secret managers.
+  let privateKey = privateKeyRaw;
+  if (!privateKey.includes('\n') && privateKey.includes('\\n')) {
+    privateKey = privateKey.replace(/\\n/g, '\n');
+  }
+
+  // Ensure key is wrapped correctly if it was stripped
+  if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+    privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
+  }
 
   return initializeApp({
     credential: cert({ projectId, clientEmail, privateKey }),

@@ -136,6 +136,9 @@ export default async function AuctionDetailPage({ params }: Props) {
     },
   };
 
+  const now = new Date();
+  const serverTime = now.toISOString();
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
       <Script
@@ -148,6 +151,7 @@ export default async function AuctionDetailPage({ params }: Props) {
       <StickyBidBar
         currentPrice={auction.currentPrice}
         endTime={auction.endTime}
+        serverTime={serverTime}
         targetId="mobile-bid-anchor"
       />
       <div className="flex flex-col lg:flex-row gap-8">
@@ -194,7 +198,7 @@ export default async function AuctionDetailPage({ params }: Props) {
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                <CountdownTimer endTime={auction.endTime} />
+                <CountdownTimer endTime={auction.endTime} serverTime={serverTime} />
               </div>
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
@@ -202,7 +206,7 @@ export default async function AuctionDetailPage({ params }: Props) {
               </div>
               <div className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
-                {t("listed")} {formatRelativeTime(auction.createdAt)}
+                {t("listed")} {formatRelativeTime(auction.createdAt, now)}
               </div>
             </div>
           </div>
@@ -286,7 +290,8 @@ export default async function AuctionDetailPage({ params }: Props) {
             currentPrice={auction.currentPrice}
             minBidIncrement={auction.minBidIncrement}
             endTime={auction.endTime}
-            isExpired={new Date() >= new Date(auction.endTime)}
+            serverTime={serverTime}
+            isExpired={now >= new Date(auction.endTime)}
             sellerId={auction.sellerId}
             reservePrice={auction.reservePrice}
             buyItNowPrice={auction.buyItNowPrice}

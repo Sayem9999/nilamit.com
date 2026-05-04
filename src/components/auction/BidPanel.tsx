@@ -34,6 +34,7 @@ interface BidPanelProps {
   currentPrice: number;
   minBidIncrement: number;
   endTime: Date | string;
+  serverTime?: Date | string;
   isExpired: boolean;
   sellerId: string;
   reservePrice?: number | null;
@@ -48,6 +49,7 @@ export function BidPanel({
   currentPrice,
   minBidIncrement,
   endTime,
+  serverTime,
   isExpired,
   sellerId,
   reservePrice,
@@ -221,7 +223,7 @@ export function BidPanel({
           </button>
           <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg">
             <Clock className="w-4 h-4" />
-            <CountdownTimer endTime={displayEndTime} />
+            <CountdownTimer endTime={displayEndTime} serverTime={serverTime} />
         </div>
       </div>
     </div>

@@ -60,5 +60,6 @@ export function filterPII(text: string | null | undefined): string {
 export function containsPII(text: string): boolean {
   if (BANGLADESH_PHONE_REGEX_TEST.test(text)) return true;
   if (EMAIL_REGEX_TEST.test(text)) return true;
+  if (WORD_DIGIT_REGEX.test(text)) return true;
   return BYPASS_KEYWORDS.some((regex) => regex.test(text));
 }
