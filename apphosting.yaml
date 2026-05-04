@@ -16,6 +16,9 @@ env:
   - variable: AUTH_URL
     secret: APP_URL
 
+  - variable: AUTH_TRUST_HOST
+    value: "true"
+
   - variable: GOOGLE_CLIENT_ID
     secret: GOOGLE_CLIENT_ID
 

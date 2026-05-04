@@ -199,19 +199,20 @@ export function Navbar() {
                       <button
                         onClick={async () => {
                           try {
+                            // 1. Trigger Auth.js SignOut
                             await signOut({ 
-                              callbackUrl: `${window.location.origin}/${locale}/login`,
-                              redirect: true 
+                              redirect: false,
                             });
+                            
+                            // 2. Clear server-side session via Action
+                            await logoutAction();
+                            
+                            // 3. Force full browser state clear & redirect
+                            window.location.href = `/${locale}/login?signout=success`;
+                            window.location.reload(); 
                           } catch (e) {
-                            console.error("Client-side SignOut failed, trying Server Action", e);
-                            try {
-                              await logoutAction();
-                              window.location.href = `/${locale}/login`;
-                            } catch (e2) {
-                              console.error("Server-side logout failed, trying hard redirect", e2);
-                              window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}`)}`;
-                            }
+                            console.error("SignOut flow failed", e);
+                            window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}/login`)}`;
                           }
                         }}
                         className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-xl transition-all font-bold"
@@ -303,19 +304,13 @@ export function Navbar() {
                     <button
                       onClick={async () => {
                         try {
-                          await signOut({ 
-                            callbackUrl: `${window.location.origin}/${locale}/login`,
-                            redirect: true 
-                          });
+                          await signOut({ redirect: false });
+                          await logoutAction();
+                          window.location.href = `/${locale}/login?signout=success`;
+                          window.location.reload();
                         } catch (e) {
-                          console.error("Client-side SignOut failed, trying Server Action", e);
-                          try {
-                            await logoutAction();
-                            window.location.href = `/${locale}/login`;
-                          } catch (e2) {
-                            console.error("Server-side logout failed, trying hard redirect", e2);
-                            window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}`)}`;
-                          }
+                          console.error("Mobile SignOut failed", e);
+                          window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}/login`)}`;
                         }
                         setMobileMenuOpen(false);
                       }}

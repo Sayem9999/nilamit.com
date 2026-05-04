@@ -28,36 +28,25 @@ export default auth((req) => {
     ? env.NEXTAUTH_URL
     : currentOrigin;
 
-  // 0. Global Security: Redirect banned users
-  const isBanned = (req.auth?.user as { isBanned?: boolean })?.isBanned;
-  if (isBanned && !pathname.includes('/banned') && !pathname.startsWith('/api')) {
-    const locale = pathname.split('/')[1] || 'en';
-    return Response.redirect(new URL(`/${locale}/banned`, redirectBase), 307);
-  }
-
-  // 1. Strip locale from API routes BEFORE NextAuth or intl handles them
-  const localeApiMatch = pathname.match(/^\/(en|bn)?(\/api\/.*)/);
-  if (localeApiMatch) {
-    const apiPath = localeApiMatch[2];
-    if (apiPath.includes('/auth/error')) {
-      const locale = localeApiMatch[1] || 'en';
-      return Response.redirect(new URL(`/${locale}/login?error=AuthError`, redirectBase), 307);
-    }
-    // If there was a locale prefix, strip it and redirect to the raw /api/ path
-    if (localeApiMatch[1]) {
-      return Response.redirect(new URL(apiPath, redirectBase), 307);
-    }
-  }
-
-  // 2. For all other routes, let next-intl handle the locales
-  const response = intlMiddleware(req) || new NextResponse(null, { status: 200 });
-
-  // 3. API Early Return (Headers are already set globally in next.config.ts)
+  // 1. API routes should bypass intlMiddleware and go straight to handlers
   if (pathname.startsWith('/api')) {
-    return response;
+    // Specialized Auth stripping: /en/api/auth -> /api/auth
+    const localeApiMatch = pathname.match(/^\/(en|bn)(\/api\/auth\/.*)/);
+    if (localeApiMatch) {
+      return NextResponse.redirect(new URL(localeApiMatch[2], redirectBase));
+    }
+    return NextResponse.next();
+  }
+  
+  // 2. Global Security: Redirect banned users
+  const isBanned = (req.auth?.user as { isBanned?: boolean })?.isBanned;
+  if (isBanned && !pathname.includes('/banned')) {
+    const locale = pathname.split('/')[1] || 'en';
+    return NextResponse.redirect(new URL(`/${locale}/banned`, redirectBase));
   }
 
-  return response;
+  // 3. Let next-intl handle the locales for page routes
+  return intlMiddleware(req);
 });
 
 export const config = {

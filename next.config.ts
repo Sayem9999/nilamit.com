@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "uploadthing.com" },
       { protocol: "https", hostname: "*.uploadthing.com" },
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "i.pravatar.cc" },
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
