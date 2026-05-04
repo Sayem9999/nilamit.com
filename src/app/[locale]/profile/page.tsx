@@ -3,13 +3,13 @@
 import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
+import { calculateLevelProgress } from "@/lib/gamification-engine";
 import {
   User,
   Phone,
-  CheckCircle,
   Edit3,
   Save,
   Star,
@@ -17,19 +17,27 @@ import {
   Wallet,
   Mail,
   Smartphone,
-  AlertTriangle,
   BadgeCheck,
+  ChevronRight,
+  ShieldCheck,
+  Zap,
+  Trophy,
+  Activity,
+  LogOut,
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
 import VerificationBadge from "@/components/social/VerificationBadge";
-import GamificationStats from "@/components/social/GamificationStats";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { signOut } from "next-auth/react";
 
 export default function ProfilePage() {
   const { data: session, update, status } = useSession();
   const router = useRouter();
+  const locale = useLocale();
   const t_prof = useTranslations("Profile");
+  const t_nav = useTranslations("Navigation");
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
@@ -49,21 +57,23 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/login");
+      router.push(`/${locale}/login`);
     }
-  }, [status, router]);
+  }, [status, router, locale]);
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full shadow-sm" 
+        />
       </div>
     );
   }
 
-  if (!session) {
-    return null;
-  }
+  if (!session) return null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const user = (session.user as any) as { 
@@ -79,14 +89,14 @@ export default function ProfilePage() {
     userLevel: number;
     winningStreak: number;
   };
-  const isPhoneVerified = user?.isPhoneVerified as boolean;
 
   const handleSaveName = () => {
+    if (!name.trim()) return;
     startTransition(async () => {
       await updateProfile({ name });
       await update();
       setEditing(false);
-      setName(""); // Reset local state
+      setName("");
     });
   };
 
@@ -128,315 +138,466 @@ export default function ProfilePage() {
     });
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.5,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="font-heading font-bold text-2xl text-gray-900 mb-6">
-        {t_prof("title")}
-      </h1>
-
-      {/* Verification Status Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className={`p-4 rounded-3xl border transition-all ${user?.isPhoneVerified ? 'bg-blue-50/50 border-blue-100' : 'bg-amber-50/50 border-amber-100'}`}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 bg-white rounded-xl shadow-sm">
-              <Smartphone className={`w-5 h-5 ${user?.isPhoneVerified ? 'text-blue-600' : 'text-amber-600'}`} />
-            </div>
-            {user?.isPhoneVerified ? (
-              <BadgeCheck className="w-5 h-5 text-blue-600" />
-            ) : (
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
-            )}
-          </div>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("phoneStatus")}</p>
-          <p className={`text-sm font-bold ${user?.isPhoneVerified ? 'text-blue-900' : 'text-amber-900'}`}>
-            {user?.isPhoneVerified ? t_prof("verified") : t_prof("actionRequired")}
-          </p>
-          {user?.phone && <p className="text-xs text-gray-500 font-mono mt-1">{user.phone}</p>}
-        </div>
-
-        <div className={`p-4 rounded-3xl border transition-all ${(session.user as { emailVerified?: Date | null }).emailVerified ? 'bg-blue-50/50 border-blue-100' : 'bg-gray-50/50 border-gray-100'}`}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 bg-white rounded-xl shadow-sm">
-              <Mail className={`w-5 h-5 ${(session.user as { emailVerified?: Date | null }).emailVerified ? 'text-blue-600' : 'text-gray-400'}`} />
-            </div>
-            {(session.user as { emailVerified?: Date | null }).emailVerified ? (
-              <BadgeCheck className="w-5 h-5 text-blue-600" />
-            ) : (
-              <div className="w-5 h-5 bg-gray-200 rounded-full" />
-            )}
-          </div>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("emailStatus")}</p>
-          <p className={`text-sm font-bold ${(session.user as { emailVerified?: Date | null }).emailVerified ? 'text-blue-900' : 'text-gray-900'}`}>
-            {(session.user as { emailVerified?: Date | null }).emailVerified ? t_prof("verified") : t_prof("linkedStatus")}
-          </p>
-          <p className="text-xs text-gray-500 font-mono mt-1">{session.user?.email}</p>
-        </div>
-      </div>
-
-      {!user?.isPhoneVerified && (
-        <div className="bg-amber-600 text-white p-4 rounded-3xl mb-8 flex items-start gap-3 shadow-lg shadow-amber-100 animate-in fade-in slide-in-from-top-4 duration-500">
-           <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-           <div>
-             <p className="text-sm font-black uppercase tracking-wider mb-1">{t_prof("actionRequired")}</p>
-             <p className="text-xs text-amber-50 font-medium">{t_prof("identityDesc")}</p>
-           </div>
-        </div>
-      )}
-
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20">
+      {/* Premium Header/Cover Area */}
+      <div className="relative h-48 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-700 overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
+        <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative p-1.5 bg-white rounded-[2.5rem] shadow-2xl border-4 border-white/20 backdrop-blur-sm"
+          >
             {session.user?.image ? (
               <Image
                 src={session.user.image}
                 alt="Profile"
-                width={64}
-                height={64}
-                className="w-16 h-16 rounded-full object-cover"
+                width={120}
+                height={120}
+                className="w-28 h-28 md:w-32 md:h-32 rounded-[2.2rem] object-cover"
               />
             ) : (
-              <User className="w-8 h-8 text-primary-600" />
+              <div className="w-28 h-28 md:w-32 md:h-32 bg-primary-50 rounded-[2.2rem] flex items-center justify-center text-primary-600">
+                <User size={48} strokeWidth={1.5} />
+              </div>
             )}
-          </div>
-          <div>
-            <div className="flex items-center gap-3">
-              <p className="font-heading font-semibold text-lg text-gray-900">
-                {session.user?.name}
-              </p>
+            <div className="absolute -bottom-2 -right-2 p-2 bg-white rounded-2xl shadow-lg border border-gray-100">
               <VerificationBadge
                 isPhoneVerified={user.isPhoneVerified}
                 emailVerified={(session.user as { emailVerified?: Date | string | null }).emailVerified || null}
                 isVerifiedSeller={!!(user as { isVerifiedSeller?: boolean }).isVerifiedSeller}
-                size="md"
-              />
-            </div>
-            <p className="text-sm text-gray-500">{session.user?.email}</p>
-          </div>
-        </div>
-
-        {/* Name Edit */}
-        <div className="mb-4">
-          <label className="text-xs font-medium text-gray-500 mb-1 block">
-            {t_prof("displayName")}
-          </label>
-          {editing ? (
-            <div className="flex gap-2">
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
-              />
-              <button
-                onClick={handleSaveName}
-                disabled={isPending}
-                className="bg-primary-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-700 flex items-center gap-1"
-              >
-                <Save className="w-4 h-4" /> {t_prof("save")}
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">
-                {session.user?.name || t_prof("notSet")}
-              </span>
-              <button
-                onClick={() => setEditing(true)}
-                className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
-              >
-                <Edit3 className="w-3 h-3" /> {t_prof("edit")}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Elite Gamification Center */}
-      <div className="mb-8">
-        <GamificationStats 
-          xp={user.xp || 0} 
-          level={user.userLevel || 1} 
-          streak={user.winningStreak || 0} 
-        />
-      </div>
-
-      {/* Trust Score & Badges */}
-      <div className="bg-white border border-gray-100 rounded-3xl p-6 mb-6 shadow-sm overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-4">
-           <Star className="w-8 h-8 text-primary-500/10 fill-primary-500/5 rotate-12" />
-        </div>
-        <div className="flex flex-col gap-4 relative z-10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                {t_prof("reputationRank")}
-              </p>
-              <TrustBadge 
-                rating={(user?.rating as number) || 3.5} 
-                ratingCount={(user?.ratingCount as number) || 0}
                 size="lg"
               />
             </div>
-            <div className="text-right">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                {t_prof("trustPoints")}
-              </p>
-              <p className="text-2xl font-black text-gray-900 leading-none">
-                {((user?.rating as number) || 3.5).toFixed(1)} ★
-              </p>
-            </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* MFS Linkage Section */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
-        <h2 className="font-heading font-semibold text-lg text-gray-900 mb-2 flex items-center gap-2">
-          <Wallet className="w-5 h-5 text-primary-600" /> {t_prof("mfsTitle")}
-        </h2>
-        <p className="text-xs text-gray-500 mb-6">
-          {t_prof("mfsSubtitle")}
-        </p>
-
-        <div className="space-y-6">
-          {/* bKash */}
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-5xl mx-auto px-4 mt-20 md:mt-6 md:pl-48"
+      >
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-             <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t_prof("bkashAccount")}</span>
-                {user?.bkashNumber ? (
-                  <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold">{t_prof("linked")}</span>
-                ) : (
-                  <span className="text-[10px] bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full font-bold">{t_prof("notLinked")}</span>
-                )}
-             </div>
-             {user?.bkashNumber ? (
-                <div className="p-3 bg-gray-50 rounded-xl text-sm font-mono border border-gray-100 flex items-center justify-between">
-                  <span>{maskPhone(user.bkashNumber)}</span>
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                </div>
-             ) : (
-               <div className="flex gap-2">
-                 <input
-                   placeholder="01XXXXXXXXX"
-                   value={bkash}
-                   onChange={(e) => setBkash(e.target.value)}
-                   className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500"
-                 />
-                  <button
-                    onClick={() => handleLinkMFS('bkash', bkash)}
-                    disabled={isPending || bkash.length < 11}
-                    className="bg-[#E2125D] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 disabled:bg-gray-200 transition"
-                  >
-                    {t_prof("linkBtn")}
-                  </button>
-               </div>
-             )}
+            <motion.div variants={itemVariants} className="flex items-center gap-3 mb-1">
+              <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                {session.user?.name}
+              </h1>
+              {user.userLevel > 5 && (
+                <span className="bg-amber-100 text-amber-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
+                   <Trophy size={10} /> {t_prof("eliteMember") || "Elite Member"}
+                </span>
+              )}
+            </motion.div>
+            <motion.p variants={itemVariants} className="text-gray-500 font-medium flex items-center gap-2">
+              <Mail size={14} className="text-primary-500" />
+              {session.user?.email}
+            </motion.p>
           </div>
 
-          {/* Nagad */}
-          <div>
-             <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t_prof("nagadAccount")}</span>
-                {user?.nagadNumber ? (
-                  <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold">{t_prof("linked")}</span>
-                ) : (
-                  <span className="text-[10px] bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full font-bold">{t_prof("notLinked")}</span>
-                )}
-             </div>
-             {user?.nagadNumber ? (
-                <div className="p-3 bg-gray-50 rounded-xl text-sm font-mono border border-gray-100 flex items-center justify-between">
-                  <span>{maskPhone(user.nagadNumber)}</span>
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                </div>
-             ) : (
-               <div className="flex gap-2">
-                 <input
-                   placeholder="01XXXXXXXXX"
-                   value={nagad}
-                   onChange={(e) => setNagad(e.target.value)}
-                   className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500"
-                 />
-                  <button
-                    onClick={() => handleLinkMFS('nagad', nagad)}
-                    disabled={isPending || nagad.length < 11}
-                    className="bg-[#F69320] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 disabled:bg-gray-200 transition"
-                  >
-                    {t_prof("linkBtn")}
-                  </button>
-               </div>
-             )}
-          </div>
+          <motion.div variants={itemVariants} className="flex gap-2">
+            <button 
+              onClick={() => signOut({ callbackUrl: `/${locale}` })}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-red-600 hover:bg-red-50 transition-all shadow-sm"
+            >
+              <LogOut size={16} /> {t_nav("signout")}
+            </button>
+          </motion.div>
         </div>
 
-        <p
-          className={`mt-4 text-sm px-3 py-2 rounded-lg ${msg.includes("linked") || msg.includes("সফলভাবে") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}
-        >
-          {msg}
-        </p>
-      </div>
+        {/* Visionary Stats Grid */}
+        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+              <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Star className="text-primary-600 w-5 h-5 fill-primary-600/20" />
+              </div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t_prof("reputation") || "Reputation"}</p>
+              <p className="text-xl font-black text-gray-900 leading-tight">
+                {((user?.rating as number) || 3.5).toFixed(1)} <span className="text-xs text-gray-400 font-medium">/ 5.0</span>
+              </p>
+           </div>
 
-      {/* Reviews Section */}
-      <div className="mb-8 border-t border-gray-100 pt-8">
-        <h2 className="font-heading font-bold text-xl text-gray-900 mb-4 flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-primary-600" /> {t_prof("communityFeedback")}
-        </h2>
-        <ReviewList userId={session.user?.id || ""} />
-      </div>
+           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Zap className="text-purple-600 w-5 h-5 fill-purple-600/20" />
+              </div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t_prof("level") || "Level"}</p>
+              <p className="text-xl font-black text-gray-900 leading-tight">
+                {user.userLevel || 1} <span className="text-xs text-gray-400 font-medium">Rank</span>
+              </p>
+           </div>
 
-      {/* Phone Verification (Mandatory for Members) */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8">
-        <h2 className="font-heading font-semibold text-lg text-gray-900 mb-2 flex items-center gap-2">
-          <Phone className="w-5 h-5 text-primary-600" /> {t_prof("memberVerification")}
-        </h2>
-        <p className="text-xs text-gray-500 mb-6">{t_prof("identityDesc")}</p>
+           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+              <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Activity className="text-orange-600 w-5 h-5" />
+              </div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t_prof("xpPoints") || "XP Points"}</p>
+              <p className="text-xl font-black text-gray-900 leading-tight">
+                {user.xp || 0} <span className="text-xs text-gray-400 font-medium">Points</span>
+              </p>
+           </div>
 
-        {isPhoneVerified ? (
-          <div className="flex items-center gap-2 text-green-700 text-xs">
-            <CheckCircle className="w-4 h-4" />
-            <span>
-              {t_prof("verified")}: <strong>{maskPhone(user?.phone as string)}</strong>
-            </span>
+           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Trophy className="text-blue-600 w-5 h-5 fill-blue-600/20" />
+              </div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t_prof("winningStreak") || "Win Streak"}</p>
+              <p className="text-xl font-black text-gray-900 leading-tight">
+                {user.winningStreak || 0} <span className="text-xs text-gray-400 font-medium">Auctions</span>
+              </p>
+           </div>
+        </motion.div>
+
+        {/* Main Content Sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12">
+          
+          {/* Left Column: Account & Verification */}
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* Essential Action: Phone Verification */}
+            {!user.isPhoneVerified && (
+              <motion.div 
+                variants={itemVariants}
+                className="bg-amber-50 border border-amber-200 rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 rounded-full blur-3xl -mr-16 -mt-16" />
+                <div className="relative z-10">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-white rounded-2xl shadow-sm text-amber-600">
+                      <ShieldCheck size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-amber-900 uppercase tracking-tight mb-1">
+                        {t_prof("actionRequired")}
+                      </h3>
+                      <p className="text-sm text-amber-800/80 font-medium mb-6">
+                        {t_prof("identityDesc")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <AnimatePresence mode="wait">
+                    {phoneStep === "idle" && (
+                      <motion.button
+                        key="idle"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        onClick={() => setPhoneStep("input")}
+                        className="w-full bg-amber-600 text-white px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-200 flex items-center justify-center gap-2"
+                      >
+                        {t_prof("startVerification")} <ChevronRight size={18} />
+                      </motion.button>
+                    )}
+
+                    {phoneStep === "input" && (
+                      <motion.div 
+                        key="input"
+                        initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4"
+                      >
+                        <div className="relative">
+                          <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                          <input
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="+8801XXXXXXXXX"
+                            className="w-full bg-white border-2 border-amber-100 rounded-2xl pl-12 pr-4 py-4 text-gray-900 font-bold outline-none focus:border-amber-500 transition-all"
+                          />
+                        </div>
+                        <button
+                          onClick={handleSendOTP}
+                          disabled={isPending || phone.length < 11}
+                          className="w-full bg-amber-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest disabled:opacity-50"
+                        >
+                          {t_prof("sendOTP")}
+                        </button>
+                      </motion.div>
+                    )}
+
+                    {phoneStep === "otp" && (
+                      <motion.div 
+                        key="otp"
+                        initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4"
+                      >
+                        <input
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value)}
+                          placeholder={t_prof("enterOTP")}
+                          className="w-full bg-white border-2 border-amber-100 rounded-2xl px-6 py-4 text-center text-2xl font-black tracking-[0.5em] text-gray-900 outline-none focus:border-amber-500"
+                        />
+                        <button
+                          onClick={handleVerifyOTP}
+                          disabled={isPending || otp.length < 6}
+                          className="w-full bg-green-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest disabled:opacity-50"
+                        >
+                          {t_prof("verifyUnlock")}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Profile Information */}
+            <motion.div variants={itemVariants} className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
+                  <User size={22} className="text-primary-600" /> {t_prof("personalDetails") || "Personal Details"}
+                </h3>
+                {!editing && (
+                  <button 
+                    onClick={() => setEditing(true)}
+                    className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-primary-50 hover:text-primary-600 transition-all"
+                  >
+                    <Edit3 size={18} />
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t_prof("fullName") || "Full Name"}</label>
+                  {editing ? (
+                    <div className="flex gap-2">
+                      <input
+                        value={name}
+                        placeholder={session.user?.name || ""}
+                        onChange={(e) => setName(e.target.value)}
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                      <button 
+                        onClick={handleSaveName}
+                        disabled={isPending}
+                        className="bg-primary-600 text-white px-5 rounded-2xl hover:bg-primary-700 transition-all disabled:opacity-50"
+                      >
+                        <Save size={20} />
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-gray-900 font-bold text-lg">{session.user?.name}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t_prof("emailAddress") || "Email Address"}</label>
+                    <div className="flex items-center gap-2 text-gray-700 font-bold">
+                      <Mail size={16} className="text-primary-400" />
+                      {session.user?.email}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t_prof("phoneNumber") || "Phone Number"}</label>
+                    <div className="flex items-center gap-2 text-gray-700 font-bold">
+                      <Phone size={16} className="text-primary-400" />
+                      {user.phone ? maskPhone(user.phone) : t_prof("notVerified") || "Not Verified"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* MFS Linkage - Mobile First Cards */}
+            <motion.div variants={itemVariants} className="space-y-4">
+               <h3 className="text-xl font-black text-gray-900 flex items-center gap-2 pl-2">
+                  <Wallet size={22} className="text-primary-600" /> {t_prof("mfsTitle")}
+               </h3>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* bKash Card */}
+                  <div className={`p-6 rounded-[2.5rem] border transition-all ${user.bkashNumber ? 'bg-white border-gray-100' : 'bg-[#E2125D]/5 border-[#E2125D]/10'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2">
+                        <Image 
+                          src="https://cdn.nilamit.com/assets/bkash-logo.png" 
+                          alt="bKash" 
+                          width={40} 
+                          height={40} 
+                          className="object-contain" 
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/40x40?text=bK' }} 
+                        />
+                      </div>
+                      {user.bkashNumber && <BadgeCheck className="text-green-500" size={24} />}
+                    </div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">bKash Account</p>
+                    {user.bkashNumber ? (
+                      <p className="text-lg font-black text-gray-900 font-mono tracking-wider">{maskPhone(user.bkashNumber)}</p>
+                    ) : (
+                      <div className="space-y-3">
+                        <input
+                          placeholder="01XXXXXXXXX"
+                          value={bkash}
+                          onChange={(e) => setBkash(e.target.value)}
+                          className="w-full bg-white border border-[#E2125D]/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#E2125D]"
+                        />
+                        <button
+                          onClick={() => handleLinkMFS('bkash', bkash)}
+                          disabled={isPending || bkash.length < 11}
+                          className="w-full bg-[#E2125D] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
+                        >
+                          {t_prof("linkAccount") || "Link Account"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Nagad Card */}
+                  <div className={`p-6 rounded-[2.5rem] border transition-all ${user.nagadNumber ? 'bg-white border-gray-100' : 'bg-[#F69320]/5 border-[#F69320]/10'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2">
+                        <Image 
+                          src="https://cdn.nilamit.com/assets/nagad-logo.png" 
+                          alt="Nagad" 
+                          width={40} 
+                          height={40} 
+                          className="object-contain" 
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/40x40?text=NG' }} 
+                        />
+                      </div>
+                      {user.nagadNumber && <BadgeCheck className="text-green-500" size={24} />}
+                    </div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Nagad Account</p>
+                    {user.nagadNumber ? (
+                      <p className="text-lg font-black text-gray-900 font-mono tracking-wider">{maskPhone(user.nagadNumber)}</p>
+                    ) : (
+                      <div className="space-y-3">
+                        <input
+                          placeholder="01XXXXXXXXX"
+                          value={nagad}
+                          onChange={(e) => setNagad(e.target.value)}
+                          className="w-full bg-white border border-[#F69320]/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#F69320]"
+                        />
+                        <button
+                          onClick={() => handleLinkMFS('nagad', nagad)}
+                          disabled={isPending || nagad.length < 11}
+                          className="w-full bg-[#F69320] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
+                        >
+                          {t_prof("linkAccount") || "Link Account"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+               </div>
+               
+               <AnimatePresence>
+                {msg && (
+                  <motion.p 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className={`text-xs font-bold px-4 py-3 rounded-2xl ${msg.includes("linked") || msg.includes("সফলভাবে") ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-600 border border-red-100"}`}
+                  >
+                    {msg}
+                  </motion.p>
+                )}
+               </AnimatePresence>
+            </motion.div>
+
           </div>
-        ) : phoneStep === "idle" ? (
-          <button
-            onClick={() => setPhoneStep("input")}
-            className="w-full bg-primary-600 text-white px-4 py-3 rounded-xl text-sm font-bold hover:bg-primary-700 transition"
-          >
-            {t_prof("startVerification")}
-          </button>
-        ) : phoneStep === "input" ? (
-          <div className="flex flex-col gap-3">
-             <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+8801XXXXXXXXX"
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500"
-            />
-            <button
-               onClick={handleSendOTP}
-               disabled={isPending || phone.length < 11}
-               className="bg-primary-600 text-white px-4 py-3 rounded-xl text-sm font-bold disabled:bg-gray-200 transition"
-            >
-              {t_prof("sendOTP")}
-            </button>
+
+          {/* Right Column: Reviews & Gamification */}
+          <div className="space-y-8">
+             {/* Dynamic Progress Card */}
+             <motion.div variants={itemVariants} className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary-500/20 rounded-full blur-3xl" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                      <Zap className="text-primary-400" size={24} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Growth Path</p>
+                      <h4 className="font-black text-xl leading-tight">Level {user.userLevel || 1}</h4>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-6">
+                    <div className="flex justify-between text-xs font-black uppercase tracking-wider">
+                       <span>XP: {user.xp || 0}</span>
+                       <span className="text-primary-400">{Math.round(calculateLevelProgress(user.xp || 0))}%</span>
+                    </div>
+                    <div className="h-3 bg-white/10 rounded-full overflow-hidden p-0.5">
+                       <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${calculateLevelProgress(user.xp || 0)}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="h-full bg-gradient-to-r from-primary-500 to-blue-400 rounded-full" 
+                       />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                     <div className="bg-white/5 rounded-2xl p-3 border border-white/10">
+                        <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Badge</p>
+                        <p className="text-xs font-bold truncate">Early Adopter</p>
+                     </div>
+                     <div className="bg-white/5 rounded-2xl p-3 border border-white/10">
+                        <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Streak</p>
+                        <p className="text-xs font-bold">{user.winningStreak || 0} Wins</p>
+                     </div>
+                  </div>
+                </div>
+             </motion.div>
+
+             {/* Community Trust Section */}
+             <motion.div variants={itemVariants} className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
+                <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
+                  <MessageSquare size={22} className="text-primary-600" /> {t_prof("communityFeedback")}
+                </h3>
+                
+                <div className="mb-8">
+                  <TrustBadge 
+                    rating={(user?.rating as number) || 3.5} 
+                    ratingCount={(user?.ratingCount as number) || 0}
+                    size="lg"
+                  />
+                </div>
+
+                <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                  <ReviewList userId={session.user?.id || ""} />
+                </div>
+             </motion.div>
+
+             {/* Help & Support Shortcut */}
+             <motion.div variants={itemVariants} className="bg-primary-50 rounded-[2.5rem] p-8 border border-primary-100 group cursor-pointer hover:bg-primary-100 transition-all">
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-primary-600">
+                        <ShieldCheck size={24} />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-gray-900 uppercase text-xs tracking-widest">{t_prof("needHelp") || "Need Help?"}</h4>
+                        <p className="text-sm text-gray-600 font-medium">{t_prof("supportDesc") || "Contact our support team"}</p>
+                      </div>
+                   </div>
+                   <ChevronRight className="text-gray-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" size={20} />
+                </div>
+             </motion.div>
+
           </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-             <input
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder={t_prof("enterOTP")}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500"
-            />
-            <button
-               onClick={handleVerifyOTP}
-               disabled={isPending || otp.length < 6}
-               className="bg-green-600 text-white px-4 py-3 rounded-xl text-sm font-bold disabled:bg-gray-200 transition"
-            >
-              {t_prof("verifyUnlock")}
-            </button>
-          </div>
-        )}
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 }

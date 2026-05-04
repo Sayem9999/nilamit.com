@@ -401,7 +401,20 @@
     "notSet": "সেট করা নেই",
     "edit": "এডিট",
     "bayesianCertified": "বেয়েশিয়ান সার্টিফাইড",
-    "activeTrader": "সক্রিয় ট্রেডার"
+    "activeTrader": "সক্রিয় ট্রেডার",
+    "eliteMember": "এলিট মেম্বার",
+    "reputation": "সুনাম",
+    "level": "লেভেল",
+    "xpPoints": "এক্সপি পয়েন্ট",
+    "winningStreak": "টানা জয়",
+    "personalDetails": "ব্যক্তিগত তথ্য",
+    "fullName": "পুরো নাম",
+    "emailAddress": "ইমেইল অ্যাড্রেস",
+    "phoneNumber": "ফোন নম্বর",
+    "notVerified": "ভেরিফাইড নয়",
+    "needHelp": "সাহায্য প্রয়োজন?",
+    "supportDesc": "আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন",
+    "linkAccount": "অ্যাকাউন্ট লিঙ্ক করুন"
   },
   "HowItWorks": {
     "title": "বিশ্বস্ত নিলাম ব্যবস্থা।",

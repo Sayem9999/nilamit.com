@@ -405,7 +405,20 @@
     "notSet": "Not Set",
     "edit": "Edit",
     "bayesianCertified": "Bayesian Certified",
-    "activeTrader": "Active Trader"
+    "activeTrader": "Active Trader",
+    "eliteMember": "Elite Member",
+    "reputation": "Reputation",
+    "level": "Level",
+    "xpPoints": "XP Points",
+    "winningStreak": "Win Streak",
+    "personalDetails": "Personal Details",
+    "fullName": "Full Name",
+    "emailAddress": "Email Address",
+    "phoneNumber": "Phone Number",
+    "notVerified": "Not Verified",
+    "needHelp": "Need Help?",
+    "supportDesc": "Contact our support team",
+    "linkAccount": "Link Account"
   },
   "HowItWorks": {
     "title": "Bidding, Built for Trust.",
