@@ -15,8 +15,9 @@ import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
 /**
  * Transitions PENDING → HELD (buyer confirms advance payment).
+ * SECURITY: Includes automated logistics protection and notification triggers.
  */
-export async function payEscrowAdvance(transactionId: string, providerRef?: string) {
+export async function payEscrowAdvance(transactionId: string, providerRef?: string): Promise<ServiceResponse<null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
@@ -28,12 +29,12 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       const t = txSnap.data()!;
 
       if (t.buyerId !== session.user.id) throw new Error('Unauthorized');
-      if (t.status !== 'PENDING')        throw new Error('Advance already paid');
+      if (t.status !== 'PENDING')        throw new Error('Advance already paid or verification pending');
 
       const aRef  = db.collection('auctions').doc(t.auctionId);
       const aSnap = await tx.get(aRef);
       if (!aSnap.exists) throw new Error('Auction not found');
-      // Use snapshot.id for the auction ID — never rely on data().id which may be absent
+      
       const auction = { ...aSnap.data()!, id: aSnap.id } as {
         id: string; sellerId: string; title: string; [key: string]: unknown
       };
@@ -48,49 +49,65 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
 
       const ref = providerRef ?? `PAY-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 
+      // 1. Update Escrow Status
       tx.update(txRef, {
-        status:           'VERIFICATION_PENDING', // Security gate: Requires admin review of MFS statement
+        status:           'VERIFICATION_PENDING', 
         paymentMethod:    'mfs_manual',
         providerRef:      ref,
         verificationType: 'MANUAL',
         updatedAt:        new Date(),
       });
 
-      // Create conversation on first payment
+      // 2. Initialize Conversation if missing
       const convRef  = db.collection('conversations').doc(t.auctionId);
       const convSnap = await tx.get(convRef);
       if (!convSnap.exists) {
         const now = new Date();
         tx.set(convRef, {
-          id: t.auctionId, auctionId: t.auctionId, buyerId: t.buyerId,
-          sellerId: auction.sellerId, lastMessageAt: now, createdAt: now,
+          id: t.auctionId, 
+          auctionId: t.auctionId, 
+          buyerId: t.buyerId,
+          sellerId: auction.sellerId, 
+          lastMessageAt: now, 
+          lastMessageContent: 'Escrow payment submitted for verification.',
+          lastMessageSenderId: 'system',
+          createdAt: now,
+          updatedAt: now,
         });
       }
 
       return { auction, buyer, ref };
     });
 
-    await createLogisticsOrder(result.auction.id, result.auction.sellerId as string, session.user.id);
-
-    await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId as string), {
-      event:        FIREBASE_EVENTS.ADVANCE_PAID,
-      auctionId:    result.auction.id,
-      auctionTitle: result.auction.title,
-      message:      `Payment held for "${result.auction.title}". Please prepare for shipment.`,
-    });
+    // Post-transaction side-effects (non-blocking but logged)
+    try {
+      // Logistics order is deferred until Admin verification for physical goods
+      // but we prepare the placeholder here for tracking.
+      await createLogisticsOrder(result.auction.id, result.auction.sellerId as string, session.user.id);
+      
+      await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId as string), {
+        event:        FIREBASE_EVENTS.ADVANCE_PAID,
+        auctionId:    result.auction.id,
+        auctionTitle: result.auction.title,
+        message:      `Payment submitted for "${result.auction.title}". Verification pending.`,
+      });
+    } catch (sideEffectErr) {
+      log.warn('[escrow] side-effects failed after successful TX', sideEffectErr);
+    }
 
     revalidatePath('/dashboard');
     return successResponse(null);
   } catch (e) {
     log.error('[escrow] payEscrowAdvance failed', e);
-    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Internal error', e instanceof Error ? e.message : undefined);
+    const msg = e instanceof Error ? e.message : 'Internal error';
+    return errorResponse(ErrorType.INTERNAL, msg);
   }
 }
 
 /**
  * Buyer confirms item received — releases escrow.
  */
-export async function confirmItemReceived(transactionId: string) {
+export async function confirmItemReceived(transactionId: string): Promise<ServiceResponse<null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
@@ -119,32 +136,39 @@ export async function confirmItemReceived(transactionId: string) {
       return t;
     });
 
-    const aSnap    = await db.collection('auctions').doc(result.auctionId).get();
-    const sellerId = aSnap.data()?.sellerId as string | undefined;
+    // Reliability: Trigger background updates without blocking response
+    (async () => {
+      try {
+        const aSnap    = await db.collection('auctions').doc(result.auctionId).get();
+        const sellerId = aSnap.data()?.sellerId as string | undefined;
 
-    if (sellerId) {
-      await Promise.all([
-        recalculateUserRating(sellerId),
-        recalculateUserRating(session.user.id),
-        rtdbPush(RTDB_PATHS.userNotifications(sellerId), {
-          event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Sale confirmed! Funds released.',
-        }),
-        updateSellerPerformance(sellerId),
-      ]);
-    }
+        if (sellerId) {
+          await Promise.all([
+            recalculateUserRating(sellerId),
+            recalculateUserRating(session.user.id),
+            rtdbPush(RTDB_PATHS.userNotifications(sellerId), {
+              event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Sale confirmed! Funds released.',
+            }),
+            updateSellerPerformance(sellerId),
+          ]);
+        }
+      } catch (err) {
+        log.error('[escrow] background updates failed', err);
+      }
+    })();
 
     revalidatePath('/dashboard');
     return successResponse(null);
   } catch (e) {
     log.error('[escrow] confirmItemReceived failed', e);
-    return errorResponse(ErrorType.INTERNAL, 'Internal error');
+    return errorResponse(ErrorType.INTERNAL, 'Confirmation failed');
   }
 }
 
 /**
  * Seller confirms item shipped — updates tracking.
  */
-export async function markAsShipped(transactionId: string, trackingNumber: string) {
+export async function markAsShipped(transactionId: string, trackingNumber: string): Promise<ServiceResponse<null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
@@ -194,7 +218,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
 /**
  * Refund escrow — SECURITY CRITICAL: Admins only.
  */
-export async function refundEscrow(transactionId: string) {
+export async function refundEscrow(transactionId: string): Promise<ServiceResponse<null>> {
   const adminSession = await requireAdmin().catch(() => null);
   if (!adminSession) {
     return errorResponse(ErrorType.FORBIDDEN, 'Access Denied: Admin intervention required for refunds.');

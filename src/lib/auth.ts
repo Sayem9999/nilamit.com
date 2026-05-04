@@ -137,11 +137,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     ...(googleEnabled
       ? [
-          Google({ 
-            clientId: googleClientId!, 
+          Google({
+            clientId: googleClientId!,
             clientSecret: googleClientSecret!,
-            allowDangerousEmailAccountLinking: true
-          })
+            allowDangerousEmailAccountLinking: false,
+          }),
         ]
       : []),
     Credentials({

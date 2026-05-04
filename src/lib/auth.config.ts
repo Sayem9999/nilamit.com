@@ -44,17 +44,17 @@ export const authConfig: NextAuthConfig = {
 
       // 1. If banned, force them to the /banned page (unless they are already there or logging out)
       if (isBanned && !pathname.includes('/banned') && !pathname.includes('/api/auth')) {
-        const locale = pathname.match(/^\/(en|bn)/)?.[1] ?? 'en';
+        const locale = pathname.match(/^\/en/)?.[1] ?? 'en';
         return Response.redirect(new URL(`/${locale}/banned`, nextUrl));
       }
 
       // Strip locale prefix (e.g. /en, /bn) before matching
-      const path = pathname.replace(/^\/(en|bn)/, '') || '/';
+      const path = pathname.replace(/^\/en/, '') || '/';
 
       const isProtected = PROTECTED_PATHS.some(p => path.startsWith(p));
 
       if (isProtected && !isLoggedIn) {
-        const locale = pathname.match(/^\/(en|bn)/)?.[1] ?? 'en';
+        const locale = pathname.match(/^\/en/)?.[1] ?? 'en';
         const loginUrl = new URL(`/${locale}/login`, nextUrl);
         // Only round-trip the original path if it is a safe same-origin path.
         // nextUrl.pathname should always be safe, but we validate so a future

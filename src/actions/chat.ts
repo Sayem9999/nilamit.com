@@ -10,7 +10,7 @@ import { sendMessageSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { ChatData } from '@/types';
 
-export async function sendMessage(conversationId: string, content: string, imageUrl?: string) {
+export async function sendMessage(conversationId: string, content: string, imageUrl?: string): Promise<ServiceResponse<{ id: string, content: string, createdAt: Date }>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Unauthorized');
 
@@ -45,7 +45,12 @@ export async function sendMessage(conversationId: string, content: string, image
     isSystemMessage: false, isRead: false, createdAt: now,
   });
 
-  await db.collection('conversations').doc(conversationId).update({ lastMessageAt: now });
+  await db.collection('conversations').doc(conversationId).update({ 
+    lastMessageAt: now,
+    lastMessageContent: filtered.slice(0, 200), // Denormalized for hub performance
+    lastMessageSenderId: session.user.id,
+    updatedAt: now,
+  });
   await adminDB.ref(`${RTDB_PATHS.conversation(conversationId)}/meta`).update({
     auctionId: conv.auctionId,
     participants: {

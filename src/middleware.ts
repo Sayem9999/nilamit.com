@@ -9,7 +9,7 @@ import { env } from './lib/env';
 const intlMiddleware = createMiddleware({
   locales,
   defaultLocale: 'en',
-  localePrefix: 'always'
+  localePrefix: 'never'
 });
 
 const { auth } = NextAuth(authConfig);
@@ -31,12 +31,22 @@ export default auth((req) => {
   // 1. API routes should bypass intlMiddleware and go straight to handlers
   if (pathname.startsWith('/api')) {
     // Specialized Auth stripping: /en/api/auth -> /api/auth
-    const localeApiMatch = pathname.match(/^\/(en|bn)(\/api\/auth\/.*)/);
+    const localeApiMatch = pathname.match(/^\/en(\/api\/auth\/.*)/);
     if (localeApiMatch) {
       return NextResponse.redirect(new URL(localeApiMatch[2], redirectBase));
     }
     return NextResponse.next();
   }
+
+  // 2. Legacy Redirect: /en/* -> /*
+  // Since we are English-only now, /en is redundant.
+  if (pathname === '/en') {
+    return NextResponse.redirect(new URL('/', redirectBase));
+  }
+  if (pathname.startsWith('/en/')) {
+    return NextResponse.redirect(new URL(pathname.replace(/^\/en/, ''), redirectBase));
+  }
+
   
   // 2. Global Security: Redirect banned users
   const isBanned = (req.auth?.user as { isBanned?: boolean })?.isBanned;

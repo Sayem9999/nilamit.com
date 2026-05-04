@@ -1,6 +1,6 @@
 'use server';
 
-import { db, docData, toSellerPublic } from '@/lib/db';
+import { db, toSellerPublic } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { User, PublicProfile } from '@/types';
 import { apiLimiter } from '@/lib/ratelimit';
@@ -10,7 +10,7 @@ import { log } from '@/lib/logger';
 import { updateProfileSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
-export async function updateProfile(data: unknown) {
+export async function updateProfile(data: unknown): Promise<ServiceResponse<{ user: Pick<User, 'id' | 'name' | 'email' | 'image'> }>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
@@ -71,7 +71,7 @@ export async function getPublicProfile(userId: string): Promise<ServiceResponse<
   }
 }
 
-export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string) {
+export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): Promise<ServiceResponse<null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 

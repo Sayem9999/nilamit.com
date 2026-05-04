@@ -3,14 +3,14 @@
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { batchHydrateEscrowRows, type AdminEscrowDoc } from './shared';
 
 /**
  * Recent automated escrow transactions for the treasury audit table.
  * Filters to states where money has actually moved (HELD / RELEASED).
  */
-export async function getTreasuryAudit() {
+export async function getTreasuryAudit(): Promise<ServiceResponse<unknown[]>> {
   await requireAdmin();
 
   const txSnap = await db.collection('escrowTransactions')
@@ -33,7 +33,7 @@ export async function getTreasuryAudit() {
 /**
  * Currently HELD escrows — surfaced in TreasuryTab for admin manual override.
  */
-export async function getAdminActiveEscrows() {
+export async function getAdminActiveEscrows(): Promise<ServiceResponse<unknown[]>> {
   await requireAdmin();
 
   const txSnap = await db.collection('escrowTransactions')
@@ -56,7 +56,7 @@ export async function getAdminActiveEscrows() {
 /**
  * Transactions awaiting manual verification of MFS payments.
  */
-export async function getVerificationQueue() {
+export async function getVerificationQueue(): Promise<ServiceResponse<unknown[]>> {
   await requireAdmin();
 
   const txSnap = await db.collection('escrowTransactions')
@@ -78,7 +78,7 @@ export async function getVerificationQueue() {
 /**
  * Approve a pending MFS payment after manual verification.
  */
-export async function approveEscrowPayment(transactionId: string) {
+export async function approveEscrowPayment(transactionId: string): Promise<ServiceResponse<null>> {
   const admin = await requireAdmin();
 
   try {
@@ -106,7 +106,7 @@ export async function approveEscrowPayment(transactionId: string) {
 /**
  * Force a refund to the buyer but deduct a standard logistics fee (120 BDT) for the seller.
  */
-export async function refundWithDeduction(transactionId: string) {
+export async function refundWithDeduction(transactionId: string): Promise<ServiceResponse<null>> {
   const admin = await requireAdmin();
 
   try {

@@ -156,7 +156,7 @@ export function EscrowActionCard({
                 <Clock className="w-4 h-4" />
                 <span className="bn">
                   {t("wonDate")}:{" "}
-                  {new Date(transaction.auction.endTime).toLocaleDateString(locale === 'bn' ? "bn-BD" : "en-US")}
+                  {new Date(transaction.auction.endTime).toLocaleDateString("en-US")}
                 </span>
               </div>
             </div>

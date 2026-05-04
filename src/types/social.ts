@@ -6,6 +6,8 @@ export interface Conversation {
   buyerId: string;
   sellerId: string;
   lastMessageAt: Date;
+  lastMessageContent?: string;
+  lastMessageSenderId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -17,7 +17,6 @@ import {
   Trophy,
   ChevronDown,
   LogOut,
-  Globe,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
@@ -32,19 +31,14 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
 
-  const toggleLanguage = () => {
-    const newLocale = locale === "en" ? "bn" : "en";
-    // Remove the current locale prefix to switch
-    const currentPath = pathname.replace(`/${locale}`, "") || "/";
-    router.push(`/${newLocale}${currentPath}`);
-  };
+
 
   return (
     <nav className="sticky top-0 z-50 glass !bg-white/70 border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href={`/${locale}`} className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-2 group">
             <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
               <Gavel className="w-5 h-5 text-white" />
             </div>
@@ -56,7 +50,7 @@ export function Navbar() {
           {/* Search Bar (Desktop) */}
           <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
             <form
-              action={`/${locale}/search`}
+              action="/search"
               className="w-full relative group"
             >
               <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-primary-500 transition-colors" />
@@ -71,6 +65,8 @@ export function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-4">
+            {/* Language Toggle Sidelined */}
+            {/* 
             <button
               onClick={toggleLanguage}
               className="flex items-center gap-2 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-100 hover:bg-white hover:border-primary-200 transition-all px-4 py-2 rounded-xl shadow-sm"
@@ -81,13 +77,10 @@ export function Navbar() {
               <Globe className="w-4 h-4 text-primary-500" />
               <span>{locale === "en" ? "বাংলা" : "English"}</span>
             </button>
-
-
-
-
+            */}
 
               <Link
-                href={`/${locale}/auctions`}
+                href="/auctions"
                 className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors"
               >
                 {t("browse")}
@@ -102,7 +95,7 @@ export function Navbar() {
                 <div className="absolute left-0 top-full pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 scale-95 group-hover:scale-100 origin-top-left">
                   <div className="w-56 bg-white border border-gray-100 rounded-2xl shadow-xl p-1.5 overflow-hidden">
                     <Link
-                      href={`/${locale}/leaderboard`}
+                      href="/leaderboard"
                       className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition-colors"
                     >
                       <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
@@ -120,7 +113,7 @@ export function Navbar() {
               </div>
               {session?.user?.isAdmin && (
                 <Link
-                  href={`/${locale}/admin`}
+                  href="/admin"
                   className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
                 >
                   <Gavel className="w-4 h-4" /> {t("admin")}
@@ -129,13 +122,13 @@ export function Navbar() {
               {session ? (
                 <>
                   <Link
-                    href={`/${locale}/auctions/create`}
+                    href="/auctions/create"
                     className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
                   >
                     <Plus className="w-4 h-4" /> {t("sell")}
                   </Link>
                   <Link
-                    href={`/${locale}/dashboard`}
+                    href="/dashboard"
                     className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
                   >
                     <LayoutDashboard className="w-4 h-4" /> {t("dashboard")}
@@ -181,7 +174,7 @@ export function Navbar() {
                           <p className="text-xs font-bold text-gray-900 truncate">{session.user?.email}</p>
                         </div>
                       <Link
-                        href={`/${locale}/profile`}
+                        href="/profile"
                         className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition-all"
                       >
                         <div className="flex items-center gap-2.5">
@@ -209,11 +202,11 @@ export function Navbar() {
                             await logoutAction();
                             
                             // 3. Force full browser state clear & redirect
-                            window.location.href = `/${locale}/login?signout=success`;
+                            window.location.href = "/login?signout=success";
                             window.location.reload(); 
                           } catch (e) {
                             console.error("SignOut flow failed", e);
-                            window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}/login`)}`;
+                            window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/login`)}`;
                           }
                         }}
                         className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-xl transition-all font-bold"
@@ -226,7 +219,7 @@ export function Navbar() {
                 </>
               ) : (
                 <Link
-                  href={`/${locale}/login`}
+                  href="/login"
                   className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all"
                 >
                   {t("signin")}
@@ -236,12 +229,15 @@ export function Navbar() {
 
             {/* Mobile menu button */}
             <div className="flex items-center gap-4 md:hidden">
+              {/* Mobile Language Switcher Sidelined */}
+              {/* 
               <button
                 onClick={toggleLanguage}
                 className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1.5 rounded-lg"
               >
                 {locale === "en" ? "🇧🇩" : "🇺🇸"}
               </button>
+              */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 rounded-xl hover:bg-gray-50"
@@ -252,29 +248,20 @@ export function Navbar() {
                   <Menu className="w-5 h-5" />
                 )}
               </button>
-            </div>
           </div>
         </div>
+      </div>
 
         {/* Mobile Menu */}
-        {mobileMenuOpen && (
+        {mobileMenuOpen ? (
           <div className="md:hidden border-t border-gray-100 bg-white shadow-lg animate-in slide-in-from-top duration-300">
             <div className="px-4 py-4 space-y-2">
               <div className="pt-2 pb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 {t("settings")}
               </div>
-              <div className="grid grid-cols-2 gap-2 px-4 py-2">
-                <button
-                  onClick={toggleLanguage}
-                  className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 rounded-xl"
-                >
-                  <Globe className="w-4 h-4" />
-                  {locale === "en" ? "বাংলা" : "English"}
-                </button>
-              </div>
               <div className="border-t border-gray-50 mt-2 pt-2">
                 <Link
-                  href={`/${locale}/auctions`}
+                  href="/auctions"
                   className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -283,21 +270,21 @@ export function Navbar() {
                 {session ? (
                   <>
                     <Link
-                      href={`/${locale}/auctions/create`}
+                      href="/auctions/create"
                       className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {t("sell")}
                     </Link>
                     <Link
-                      href={`/${locale}/dashboard`}
+                      href="/dashboard"
                       className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {t("dashboard")}
                     </Link>
                     <Link
-                      href={`/${locale}/profile`}
+                      href="/profile"
                       className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl"
                       onClick={() => setMobileMenuOpen(false)}
                     >
@@ -308,11 +295,11 @@ export function Navbar() {
                         try {
                           await signOut({ redirect: false });
                           await logoutAction();
-                          window.location.href = `/${locale}/login?signout=success`;
+                          window.location.href = "/login?signout=success";
                           window.location.reload();
                         } catch (e) {
                           console.error("Mobile SignOut failed", e);
-                          window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}/login`)}`;
+                          window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/login`)}`;
                         }
                         setMobileMenuOpen(false);
                       }}
@@ -323,7 +310,7 @@ export function Navbar() {
                   </>
                 ) : (
                   <Link
-                    href={`/${locale}/login`}
+                    href="/login"
                     className="block px-4 py-3 text-sm font-semibold text-primary-600 bg-primary-50 rounded-xl text-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -333,7 +320,7 @@ export function Navbar() {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
     </nav>
   );
 }

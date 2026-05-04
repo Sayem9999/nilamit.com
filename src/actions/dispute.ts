@@ -10,7 +10,7 @@ import { log } from '@/lib/logger';
 import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
-export async function raiseDispute(transactionId: string, reason: string) {
+export async function raiseDispute(transactionId: string, reason: string): Promise<ServiceResponse<null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
@@ -49,7 +49,7 @@ export async function raiseDispute(transactionId: string, reason: string) {
   }
 }
 
-export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYER', resolution: string) {
+export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYER', resolution: string): Promise<ServiceResponse<null>> {
   const adminSession = await requireAdmin();
 
   try {
@@ -101,7 +101,7 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
 /**
  * Admin override refund — always cancels the linked auction to keep state consistent.
  */
-export async function adminRefundEscrow(transactionId: string, reason: string) {
+export async function adminRefundEscrow(transactionId: string, reason: string): Promise<ServiceResponse<null>> {
   const adminSession = await requireAdmin();
 
   try {
@@ -139,13 +139,15 @@ export async function adminRefundEscrow(transactionId: string, reason: string) {
   }
 }
 
-export async function getOpenDisputes() {
-  // Use requireAdmin to throw consistently — isAdminEmail silently returns []
-  // which masks auth failures and diverges from all other admin action gates.
-  try { await requireAdmin(); } catch { return []; }
+export async function getOpenDisputes(): Promise<ServiceResponse<unknown[]>> {
+  try { 
+    await requireAdmin(); 
+  } catch (_e) { 
+    return errorResponse(ErrorType.FORBIDDEN, 'Admin access required'); 
+  }
 
   const snap = await db.collection('disputes').where('status', '==', 'OPEN').orderBy('createdAt', 'desc').get();
-  if (snap.empty) return [];
+  if (snap.empty) return successResponse([]);
 
   const disputes = snapDocs<Dispute>(snap);
 
@@ -180,23 +182,23 @@ export async function getOpenDisputes() {
     sellerSnaps.forEach((s) => sellerMap.set(s.id, docData<User>(s)));
   }
 
-  return disputes.map((dispute) => {
-    const tx     = txMap.get(dispute.transactionId);
-    const opener = openerMap.get(dispute.openerId);
-    const a      = tx ? auctionMap.get(tx.auctionId)   : null;
-    const buyer  = tx ? buyerMap.get(tx.buyerId)        : null;
-    const seller = a?.sellerId ? (sellerMap.get(a.sellerId) ?? null) : null;
+    return successResponse(disputes.map((dispute) => {
+      const tx     = txMap.get(dispute.transactionId);
+      const opener = openerMap.get(dispute.openerId);
+      const a      = tx ? auctionMap.get(tx.auctionId)   : null;
+      const buyer  = tx ? buyerMap.get(tx.buyerId)        : null;
+      const seller = a?.sellerId ? (sellerMap.get(a.sellerId) ?? null) : null;
 
-    return {
-      ...dispute,
-      transaction: {
-        id:        tx?.id        ?? '',
-        amount:    tx?.amount    ?? 0,
-        auctionId: tx?.auctionId ?? '',
-        auction: { title: a?.title ?? '', seller: { name: seller?.name ?? null } },
-        buyer:   { name: buyer?.name ?? null, email: buyer?.email ?? null },
-      },
-      opener: { name: opener?.name ?? null, email: opener?.email ?? null },
-    };
-  });
+      return {
+        ...dispute,
+        transaction: {
+          id:        tx?.id        ?? '',
+          amount:    tx?.amount    ?? 0,
+          auctionId: tx?.auctionId ?? '',
+          auction: { title: a?.title ?? '', seller: { name: seller?.name ?? null } },
+          buyer:   { name: buyer?.name ?? null, email: buyer?.email ?? null },
+        },
+        opener: { name: opener?.name ?? null, email: opener?.email ?? null },
+      };
+    }));
 }

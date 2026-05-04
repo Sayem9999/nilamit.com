@@ -4,9 +4,9 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { reportAuctionSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
-export async function reportAuction(data: unknown) {
+export async function reportAuction(data: unknown): Promise<ServiceResponse<null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 

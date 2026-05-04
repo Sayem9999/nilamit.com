@@ -1,20 +1,17 @@
 'use server';
 
-import { z } from 'zod';
 import { db, newId } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { filterPII } from '@/lib/pii-filter';
-import { CATEGORIES } from '@/types';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
-const VALID_CATEGORIES = CATEGORIES.map((c) => c.slug);
 const MAX_BULK_ROWS    = 1000;
 const BATCH_SIZE       = 499; // Firestore max is 500 ops per batch
 
-import { BulkAuctionSchema, type BulkAuctionInput } from '@/lib/inventory-parser';
+import { type BulkAuctionInput } from '@/lib/inventory-parser';
 
-export async function processBulkUpload(fileName: string, rows: BulkAuctionInput[]) {
+export async function processBulkUpload(fileName: string, rows: BulkAuctionInput[]): Promise<ServiceResponse<{ processed: number, errors: string[] }>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
@@ -113,19 +110,25 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
   return successResponse({ processed, errors });
 }
 
-export async function getBulkOperations() {
+export async function getBulkOperations(): Promise<ServiceResponse<unknown[]>> {
   const session = await auth();
-  if (!session?.user?.id) return [];
+  if (!session?.user?.id) return successResponse([]);
 
-  const snap = await db.collection('bulkOperations')
-    .where('sellerId', '==', session.user.id)
-    .orderBy('createdAt', 'desc')
-    .limit(10)
-    .get();
+  try {
+    const snap = await db.collection('bulkOperations')
+      .where('sellerId', '==', session.user.id)
+      .orderBy('createdAt', 'desc')
+      .limit(10)
+      .get();
 
-  return snap.docs.map((d) => ({
-    ...d.data(), id: d.id,
-    createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
-    updatedAt: d.data().updatedAt?.toDate?.() ?? new Date(d.data().updatedAt),
-  }));
+    const data = snap.docs.map((d) => ({
+      ...d.data(), id: d.id,
+      createdAt: d.data().createdAt?.toDate?.() ?? new Date(d.data().createdAt),
+      updatedAt: d.data().updatedAt?.toDate?.() ?? new Date(d.data().updatedAt),
+    }));
+    return successResponse(data);
+  } catch (e) {
+    log.error('[bulk-upload] getBulkOperations failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch bulk operations');
+  }
 }

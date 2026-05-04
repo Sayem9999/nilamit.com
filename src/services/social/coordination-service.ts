@@ -6,6 +6,7 @@ import { log } from '@/lib/logger';
 export class CoordinationService {
   /**
    * Fetch hydrated coordination items for a user (either buyer or seller).
+   * Optimized: Uses denormalized lastMessage fields to avoid N+1 queries.
    */
   static async getActiveCoordination(userId: string): Promise<ServiceResponse<CoordinationHubItem[]>> {
     try {
@@ -42,16 +43,7 @@ export class CoordinationService {
         if (s.exists) escrowMap.set(s.id, { ...s.data(), id: s.id } as EscrowTransaction);
       });
 
-      // Batch last messages
-      const messageSnaps = await Promise.all(uniqueConvs.map(conv =>
-        db.collection('messages')
-          .where('conversationId', '==', conv.id)
-          .orderBy('createdAt', 'desc')
-          .limit(1)
-          .get()
-      ));
-
-      const items = uniqueConvs.map((conv, i) => {
+      const items = uniqueConvs.map((conv) => {
         const auction = auctionMap.get(conv.auctionId);
         const escrow = escrowMap.get(conv.auctionId);
         
@@ -60,7 +52,16 @@ export class CoordinationService {
         // Coordination only shows for active/held/disputed states
         if (!['HELD', 'DISPUTED'].includes(escrow.status)) return null;
 
-        const messages = messageSnaps[i].docs.map(d => ({ ...d.data(), id: d.id } as Message));
+        // Use denormalized data for the summary message
+        const lastMessage: Message | null = conv.lastMessageContent ? {
+          id: 'last',
+          conversationId: conv.id,
+          content: conv.lastMessageContent,
+          senderId: conv.lastMessageSenderId || '',
+          isSystemMessage: false,
+          isRead: true,
+          createdAt: conv.lastMessageAt
+        } : null;
 
         return {
           ...conv,
@@ -71,7 +72,7 @@ export class CoordinationService {
             escrowTransaction: { status: escrow.status, id: escrow.id },
             logistics: auction.logistics ? { status: auction.logistics.status, trackingId: auction.logistics.trackingId } : undefined,
           },
-          messages
+          messages: lastMessage ? [lastMessage] : []
         } as CoordinationHubItem;
       }).filter((x): x is CoordinationHubItem => x !== null)
       .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());

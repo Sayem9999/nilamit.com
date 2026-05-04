@@ -6,7 +6,7 @@ import { User } from '@/types';
 import { revalidatePath } from 'next/cache';
 import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
-export async function grantVerifiedSeller(userId: string) {
+export async function grantVerifiedSeller(userId: string): Promise<ServiceResponse<null>> {
   try {
     const session = await requireAdmin();
     await db.collection('users').doc(userId).update({
@@ -25,7 +25,7 @@ export async function grantVerifiedSeller(userId: string) {
   }
 }
 
-export async function revokeVerifiedSeller(userId: string) {
+export async function revokeVerifiedSeller(userId: string): Promise<ServiceResponse<null>> {
   try {
     const session = await requireAdmin();
     await db.collection('users').doc(userId).update({
@@ -43,7 +43,7 @@ export async function revokeVerifiedSeller(userId: string) {
   }
 }
 
-export async function banUser(userId: string) {
+export async function banUser(userId: string): Promise<ServiceResponse<null>> {
   try {
     const session = await requireAdmin();
     await db.collection('users').doc(userId).update({
@@ -61,7 +61,7 @@ export async function banUser(userId: string) {
   }
 }
 
-export async function unbanUser(userId: string) {
+export async function unbanUser(userId: string): Promise<ServiceResponse<null>> {
   try {
     const session = await requireAdmin();
     await db.collection('users').doc(userId).update({
@@ -83,7 +83,7 @@ export async function getAdminUsers(opts: {
   cursor?: string | null;
   limit?: number;
   search?: string;
-} = {}) {
+} = {}): Promise<ServiceResponse<{ users: unknown[], nextCursor: string | null, hasMore: boolean }>> {
   try {
     await requireAdmin();
     const limit = opts.limit ?? 20;

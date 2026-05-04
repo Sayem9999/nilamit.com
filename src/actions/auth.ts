@@ -1,6 +1,6 @@
 "use server";
 
-import { signOut, signIn } from "@/lib/auth";
+import { signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
@@ -14,13 +14,13 @@ import { ErrorType, errorResponse, successResponse } from "@/lib/errors";
 import { verifyStandaloneOTP } from "./phone";
 import { log } from "@/lib/logger";
 
-export async function logoutAction() {
+export async function logoutAction(): Promise<ServiceResponse<null>> {
   await signOut({ redirect: false });
   revalidatePath("/");
-  return { success: true };
+  return successResponse(null);
 }
 
-export async function registerUser(data: unknown) {
+export async function registerUser(data: unknown): Promise<ServiceResponse<{ message: string }>> {
   const parsed = registerSchema.safeParse(data);
   if (!parsed.success) {
     return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
@@ -78,7 +78,7 @@ export async function registerUser(data: unknown) {
   }
 }
 
-export async function signupWithPhone(data: unknown) {
+export async function signupWithPhone(data: unknown): Promise<ServiceResponse<{ message: string }>> {
   const parsed = phoneSignupSchema.safeParse(data);
   if (!parsed.success) {
     return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
@@ -137,7 +137,7 @@ export async function signupWithPhone(data: unknown) {
   }
 }
 
-export async function resetPasswordWithOTP(data: unknown) {
+export async function resetPasswordWithOTP(data: unknown): Promise<ServiceResponse<{ message: string }>> {
   const parsed = passwordResetSchema.safeParse(data);
   if (!parsed.success) {
     return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));

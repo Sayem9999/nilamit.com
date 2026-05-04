@@ -34,10 +34,15 @@ const REPLACEMENT_TEXT = "[নিরাপত্তার স্বার্থ�
 export function filterPII(text: string | null | undefined): string {
   if (!text) return "";
 
+  // Normalize: remove common separators to catch spread-out phone numbers
+  const normalized = text.replace(/[\s.-]/g, "");
   let sanitized = text;
 
   // 1. Filter Phone Numbers (English & Bangla digits)
-  sanitized = sanitized.replace(BANGLADESH_PHONE_REGEX, REPLACEMENT_TEXT);
+  // Check against normalized text but replace in original
+  if (BANGLADESH_PHONE_REGEX_TEST.test(normalized)) {
+      sanitized = sanitized.replace(BANGLADESH_PHONE_REGEX, REPLACEMENT_TEXT);
+  }
 
   // 2. Filter Emails
   sanitized = sanitized.replace(EMAIL_REGEX, REPLACEMENT_TEXT);

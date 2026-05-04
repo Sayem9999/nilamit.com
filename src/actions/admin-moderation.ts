@@ -7,7 +7,7 @@ import { Auction, User, Report } from '@/types';
 import { updateSellerPerformance } from '@/lib/seller-performance';
 import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 
-export async function getAdminReports(status?: string, page = 1, limit = 20) {
+export async function getAdminReports(status?: string, page = 1, limit = 20): Promise<ServiceResponse<{ reports: unknown[], total: number, pages: number }>> {
   try {
     await requireAdmin();
 
@@ -84,7 +84,7 @@ async function getUserMap(userIds: string[]) {
   );
 }
 
-export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
+export async function getAdminAuctions(page = 1, limit = 20, status?: string): Promise<ServiceResponse<{ auctions: unknown[], total: number, pages: number }>> {
   try {
     await requireAdmin();
 
@@ -124,7 +124,7 @@ export async function getAdminAuctions(page = 1, limit = 20, status?: string) {
   }
 }
 
-export async function resolveReport(reportId: string, status: string) {
+export async function resolveReport(reportId: string, status: string): Promise<ServiceResponse<null>> {
   try {
     const session = await requireAdmin();
     await db.collection('reports').doc(reportId).update({
@@ -147,7 +147,7 @@ export async function resolveReport(reportId: string, status: string) {
   }
 }
 
-export async function suspendAuction(auctionId: string, reportId: string, reason: string) {
+export async function suspendAuction(auctionId: string, reportId: string, reason: string): Promise<ServiceResponse<null>> {
   try {
     const session = await requireAdmin();
 

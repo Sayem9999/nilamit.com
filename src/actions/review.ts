@@ -11,7 +11,7 @@ import { recalculateUserRating } from '@/lib/rating';
 
 export async function submitReview({
   auctionId, toId, rating, comment,
-}: { auctionId: string; toId: string; rating: number; comment?: string }) {
+}: { auctionId: string; toId: string; rating: number; comment?: string }): Promise<ServiceResponse<Review>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
   const fromId = session.user.id;

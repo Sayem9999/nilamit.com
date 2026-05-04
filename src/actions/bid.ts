@@ -28,7 +28,7 @@ async function requireBiddingPrivileges(userId: string): Promise<ServiceResponse
 /**
  * Server Action: Place a bid on an auction
  */
-export async function placeBid(auctionId: string, amount: number) {
+export async function placeBid(auctionId: string, amount: number): Promise<ServiceResponse<PlaceBidResult | null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated', ERROR_CODES.NOT_AUTHENTICATED);
   const userId = session.user.id;
@@ -97,7 +97,8 @@ export async function placeBid(auctionId: string, amount: number) {
 
     while (attempts < MAX_ATTEMPTS) {
       try {
-        return successResponse(await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || ''));
+        const result = await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
+        return successResponse(result);
       } catch (error) {
         attempts++;
         const message = error instanceof Error ? error.message : '';
@@ -131,14 +132,8 @@ export async function placeBid(auctionId: string, amount: number) {
 
 /**
  * Server Action: Buy It Now — instant purchase at the listed BIN price.
- *
- * Atomic: closes the auction (status → SOLD), records buyer as winner, and
- * upserts an escrow doc in PENDING via the shared `processAuctionSale`
- * helper. Failure modes mirror placeBid (auction inactive, ended, self-buy,
- * BIN unavailable). Buyer must be phone-verified; min/banned checks match
- * placeBid so users can't bypass them via BIN.
  */
-export async function executeBuyItNow(auctionId: string) {
+export async function executeBuyItNow(auctionId: string): Promise<ServiceResponse<null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated', ERROR_CODES.NOT_AUTHENTICATED);
   const userId = session.user.id;
@@ -169,6 +164,7 @@ export async function executeBuyItNow(auctionId: string) {
     return errorResponse(ErrorType.INTERNAL, message);
   }
 }
+
 
 /**
  * Server Action: Fetch bid history for an auction

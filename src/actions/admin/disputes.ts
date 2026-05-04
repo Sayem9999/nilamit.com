@@ -12,7 +12,7 @@ import { batchHydrateEscrowRows, type AdminEscrowDoc } from './shared';
  * All escrow transactions in DISPUTED state, with attached dispute reason.
  * UI: src/app/[locale]/admin/tabs/DisputesTab.tsx
  */
-export async function getAdminDisputes() {
+export async function getAdminDisputes(): Promise<ServiceResponse<unknown[]>> {
   await requireAdmin();
 
   const txSnap = await db.collection('escrowTransactions')
@@ -50,7 +50,7 @@ export async function getAdminDisputes() {
 /**
  * Force-resolve a held/disputed escrow.
  */
-export async function resolveAdminDispute(transactionId: string, resolution: 'RELEASE' | 'REFUND' | 'HOLD') {
+export async function resolveAdminDispute(transactionId: string, resolution: 'RELEASE' | 'REFUND' | 'HOLD'): Promise<ServiceResponse<null>> {
   await requireAdmin();
 
   try {
@@ -117,7 +117,7 @@ export async function resolveAdminDispute(transactionId: string, resolution: 'RE
 /**
  * Read the buyer/seller coordination chat for an auction (admin view).
  */
-export async function getAdminCoordinationLog(auctionId: string) {
+export async function getAdminCoordinationLog(auctionId: string): Promise<ServiceResponse<unknown[]>> {
   await requireAdmin();
 
   const messagesSnap = await db.collection('messages')
