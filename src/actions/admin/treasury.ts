@@ -102,3 +102,18 @@ export async function approveEscrowPayment(transactionId: string) {
     return errorResponse(ErrorType.INTERNAL, 'Failed to approve payment');
   }
 }
+
+/**
+ * Force a refund to the buyer but deduct a standard logistics fee (120 BDT) for the seller.
+ */
+export async function refundWithDeduction(transactionId: string) {
+  const admin = await requireAdmin();
+
+  try {
+    const { CommitmentService } = await import('@/services/finance/commitment-service');
+    return await CommitmentService.refundWithLogisticsDeduction(transactionId, admin.user.id);
+  } catch (e) {
+    log.error('[admin] refundWithDeduction failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to process deduction-based refund');
+  }
+}

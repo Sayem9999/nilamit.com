@@ -26,7 +26,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
     return (
       <div className="relative aspect-[4/3] sm:aspect-video rounded-3xl overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-100/50 shadow-sm">
         <Image
-          src="/placeholder.png"
+          src="https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=800&auto=format&fit=crop"
           alt={title}
           fill
           className="object-cover"

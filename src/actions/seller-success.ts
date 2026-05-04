@@ -8,14 +8,10 @@ export async function getSellerPerformance() {
   if (!session?.user?.id) return null;
   const userId = session.user.id;
 
-  const [allAuctionsSnap, soldSnap, activeSnap, bidsSnap] = await Promise.all([
+  const [allAuctionsSnap, soldSnap, activeSnap] = await Promise.all([
     db.collection('auctions').where('sellerId', '==', userId).get(),
     db.collection('auctions').where('sellerId', '==', userId).where('status', '==', 'SOLD').get(),
     db.collection('auctions').where('sellerId', '==', userId).where('status', '==', 'ACTIVE').get(),
-    db.collection('bids').where('auctionId', 'in',
-      // Firestore 'in' limited to 30 items; fetch auction IDs first
-      ['placeholder'] // handled below
-    ).get(),
   ]);
 
   const auctionIds = allAuctionsSnap.docs.map(d => d.id);

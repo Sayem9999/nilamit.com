@@ -8,6 +8,9 @@
 - **Currency**: Strictly BDT (৳).
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
+- **v2.3.1 (Treasury Logic Hardening)**:
+    - **Smart Logistics Protection**: Implemented the `refundWithDeduction` server action, replacing simulated logic in `TreasuryTab` with a production-ready resolution flow.
+    - **Commitment Service Activation**: Integrated `CommitmentService` to handle atomic 120 BDT deductions for RTO protection.
 - **v2.3.0 (Production Auth Stabilization & UI Restoration)**:
     - **Auth.js v5 Hardening**: Resolved 403 Forbidden errors by bypassing internationalization middleware for `/api/auth` routes.
     - **Infrastructure Trust**: Enabled `AUTH_TRUST_HOST` to handle Firebase App Hosting proxies correctly.

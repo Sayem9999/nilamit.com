@@ -13,9 +13,8 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/.next/**',
-      // tests/e2e/** are Playwright specs; they have a separate runner and
-      // import from '@playwright/test' which vitest cannot resolve.
-      'tests/e2e/**',
+      '**/.claude/**',
+      '**/tests/e2e/**',
     ],
     alias: {
       '@': path.resolve(__dirname, './src'),

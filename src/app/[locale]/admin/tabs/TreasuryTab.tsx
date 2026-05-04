@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute, getVerificationQueue, approveEscrowPayment } from '@/actions/admin';
+import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute, getVerificationQueue, approveEscrowPayment, refundWithDeduction } from '@/actions/admin';
 import { ShieldCheck, Download, ExternalLink, Smartphone, Clock, Scale, RotateCcw, Loader2, CheckCircle2, Trash2 } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import { generateInvoice } from '@/lib/pdf-generator';
@@ -72,9 +72,20 @@ export function TreasuryTab() {
   const handleProtectedRefund = async (id: string) => {
     if (!confirm('Refund buyer but DEDUCT 120 BDT for seller shipping?')) return;
     setResolving(id);
-    // In a real app, this would call a server action that wraps CommitmentService.refundWithLogisticsDeduction
-    toast.success('Deduction-based refund processed (Simulation)');
-    setResolving(null);
+    try {
+      const res = await refundWithDeduction(id);
+      if (res.success) {
+        toast.success('Deduction-based refund processed successfully');
+        setActiveEscrows(prev => prev.filter(e => e.id !== id));
+        loadData();
+      } else {
+        toast.error(res.error?.message || 'Failed to process refund');
+      }
+    } catch (e) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setResolving(null);
+    }
   };
 
   const handleManualResolve = async (id: string, resolution: 'RELEASE' | 'REFUND') => {
