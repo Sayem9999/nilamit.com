@@ -77,7 +77,13 @@
     "emailSignupDesc": "Create your account with email.",
     "phoneBtn": "Phone",
     "emailBtn": "Email",
-    "passwordsMismatch": "Passwords do not match."
+    "passwordsMismatch": "Passwords do not match.",
+    "googleBtn": "Continue with Google",
+    "verifyEmailTitle": "Verify Your Email",
+    "verifyEmailDesc": "We've sent a verification link to your email address.",
+    "emailVerifiedSuccess": "Email verified successfully!",
+    "emailVerifiedError": "Invalid or expired verification link.",
+    "resendEmailBtn": "Resend Verification Email"
   },
   "Home": {
     "title": "Trusted Auctions",
@@ -418,7 +424,13 @@
     "notVerified": "Not Verified",
     "needHelp": "Need Help?",
     "supportDesc": "Contact our support team",
-    "linkAccount": "Link Account"
+    "linkAccount": "Link Account",
+    "verifyEmailTitle": "Verify Your Email",
+    "verifyEmailDesc": "Verify your email to receive official invoices and receipts.",
+    "emailVerifiedSuccess": "Email verified successfully!",
+    "emailVerifiedError": "Invalid or expired verification link.",
+    "resendEmailBtn": "Resend Verification Email",
+    "sendVerificationLink": "Send Verification Link"
   },
   "HowItWorks": {
     "title": "Bidding, Built for Trust.",

@@ -7,6 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { logoutAction } from "@/actions/auth";
 import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
+import { sendEmailVerification } from "@/actions/email";
 import { calculateLevelProgress } from "@/lib/gamification-engine";
 import {
   User,
@@ -84,6 +85,7 @@ export default function ProfilePage() {
     ratingCount: number;
     phone?: string; 
     email?: string;
+    emailVerified?: Date | string | null;
     bkashNumber?: string;
     nagadNumber?: string;
     xp: number;
@@ -136,6 +138,18 @@ export default function ProfilePage() {
         setMsg(t_prof("verificationSuccess"));
         await update();
       } else setMsg(res.error?.message || t_prof("errorGeneric"));
+    });
+  };
+
+  const handleSendEmailVerification = () => {
+    setMsg("");
+    startTransition(async () => {
+      const res = await sendEmailVerification();
+      if (res.success) {
+        setMsg(t_prof("otpSent")); // "OTP সফলভাবে পাঠানো হয়েছে!" - Reuse for email
+      } else {
+        setMsg(res.error?.message || t_prof("errorGeneric"));
+      }
     });
   };
 
@@ -327,90 +341,121 @@ export default function ProfilePage() {
           {/* Left Column: Account & Verification */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Essential Action: Phone Verification */}
-            {!user.isPhoneVerified && (
-              <motion.div 
-                variants={itemVariants}
-                className="bg-amber-50 border border-amber-200 rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 rounded-full blur-3xl -mr-16 -mt-16" />
-                <div className="relative z-10">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-white rounded-2xl shadow-sm text-amber-600">
-                      <ShieldCheck size={24} />
+            {/* Essential Action: Phone & Email Verification */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {!user.isPhoneVerified && (
+                <motion.div 
+                  variants={itemVariants}
+                  className="bg-amber-50 border border-amber-200 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl -mr-12 -mt-12" />
+                  <div className="relative z-10">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="p-2.5 bg-white rounded-xl shadow-sm text-amber-600">
+                        <Smartphone size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-amber-900 uppercase tracking-tight">
+                          Phone Required
+                        </h3>
+                        <p className="text-[11px] text-amber-800/80 font-medium">
+                          {t_prof("identityDesc")}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-black text-amber-900 uppercase tracking-tight mb-1">
-                        {t_prof("actionRequired")}
-                      </h3>
-                      <p className="text-sm text-amber-800/80 font-medium mb-6">
-                        {t_prof("identityDesc")}
-                      </p>
-                    </div>
-                  </div>
 
-                  <AnimatePresence mode="wait">
-                    {phoneStep === "idle" && (
-                      <motion.button
-                        key="idle"
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        onClick={() => setPhoneStep("input")}
-                        className="w-full bg-amber-600 text-white px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-200 flex items-center justify-center gap-2"
-                      >
-                        {t_prof("startVerification")} <ChevronRight size={18} />
-                      </motion.button>
-                    )}
+                    <AnimatePresence mode="wait">
+                      {phoneStep === "idle" && (
+                        <motion.button
+                          key="idle"
+                          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                          onClick={() => setPhoneStep("input")}
+                          className="w-full bg-amber-600 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-700 transition-all shadow-md flex items-center justify-center gap-2"
+                        >
+                          {t_prof("startVerification")} <ChevronRight size={14} />
+                        </motion.button>
+                      )}
 
-                    {phoneStep === "input" && (
-                      <motion.div 
-                        key="input"
-                        initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4"
-                      >
-                        <div className="relative">
-                          <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                      {phoneStep === "input" && (
+                        <motion.div 
+                          key="input"
+                          initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                          className="space-y-3"
+                        >
                           <input
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             placeholder="+8801XXXXXXXXX"
-                            className="w-full bg-white border-2 border-amber-100 rounded-2xl pl-12 pr-4 py-4 text-gray-900 font-bold outline-none focus:border-amber-500 transition-all"
+                            className="w-full bg-white border border-amber-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-amber-500 transition-all"
                           />
-                        </div>
-                        <button
-                          onClick={handleSendOTP}
-                          disabled={isPending || phone.length < 11}
-                          className="w-full bg-amber-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest disabled:opacity-50"
-                        >
-                          {t_prof("sendOTP")}
-                        </button>
-                      </motion.div>
-                    )}
+                          <button
+                            onClick={handleSendOTP}
+                            disabled={isPending || phone.length < 11}
+                            className="w-full bg-amber-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
+                          >
+                            {t_prof("sendOTP")}
+                          </button>
+                        </motion.div>
+                      )}
 
-                    {phoneStep === "otp" && (
-                      <motion.div 
-                        key="otp"
-                        initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                        className="space-y-4"
-                      >
-                        <input
-                          value={otp}
-                          onChange={(e) => setOtp(e.target.value)}
-                          placeholder={t_prof("enterOTP")}
-                          className="w-full bg-white border-2 border-amber-100 rounded-2xl px-6 py-4 text-center text-2xl font-black tracking-[0.5em] text-gray-900 outline-none focus:border-amber-500"
-                        />
-                        <button
-                          onClick={handleVerifyOTP}
-                          disabled={isPending || otp.length < 6}
-                          className="w-full bg-green-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest disabled:opacity-50"
+                      {phoneStep === "otp" && (
+                        <motion.div 
+                          key="otp"
+                          initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                          className="space-y-3"
                         >
-                          {t_prof("verifyUnlock")}
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            )}
+                          <input
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            placeholder="OTP"
+                            className="w-full bg-white border border-amber-100 rounded-xl px-4 py-3 text-center text-lg font-black tracking-widest text-gray-900 outline-none focus:border-amber-500"
+                          />
+                          <button
+                            onClick={handleVerifyOTP}
+                            disabled={isPending || otp.length < 6}
+                            className="w-full bg-green-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
+                          >
+                            {t_prof("verifyUnlock")}
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+
+              {!user.emailVerified && (
+                <motion.div 
+                  variants={itemVariants}
+                  className="bg-blue-50 border border-blue-200 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-200/20 rounded-full blur-2xl -mr-12 -mt-12" />
+                  <div className="relative z-10">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="p-2.5 bg-white rounded-xl shadow-sm text-blue-600">
+                        <Mail size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-black text-blue-900 uppercase tracking-tight">
+                          Email Verification
+                        </h3>
+                        <p className="text-[11px] text-blue-800/80 font-medium">
+                          Verify your email to receive official invoices and receipts.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleSendEmailVerification}
+                      disabled={isPending}
+                      className="w-full bg-blue-600 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2"
+                    >
+                      {isPending ? "Sending..." : "Send Verification Link"} <Mail size={14} />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </div>
 
             {/* Profile Information */}
             <motion.div variants={itemVariants} className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
