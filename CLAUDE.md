@@ -153,7 +153,7 @@ DISPUTED→ resolveAdminDispute()    → RELEASED or REFUNDED
 | `FIREBASE_MESSAGING_SENDER_ID` | ✓ Real | `884637735592` |
 | `FIREBASE_APP_ID` | ✓ Real | Client SDK |
 | `GOOGLE_CLIENT_ID` | ✓ Real | OAuth client |
-| `GOOGLE_CLIENT_SECRET` | ⚠️ Rotate | Old value was leaked in `.env` |
+| `GOOGLE_CLIENT_SECRET` | ✓ Real | Rotated May 4, 2026 |
 | `SENTRY_DSN` | ✓ Real | EU region: `ingest.de.sentry.io` |
 | `UPSTASH_REDIS_REST_URL` | ✓ Real | `https://safe-stallion-50421.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | ✓ Real | Real Upstash token |
@@ -252,10 +252,6 @@ Permanent fix: `docker run --rm -v $(pwd):/app -w /app node:20 npm install`
 ### `cloudbuild.yaml` uses `npm install` not `npm ci`
 
 Firebase App Hosting's buildpack internally runs `npm ci`. Our `cloudbuild.yaml` runs `npm install` for the initial setup step. The buildpack's own `npm ci` is what actually installs for production — that's why the lockfile patch above matters.
-
-### `GOOGLE_CLIENT_SECRET` needs rotation
-
-The old value was in `.env` (potentially committed). Rotate at [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) then update Secret Manager.
 
 ### `GREENWEB_TOKEN` is a placeholder
 

@@ -21,6 +21,12 @@
 - **Consolidated Promise Handling**:
     - *Lesson*: Large `Promise.all` blocks with off-by-one destructuring block the TypeScript compiler.
     - *Fix*: Consolidate related data into single objects or use named properties.
+- **Middleware & Auth.js v5 (CSRF/403)**:
+    - *Lesson*: Internationalization middleware (`next-intl`) can intercept Auth.js internal API calls, causing CSRF failures (403 Forbidden).
+    - *Fix*: Explicitly bypass locale middleware for all `/api/auth` routes.
+- **Stale Client Sessions**:
+    - *Lesson*: In Next.js App Router, `signOut` might not immediately clear all client-side state in the `SessionProvider` without a full page reload.
+    - *Fix*: Supplement `signOut()` with `window.location.reload()` for absolute session termination.
 - **Micro-Deposit Advance vs. Full Price**:
     - *Insight*: Full-price escrow creates buyer drop-off in the Bangladesh COD market.
     - *Solution*: Use a "Small Advance" (Success Fee + Delivery Charge) to unlock contact info, leaving the balance for COD settlement.

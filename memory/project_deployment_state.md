@@ -8,20 +8,20 @@ Platform is LIVE at https://nilamit--nilamit-52073.asia-southeast1.hosted.app
 
 **Project:** nilamit-52073 | **Region:** asia-southeast1 | **Admin:** sayemf21@gmail.com
 
-**Why:** Full stabilization completed May 2, 2026. Resolved 20+ sequential build/type-check errors to ensure 100% production reliability.
+**Why:** Full stabilization and Auth Hardening completed May 4, 2026. Resolved critical 403 Forbidden errors and internal URL redirect mismatches in Firebase App Hosting.
 
 **How to apply:** Use this as baseline when diagnosing any new deployment issues.
 
 ## Working
 - /api/health → { status: ok, db: ok }
-- Homepage, auction browsing, bidding
+- Homepage (RESTORED): Correct images and system config data.
+- Authentication: Email/Google Login working with linked account support.
 - Dashboard (watchlist, bids, escrow, listings, coordination)
 - Admin panel at /en/admin (requires login as sayemf21@gmail.com)
 - Firestore rules + indexes deployed
-- All 16 secrets stored in Secret Manager with correct IAM grants
+- All 17 secrets stored in Secret Manager with correct IAM grants (including new GOOGLE_CLIENT_ID/SECRET).
 
 ## Needs attention
-- GOOGLE_CLIENT_SECRET must be rotated (old value in .env was potentially leaked)
 - GREENWEB_TOKEN is placeholder "console" — OTPs log to stdout, not SMS
 - package-lock.json has manual @emnapi patches that npm install overwrites
 - Auth.js v5 beta — upgrade when stable

@@ -8,6 +8,11 @@
 - **Currency**: Strictly BDT (৳).
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
+- **v2.3.0 (Production Auth Stabilization & UI Restoration)**:
+    - **Auth.js v5 Hardening**: Resolved 403 Forbidden errors by bypassing internationalization middleware for `/api/auth` routes.
+    - **Infrastructure Trust**: Enabled `AUTH_TRUST_HOST` to handle Firebase App Hosting proxies correctly.
+    - **Session Lifecycle Fix**: Forced full-browser reloads on sign-out to eliminate stale client-side session states.
+    - **Landing Page Restoration**: Fixed Firestore collection mismatches and allowed external image domains (`unsplash.com`) for a high-fidelity Hero experience.
 - **v2.2.0 (Zero-Loss Logistics & Infrastructure Stabilization)**:
     - **Zero-Loss Model**: Formalized the 120 BDT RTO (Return to Origin) deduction for frivolous rejections to protect sellers.
     - **Escrow Hardening**: Synchronized the escrow lifecycle with automated logistics coordination.

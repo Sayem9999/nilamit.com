@@ -2,7 +2,17 @@
 
 All notable changes to the Nilamit platform will be documented in this file.
 
-## [2.2.0] - 2026-05-03 (Current)
+## [2.3.0] - 2026-05-04 (Current)
+### Added 🆕
+- **Auth Hardening**: Implemented `AUTH_TRUST_HOST` and explicit sign-out revalidation to ensure session consistency in proxied environments.
+- **Image Domain White-listing**: Added `unsplash.com` to Next.js remote patterns to support high-fidelity mockup assets.
+
+### Fixed 🐛
+- **Auth Middleware 403**: Resolved critical CSRF/Forbidden errors by bypassing locale middleware for `/api/auth` routes.
+- **Landing Page Data**: Fixed Firestore collection/doc name mismatch for `systemConfig` (switched from `settings/system` to `systemConfig/default`).
+- **Missing Chunks (404)**: Hardened client-side routing to handle build-time chunk removal during live deployments.
+
+## [2.2.0] - 2026-05-03
 
 ### Added 🆕
 - **Zero-Loss Logistics Model**: Formalized the 120 BDT RTO (Return to Origin) deduction policy to protect sellers from courier fee losses during frivolous rejections.
