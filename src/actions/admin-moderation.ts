@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 import { Auction, User, Report } from '@/types';
 import { updateSellerPerformance } from '@/lib/seller-performance';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
 export async function getAdminReports(status?: string, page = 1, limit = 20): Promise<ServiceResponse<{ reports: unknown[], total: number, pages: number }>> {
   try {

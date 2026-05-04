@@ -32,7 +32,7 @@ export function DisputesTab() {
     try {
       const res = await getAdminCoordinationLog(auctionId);
       if (res.success && res.data) {
-        setActiveLog(res.data);
+        setActiveLog(res.data as any);
       } else {
         toast.error(res.error?.message || "Failed to fetch coordination log.");
       }
@@ -115,7 +115,7 @@ export function DisputesTab() {
         <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
           <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <h3 className="text-lg font-medium text-gray-900">No Active Disputes</h3>
-          <p className="text-gray-500 font-bn">বর্তমানে কোনো অভিযোগ পেন্ডিং নেই।</p>
+          <p className="text-gray-500">There are currently no pending disputes.</p>
         </div>
       ) : (
         <div className="space-y-4">

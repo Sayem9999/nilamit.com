@@ -11,7 +11,7 @@ import { createLogisticsOrder } from './logistics';
 import { log } from '@/lib/logger';
 import { randomUUID } from 'crypto';
 import { updateSellerPerformance } from '@/lib/seller-performance';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
 /**
  * Transitions PENDING → HELD (buyer confirms advance payment).
@@ -92,7 +92,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         message:      `Payment submitted for "${result.auction.title}". Verification pending.`,
       });
     } catch (sideEffectErr) {
-      log.warn('[escrow] side-effects failed after successful TX', sideEffectErr);
+      log.error('[escrow] side-effects failed after successful TX', sideEffectErr);
     }
 
     revalidatePath('/dashboard');

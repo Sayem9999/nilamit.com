@@ -71,7 +71,7 @@ export default function AdminLiveFeed() {
 
     // Fetch initial stats
     getAdminStats().then(res => {
-      if (res.success && res.data) setStats(res.data);
+      if (res.success && res.data) setStats(res.data as AdminStats);
     });
 
     return () => {
@@ -199,7 +199,7 @@ export default function AdminLiveFeed() {
                               {formatBDT(bid.amount)}
                             </div>
                             <Link 
-                              href={`/${locale}/auctions/${bid.auctionId}`}
+                              href={`/auctions/${bid.auctionId}`}
                               className="inline-flex items-center gap-1 text-[10px] font-black text-gray-400 hover:text-primary-600 uppercase tracking-widest transition-colors"
                             >
                               Details <ExternalLink className="w-2.5 h-2.5" />

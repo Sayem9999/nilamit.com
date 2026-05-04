@@ -21,21 +21,16 @@ import { formatBDT } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default async function RetailerDashboardPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+export default async function RetailerDashboardPage() {
   const session = await auth();
   const t = await getTranslations("Dashboard");
 
   if (!session?.user) {
-    redirect(`/${locale}/login?callbackUrl=/${locale}/retailer/dashboard`);
+    redirect("/login?callbackUrl=/retailer/dashboard");
   }
 
   if (!session.user.isVerifiedSeller && !session.user.isRetailer) {
-    redirect(`/${locale}/dashboard`);
+    redirect("/dashboard");
   }
 
   const statsRes = await getRetailerStats();
@@ -80,7 +75,7 @@ export default async function RetailerDashboardPage({
           
           <div className="flex items-center gap-3">
             <Link 
-              href={`/${locale}/auctions/create`}
+              href="/auctions/create"
               className="px-6 py-3 bg-white text-black hover:bg-gray-200 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 shadow-xl shadow-white/5"
             >
               <Package className="w-4 h-4" />
@@ -171,7 +166,7 @@ export default async function RetailerDashboardPage({
               </div>
 
               <Link 
-                href={`/${locale}/retailer/perks`}
+                href="/retailer/perks"
                 className="mt-8 block text-center py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
               >
                 View Unlockables
@@ -218,10 +213,10 @@ export default async function RetailerDashboardPage({
 
         {/* Quick Actions Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-           <QuickAction href={`/${locale}/dashboard?tab=listings`} icon={<Package />} label="Active Listings" />
-           <QuickAction href={`/${locale}/retailer/orders`} icon={<Clock />} label="Order History" />
-           <QuickAction href={`/${locale}/retailer/disputes`} icon={<ShieldCheck />} label="Dispute Center" />
-           <QuickAction href={`/${locale}/retailer/settings`} icon={<ChevronRight />} label="Business Profile" />
+           <QuickAction href="/dashboard?tab=listings" icon={<Package />} label="Active Listings" />
+           <QuickAction href="/retailer/orders" icon={<Clock />} label="Order History" />
+           <QuickAction href="/retailer/disputes" icon={<ShieldCheck />} label="Dispute Center" />
+           <QuickAction href="/retailer/settings" icon={<ChevronRight />} label="Business Profile" />
         </div>
       </div>
     </div>

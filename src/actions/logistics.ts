@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
 /**
  * Logistics Statuses based on real-world courier flows.

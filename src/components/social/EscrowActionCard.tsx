@@ -44,7 +44,7 @@ export function EscrowActionCard({
   const handlePayAdvance = async () => {
     if (!hasMFS) {
       toast.error(t("linkMFSProfile"));
-      router.push(`/${locale}/profile`);
+      router.push("/profile");
       return;
     }
     

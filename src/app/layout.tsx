@@ -1,26 +1,46 @@
-/**
- * Root Layout — Nilamit App
- *
- * With next-intl, the actual <html>/<body> tags live inside
- * src/app/[locale]/layout.tsx so that `lang` can be set per locale.
- * This root layout is intentionally a thin passthrough shell.
- *
- * What it DOES do:
- *   1. Validates environment variables at server startup (fail-fast)
- *   2. Provides fallback metadata (overridden by locale layout)
- */
-
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
+import { Providers } from "@/components/providers/Providers";
+import "./globals.css";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { env, validateEnv } from "@/lib/env";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getTranslations } from "next-intl/server";
+import { Toaster } from "react-hot-toast";
+import Script from "next/script";
 
 // ─── Startup validation ──────────────────────────────────────
-// Runs once when the module is first imported (server start / build).
-// Missing required env vars throw immediately — no silent failures.
 if (typeof window === "undefined") {
   validateEnv();
 }
 
-// ─── Fallback metadata (locale layout overrides these) ──────
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-heading",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const inter = Inter({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+});
+
+export const viewport: Viewport = {
+  themeColor: "#6366f1",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 const DOMAIN = "https://nilamit--nilamit-52073.asia-southeast1.hosted.app";
 
 function getMetadataBase() {
@@ -28,42 +48,82 @@ function getMetadataBase() {
   try {
     return new URL(urlString);
   } catch {
-    console.error(`[Layout] ❌ Invalid metadataBase URL: "${urlString}"`);
     return new URL(DOMAIN);
   }
 }
 
-export const metadata: Metadata = {
-  metadataBase: getMetadataBase(),
-  title: {
-    default: "Nilamit — Bangladesh's Trusted Auction Marketplace",
-    template: "%s | Nilamit",
-  },
-  description:
-    "Buy & sell through transparent, real-time bidding. Bangladesh's first dedicated C2C auction marketplace.",
-  keywords: ["auction", "bidding", "bangladesh", "c2c", "marketplace", "nilamit"],
-  robots: { index: true, follow: true },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: DOMAIN,
-    siteName: "Nilamit",
-    title: "Nilamit — Bangladesh's Trusted Auction Marketplace",
-    description: "Buy & sell through transparent, real-time bidding.",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Nilamit — Bangladesh's Trusted Auction Marketplace",
-    description: "Buy & sell through transparent, real-time bidding.",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = "en";
+  const t = await getTranslations({ locale, namespace: "Meta" });
+  
+  return {
+    metadataBase: getMetadataBase(),
+    title: {
+      default: t("title") || "Nilamit — Bangladesh's Trusted Auction Marketplace",
+      template: "%s | Nilamit",
+    },
+    description: t("description") || "Buy & sell through transparent, real-time bidding.",
+    keywords: t("keywords")?.split(",") || ["auction", "bidding", "bangladesh"],
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "Nilamit",
+    },
+    icons: {
+      icon: "/icon-512.png",
+      apple: "/icon-512.png",
+    },
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: DOMAIN,
+      siteName: "Nilamit",
+      title: t("title"),
+      description: t("description"),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("title"),
+      description: t("description"),
+    },
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // <html> and <body> are provided by [locale]/layout.tsx
-  // so the `lang` attribute matches the active locale.
-  return children;
+  const locale = "en";
+  const messages = await getMessages();
+
+  return (
+    <html lang={locale}>
+      <body
+        className={`${plusJakarta.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased bg-white text-gray-900 font-body`}
+      >
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <Providers>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  borderRadius: "12px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                },
+              }}
+            />
+            <Navbar />
+            <main className="min-h-screen bg-gray-50/50">{children}</main>
+            <Footer />
+          </Providers>
+        </NextIntlClientProvider>
+        <Script src="/sw-register.js" strategy="afterInteractive" />
+      </body>
+    </html>
+  );
 }

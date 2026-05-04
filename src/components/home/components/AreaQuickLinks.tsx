@@ -24,7 +24,7 @@ export function AreaQuickLinks({ locale }: { locale: string }) {
           </p>
         </div>
         <Link 
-          href={`/${locale}/search`}
+          href="/search"
           className="text-primary-600 font-semibold text-sm hover:underline"
         >
           {t("viewAllLocations")}
@@ -35,7 +35,7 @@ export function AreaQuickLinks({ locale }: { locale: string }) {
         {quickLocs.map((loc) => (
           <Link
             key={loc.id}
-            href={`/${locale}/search?location=${loc.id}`}
+            href={`/search?location=${loc.id}`}
             className="group p-6 bg-white rounded-2xl border border-gray-100 hover:border-primary-100 hover:bg-primary-50/30 transition-all duration-300 text-center flex flex-col items-center gap-3 shadow-sm hover:shadow-md"
           >
             <div className="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-colors">

@@ -13,7 +13,6 @@ import { sanitizeRedirect } from "@/lib/url-safety";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
-  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   // sanitizeRedirect blocks open-redirect attacks via ?callbackUrl=https://evil.com
@@ -107,7 +106,7 @@ export default function LoginPage() {
                   {t("passwordLabel")}
                 </label>
                 <Link 
-                  href={`/${locale}/forgot-password`}
+                  href="/forgot-password"
                   className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors uppercase tracking-widest"
                 >
                   {t("forgotPassword")}
@@ -185,7 +184,7 @@ export default function LoginPage() {
             <p className="text-gray-500 font-medium tracking-tight">
               {t("noAccount")}{" "}
               <Link
-                href={`/${locale}/register`}
+                href="/register"
                 className="text-primary-600 font-black hover:text-primary-700 transition-colors underline decoration-2 underline-offset-4"
               >
                 {t("signUpBtn")}

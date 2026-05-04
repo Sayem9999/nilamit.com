@@ -10,7 +10,7 @@ import {
   passwordResetSchema, 
   formatZodError 
 } from "@/lib/schemas";
-import { ErrorType, errorResponse, successResponse } from "@/lib/errors";
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from "@/lib/errors";
 import { verifyStandaloneOTP } from "./phone";
 import { log } from "@/lib/logger";
 
@@ -90,7 +90,7 @@ export async function signupWithPhone(data: unknown): Promise<ServiceResponse<{ 
     // 1. Verify OTP
     const otpResult = await verifyStandaloneOTP(phone, otp);
     if (!otpResult.success) {
-      return otpResult;
+      return otpResult as any;
     }
 
     // 2. Check if phone already taken
@@ -150,7 +150,7 @@ export async function resetPasswordWithOTP(data: unknown): Promise<ServiceRespon
     if (phone) {
       // Verify Phone OTP
       const otpResult = await verifyStandaloneOTP(phone, otp);
-      if (!otpResult.success) return otpResult;
+      if (!otpResult.success) return otpResult as any;
       
       userSnap = await db.collection("users").where("phone", "==", phone).limit(1).get();
     } else if (email) {

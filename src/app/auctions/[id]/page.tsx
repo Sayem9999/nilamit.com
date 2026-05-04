@@ -106,14 +106,15 @@ export default async function AuctionDetailPage({ params }: Props) {
   const t = await getTranslations("Auction");
   if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
 
-  const [bidsRes, watched, chatRes, reviewRes] = await Promise.all([
+  const [bidsRes, watchedRes, chatRes, reviewRes] = await Promise.all([
     getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
-    isWatched(id).catch((e) => { log.error('[AuctionDetail] isWatched failed', e); return false; }),
+    isWatched(id).catch((e) => { log.error('[AuctionDetail] isWatched failed', e); return { success: false } as any; }),
     getAuctionChat(id).catch((e) => { log.error('[AuctionDetail] getAuctionChat failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     canReviewAuction(id).catch((e) => { log.error('[AuctionDetail] canReviewAuction failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
   ]);
 
   const bids = (bidsRes.success && bidsRes.data ? bidsRes.data : []) as (Bid & { bidder: { id: string, name: string, image: string | null } })[];
+  const watched = (watchedRes.success && watchedRes.data) ? watchedRes.data : false;
   const chat = (chatRes.success && chatRes.data) ? chatRes.data : null;
   const canReview = (reviewRes.success && reviewRes.data) ? reviewRes.data : false;
 

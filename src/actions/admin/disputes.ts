@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/admin-guard';
 import { recalculateUserRating } from '@/lib/rating';
 import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { batchHydrateEscrowRows, type AdminEscrowDoc } from './shared';
 
 /**

@@ -34,17 +34,21 @@ export default function AdminDisputesPage() {
 
   const fetchDisputes = async () => {
     setLoading(true);
-    const data = await getOpenDisputes();
-    setDisputes(data as Dispute[]);
+    const res = await getOpenDisputes();
+    if (res.success) {
+      setDisputes(res.data as Dispute[]);
+    }
     setLoading(false);
   };
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const data = await getOpenDisputes();
-      if (mounted) {
-        setDisputes(data as Dispute[]);
+      const res = await getOpenDisputes();
+      if (mounted && res.success) {
+        setDisputes(res.data as Dispute[]);
+        setLoading(false);
+      } else if (mounted) {
         setLoading(false);
       }
     };

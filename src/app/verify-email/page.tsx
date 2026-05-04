@@ -11,8 +11,7 @@ interface Props {
   searchParams: Promise<{ token?: string; email?: string }>;
 }
 
-export default async function VerifyEmailPage({ params, searchParams }: Props) {
-  const { locale } = await params;
+export default async function VerifyEmailPage({ searchParams }: Props) {
   const { token, email } = await searchParams;
   const t = await getTranslations('Auth');
 
@@ -27,7 +26,7 @@ export default async function VerifyEmailPage({ params, searchParams }: Props) {
           <p className="text-gray-500 font-medium mb-10 leading-relaxed">
             Missing verification parameters. Please use the link provided in your email.
           </p>
-          <Link href={`/${locale}/login`}>
+          <Link href="/login">
             <Button className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-2xl font-bold text-lg">
               {t('goToLogin')}
             </Button>
@@ -51,7 +50,7 @@ export default async function VerifyEmailPage({ params, searchParams }: Props) {
             <p className="text-gray-500 font-medium mb-10 leading-relaxed">
               Your email has been successfully verified. You can now access all features of Nilamit.
             </p>
-            <Link href={`/${locale}/dashboard`}>
+            <Link href="/dashboard">
               <Button className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-lg group">
                 <div className="flex items-center justify-center gap-2">
                   Go to Dashboard
@@ -69,7 +68,7 @@ export default async function VerifyEmailPage({ params, searchParams }: Props) {
             <p className="text-gray-500 font-medium mb-10 leading-relaxed">
               {result.error?.message || 'The verification link is invalid or has expired.'}
             </p>
-            <Link href={`/${locale}/profile`}>
+            <Link href="/profile">
               <Button className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-2xl font-bold text-lg">
                 Try Again
               </Button>

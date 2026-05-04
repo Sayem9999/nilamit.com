@@ -5,7 +5,7 @@ import { Auction } from '@/types';
 import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
 async function deleteCollection(name: string, batchSize = 100) {
   while (true) {

@@ -11,7 +11,7 @@ import {
   emailOtpVerifyLimiter,
 } from '@/lib/ratelimit';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import crypto from 'crypto';
 
 const OTP_EXPIRY_MS        = 5 * 60 * 1000;

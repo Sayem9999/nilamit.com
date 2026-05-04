@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { logoutAction } from "@/actions/auth";
 import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
@@ -37,7 +37,6 @@ import { signOut } from "next-auth/react";
 export default function ProfilePage() {
   const { data: session, update, status } = useSession();
   const router = useRouter();
-  const locale = useLocale();
   const t_prof = useTranslations("Profile");
   const t_nav = useTranslations("Navigation");
   const [isPending, startTransition] = useTransition();
@@ -51,6 +50,10 @@ export default function ProfilePage() {
   // MFS State
   const [bkash, setBkash] = useState("");
   const [nagad, setNagad] = useState("");
+  
+  // Instant Visibility State
+  const [isPhoneVerifiedLocal, setIsPhoneVerifiedLocal] = useState(false);
+  const [isEmailVerifiedLocal, setIsEmailVerifiedLocal] = useState(false);
 
   const maskPhone = (num: string) => {
     if (!num) return "";
@@ -59,9 +62,18 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push(`/${locale}/login`);
+      router.push("/login");
     }
-  }, [status, router, locale]);
+    if (session?.user) {
+      // Hardened check: Ensure we only show verified if the value is explicitly truthy/not null
+      setIsPhoneVerifiedLocal((session.user as any).isPhoneVerified === true);
+      setIsEmailVerifiedLocal((session.user as any).emailVerified != null);
+    }
+  }, [status, router, session]);
+
+  // Fallback logos from reliable Wikimedia sources for production stability
+  const BKASH_LOGO_PRIMARY = "https://upload.wikimedia.org/wikipedia/commons/8/8c/BKash_logo.png";
+  const NAGAD_LOGO_PRIMARY = "https://upload.wikimedia.org/wikipedia/en/2/23/Nagad_Logo.png";
 
   if (status === "loading") {
     return (
@@ -135,20 +147,27 @@ export default function ProfilePage() {
       const res = await verifyPhoneOTP(phone, otp);
       if (res.success) {
         setPhoneStep("idle");
+        setIsPhoneVerifiedLocal(true);
         setMsg(t_prof("verificationSuccess"));
         await update();
-      } else setMsg(res.error?.message || t_prof("errorGeneric"));
+      } else {
+        setMsg(res.error?.message || t_prof("errorGeneric"));
+      }
     });
   };
 
   const handleSendEmailVerification = () => {
     setMsg("");
     startTransition(async () => {
-      const res = await sendEmailVerification();
-      if (res.success) {
-        setMsg(t_prof("otpSent")); // "OTP সফলভাবে পাঠানো হয়েছে!" - Reuse for email
-      } else {
-        setMsg(res.error?.message || t_prof("errorGeneric"));
+      try {
+        const res = await sendEmailVerification();
+        if (res.success) {
+          setMsg(t_prof("otpSent"));
+        } else {
+          setMsg(res.error?.message || t_prof("errorGeneric"));
+        }
+      } catch (err) {
+        setMsg(t_prof("errorGeneric"));
       }
     });
   };
@@ -207,8 +226,8 @@ export default function ProfilePage() {
               </div>
               <div className="absolute bottom-1 right-1 p-1.5 bg-white rounded-full shadow-lg border border-gray-100 z-30">
                 <VerificationBadge
-                  isPhoneVerified={user.isPhoneVerified}
-                  emailVerified={(session.user as { emailVerified?: Date | string | null }).emailVerified || null}
+                  isPhoneVerified={isPhoneVerifiedLocal}
+                  emailVerified={isEmailVerifiedLocal ? new Date() : null}
                   isVerifiedSeller={!!(user as { isVerifiedSeller?: boolean }).isVerifiedSeller}
                   size="lg"
                 />
@@ -258,21 +277,18 @@ export default function ProfilePage() {
               <button 
                 onClick={async () => {
                   try {
-                    // 1. Try standard Auth.js signout
                     await signOut({ 
-                      callbackUrl: `${window.location.origin}/${locale}/login`,
+                      callbackUrl: "/login",
                       redirect: true 
                     });
                   } catch (e) {
                     console.error("Client-side SignOut failed, trying Server Action", e);
                     try {
-                      // 2. Try Server Action logout
                       await logoutAction();
-                      window.location.href = `/${locale}/login`;
+                      window.location.href = "/login";
                     } catch (e2) {
                       console.error("Server-side logout failed, trying hard redirect", e2);
-                      // 3. Last resort: hard redirect to signout API
-                      window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/${locale}`)}`;
+                      window.location.href = "/api/auth/signout?callbackUrl=/login";
                     }
                   }
                 }}
@@ -343,9 +359,13 @@ export default function ProfilePage() {
             
             {/* Essential Action: Phone & Email Verification */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {!user.isPhoneVerified && (
+              {!isPhoneVerifiedLocal && (
                 <motion.div 
                   variants={itemVariants}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8, height: 0 }}
                   className="bg-amber-50 border border-amber-200 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl -mr-12 -mt-12" />
@@ -393,7 +413,7 @@ export default function ProfilePage() {
                             disabled={isPending || phone.length < 11}
                             className="w-full bg-amber-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
                           >
-                            {t_prof("sendOTP")}
+                            {isPending ? "Sending..." : t_prof("sendOTP")}
                           </button>
                         </motion.div>
                       )}
@@ -415,7 +435,7 @@ export default function ProfilePage() {
                             disabled={isPending || otp.length < 6}
                             className="w-full bg-green-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
                           >
-                            {t_prof("verifyUnlock")}
+                            {isPending ? "Verifying..." : t_prof("verifyUnlock")}
                           </button>
                         </motion.div>
                       )}
@@ -424,9 +444,13 @@ export default function ProfilePage() {
                 </motion.div>
               )}
 
-              {!user.emailVerified && (
+              {!isEmailVerifiedLocal && (
                 <motion.div 
                   variants={itemVariants}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8, height: 0 }}
                   className="bg-blue-50 border border-blue-200 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-blue-200/20 rounded-full blur-2xl -mr-12 -mt-12" />
@@ -528,12 +552,11 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2">
                         <Image 
-                          src="https://www.logo.wine/a/logo/BKash/BKash-Logo.wine.svg" 
+                          src={BKASH_LOGO_PRIMARY} 
                           alt="bKash" 
                           width={48} 
                           height={48} 
                           className="object-contain" 
-                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/40x40?text=bK' }} 
                         />
                       </div>
                       {user.bkashNumber && <BadgeCheck className="text-green-500" size={24} />}
@@ -565,12 +588,11 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2">
                         <Image 
-                          src="https://www.logo.wine/a/logo/Nagad/Nagad-Logo.wine.svg" 
+                          src={NAGAD_LOGO_PRIMARY} 
                           alt="Nagad" 
                           width={48} 
                           height={48} 
                           className="object-contain" 
-                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/40x40?text=NG' }} 
                         />
                       </div>
                       {user.nagadNumber && <BadgeCheck className="text-green-500" size={24} />}
@@ -604,7 +626,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className={`text-xs font-bold px-4 py-3 rounded-2xl ${msg.includes("linked") || msg.includes("সফলভাবে") ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-600 border border-red-100"}`}
+                    className={`text-xs font-bold px-4 py-3 rounded-2xl ${msg.toLowerCase().includes("success") || msg.toLowerCase().includes("linked") ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-600 border border-red-100"}`}
                   >
                     {msg}
                   </motion.p>

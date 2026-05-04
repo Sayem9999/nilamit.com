@@ -29,9 +29,9 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-semibold text-sm mb-4">{t("marketplace")}</h4>
             <ul className="space-y-2">
-              <li><Link href={`/${locale}/auctions`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("browse")}</Link></li>
-              <li><Link href={`/${locale}/auctions/create`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("sell")}</Link></li>
-              <li><Link href={`/${locale}/leaderboard`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("leaderboard")}</Link></li>
+              <li><Link href="/auctions" className="text-sm text-primary-300 hover:text-white transition-colors">{t("browse")}</Link></li>
+              <li><Link href="/auctions/create" className="text-sm text-primary-300 hover:text-white transition-colors">{t("sell")}</Link></li>
+              <li><Link href="/leaderboard" className="text-sm text-primary-300 hover:text-white transition-colors">{t("leaderboard")}</Link></li>
             </ul>
           </div>
 
@@ -39,10 +39,10 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-semibold text-sm mb-4">{t("support")}</h4>
             <ul className="space-y-2">
-              <li><Link href={`/${locale}/how-it-works`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("howItWorks")}</Link></li>
-              <li><Link href={`/${locale}/safety`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("safety")}</Link></li>
-              <li><Link href={`/${locale}/faq`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("faq")}</Link></li>
-              <li><Link href={`/${locale}/contact`} className="text-sm text-primary-300 hover:text-white transition-colors">{t("contact")}</Link></li>
+              <li><Link href="/how-it-works" className="text-sm text-primary-300 hover:text-white transition-colors">{t("howItWorks")}</Link></li>
+              <li><Link href="/safety" className="text-sm text-primary-300 hover:text-white transition-colors">{t("safety")}</Link></li>
+              <li><Link href="/faq" className="text-sm text-primary-300 hover:text-white transition-colors">{t("faq")}</Link></li>
+              <li><Link href="/contact" className="text-sm text-primary-300 hover:text-white transition-colors">{t("contact")}</Link></li>
             </ul>
           </div>
 
@@ -68,8 +68,8 @@ export function Footer() {
             © {new Date().getFullYear()} nilamit.com — {t("allRights")}
           </p>
           <div className="flex gap-4">
-            <Link href={`/${locale}/privacy`} className="text-xs text-primary-400 hover:text-white transition-colors">{t("privacy")}</Link>
-            <Link href={`/${locale}/terms`} className="text-xs text-primary-400 hover:text-white transition-colors">{t("terms")}</Link>
+            <Link href="/privacy" className="text-xs text-primary-400 hover:text-white transition-colors">{t("privacy")}</Link>
+            <Link href="/terms" className="text-xs text-primary-400 hover:text-white transition-colors">{t("terms")}</Link>
           </div>
         </div>
       </div>

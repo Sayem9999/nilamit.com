@@ -201,7 +201,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 <Image
                   src={
                     systemConfig?.heroImage ||
-                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800"
+                    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Dhaka_City_at_Night.jpg/1280px-Dhaka_City_at_Night.jpg"
                   }
                   alt="Auction Item"
                   fill

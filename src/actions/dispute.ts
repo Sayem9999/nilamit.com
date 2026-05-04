@@ -8,7 +8,7 @@ import { recalculateUserRating } from '@/lib/rating';
 import { requireAdmin } from '@/lib/admin-guard';
 import { log } from '@/lib/logger';
 import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
 export async function raiseDispute(transactionId: string, reason: string): Promise<ServiceResponse<null>> {
   const session = await auth();

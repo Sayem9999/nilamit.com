@@ -11,7 +11,7 @@ import { log } from '@/lib/logger';
 
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { placeBidSchema, formatZodError } from '@/lib/schemas';
-import { BidWithBidder } from '@/types';
+import { BidWithBidder, PlaceBidResult } from '@/types';
 
 async function requireBiddingPrivileges(userId: string): Promise<ServiceResponse<Record<string, unknown>>> {
   const userSnap = await db.collection('users').doc(userId).get();

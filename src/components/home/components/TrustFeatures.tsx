@@ -122,7 +122,7 @@ export function TrustFeatures() {
           </h2>
           <p className="text-primary-100 mb-8">{t("ctaFooterDesc")}</p>
           <Link
-            href={`/${locale}/login`}
+            href="/login"
             className="inline-flex items-center gap-2 bg-white text-primary-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-primary-50 transition-all shadow-lg"
           >
             {t("ctaFooterBtn")} <ArrowRight className="w-4 h-4" />

@@ -65,19 +65,6 @@ export function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-4">
-            {/* Language Toggle Sidelined */}
-            {/* 
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-2 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-100 hover:bg-white hover:border-primary-200 transition-all px-4 py-2 rounded-xl shadow-sm"
-              title={
-                locale === "en" ? "বাংলা" : "English"
-              }
-            >
-              <Globe className="w-4 h-4 text-primary-500" />
-              <span>{locale === "en" ? "বাংলা" : "English"}</span>
-            </button>
-            */}
 
               <Link
                 href="/auctions"

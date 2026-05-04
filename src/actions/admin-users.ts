@@ -4,7 +4,7 @@ import { db, toDate } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
 import { User } from '@/types';
 import { revalidatePath } from 'next/cache';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
 export async function grantVerifiedSeller(userId: string): Promise<ServiceResponse<null>> {
   try {

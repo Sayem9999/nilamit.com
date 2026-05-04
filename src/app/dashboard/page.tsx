@@ -27,19 +27,16 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage({
-  params,
   searchParams,
 }: {
-  params: Promise<{ locale: string }>;
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const { locale } = await params;
   const session = await auth();
   const t = await getTranslations("Dashboard");
   const te = await getTranslations("Escrow");
 
   if (!session?.user) {
-    redirect(`/${locale}/login?callbackUrl=/${locale}/dashboard`);
+    redirect("/login?callbackUrl=/dashboard");
   }
 
   const configRes = await getSystemConfig();
@@ -214,7 +211,7 @@ export default async function DashboardPage({
           <div className="w-full md:w-64 flex-shrink-0">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-2">
               <Link
-                href={`/${locale}/dashboard?tab=watchlist`}
+                href="/dashboard?tab=watchlist"
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
                   currentTab === "watchlist"
                     ? "bg-red-50 text-red-600"
@@ -225,7 +222,7 @@ export default async function DashboardPage({
                 {t("watchlist")}
               </Link>
               <Link
-                href={`/${locale}/dashboard?tab=bids`}
+                href="/dashboard?tab=bids"
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
                   currentTab === "bids"
                     ? "bg-primary-50 text-primary-600"
@@ -236,7 +233,7 @@ export default async function DashboardPage({
                 {t("activeBids")}
               </Link>
               <Link
-                href={`/${locale}/dashboard?tab=escrow`}
+                href="/dashboard?tab=escrow"
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
                   currentTab === "escrow"
                     ? "bg-emerald-50 text-emerald-600"
@@ -247,7 +244,7 @@ export default async function DashboardPage({
                 {t("wonEscrow")}
               </Link>
               <Link
-                href={`/${locale}/dashboard?tab=listings`}
+                href="/dashboard?tab=listings"
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
                   currentTab === "listings"
                     ? "bg-blue-50 text-blue-600"
@@ -258,7 +255,7 @@ export default async function DashboardPage({
               </Link>
               {session.user.isVerifiedSeller && (
                  <Link
-                  href={`/${locale}/auctions/create?bulk=true`}
+                  href="/auctions/create?bulk=true"
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 border border-transparent hover:border-emerald-100`}
                 >
                   <Package className="w-4 h-4" />
@@ -266,7 +263,7 @@ export default async function DashboardPage({
                 </Link>
               )}
               <Link
-                href={`/${locale}/dashboard?tab=coordination`}
+                href="/dashboard?tab=coordination"
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
                   currentTab === "coordination"
                     ? "bg-purple-50 text-purple-600"
@@ -278,7 +275,7 @@ export default async function DashboardPage({
               </Link>
               <div className="pt-4 mt-4 border-t border-gray-100">
                 <Link
-                  href={`/${locale}/profile`}
+                  href="/profile"
                   className="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm text-gray-600 hover:bg-gray-50"
                 >
                   <LogOut className="w-4 h-4" />
@@ -300,7 +297,7 @@ export default async function DashboardPage({
                 </div>
                 <p className="text-[10px] text-gray-400 mb-3 font-medium">{session.user.ratingCount || 0} {t("tradesCompleted")}</p>
                 <Link
-                  href={`/${locale}/leaderboard`}
+                  href="/leaderboard"
                   className="flex items-center justify-between w-full py-2 px-3 bg-white border border-gray-100 hover:border-primary-200 hover:bg-primary-50 rounded-xl text-[10px] font-bold uppercase text-gray-600 hover:text-primary-600 transition-all"
                 >
                   {t("viewLeaderboard")}
@@ -353,7 +350,7 @@ export default async function DashboardPage({
                     {/* Retailer Specific Tools */}
                     <div className="pt-3">
                       <Link
-                        href={`/${locale}/retailer/dashboard`}
+                        href="/retailer/dashboard"
                         className="flex items-center justify-between w-full py-2.5 px-3 bg-[#0a0a0b] hover:bg-black rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md group"
                       >
                         <div className="flex items-center gap-2">
@@ -364,7 +361,7 @@ export default async function DashboardPage({
                       </Link>
 
                       <Link
-                        href={`/${locale}/seller/inventory/bulk`}
+                        href="/seller/inventory/bulk"
                         className="flex items-center justify-between w-full py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md shadow-indigo-100 group"
                       >
                         <div className="flex items-center gap-2">
@@ -465,7 +462,7 @@ export default async function DashboardPage({
                     {coordinationItems.map((conv) => (
                       <Link 
                         key={conv.id} 
-                        href={`/${locale}/dashboard/coordination/${conv.id}`}
+                        href={`/dashboard/coordination/${conv.id}`}
                         className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-4"
                       >
                          <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
