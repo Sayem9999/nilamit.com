@@ -85,3 +85,6 @@ env:
   - variable: GREENWEB_TOKEN
     secret: GREENWEB_TOKEN
 
+  - variable: RESEND_API_KEY
+    secret: RESEND_API_KEY
+

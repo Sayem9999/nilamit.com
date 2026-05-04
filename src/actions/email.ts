@@ -10,7 +10,17 @@ import { apiLimiter } from '@/lib/ratelimit';
 import { headers } from 'next/headers';
 import crypto from 'crypto';
 
-const resend = new Resend(env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+function getResend() {
+  if (!_resend) {
+    if (!env.RESEND_API_KEY) {
+      log.error('[email] RESEND_API_KEY is missing');
+      throw new Error('Email service is not configured');
+    }
+    _resend = new Resend(env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 /**
  * Sends a verification email to the current user
@@ -39,7 +49,7 @@ export async function sendEmailVerification() {
 
     const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(session.user.email)}`;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: 'Nilamit <onboarding@resend.dev>', // Should be a verified domain in production
       to: session.user.email,
       subject: 'Verify your email for Nilamit',
