@@ -57,7 +57,21 @@ export async function registerUser(data: unknown) {
       updatedAt: now,
     });
 
-    return successResponse({ message: "Registration successful. Please log in." });
+    // ─── Automatic Email Verification ───
+    try {
+      const { sendEmailVerificationByEmail } = await import("./email-server");
+      await sendEmailVerificationByEmail(email);
+      log.info(`[Auth] Verification email sent to ${email}`);
+    } catch (verifErr) {
+      log.error("[Auth] Background email verification trigger failed", verifErr);
+      // We don't fail the registration if the email fails, but we log it.
+    }
+
+    return successResponse({ 
+      message: email.endsWith("@gmail.com") 
+        ? "Registration successful. Please check your Gmail for a verification link." 
+        : "Registration successful. Please check your email for a verification link." 
+    });
   } catch (e) {
     log.error("[Auth] registerUser failed", e);
     return errorResponse(ErrorType.INTERNAL, "Failed to register user.");

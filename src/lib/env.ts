@@ -87,7 +87,20 @@ export function validateEnv(): Env {
     }
   });
 
+  // Global sanitization for all variables: trim and remove wrapping quotes
+  Object.keys(process.env).forEach(key => {
+    let val = process.env[key];
+    if (typeof val === 'string') {
+      val = val.trim();
+      if (val.startsWith('"') && val.endsWith('"')) {
+        val = val.slice(1, -1);
+      }
+      process.env[key] = val;
+    }
+  });
+
   const result = envSchema.safeParse(process.env);
+
 
   if (!result.success) {
     const errors = result.error.flatten().fieldErrors;
