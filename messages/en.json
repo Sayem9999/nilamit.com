@@ -50,6 +50,7 @@
     "forgotPassword": "Forgot Password?",
     "signInBtn": "Sign In",
     "signUpBtn": "Create Account",
+    "googleBtn": "Continue with Google",
     "sendResetBtn": "Send Reset Code",
     "verifyBtn": "Verify",
     "noAccount": "Don't have an account?",

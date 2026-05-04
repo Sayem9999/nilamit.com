@@ -8,6 +8,7 @@ import { db } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
 import { isAdminEmail } from '@/lib/admin-guard';
 import { log } from '@/lib/logger';
+import { env } from '@/lib/env';
 
 // ─── Inline Firestore Adapter (JWT-strategy, minimal surface) ──
 function FirestoreAdapter(): Adapter {
@@ -117,8 +118,8 @@ async function verifyUser(field: 'email' | 'phone', value: string, passwordRaw: 
 }
 
 // ─── Provider feature flags ─────────────────────────────────────
-const googleClientId     = process.env.GOOGLE_CLIENT_ID;
-const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const googleClientId     = env.GOOGLE_CLIENT_ID;
+const googleClientSecret = env.GOOGLE_CLIENT_SECRET;
 const googleEnabled      = Boolean(googleClientId && googleClientSecret);
 
 if (!googleEnabled && process.env.NODE_ENV === 'production') {
@@ -135,7 +136,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: FirestoreAdapter(),
   providers: [
     ...(googleEnabled
-      ? [Google({ clientId: googleClientId!, clientSecret: googleClientSecret! })]
+      ? [
+          Google({ 
+            clientId: googleClientId!, 
+            clientSecret: googleClientSecret!,
+            allowDangerousEmailAccountLinking: true
+          })
+        ]
       : []),
     Credentials({
       id: 'credentials',

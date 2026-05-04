@@ -50,6 +50,7 @@
     "forgotPassword": "পাসওয়ার্ড ভুলে গেছেন?",
     "signInBtn": "লগইন করুন",
     "signUpBtn": "অ্যাকাউন্ট তৈরি করুন",
+    "googleBtn": "গুগল দিয়ে চালিয়ে যান",
     "sendResetBtn": "রিসেট কোড পাঠান",
     "verifyBtn": "ভেরিফাই করুন",
     "noAccount": "অ্যাকাউন্ট নেই?",
