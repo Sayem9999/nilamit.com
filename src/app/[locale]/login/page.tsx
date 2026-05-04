@@ -39,10 +39,18 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
-        toast.error(t("errorGeneric"));
+        if (result.error === "CredentialsSignin") {
+          toast.error("Invalid email or password");
+        } else {
+          toast.error(t("errorGeneric"));
+        }
+      } else if (result?.url) {
+        router.push(result.url);
+        router.refresh();
       } else {
         router.push(callbackUrl);
         router.refresh();
