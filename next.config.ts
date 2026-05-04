@@ -39,12 +39,12 @@ const nextConfig: NextConfig = {
   async headers() {
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://www.gstatic.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://*.firebasedatabase.app https://www.gstatic.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https://*.googleusercontent.com https://utfs.io https://*.uploadthing.com https://firebasestorage.googleapis.com https://storage.googleapis.com https://avatars.githubusercontent.com https://i.pravatar.cc https://images.unsplash.com https://*.ingest.sentry.io",
       "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self' https://*.googleapis.com https://storage.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.cloudfunctions.net https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.sentry.io https://utfs.io https://*.uploadthing.com",
-      "frame-src 'self' https://*.firebaseapp.com https://*.firebaseio.com",
+      "frame-src 'self' https://*.firebaseapp.com https://*.firebaseio.com https://*.firebasedatabase.app",
       "media-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",
