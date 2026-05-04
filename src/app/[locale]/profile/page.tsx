@@ -183,8 +183,8 @@ export default function ProfilePage() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px] -mr-48 -mt-48" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/30 rounded-full blur-[100px] -ml-32 -mb-32" />
         
-        <div className="max-w-5xl mx-auto px-4 h-full relative flex items-end pb-8">
-          <div className="flex flex-col md:flex-row items-center md:items-end gap-6 w-full translate-y-12 md:translate-y-16">
+        <div className="max-w-5xl mx-auto px-4 h-full relative flex items-end pb-16 md:pb-24">
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-6 w-full translate-y-2 md:translate-y-4">
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
