@@ -3,6 +3,8 @@ import ForYouFeed from "@/components/home/components/ForYouFeed";
 export const dynamic = "force-dynamic";
 import { getAuctions, getSpecializedFeeds } from "@/actions/auction";
 import { db } from "@/lib/db";
+import { SystemConfig } from "@/types/common";
+
 
 export default async function HomePage({
   params,
