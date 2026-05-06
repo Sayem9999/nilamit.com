@@ -2,6 +2,8 @@ import Leaderboard from "@/components/social/Leaderboard";
 import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/ui/card";
 
+export const dynamic = "force-dynamic";
+
 export default async function LeaderboardPage() {
   const t = await getTranslations("Leaderboard");
 
