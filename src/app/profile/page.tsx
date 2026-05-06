@@ -71,9 +71,9 @@ export default function ProfilePage() {
     }
   }, [status, router, session]);
 
-  // Fallback logos from reliable Wikimedia sources for production stability
-  const BKASH_LOGO_PRIMARY = "https://upload.wikimedia.org/wikipedia/commons/8/8c/BKash_logo.png";
-  const NAGAD_LOGO_PRIMARY = "https://upload.wikimedia.org/wikipedia/en/2/23/Nagad_Logo.png";
+  // Local SVG assets for robust cross-domain loading and full CSP/hotlink bypass
+  const BKASH_LOGO_PRIMARY = "/bkash.svg";
+  const NAGAD_LOGO_PRIMARY = "/nagad.svg";
 
   if (status === "loading") {
     return (

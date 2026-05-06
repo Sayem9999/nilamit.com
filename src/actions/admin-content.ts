@@ -1,6 +1,6 @@
 'use server';
 
-import { db, snapDocs } from '@/lib/db';
+import { db, snapDocs, docData } from '@/lib/db';
 import { Auction, SystemConfig } from '@/types';
 import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
@@ -10,7 +10,8 @@ import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/li
 export async function getSystemConfig(): Promise<ServiceResponse<SystemConfig>> {
   try {
     const snap = await db.collection('systemConfig').doc('default').get();
-    if (!snap.exists) {
+    const data = docData<SystemConfig>(snap);
+    if (!data) {
       return successResponse({
         id: 'default', heroTitle: '', heroSubtitle: '', heroImage: null,
         announcement: null, showAnnouncement: false,
@@ -18,7 +19,7 @@ export async function getSystemConfig(): Promise<ServiceResponse<SystemConfig>> 
         updatedAt: new Date(),
       } as SystemConfig);
     }
-    return successResponse({ ...snap.data(), id: snap.id } as SystemConfig);
+    return successResponse(data);
   } catch (e) {
     log.error('[admin-content] getSystemConfig failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch system config');
