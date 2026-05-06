@@ -59,6 +59,7 @@ export default async function DashboardPage({
 
   // Fetch relevant data based on tab
   let watchlistAuctions: AuctionWithSeller[] = [];
+  let myListings: AuctionWithSeller[] = [];
   let activeBids: AuctionWithSeller[] = [];
   let escrowTransactions: HydratedEscrowTransaction[] = [];
   let coordinationItems: CoordinationHubItem[] = [];
@@ -83,7 +84,7 @@ export default async function DashboardPage({
       const seller = sellerSnap.data() ?? {};
       const bidCountMap = new Map(auctionIds.map((id, i) => [id, bidCountSnaps[i].data().count]));
 
-      watchlistAuctions = rawSnap.docs.map(d => {
+      myListings = rawSnap.docs.map(d => {
         const a = d.data();
         return {
           ...a, id: d.id,
@@ -445,6 +446,40 @@ export default async function DashboardPage({
                     <p className="text-gray-500">
                       {t("noWonItems")}
                     </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {currentTab === "listings" && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-heading font-semibold text-gray-900">
+                    {t("myListings")} ({myListings.length})
+                  </h2>
+                  <Link
+                    href="/auctions/create"
+                    className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl shadow-sm transition-all"
+                  >
+                    + New Listing
+                  </Link>
+                </div>
+                {myListings.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {myListings.map((auction) => (
+                      <AuctionCard key={auction.id} auction={auction} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
+                    <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 mb-4">{t("emptyListings")}</p>
+                    <Link
+                      href="/auctions/create"
+                      className="inline-block bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl shadow-sm transition-all"
+                    >
+                      Create your first listing
+                    </Link>
                   </div>
                 )}
               </div>

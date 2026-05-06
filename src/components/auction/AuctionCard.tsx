@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import Image from "next/image";
-import { Clock, Users, Zap, MapPin, Package, Shield } from "lucide-react";
+import { Clock, Users, Zap, MapPin, Package, Shield, X, RotateCcw } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -13,8 +13,11 @@ import { useSettings } from "@/context/SettingsContext";
 import { useTranslations } from "next-intl";
 import TrustBadge from "../social/TrustBadge";
 import VerificationBadge from "../social/VerificationBadge";
+import { useRouter } from "next/navigation";
+import { cancelAuction, relistAuction } from "@/actions/auction";
+import toast from "react-hot-toast";
 
-import React, { memo } from "react";
+import React, { memo, useState, useTransition } from "react";
 
 export const AuctionCard = memo(({
   auction,
@@ -28,7 +31,38 @@ export const AuctionCard = memo(({
   const t = useTranslations("Auction");
   const tCat = useTranslations("Categories");
   const tLoc = useTranslations("Locations");
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const bidCount = auction._count?.bids ?? auction.bidCount ?? 0;
+  const isOwner = !!session?.user?.id && session.user.id === auction.sellerId;
+  const canCancel = isOwner && auction.status === "ACTIVE" && bidCount === 0;
+  const canRelist = isOwner && (auction.status === "EXPIRED" || auction.status === "CANCELLED");
+
+  const handleCancel = () => {
+    setShowCancelConfirm(false);
+    startTransition(async () => {
+      const res = await cancelAuction(auction.id);
+      if (res.success) {
+        toast.success("Listing cancelled.");
+        router.refresh();
+      } else {
+        toast.error(res.error?.message ?? "Failed to cancel listing.");
+      }
+    });
+  };
+
+  const handleRelist = () => {
+    startTransition(async () => {
+      const res = await relistAuction(auction.id);
+      if (res.success && res.data) {
+        toast.success("Relisted — review and adjust the new auction below.");
+        router.push(`/auctions/${res.data.auctionId}`);
+      } else {
+        toast.error(res.error?.message ?? "Failed to relist.");
+      }
+    });
+  };
 
   const isWatchlisted =
     auction.watchlist?.some(
@@ -188,8 +222,71 @@ export const AuctionCard = memo(({
               />
             </div>
           </div>
+
+          {/* Owner controls — only visible to the seller on their own listings.
+              Buttons stop the parent <Link> from navigating to the auction page. */}
+          {(canCancel || canRelist) && (
+            <div className="mt-3 flex gap-2 relative z-20">
+              {canCancel && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCancelConfirm(true); }}
+                  disabled={isPending}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+                >
+                  <X className="w-3.5 h-3.5" /> Cancel
+                </button>
+              )}
+              {canRelist && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRelist(); }}
+                  disabled={isPending}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-primary-200 text-primary-600 hover:bg-primary-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> {isPending ? "Relisting..." : "Relist"}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {showCancelConfirm && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCancelConfirm(false); }}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          >
+            <h2 className="text-lg font-heading font-bold text-gray-900 mb-1">Cancel listing?</h2>
+            <p className="text-sm text-gray-600 mb-2">
+              This auction will be marked CANCELLED and removed from search results. This is only possible
+              because no bids have been placed yet — once cancelled it can be relisted from your dashboard.
+            </p>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCancelConfirm(false); }}
+                disabled={isPending}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl disabled:opacity-50"
+              >
+                Keep listing
+              </button>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCancel(); }}
+                disabled={isPending}
+                className="px-5 py-2 text-sm font-bold text-white rounded-xl shadow-sm bg-red-600 hover:bg-red-700 disabled:opacity-50"
+              >
+                {isPending ? "Cancelling..." : "Yes, cancel"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Link>
   );
 });
