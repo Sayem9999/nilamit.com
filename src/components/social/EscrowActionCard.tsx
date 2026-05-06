@@ -58,14 +58,25 @@ export function EscrowActionCard({
   const handlePaymentSuccess = async (providerRef: string) => {
     setIsPaymentOpen(false);
     setLoading(true);
-    
+
     try {
       const result = await payEscrowAdvance(transaction.id, providerRef);
       if (result.success) {
         toast.success(t("advanceSuccess"));
         router.refresh();
       } else {
-        toast.error(result.error?.message || t("paymentFailed"));
+        const msg = result.error?.message ?? "";
+        if (msg.includes("ADDRESS_REQUIRED")) {
+          toast.error("Please add your delivery address in your profile before paying advance.", { duration: 6000 });
+          router.push("/profile");
+        } else if (msg.includes("SELLER_ADDRESS_MISSING")) {
+          toast.error("The seller hasn't set a pickup address yet — please contact support.", { duration: 6000 });
+        } else if (msg.includes("MFS_LINKAGE_REQUIRED")) {
+          toast.error(t("linkMFSProfile"), { duration: 6000 });
+          router.push("/profile");
+        } else {
+          toast.error(msg || t("paymentFailed"));
+        }
       }
     } catch {
       toast.error(t("paymentFailed"));

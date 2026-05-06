@@ -4,6 +4,7 @@
  */
 
 import { log } from '@/lib/logger';
+import * as Sentry from '@sentry/nextjs';
 
 export interface SMSGateway {
   sendSMS(phone: string, message: string): Promise<{ success: boolean; messageId?: string }>;
@@ -35,11 +36,29 @@ class GreenWebGateway implements SMSGateway {
       });
       const res = await fetch(`${this.apiUrl}?${params}`);
       const text = await res.text();
-      return { success: text.includes('Ok'), messageId: text };
-    } catch {
+      const success = text.includes('Ok');
+      if (!success) {
+        // Surface upstream gateway errors — without this, SMS delivery failures
+        // are invisible to the user (they'll wait for an OTP that never arrives).
+        log.error('[SMS:greenweb] gateway returned non-Ok response', { phone: maskPhone(phone), response: text.slice(0, 200) });
+        Sentry.captureMessage('[SMS:greenweb] gateway returned non-Ok response', {
+          level: 'error',
+          tags: { component: 'sms', provider: 'greenweb' },
+          extra: { phoneMasked: maskPhone(phone), response: text.slice(0, 200) },
+        });
+      }
+      return { success, messageId: text };
+    } catch (err) {
+      log.error('[SMS:greenweb] fetch failed', err);
+      Sentry.captureException(err, { tags: { component: 'sms', provider: 'greenweb' } });
       return { success: false };
     }
   }
+}
+
+function maskPhone(phone: string): string {
+  if (phone.length < 7) return '***';
+  return phone.slice(0, 4) + '****' + phone.slice(-2);
 }
 
 // ---- BulksmsBD Gateway (Production) ----

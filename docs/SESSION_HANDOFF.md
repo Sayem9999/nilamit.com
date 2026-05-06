@@ -2,6 +2,8 @@
 
 This document captures the work completed in the May 2026 audit-and-fix session and the open items the next agent should pick up. It is written so a fresh model can resume without re-reading the full chat transcript.
 
+> **Updated 2026-05-07** — handoff items #2, #5, #6 are now done; #4 instrumented (Sentry hooks added to image-moderation, gc-uploads, sms-gateway). #3 still requires a real GreenWeb token from operations.
+
 ---
 
 ## State of `main`
@@ -88,34 +90,23 @@ This document captures the work completed in the May 2026 audit-and-fix session 
 
 ### Should do (real findings, not done)
 
-1. **Pre-existing CI lint debt on `main`** — 10 errors in files we didn't touch, blocking green CI:
-   - `src/actions/auth.ts:107`, `src/actions/auth.ts:173` — `Unexpected any`
-   - `src/actions/auction.ts:35` — `Unexpected any`
-   - `src/actions/bulk-auction.ts`, `src/actions/watchlist.ts` — `Unexpected any`
-   - `src/app/page.tsx` — `Avoid constructing JSX within try/catch` (3 places)
-   - `src/app/profile/page.tsx:69` — `Calling setState synchronously within an effect`
-   - `src/app/admin/AdminLayout.tsx`, `src/app/admin/live/AdminLiveFeed.tsx`, `src/app/admin/tabs/DisputesTab.tsx`, `src/app/dashboard/coordination/[id]/page.tsx`, `src/app/dashboard/page.tsx`, `src/app/leaderboard/page.tsx`, `src/app/login/page.tsx`, `src/app/policy/page.tsx` — assorted `any` usages
-   - One PR cleaning these up = green CI on `main`.
+1. **~~Pre-existing CI lint debt on `main`~~ — DONE 2026-05-07.** Fixed all 10 errors across `src/actions/auth.ts`, `src/app/admin/tabs/DisputesTab.tsx`, `src/app/page.tsx` (refactored to load data inside try/catch and render outside), and `src/app/profile/page.tsx`. CI lint is now zero-error.
 
-2. **Confirm post-deploy state** — at the time of writing, May 2026 deploy was in flight. Next agent should:
-   - `firebase apphosting:rollouts:list nilamit --project nilamit-52073` — confirm latest rollout succeeded.
-   - `gh workflow run cron.yml --ref main -f job=all` — should now be 5/5 green.
-   - Smoke-test `/api/cron/enforce-policies` (was 405 before deploy) and `/api/cron/gc-uploads` (was 404 before deploy).
-   - Test a real upload through the UI — successful uploads should still work; an actual NSFW image should now be rejected with a 422 ("This image violates our content policy").
+2. **~~Confirm post-deploy state~~ — DONE 2026-05-06.** PR #11 (`process-auctions` route fix) and PR #12 (missing `auctions(status, updatedAt)` index) unblocked the deploy. All 5 cron jobs are now green against production. Storage bucket `nilamit-52073.firebasestorage.app` was auto-provisioned during the deploy.
 
-3. **`GREENWEB_TOKEN` is still a placeholder.** SMS OTPs log to stdout in production. Get a real token from greenweb.com.bd and update Firebase Secret Manager. Until then, phone verification is effectively manual.
+3. **`GREENWEB_TOKEN` is still a placeholder** — STILL OPEN. SMS OTPs would silently fail in production today (the secret value `"console"` is truthy so `GreenWebGateway` instantiates with that as the token, all subsequent API calls return non-Ok). 2026-05-07: added `log.error` + Sentry capture in `src/lib/sms-gateway.ts` so failures are no longer silent — operator should see Sentry alerts the next time someone tries to verify a phone. Real fix: get a GreenWeb token, `gcloud secrets versions add GREENWEB_TOKEN --data-file=- --project=nilamit-52073`, redeploy.
 
-4. **Sentry visibility for new code paths.** `image-moderation` failures (Vision API errors) and `gc-uploads` errors should both surface in Sentry but they're new paths — verify alerts fire as expected once they have organic traffic.
+4. **~~Sentry visibility for new code paths~~ — INSTRUMENTED 2026-05-07.** Added `Sentry.captureException` / `captureMessage` calls in `src/lib/image-moderation.ts` (Vision client unavailable + API error paths) and `src/app/api/cron/gc-uploads/route.ts` (cron-level failures). Next agent should still verify alerts fire end-to-end once organic traffic arrives.
 
 ### Could do (P2, not urgent)
 
-5. **Translate `useTranslations` text in dynamically-imported components.** `BidPrompts` (eliteBarrier modal) and `VerificationGuard` use the i18n layer — fine for English but a future locale would need keys mirrored.
+5. **Translate `useTranslations` text in dynamically-imported components.** `BidPrompts` (eliteBarrier modal) and `VerificationGuard` use the i18n layer — fine for English but a future locale would need keys mirrored. Also: `EscrowActionCard.tsx` and `GatedContactInfo.tsx` still have a few hardcoded English strings (and `GatedContactInfo.tsx` had hardcoded Bengali strings; replaced 2026-05-07 — now uses English literals; the right long-term fix is to move them into `messages/en.json`).
 
-6. **`payEscrowAdvance` UX for missing addresses** — the new validation (`ADDRESS_REQUIRED`, `SELLER_ADDRESS_MISSING`) bubbles up as a generic error. The dashboard `EscrowActionCard` should detect those codes and show a "complete your profile address" CTA.
+6. **~~`payEscrowAdvance` UX for missing addresses~~ — DONE 2026-05-07.** `src/components/social/EscrowActionCard.tsx` and `src/components/ui/GatedContactInfo.tsx` now detect `ADDRESS_REQUIRED`, `SELLER_ADDRESS_MISSING`, and `MFS_LINKAGE_REQUIRED` error codes and show specific toasts + redirect to `/profile` where appropriate.
 
-7. **`/api/logistics/labels/<trackingId>.pdf`** — `createLogisticsOrder` writes a `labelUrl` pointing here, but the route doesn't exist. Either implement (Pathao/RedX label fetch) or remove the field until a real provider integration lands.
+7. **~~`/api/logistics/labels/<trackingId>` endpoint~~ — DONE 2026-05-07.** Removed the `labelUrl` field from `createLogisticsOrder` and the auction `logistics` map. When a real provider (Pathao / RedX) is wired up, the courier's webhook should populate `logistics.labelUrl` directly, not this code path.
 
-8. **Operational: rotate `CRON_SECRET` to a new value** in both Firebase Secret Manager + GitHub Actions secret. Was synced this session but never rotated; the value has been live since 2026-02-16 and may have leaked through CI logs.
+8. **Operational: rotate `CRON_SECRET` to a new value** in both Firebase Secret Manager + GitHub Actions secret. Was synced 2026-05-06 but never rotated; the value has been live since 2026-02-16 and may have leaked through CI logs.
 
 ### Won't do without explicit ask (out of scope)
 

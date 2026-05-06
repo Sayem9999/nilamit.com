@@ -104,7 +104,7 @@ export async function signupWithPhone(data: unknown): Promise<ServiceResponse<{ 
     // 1. Verify OTP
     const otpResult = await verifyStandaloneOTP(phone, otp);
     if (!otpResult.success) {
-      return otpResult as any;
+      return otpResult as ServiceResponse<never>;
     }
 
     // 2. Check if phone already taken
@@ -170,7 +170,7 @@ export async function resetPasswordWithOTP(data: unknown): Promise<ServiceRespon
     if (phone) {
       // Verify Phone OTP
       const otpResult = await verifyStandaloneOTP(phone, otp);
-      if (!otpResult.success) return otpResult as any;
+      if (!otpResult.success) return otpResult as ServiceResponse<never>;
       
       userSnap = await db.collection("users").where("phone", "==", phone).limit(1).get();
     } else if (email) {
