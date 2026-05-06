@@ -24,17 +24,39 @@ export default async function HomePage() {
       db.collection('systemConfig').doc('default').get(),
     ]);
 
-    // First-run safeguard: Seed initial data if missing
+    // First-run safeguard: Dynamically fetch real Firestore collection counts for live accuracy
     let statsData = docData<any>(globalStatsSnap);
-    if (!statsData) {
-      statsData = {
-        totalUsers: 2450,
-        totalBids: 15600,
-        totalAuctions: 840,
-        totalVerifiedSellers: 320,
-        updatedAt: new Date()
-      };
-      await db.collection('stats').doc('global').set(statsData);
+    if (!statsData || !statsData.isReal) {
+      try {
+        const [userCountSnap, bidCountSnap, auctionCountSnap, sellerCountSnap] = await Promise.all([
+          db.collection('users').count().get(),
+          db.collection('bids').count().get(),
+          db.collection('auctions').count().get(),
+          db.collection('users').where('isVerifiedSeller', '==', true).count().get(),
+        ]);
+
+        statsData = {
+          totalUsers: userCountSnap.data().count,
+          totalBids: bidCountSnap.data().count,
+          totalAuctions: auctionCountSnap.data().count,
+          totalVerifiedSellers: sellerCountSnap.data().count,
+          isReal: true,
+          updatedAt: new Date()
+        };
+        await db.collection('stats').doc('global').set(statsData);
+      } catch (err) {
+        if (!statsData) {
+          statsData = {
+            totalUsers: 2450,
+            totalBids: 15600,
+            totalAuctions: 840,
+            totalVerifiedSellers: 320,
+            isReal: false,
+            updatedAt: new Date()
+          };
+          await db.collection('stats').doc('global').set(statsData);
+        }
+      }
     }
 
     let systemConfig = docData<SystemConfig>(systemConfigSnap);
