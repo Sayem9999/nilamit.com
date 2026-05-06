@@ -2,7 +2,7 @@ import { HomeContent } from "@/components/home/HomeContent";
 import ForYouFeed from "@/components/home/components/ForYouFeed";
 export const dynamic = "force-dynamic";
 import { getAuctions, getSpecializedFeeds } from "@/actions/auction";
-import { db } from "@/lib/db";
+import { db, docData } from "@/lib/db";
 import { SystemConfig } from "@/types/common";
 
 
@@ -25,7 +25,7 @@ export default async function HomePage() {
     ]);
 
     // First-run safeguard: Seed initial data if missing
-    let statsData = globalStatsSnap.exists ? globalStatsSnap.data() : null;
+    let statsData = docData<any>(globalStatsSnap);
     if (!statsData) {
       statsData = {
         totalUsers: 2450,
@@ -37,9 +37,10 @@ export default async function HomePage() {
       await db.collection('stats').doc('global').set(statsData);
     }
 
-    let systemConfig = systemConfigSnap.exists ? (systemConfigSnap.data() as SystemConfig) : null;
+    let systemConfig = docData<SystemConfig>(systemConfigSnap);
     if (!systemConfig) {
       systemConfig = {
+        id: 'default',
         heroTitle: "The Future of Bidding in Bangladesh",
         heroSubtitle: "Experience transparency, security, and true market value.",
         heroImage: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800",
