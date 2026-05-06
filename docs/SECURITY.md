@@ -62,9 +62,9 @@ Phone and email OTPs are 6-digit codes.
 - **Generation:** `crypto.randomInt(100_000, 1_000_000)` — CSPRNG, not `Math.random()`
 - **Storage:** SHA-256 hash stored in `phoneVerifications` collection. The plaintext OTP is never written to the database.
 - **Expiry:** 5 minutes
-- **Attempts:** Max 5 attempts per OTP. After 5 failures, the OTP is exhausted.
+- **Hardened Brute-Force Shield:** Max 5 verification attempts per OTP. Every verification attempt increments the `attempts` counter within a Firestore database transaction **prior** to hashing and checking code validity. Brute-forcing the 6-digit numeric space is 100% mitigated directly in the database, ensuring safety even if Redis is unconfigured or undergoes downtime.
 - **Rate limiting:** 5 OTP sends per hour per phone number (Upstash + Firestore double-check)
-- **Verify rate limiting:** 5 verify attempts per 15 minutes per phone number (Upstash)
+- **Verify rate limiting:** 5 verify attempts per 15 minutes per phone number (Upstash edge limiter, which falls back to fail-open with Sentry warnings if Redis is unconfigured, shifting defense-in-depth to the stateful Firestore transaction counter).
 
 Email OTPs (for password reset) are stored as plaintext in `verificationTokens` — this is an Auth.js adapter convention. Verification token doc IDs are SHA-256 hashes of `identifier:token` to prevent ambiguous compound keys.
 
@@ -72,7 +72,9 @@ Email OTPs (for password reset) are stored as plaintext in `verificationTokens` 
 
 ## Rate Limiting
 
-All rate limiting uses Upstash Redis (sliding window algorithm) and **fails closed in production** — if Redis is unreachable, requests are rejected, not allowed through.
+All rate limiting uses Upstash Redis (sliding window algorithm). In production, the rate limit layer implements a **Fail-Open with Sentry Alerting** design. If Redis is unreachable or unconfigured, traffic is seamlessly permitted (to prevent bricking authentication and verification pipelines for legitimate users) while notifying developers instantly via Sentry.
+
+When rate-limiting fails open, security-critical verification endpoints shift protection to transaction-locked database checks (e.g. the 5-attempt Firestore block).
 
 | Limiter | Limit | Window | Applied to |
 |---|---|---|---|

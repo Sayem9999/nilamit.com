@@ -2,7 +2,19 @@
 
 All notable changes to the Nilamit platform will be documented in this file.
 
-## [2.3.0] - 2026-05-04 (Current)
+## [2.4.0] - 2026-05-06 (Current)
+### Added 🆕
+- **Firestore Brute-Force Shield**: Enforced transactional state check limits of maximum 5 attempts for OTP code-space verification directly in Firestore.
+- **GCP Secrets Integration**: Added live Redis credentials in GCP Secret Manager to activate high-throughput sliding-window rate limiting.
+- **Automated Firestore CI/CD Pipeline**: Added automated deployment of Firestore rules and indexes during both local git push hook actions and GitHub Actions CI pipelines on pushes to `main`.
+- **Local bKash/Nagad SVGs**: Localized financial brand media in `/public` directory to guarantee high-performance, CSP-compliant logo rendering.
+
+### Fixed 🐛
+- **Fail-Open Rate Limiter**: Prevented false login/register lockouts for users on setups with missing Upstash secrets by shifting to a secure fail-open strategy with Sentry reporting.
+- **Zero-Dependency Image Uploads**: Bypassed Firebase custom token client-side configuration dependency failures by routing all photo uploads server-side via Admin SDK.
+- **Dynamic Self-Healing Landing Stats**: Decoupled homepage metrics from placeholders and populated them with real, performant Firestore count queries.
+
+## [2.3.0] - 2026-05-04
 ### Added 🆕
 - **Auth Hardening**: Implemented `AUTH_TRUST_HOST` and explicit sign-out revalidation to ensure session consistency in proxied environments.
 - **Image Domain White-listing**: Added `unsplash.com` to Next.js remote patterns to support high-fidelity mockup assets.

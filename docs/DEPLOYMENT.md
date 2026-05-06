@@ -141,25 +141,33 @@ Or redeploy a specific commit:
 git push origin <commit-sha>:main --force
 ```
 
----
+## Firestore Rules & Indexes (AUTOMATED)
 
-## Firestore Indexes
+Composite indexes are defined in `firestore.indexes.json` and security rules in `firestore.rules`. These are now **100% automated** to ensure your production database schemas, index paths, and access permissions are always synchronized with your source code:
 
-Composite indexes are defined in `firestore.indexes.json`. Deploy them with:
+### 1. Local Autopilot (Husky Git Hook)
+Whenever you push your code to the `main` branch locally, your machine automatically triggers the deployment of indexes and rules:
+* Hook Location: `.husky/pre-push`
+* Deployment Command: `npx firebase deploy --only firestore --project=nilamit-52073`
+* Safe Fallback: If you are pushing from a machine that doesn't have `firebase` installed or isn't authenticated, the hook prints a warning and completes the push safely without blocking you.
+
+### 2. Cloud Autopilot (GitHub Actions CI/CD)
+When code is pushed or a pull request is merged into `main`, GitHub Actions automatically compiles, tests, and deploys the rules and indexes:
+* Workflow Location: `.github/workflows/ci.yml` (Step: `deploy-firestore`)
+* Authentication: Reads from the `FIREBASE_TOKEN` secret stored in your GitHub Repository settings.
+
+### Manual Override Commands
+If you ever need to manually deploy your indexes or rules from the command line:
 ```bash
-firebase deploy --only firestore:indexes --project YOUR_PROJECT_ID
+# Deploy both Rules & Indexes
+npx firebase deploy --only firestore --project=nilamit-52073
+
+# Deploy Indexes only
+npx firebase deploy --only firestore:indexes --project=nilamit-52073
+
+# Deploy Rules only
+npx firebase deploy --only firestore:rules --project=nilamit-52073
 ```
-
----
-
-## Firestore Security Rules
-
-Security rules are in `firestore.rules`. Deploy with:
-```bash
-firebase deploy --only firestore:rules --project YOUR_PROJECT_ID
-```
-
----
 
 ## Custom Domain
 
