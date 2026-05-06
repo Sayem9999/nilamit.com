@@ -41,7 +41,7 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-const DOMAIN = "https://nilamit--nilamit-52073.asia-southeast1.hosted.app";
+const DOMAIN = "https://nilamit.com";
 
 function getMetadataBase() {
   const urlString = env.NEXT_PUBLIC_APP_URL || DOMAIN;
