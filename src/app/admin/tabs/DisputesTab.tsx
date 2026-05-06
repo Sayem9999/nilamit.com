@@ -22,7 +22,8 @@ export function DisputesTab() {
   const [isPending, startTransition] = useTransition();
   const [logModalOpen, setLogModalOpen] = useState(false);
   const [logLoading, setLogLoading] = useState(false);
-  const [activeLog, setActiveLog] = useState<{ id: string, content: string, senderId: string, isSystemMessage: boolean, createdAt: Date, imageUrl?: string | null }[]>([]);
+  type LogEntry = { id: string; content: string; senderId: string; isSystemMessage: boolean; createdAt: Date; imageUrl?: string | null };
+  const [activeLog, setActiveLog] = useState<LogEntry[]>([]);
   const [activeAuctionTitle, setActiveAuctionTitle] = useState("");
 
   const handleViewLog = async (auctionId: string, title: string) => {
@@ -32,7 +33,7 @@ export function DisputesTab() {
     try {
       const res = await getAdminCoordinationLog(auctionId);
       if (res.success && res.data) {
-        setActiveLog(res.data as any);
+        setActiveLog(res.data as LogEntry[]);
       } else {
         toast.error(res.error?.message || "Failed to fetch coordination log.");
       }

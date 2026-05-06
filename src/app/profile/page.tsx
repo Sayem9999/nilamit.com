@@ -65,9 +65,14 @@ export default function ProfilePage() {
       router.push("/login");
     }
     if (session?.user) {
-      // Hardened check: Ensure we only show verified if the value is explicitly truthy/not null
-      setIsPhoneVerifiedLocal((session.user as any).isPhoneVerified === true);
-      setIsEmailVerifiedLocal((session.user as any).emailVerified != null);
+      // Mirror session-derived flags into local state so an OTP-verify action
+      // can optimistically flip them before the session refresh propagates
+      // (see line ~150 — setIsPhoneVerifiedLocal(true) on success).
+      const u = session.user as { isPhoneVerified?: boolean; emailVerified?: unknown };
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsPhoneVerifiedLocal(u.isPhoneVerified === true);
+       
+      setIsEmailVerifiedLocal(u.emailVerified != null);
     }
   }, [status, router, session]);
 

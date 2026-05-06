@@ -10,6 +10,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { db } from '@/lib/db';
 import { adminStorage } from '@/lib/firebase-admin';
 import { verifyCronSecret, withRetry, cronError } from '@/lib/cron-utils';
@@ -104,6 +105,9 @@ export async function POST(req: Request) {
   }, { maxAttempts: 2, initialDelayMs: 5000 });
 
   if (result.error) {
+    Sentry.captureException(result.error, {
+      tags: { component: 'cron', job: 'gc-uploads' },
+    });
     return cronError(`gc-uploads failed: ${result.error.message}`);
   }
 

@@ -49,19 +49,19 @@ function newTrackingId(): string {
  * Caller is responsible for ensuring the auction id, seller id, and buyer id
  * correspond to the same logical sale and that the addresses are the
  * authoritative ones from the user docs read inside the same transaction.
+ *
+ * `labelUrl` was removed from the schema because we don't ship a label-fetch
+ * endpoint — when a real courier integration lands it should populate
+ * `logistics.labelUrl` via the courier's own webhook, not here.
  */
-export async function createLogisticsOrder(input: CreateLogisticsOrderInput): Promise<{ trackingId: string; labelUrl: string }> {
+export async function createLogisticsOrder(input: CreateLogisticsOrderInput): Promise<{ trackingId: string }> {
   const trackingId = newTrackingId();
-  // TODO: replace with real provider label URL once Pathao/RedX is wired up.
-  const labelUrl   = `/api/logistics/labels/${trackingId}`;
-
   const now = new Date();
 
   await db.collection('auctions').doc(input.auctionId).update({
     logistics: {
       provider:        'NILAMIT_EXPRESS',
       trackingId,
-      labelUrl,
       status:          LogisticsStatus.READY_FOR_PICKUP,
       pickupAddress:   input.sellerAddress,
       deliveryAddress: input.buyerAddress,
@@ -74,7 +74,7 @@ export async function createLogisticsOrder(input: CreateLogisticsOrderInput): Pr
   });
 
   log.info(`Logistics order created for auction ${input.auctionId}`, { trackingId });
-  return { trackingId, labelUrl };
+  return { trackingId };
 }
 
 /**

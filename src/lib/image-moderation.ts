@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { log } from '@/lib/logger';
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * Cloud Vision SafeSearch wrapper.
@@ -62,6 +63,10 @@ export async function moderateImage(buffer: Buffer): Promise<ModerationResult> {
   const client = await getClient();
   if (!client) {
     log.warn('[image-moderation] Vision client unavailable; allowing upload (fail-open)');
+    Sentry.captureMessage('[image-moderation] Vision client unavailable — fail-open', {
+      level: 'warning',
+      tags: { component: 'image-moderation', state: 'client-unavailable' },
+    });
     return { allowed: true, reason: 'client-unavailable' };
   }
 
@@ -89,6 +94,9 @@ export async function moderateImage(buffer: Buffer): Promise<ModerationResult> {
     return { allowed: true, scores };
   } catch (e) {
     log.error('[image-moderation] SafeSearch call failed (fail-open)', e);
+    Sentry.captureException(e, {
+      tags: { component: 'image-moderation', state: 'api-error' },
+    });
     return { allowed: true, reason: 'api-error' };
   }
 }

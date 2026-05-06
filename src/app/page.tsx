@@ -4,105 +4,141 @@ export const dynamic = "force-dynamic";
 import { getAuctions, getSpecializedFeeds } from "@/actions/auction";
 import { db, docData } from "@/lib/db";
 import { SystemConfig } from "@/types/common";
+import type { AuctionWithSeller, LatestActivity } from "@/types";
+import { log } from "@/lib/logger";
 
+interface GlobalStats {
+  totalUsers?: number;
+  totalBids?: number;
+  totalAuctions?: number;
+  totalVerifiedSellers?: number;
+  isReal?: boolean;
+  updatedAt?: Date;
+}
+
+const FALLBACK_STATS: Required<Omit<GlobalStats, "updatedAt">> & { updatedAt: Date } = {
+  totalUsers: 2450,
+  totalBids: 15600,
+  totalAuctions: 840,
+  totalVerifiedSellers: 320,
+  isReal: false,
+  updatedAt: new Date(),
+};
+
+const FALLBACK_SYSTEM_CONFIG: SystemConfig = {
+  id: "default",
+  heroTitle: "The Future of Bidding in Bangladesh",
+  heroSubtitle: "Experience transparency, security, and true market value.",
+  heroImage: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800",
+  updatedAt: new Date(),
+} as SystemConfig;
+
+interface ResolvedHomeData {
+  trendingAuctions: AuctionWithSeller[];
+  endingSoon: AuctionWithSeller[];
+  latestBids: LatestActivity[];
+  featuredAuctions: AuctionWithSeller[];
+  stats: { totalUsers: number; totalBids: number; totalAuctions: number; verifiedSellers: number };
+  systemConfig: SystemConfig;
+}
+
+async function loadHomeData(): Promise<ResolvedHomeData> {
+  const [
+    trendingRes,
+    specializedRes,
+    featuredRes,
+    globalStatsSnap,
+    systemConfigSnap,
+  ] = await Promise.all([
+    getAuctions({ sortBy: "bids", sortOrder: "desc", limit: 8 }),
+    getSpecializedFeeds(),
+    getAuctions({ limit: 4 }),
+    db.collection("stats").doc("global").get(),
+    db.collection("systemConfig").doc("default").get(),
+  ]);
+
+  let statsData = docData<GlobalStats>(globalStatsSnap);
+  if (!statsData || !statsData.isReal) {
+    try {
+      const [userCountSnap, bidCountSnap, auctionCountSnap, sellerCountSnap] = await Promise.all([
+        db.collection("users").count().get(),
+        db.collection("bids").count().get(),
+        db.collection("auctions").count().get(),
+        db.collection("users").where("isVerifiedSeller", "==", true).count().get(),
+      ]);
+
+      statsData = {
+        totalUsers: userCountSnap.data().count,
+        totalBids: bidCountSnap.data().count,
+        totalAuctions: auctionCountSnap.data().count,
+        totalVerifiedSellers: sellerCountSnap.data().count,
+        isReal: true,
+        updatedAt: new Date(),
+      };
+      await db.collection("stats").doc("global").set(statsData);
+    } catch (err) {
+      log.warn("[home] Falling back to seed stats — count() queries failed", { error: err instanceof Error ? err.message : String(err) });
+      if (!statsData) {
+        statsData = { ...FALLBACK_STATS };
+        await db.collection("stats").doc("global").set(statsData);
+      }
+    }
+  }
+
+  let systemConfig = docData<SystemConfig>(systemConfigSnap);
+  if (!systemConfig) {
+    systemConfig = FALLBACK_SYSTEM_CONFIG;
+    await db.collection("systemConfig").doc("default").set(systemConfig);
+  }
+
+  return {
+    trendingAuctions: trendingRes.success ? trendingRes.data!.auctions : [],
+    endingSoon:       specializedRes.success ? specializedRes.data!.endingSoon : [],
+    latestBids:       specializedRes.success ? specializedRes.data!.latestBids : [],
+    featuredAuctions: featuredRes.success ? featuredRes.data!.auctions : [],
+    stats: {
+      totalUsers:      Number(statsData.totalUsers ?? 0),
+      totalBids:       Number(statsData.totalBids ?? 0),
+      totalAuctions:   Number(statsData.totalAuctions ?? 0),
+      verifiedSellers: Number(statsData.totalVerifiedSellers ?? 0),
+    },
+    systemConfig,
+  };
+}
 
 export default async function HomePage() {
   const locale = "en";
 
+  // Load data inside a try so a Firestore outage falls back to a safe empty
+  // state. JSX is constructed AFTER the try block — render errors propagate
+  // to the nearest error boundary (the React rule we used to violate).
+  let data: ResolvedHomeData;
   try {
-    const [
-      trendingRes,
-      specializedRes,
-      featuredRes,
-      globalStatsSnap,
-      systemConfigSnap,
-    ] = await Promise.all([
-      getAuctions({ sortBy: "bids", sortOrder: "desc", limit: 8 }),
-      getSpecializedFeeds(),
-      getAuctions({ limit: 4 }),
-      db.collection('stats').doc('global').get(),
-      db.collection('systemConfig').doc('default').get(),
-    ]);
-
-    // First-run safeguard: Dynamically fetch real Firestore collection counts for live accuracy
-    let statsData = docData<any>(globalStatsSnap);
-    if (!statsData || !statsData.isReal) {
-      try {
-        const [userCountSnap, bidCountSnap, auctionCountSnap, sellerCountSnap] = await Promise.all([
-          db.collection('users').count().get(),
-          db.collection('bids').count().get(),
-          db.collection('auctions').count().get(),
-          db.collection('users').where('isVerifiedSeller', '==', true).count().get(),
-        ]);
-
-        statsData = {
-          totalUsers: userCountSnap.data().count,
-          totalBids: bidCountSnap.data().count,
-          totalAuctions: auctionCountSnap.data().count,
-          totalVerifiedSellers: sellerCountSnap.data().count,
-          isReal: true,
-          updatedAt: new Date()
-        };
-        await db.collection('stats').doc('global').set(statsData);
-      } catch (err) {
-        if (!statsData) {
-          statsData = {
-            totalUsers: 2450,
-            totalBids: 15600,
-            totalAuctions: 840,
-            totalVerifiedSellers: 320,
-            isReal: false,
-            updatedAt: new Date()
-          };
-          await db.collection('stats').doc('global').set(statsData);
-        }
-      }
-    }
-
-    let systemConfig = docData<SystemConfig>(systemConfigSnap);
-    if (!systemConfig) {
-      systemConfig = {
-        id: 'default',
-        heroTitle: "The Future of Bidding in Bangladesh",
-        heroSubtitle: "Experience transparency, security, and true market value.",
-        heroImage: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800",
-        updatedAt: new Date()
-      } as SystemConfig;
-      await db.collection('systemConfig').doc('default').set(systemConfig);
-    }
-
-    const trendingAuctions = trendingRes.success ? trendingRes.data!.auctions : [];
-    const endingSoon = specializedRes.success ? specializedRes.data!.endingSoon : [];
-    const latestBids = specializedRes.success ? specializedRes.data!.latestBids : [];
-    const featuredAuctions = featuredRes.success ? featuredRes.data!.auctions : [];
-
-    const totalUsers = Number(statsData.totalUsers ?? 0);
-    const totalBids = Number(statsData.totalBids ?? 0);
-    const totalAuctions = Number(statsData.totalAuctions ?? 0);
-    const verifiedSellers = Number(statsData.totalVerifiedSellers ?? 0);
-
-    return (
-      <>
-        <HomeContent
-          trendingAuctions={trendingAuctions}
-          endingSoon={endingSoon}
-          latestActivity={latestBids}
-          featuredAuctions={featuredAuctions}
-          stats={{ totalUsers, totalBids, totalAuctions, verifiedSellers }}
-          systemConfig={systemConfig}
-          locale={locale}
-        />
-        <ForYouFeed />
-      </>
-    );
-  } catch (error: unknown) {
-    const err = error as Error;
-    return (
-      <div style={{ padding: '2rem', backgroundColor: '#fee2e2', color: '#7f1d1d', margin: '1rem', borderRadius: '0.5rem', fontFamily: 'monospace' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Application Error Details</h1>
-        <p><strong>Message:</strong> {err?.message || String(error)}</p>
-        <pre style={{ marginTop: '1rem', whiteSpace: 'pre-wrap', fontSize: '0.875rem' }}>{err?.stack}</pre>
-      </div>
-    );
+    data = await loadHomeData();
+  } catch (error) {
+    log.error("[home] failed to load home data — rendering fallback", error);
+    data = {
+      trendingAuctions: [],
+      endingSoon:       [],
+      latestBids:       [],
+      featuredAuctions: [],
+      stats: { totalUsers: 0, totalBids: 0, totalAuctions: 0, verifiedSellers: 0 },
+      systemConfig:     FALLBACK_SYSTEM_CONFIG,
+    };
   }
+
+  return (
+    <>
+      <HomeContent
+        trendingAuctions={data.trendingAuctions}
+        endingSoon={data.endingSoon}
+        latestActivity={data.latestBids}
+        featuredAuctions={data.featuredAuctions}
+        stats={data.stats}
+        systemConfig={data.systemConfig}
+        locale={locale}
+      />
+      <ForYouFeed />
+    </>
+  );
 }
