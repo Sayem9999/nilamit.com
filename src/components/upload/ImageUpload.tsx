@@ -4,8 +4,7 @@ import { X, Loader2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
-import { getClientStorage, ensureFirebaseAuth } from "@/lib/firebase-client";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadFile } from "@/lib/uploadthing";
 import { useSession } from "next-auth/react";
 import { compressImage } from "@/lib/image-optimization";
 
@@ -39,26 +38,12 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
 
       const newUrls: string[] = [...value];
 
-      // Ensure Firebase client is authenticated with the custom token from NextAuth
-      await ensureFirebaseAuth();
-      const storage = getClientStorage();
-
       for (const rawFile of Array.from(files)) {
         // Compress image on the client side before uploading to save bandwidth
         const file = await compressImage(rawFile, { maxWidth: 1280, maxHeight: 1280, quality: 0.85 });
         
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-        const filePath = `auctions/${session.user.id}/${fileName}`;
-
-        const storageRef = ref(storage, filePath);
-        
-        // Upload to Firebase Storage
-        const uploadResult = await uploadBytes(storageRef, file, {
-          contentType: file.type,
-        });
-
-        const publicUrl = await getDownloadURL(uploadResult.ref);
+        // Upload via secure server-side API to bypass Firebase Auth configuration requirements
+        const publicUrl = await uploadFile(file, 'auction');
         newUrls.push(publicUrl);
       }
 

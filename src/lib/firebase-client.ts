@@ -83,18 +83,24 @@ export async function ensureFirebaseAuth(): Promise<void> {
   if (_authPromise) return _authPromise;
 
   _authPromise = (async () => {
-    const auth = getClientAuth();
+    try {
+      const auth = getClientAuth();
 
-    // Already signed in (e.g., hot-reload)
-    if (auth.currentUser) return;
+      // Already signed in (e.g., hot-reload)
+      if (auth.currentUser) return;
 
-    const res = await fetch('/api/firebase/token');
-    if (!res.ok) {
-      log.warn('[Firebase Client] Could not get custom token — private RTDB access unavailable.');
-      return;
+      const res = await fetch('/api/firebase/token');
+      if (!res.ok) {
+        log.warn('[Firebase Client] Could not get custom token — private RTDB access unavailable.');
+        return;
+      }
+      const { token } = await res.json() as { token: string };
+      await signInWithCustomToken(auth, token);
+    } catch (err) {
+      log.warn('[Firebase Client] Custom token authentication failed. Client auth not fully configured or enabled.', {
+        error: err instanceof Error ? err.message : String(err)
+      });
     }
-    const { token } = await res.json() as { token: string };
-    await signInWithCustomToken(auth, token);
   })();
 
   return _authPromise;
