@@ -13,6 +13,7 @@
     "unverified": "আনভেরিফাইড",
     "signout": "লগ আউট",
     "signin": "লগ ইন",
+    "signedInAs": "সাইন-ইন হিসেবে",
     "settings": "সেটিংস",
     "howItWorks": "কিভাবে কাজ করে",
     "safety": "নিরাপত্তা",
@@ -241,7 +242,10 @@
     "verifyNowBtn": "এখনই ভেরিফাই করুন",
     "mfsLinkRequired": "MFS সংযোগ আবশ্যক",
     "mfsLinkDesc": "নিরাপত্তার স্বার্থে, আপনার প্রোফাইলে বিকাশ বা নগদ ওয়ালেট যুক্ত করুন।",
-    "linkMFSNowBtn": "এখনই যুক্ত করুন"
+    "linkMFSNowBtn": "এখনই যুক্ত করুন",
+    "eliteBarrier": "এলিট ট্রাস্ট গেট",
+    "eliteDepositDesc": "১,৫০,০০০ টাকার বেশি বিড শুধুমাত্র বিশ্বস্ত সদস্যদের জন্য সীমাবদ্ধ। বিড করতে ৪.৫★ রেটিং + ৫টি বিক্রি প্রয়োজন, অথবা ১% রিফান্ডেবল সিকিউরিটি ডিপোজিট দিন।",
+    "contactSupportBtn": "১% ডিপোজিট দিন"
   },
   "Dashboard": {
     "title": "আমার ড্যাশবোর্ড",
@@ -265,6 +269,7 @@
     "sharedLogistics": "শেয়ার্ড লজিস্টিকস এবং ডেলিভারি কোঅর্ডিনেশন",
     "sellerPerformance": "সেলার পারফরম্যান্স",
     "trustPointsTitle": "আপনার রেটিং স্কোর",
+    "tradesCompleted": "সম্পন্ন ট্রেড",
     "viewLeaderboard": "গ্লোবাল লিডারবোর্ড",
     "insights": "ইনসাইটস",
     "totalRevenue": "মোট আয়",

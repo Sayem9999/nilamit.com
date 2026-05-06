@@ -1,14 +1,17 @@
 'use server';
 
-import { db, docData, snapDocs } from '@/lib/db';
+import { db, FieldValue, docData, snapDocs } from '@/lib/db';
 import { Dispute, EscrowTransaction, Auction, User } from '@/types';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { recalculateUserRating } from '@/lib/rating';
 import { requireAdmin } from '@/lib/admin-guard';
+import { updateSellerPerformance } from '@/lib/seller-performance';
 import { log } from '@/lib/logger';
 import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+
+const REFUNDABLE_ESCROW_STATES = new Set(['HELD', 'DISPUTED', 'PENDING', 'VERIFICATION_PENDING']);
 
 export async function raiseDispute(transactionId: string, reason: string): Promise<ServiceResponse<null>> {
   const session = await auth();
@@ -36,7 +39,7 @@ export async function raiseDispute(transactionId: string, reason: string): Promi
       const now = new Date();
       tx.set(disputeRef, {
         id: transactionId, transactionId, openerId: session.user.id,
-        reason, status: 'OPEN', resolution: null, createdAt: now, updatedAt: now,
+        reason: parsed.data.reason, status: 'OPEN', resolution: null, createdAt: now, updatedAt: now,
       });
       tx.update(escrowRef, { status: 'DISPUTED', updatedAt: now });
     });
@@ -52,6 +55,10 @@ export async function raiseDispute(transactionId: string, reason: string): Promi
 export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYER', resolution: string): Promise<ServiceResponse<null>> {
   const adminSession = await requireAdmin();
 
+  const trimmedResolution = resolution?.trim();
+  if (!trimmedResolution) return errorResponse(ErrorType.VALIDATION, 'Resolution notes are required.');
+  if (trimmedResolution.length > 2000) return errorResponse(ErrorType.VALIDATION, 'Resolution notes too long.');
+
   try {
     const { sellerId, buyerId } = await db.runTransaction(async (tx) => {
       const disputeRef = db.collection('disputes').doc(disputeId);
@@ -62,7 +69,13 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
 
       const escrowRef  = db.collection('escrowTransactions').doc(dispute.transactionId);
       const escrowSnap = await tx.get(escrowRef);
-      const escrow     = escrowSnap.data()!;
+      if (!escrowSnap.exists) throw new Error('Escrow not found for dispute');
+      const escrow = escrowSnap.data()!;
+
+      // Guard against an admin-initiated refund/release racing the dispute resolution.
+      if (escrow.status !== 'DISPUTED') {
+        throw new Error(`Cannot resolve: escrow is in ${escrow.status} state, not DISPUTED.`);
+      }
 
       const aRef  = db.collection('auctions').doc(escrow.auctionId);
       const aSnap = await tx.get(aRef);
@@ -73,7 +86,16 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
       const finalDispute = ruling === 'SELLER' ? 'RESOLVED_SELLER' : 'RESOLVED_BUYER';
 
       tx.update(escrowRef,  { status: finalEscrow,  updatedAt: now });
-      tx.update(disputeRef, { status: finalDispute, resolution, updatedAt: now });
+      tx.update(disputeRef, { status: finalDispute, resolution: trimmedResolution, updatedAt: now });
+
+      // Refund mirrors the seller-side accounting from refundEscrow so reputation
+      // stays consistent regardless of which path closes the transaction.
+      if (ruling === 'BUYER' && seller) {
+        tx.update(db.collection('users').doc(seller), {
+          defectCount: FieldValue.increment(1),
+          updatedAt: now,
+        });
+      }
 
       return { sellerId: seller, buyerId: escrow.buyerId as string };
     });
@@ -83,10 +105,16 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
       adminId:   adminSession.user.id,
       targetId:  disputeId,
       ruling,
+      resolution: trimmedResolution,
       createdAt: new Date(),
     });
 
-    if (sellerId) await recalculateUserRating(sellerId);
+    if (sellerId) {
+      await Promise.all([
+        recalculateUserRating(sellerId),
+        ruling === 'BUYER' ? updateSellerPerformance(sellerId) : Promise.resolve(),
+      ]);
+    }
     await recalculateUserRating(buyerId);
 
     revalidatePath('/admin/disputes');
@@ -99,39 +127,65 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
 }
 
 /**
- * Admin override refund — always cancels the linked auction to keep state consistent.
+ * Admin override refund — single source of truth for refunds.
+ * Validates current escrow state, cancels the linked auction, increments
+ * seller defectCount, audit-logs with reason, and updates seller performance.
  */
 export async function adminRefundEscrow(transactionId: string, reason: string): Promise<ServiceResponse<null>> {
   const adminSession = await requireAdmin();
 
+  const trimmedReason = reason?.trim();
+  if (!trimmedReason) return errorResponse(ErrorType.VALIDATION, 'A reason is required for admin refunds.');
+  if (trimmedReason.length > 2000) return errorResponse(ErrorType.VALIDATION, 'Reason too long.');
+
+  let sellerId: string | null = null;
+
   try {
-    await db.runTransaction(async (tx) => {
+    sellerId = await db.runTransaction(async (tx) => {
       const escrowRef  = db.collection('escrowTransactions').doc(transactionId);
       const escrowSnap = await tx.get(escrowRef);
       if (!escrowSnap.exists) throw new Error('Escrow transaction not found');
       const escrow = escrowSnap.data()!;
 
+      if (!REFUNDABLE_ESCROW_STATES.has(escrow.status)) {
+        throw new Error(`Cannot refund escrow in status: ${escrow.status}`);
+      }
+
       const now = new Date();
       tx.update(escrowRef, { status: 'REFUNDED', updatedAt: now });
 
-      // Cancel the auction so it doesn't remain SOLD with an unfulfilled winner
+      let seller: string | null = null;
       if (escrow.auctionId) {
-        tx.update(db.collection('auctions').doc(escrow.auctionId), {
-          status: 'CANCELLED', updatedAt: now,
-        });
+        const aRef  = db.collection('auctions').doc(escrow.auctionId);
+        const aSnap = await tx.get(aRef);
+        seller = (aSnap.data()?.sellerId as string | undefined) ?? null;
+
+        tx.update(aRef, { status: 'CANCELLED', updatedAt: now });
+
+        if (seller) {
+          tx.update(db.collection('users').doc(seller), {
+            defectCount: FieldValue.increment(1),
+            updatedAt: now,
+          });
+        }
       }
+
+      return seller;
     });
 
     await db.collection('admin_logs').add({
       action:    'ADMIN_REFUND_ESCROW',
       adminId:   adminSession.user.id,
       targetId:  transactionId,
-      reason,
+      reason:    trimmedReason,
       createdAt: new Date(),
     });
 
-    log.info(`[Admin] Transaction ${transactionId} refunded. Reason: ${reason}`);
+    if (sellerId) await updateSellerPerformance(sellerId);
+
+    log.info(`[Admin] Transaction ${transactionId} refunded by ${adminSession.user.id}`);
     revalidatePath('/admin/escrow');
+    revalidatePath('/dashboard');
     return successResponse(null);
   } catch (e) {
     log.error('[dispute] adminRefundEscrow failed', e);
@@ -140,10 +194,10 @@ export async function adminRefundEscrow(transactionId: string, reason: string): 
 }
 
 export async function getOpenDisputes(): Promise<ServiceResponse<unknown[]>> {
-  try { 
-    await requireAdmin(); 
-  } catch (_e) { 
-    return errorResponse(ErrorType.FORBIDDEN, 'Admin access required'); 
+  try {
+    await requireAdmin();
+  } catch {
+    return errorResponse(ErrorType.FORBIDDEN, 'Admin access required');
   }
 
   const snap = await db.collection('disputes').where('status', '==', 'OPEN').orderBy('createdAt', 'desc').get();
@@ -182,23 +236,23 @@ export async function getOpenDisputes(): Promise<ServiceResponse<unknown[]>> {
     sellerSnaps.forEach((s) => sellerMap.set(s.id, docData<User>(s)));
   }
 
-    return successResponse(disputes.map((dispute) => {
-      const tx     = txMap.get(dispute.transactionId);
-      const opener = openerMap.get(dispute.openerId);
-      const a      = tx ? auctionMap.get(tx.auctionId)   : null;
-      const buyer  = tx ? buyerMap.get(tx.buyerId)        : null;
-      const seller = a?.sellerId ? (sellerMap.get(a.sellerId) ?? null) : null;
+  return successResponse(disputes.map((dispute) => {
+    const tx     = txMap.get(dispute.transactionId);
+    const opener = openerMap.get(dispute.openerId);
+    const a      = tx ? auctionMap.get(tx.auctionId)   : null;
+    const buyer  = tx ? buyerMap.get(tx.buyerId)        : null;
+    const seller = a?.sellerId ? (sellerMap.get(a.sellerId) ?? null) : null;
 
-      return {
-        ...dispute,
-        transaction: {
-          id:        tx?.id        ?? '',
-          amount:    tx?.amount    ?? 0,
-          auctionId: tx?.auctionId ?? '',
-          auction: { title: a?.title ?? '', seller: { name: seller?.name ?? null } },
-          buyer:   { name: buyer?.name ?? null, email: buyer?.email ?? null },
-        },
-        opener: { name: opener?.name ?? null, email: opener?.email ?? null },
-      };
-    }));
+    return {
+      ...dispute,
+      transaction: {
+        id:        tx?.id        ?? '',
+        amount:    tx?.amount    ?? 0,
+        auctionId: tx?.auctionId ?? '',
+        auction: { title: a?.title ?? '', seller: { name: seller?.name ?? null } },
+        buyer:   { name: buyer?.name ?? null, email: buyer?.email ?? null },
+      },
+      opener: { name: opener?.name ?? null, email: opener?.email ?? null },
+    };
+  }));
 }

@@ -2,20 +2,21 @@
 
 import { db, FieldValue } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recalculateUserRating } from '@/lib/rating';
-import { createLogisticsOrder } from './logistics';
+import { createLogisticsOrder } from '@/lib/logistics';
 import { log } from '@/lib/logger';
 import { randomUUID } from 'crypto';
 import { updateSellerPerformance } from '@/lib/seller-performance';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { adminRefundEscrow } from './dispute';
 
 /**
- * Transitions PENDING → HELD (buyer confirms advance payment).
- * SECURITY: Includes automated logistics protection and notification triggers.
+ * Transitions PENDING → VERIFICATION_PENDING (buyer submits MFS payment ref).
+ * Admin treasury approval transitions VERIFICATION_PENDING → HELD
+ * (see `approveEscrowPayment` in actions/admin/treasury.ts).
  */
 export async function payEscrowAdvance(transactionId: string, providerRef?: string): Promise<ServiceResponse<null>> {
   const session = await auth();
@@ -34,7 +35,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       const aRef  = db.collection('auctions').doc(t.auctionId);
       const aSnap = await tx.get(aRef);
       if (!aSnap.exists) throw new Error('Auction not found');
-      
+
       const auction = { ...aSnap.data()!, id: aSnap.id } as {
         id: string; sellerId: string; title: string; [key: string]: unknown
       };
@@ -46,29 +47,39 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       if (!buyer.bkashNumber && !buyer.nagadNumber) {
         throw new Error('MFS_LINKAGE_REQUIRED');
       }
+      if (!buyer.address) {
+        throw new Error('ADDRESS_REQUIRED');
+      }
+
+      // Look up seller's address inside the same transaction so logistics
+      // can be created consistently after commit. Both addresses become
+      // visible only to the buyer/seller pair (see logistics module).
+      const sellerSnap = await tx.get(db.collection('users').doc(auction.sellerId));
+      const seller = sellerSnap.data() || {};
+      if (!seller.address) {
+        throw new Error('SELLER_ADDRESS_MISSING');
+      }
 
       const ref = providerRef ?? `PAY-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 
-      // 1. Update Escrow Status
       tx.update(txRef, {
-        status:           'VERIFICATION_PENDING', 
+        status:           'VERIFICATION_PENDING',
         paymentMethod:    'mfs_manual',
         providerRef:      ref,
         verificationType: 'MANUAL',
         updatedAt:        new Date(),
       });
 
-      // 2. Initialize Conversation if missing
       const convRef  = db.collection('conversations').doc(t.auctionId);
       const convSnap = await tx.get(convRef);
       if (!convSnap.exists) {
         const now = new Date();
         tx.set(convRef, {
-          id: t.auctionId, 
-          auctionId: t.auctionId, 
+          id: t.auctionId,
+          auctionId: t.auctionId,
           buyerId: t.buyerId,
-          sellerId: auction.sellerId, 
-          lastMessageAt: now, 
+          sellerId: auction.sellerId,
+          lastMessageAt: now,
           lastMessageContent: 'Escrow payment submitted for verification.',
           lastMessageSenderId: 'system',
           createdAt: now,
@@ -76,15 +87,25 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         });
       }
 
-      return { auction, buyer, ref };
+      return {
+        auction,
+        buyerAddress:  buyer.address as string,
+        sellerAddress: seller.address as string,
+        ref,
+      };
     });
 
-    // Post-transaction side-effects (non-blocking but logged)
+    // Post-transaction side-effects. Logistics call is now an internal helper
+    // (server-only, not 'use server'), bypassing the public Server Action surface.
     try {
-      // Logistics order is deferred until Admin verification for physical goods
-      // but we prepare the placeholder here for tracking.
-      await createLogisticsOrder(result.auction.id, result.auction.sellerId as string, session.user.id);
-      
+      await createLogisticsOrder({
+        auctionId:       result.auction.id,
+        sellerId:        result.auction.sellerId as string,
+        buyerId:         session.user.id,
+        sellerAddress:   result.sellerAddress,
+        buyerAddress:    result.buyerAddress,
+      });
+
       await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId as string), {
         event:        FIREBASE_EVENTS.ADVANCE_PAID,
         auctionId:    result.auction.id,
@@ -121,23 +142,21 @@ export async function confirmItemReceived(transactionId: string): Promise<Servic
       if (t.buyerId !== session.user.id) throw new Error('Unauthorized');
       if (t.status !== 'HELD')           throw new Error('Not in a holdable state');
 
-      tx.update(txRef, { status: 'RELEASED', updatedAt: new Date() });
+      const now = new Date();
+      tx.update(txRef, { status: 'RELEASED', updatedAt: now });
 
       const aRef = db.collection('auctions').doc(t.auctionId);
-      tx.update(aRef, { deliveryStatus: 'DELIVERED', updatedAt: new Date() });
+      tx.update(aRef, { deliveryStatus: 'DELIVERED', updatedAt: now });
 
-      // Increment seller's sales count
-      const sellerRef = db.collection('users').doc(t.sellerId);
-      tx.update(sellerRef, { 
+      tx.update(db.collection('users').doc(t.sellerId), {
         salesCount: FieldValue.increment(1),
-        updatedAt: new Date() 
+        updatedAt:  now,
       });
 
       return t;
     });
 
-    // Reliability: Trigger background updates without blocking response
-    (async () => {
+    void (async () => {
       try {
         const aSnap    = await db.collection('auctions').doc(result.auctionId).get();
         const sellerId = aSnap.data()?.sellerId as string | undefined;
@@ -191,7 +210,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
 
       const aRef  = db.collection('auctions').doc(t.auctionId);
       const aSnap = await tx.get(aRef);
-      if (!aSnap.exists)                           throw new Error('Auction not found');
+      if (!aSnap.exists)                              throw new Error('Auction not found');
       if (aSnap.data()!.sellerId !== session.user.id) throw new Error('Unauthorized');
 
       tx.update(aRef, { deliveryStatus: 'SHIPPED', trackingNumber: safeTracking, updatedAt: new Date() });
@@ -216,61 +235,11 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
 }
 
 /**
- * Refund escrow — SECURITY CRITICAL: Admins only.
+ * Refund escrow — admin only. Delegates to the consolidated `adminRefundEscrow`
+ * so reason validation, status checks, defect-count, and audit logging stay in
+ * one place. Kept for backwards compatibility with existing UI buttons that
+ * don't yet collect a reason.
  */
-export async function refundEscrow(transactionId: string): Promise<ServiceResponse<null>> {
-  const adminSession = await requireAdmin().catch(() => null);
-  if (!adminSession) {
-    return errorResponse(ErrorType.FORBIDDEN, 'Access Denied: Admin intervention required for refunds.');
-  }
-
-  try {
-    await db.runTransaction(async (t) => {
-      const txRef  = db.collection('escrowTransactions').doc(transactionId);
-      const txSnap = await t.get(txRef);
-      if (!txSnap.exists) throw new Error('Not found');
-
-      const txData = txSnap.data()!;
-      if (!['HELD', 'DISPUTED', 'PENDING'].includes(txData.status)) {
-        throw new Error(`Cannot refund escrow in status: ${txData.status}`);
-      }
-
-      t.update(txRef, { status: 'REFUNDED', updatedAt: new Date() });
-      
-      const aRef = db.collection('auctions').doc(txData.auctionId);
-      const aSnap = await t.get(aRef);
-      const auctionData = aSnap.data();
-
-      t.update(aRef, {
-        status: 'CANCELLED', updatedAt: new Date(),
-      });
-
-      if (auctionData?.sellerId) {
-        t.update(db.collection('users').doc(auctionData.sellerId), {
-          defectCount: FieldValue.increment(1),
-          updatedAt: new Date(),
-        });
-      }
-
-      return auctionData?.sellerId;
-    }).then(async (sellerId) => {
-      if (sellerId) {
-        await updateSellerPerformance(sellerId);
-      }
-    });
-
-    // Audit log for all admin financial actions
-    await db.collection('admin_logs').add({
-      action:    'REFUND_ESCROW',
-      adminId:   adminSession.user.id,
-      targetId:  transactionId,
-      createdAt: new Date(),
-    });
-
-    revalidatePath('/dashboard');
-    return successResponse(null);
-  } catch (e) {
-    log.error('[escrow] refundEscrow failed', e);
-    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Refund failed');
-  }
+export async function refundEscrow(transactionId: string, reason = 'Admin-initiated refund (no reason provided)'): Promise<ServiceResponse<null>> {
+  return adminRefundEscrow(transactionId, reason);
 }

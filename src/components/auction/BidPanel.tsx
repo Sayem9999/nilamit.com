@@ -3,8 +3,23 @@
 import { useState, useTransition, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { placeBid, executeBuyItNow } from "@/actions/bid";
-import confetti from "canvas-confetti";
 import { formatBDT } from "@/lib/format";
+
+// Lazy-load confetti so it doesn't ship in the initial bundle of every auction page.
+type ConfettiOpts = {
+  particleCount?: number;
+  spread?: number;
+  origin?: { x?: number; y?: number };
+  colors?: string[];
+};
+async function fireConfetti(opts: ConfettiOpts) {
+  try {
+    const mod = await import("canvas-confetti");
+    (mod.default as (o: ConfettiOpts) => void)(opts);
+  } catch {
+    /* non-critical */
+  }
+}
 import {
   TrendingUp,
   AlertCircle,
@@ -70,17 +85,18 @@ export function BidPanel({
 
   const minBid = displayPrice + minBidIncrement;
 
-  // 🔄 Sync bid amount when global price changes
-  const prevMinBidRef = useRef(minBid);
+  // Track whether the user has manually edited the input. Without this we'd
+  // overwrite their custom amount whenever it happens to equal the previous
+  // minimum after a competing bid lands.
+  const userTouchedRef = useRef(false);
   const [bidAmount, setBidAmount] = useState(minBid);
   useEffect(() => {
-    // If the user's bid is now too low, or if they were resting on the previous 
-    // minimum and hasn't manually entered a custom amount, bump them to the new min.
-    if (bidAmount < minBid || bidAmount === prevMinBidRef.current) {
+    // Bump the input to the new minimum if (a) it's now invalid, or
+    // (b) the user hasn't typed anything custom yet.
+    if (bidAmount < minBid || !userTouchedRef.current) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setBidAmount(minBid);
     }
-    prevMinBidRef.current = minBid;
   }, [minBid, bidAmount]);
 
   const [isPending, startTransition] = useTransition();
@@ -139,15 +155,16 @@ export function BidPanel({
     startTransition(async () => {
       const res = await placeBid(auctionId, bidAmount);
       setResult(res);
-      
+
       if (res.success) {
-        confetti({
+        fireConfetti({
           particleCount: 150,
           spread: 70,
           origin: { y: 0.6 },
           colors: ['#6366f1', '#a855f7', '#ec4899']
         });
 
+        userTouchedRef.current = false;
         setBidAmount(bidAmount + minBidIncrement);
         onBidPlaced?.();
       } else {
@@ -159,6 +176,7 @@ export function BidPanel({
         
         const newMin = (res.error?.details as { newMinimum?: number } | undefined)?.newMinimum;
         if (res.error?.code === ERROR_CODES.BID_TOO_LOW && newMin) {
+          userTouchedRef.current = false;
           setBidAmount(newMin);
         }
         
@@ -191,7 +209,7 @@ export function BidPanel({
       setResult(res);
       if (res.success) {
         playGavel();
-        confetti({
+        fireConfetti({
           particleCount: 200,
           spread: 100,
           origin: { y: 0.6 },
@@ -293,7 +311,7 @@ export function BidPanel({
             <input
               type="number"
               value={bidAmount}
-              onChange={(e) => setBidAmount(Number(e.target.value))}
+              onChange={(e) => { userTouchedRef.current = true; setBidAmount(Number(e.target.value)); }}
               min={minBid}
               step={minBidIncrement}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 price text-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
@@ -305,7 +323,7 @@ export function BidPanel({
             {quickBids.map((amount) => (
               <button
                 key={amount}
-                onClick={() => setBidAmount(amount)}
+                onClick={() => { userTouchedRef.current = true; setBidAmount(amount); }}
                 className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
                   bidAmount === amount ? "bg-primary-50 border-primary-200 text-primary-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}

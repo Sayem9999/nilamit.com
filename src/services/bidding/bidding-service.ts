@@ -212,12 +212,19 @@ export class BiddingService {
     );
 
     const targetReached = triggered.filter((a) => a.type === 'TARGET_REACHED');
+    // Advisory deactivation — running outside a transaction is intentional
+    // (cost: at most a duplicate notification on contention). Chunk to stay
+    // within Firestore's 500-write batch limit.
     if (targetReached.length > 0) {
-      const batch = db.batch();
-      for (const a of targetReached) {
-        batch.update(db.collection('alerts').doc(a.id), { isActive: false });
+      const BATCH_LIMIT = 450;
+      for (let i = 0; i < targetReached.length; i += BATCH_LIMIT) {
+        const slice = targetReached.slice(i, i + BATCH_LIMIT);
+        const batch = db.batch();
+        for (const a of slice) {
+          batch.update(db.collection('alerts').doc(a.id), { isActive: false });
+        }
+        await batch.commit();
       }
-      await batch.commit();
     }
 
     return triggered;
@@ -326,7 +333,10 @@ export class BiddingService {
 
       const now = new Date();
       const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
-      
+      if (!(endTime instanceof Date) || isNaN(endTime.getTime())) {
+        throw new Error(ERROR_CODES.AUCTION_ENDED);
+      }
+
       if (now < new Date(auction.startTime || 0)) throw new Error('AUCTION_NOT_STARTED');
       if (now >= endTime) throw new Error(ERROR_CODES.AUCTION_ENDED);
       if (auction.sellerId === userId) throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);

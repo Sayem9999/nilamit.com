@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Menu,
   X,
@@ -18,21 +18,26 @@ import {
   ChevronDown,
   LogOut,
 } from "lucide-react";
-import { useTranslations, useLocale } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { logoutAction } from "@/actions/auth";
 
 export function Navbar() {
   const { data: session } = useSession();
-  const locale = useLocale();
   const t = useTranslations("Navigation");
-  const router = useRouter();
-  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const handleSignOut = useCallback(async () => {
+    try {
+      await signOut({ redirect: false });
+      await logoutAction();
+      window.location.href = "/login?signout=success";
+    } catch (e) {
+      console.error("SignOut flow failed", e);
+      window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/login`)}`;
+    }
+  }, []);
 
-
-
+  const isVerified = !!(session?.user?.isPhoneVerified || session?.user?.emailVerified);
   return (
     <nav className="sticky top-0 z-50 glass !bg-white/70 border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -137,7 +142,7 @@ export function Navbar() {
                           </div>
                         )}
                         <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center shadow-sm">
-                          {session?.user?.isPhoneVerified || !!session?.user?.emailVerified ? (
+                          {isVerified ? (
                             <ShieldCheck className="w-2.5 h-2.5 text-blue-500 fill-blue-500" />
                           ) : (
                             <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
@@ -157,7 +162,7 @@ export function Navbar() {
                     <div className="absolute right-0 top-full pt-2 w-56 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all translate-y-2 group-hover:translate-y-0 scale-95 group-hover:scale-100 origin-top-right z-50">
                       <div className="bg-white rounded-[1.5rem] shadow-2xl border border-gray-100 p-1.5 overflow-hidden">
                         <div className="px-4 py-3 border-b border-gray-50 mb-1">
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t("signedInAs") || "Signed in as"}</p>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">{t("signedInAs")}</p>
                           <p className="text-xs font-bold text-gray-900 truncate">{session.user?.email}</p>
                         </div>
                       <Link
@@ -167,7 +172,7 @@ export function Navbar() {
                         <div className="flex items-center gap-2.5">
                           <User className="w-4 h-4" /> {t("profile")}
                         </div>
-                        {session?.user?.isPhoneVerified || !!session?.user?.emailVerified ? (
+                        {isVerified ? (
                           <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
                             {t("verified")}
                           </span>
@@ -178,24 +183,7 @@ export function Navbar() {
                         )}
                       </Link>
                       <button
-                        onClick={async () => {
-                          try {
-                            // 1. Trigger Auth.js SignOut
-                            await signOut({ 
-                              redirect: false,
-                            });
-                            
-                            // 2. Clear server-side session via Action
-                            await logoutAction();
-                            
-                            // 3. Force full browser state clear & redirect
-                            window.location.href = "/login?signout=success";
-                            window.location.reload(); 
-                          } catch (e) {
-                            console.error("SignOut flow failed", e);
-                            window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/login`)}`;
-                          }
-                        }}
+                        onClick={handleSignOut}
                         className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 w-full text-left rounded-xl transition-all font-bold"
                       >
                         <LogOut className="w-4 h-4" /> {t("signout")}
@@ -278,18 +266,7 @@ export function Navbar() {
                       {t("profile")}
                     </Link>
                     <button
-                      onClick={async () => {
-                        try {
-                          await signOut({ redirect: false });
-                          await logoutAction();
-                          window.location.href = "/login?signout=success";
-                          window.location.reload();
-                        } catch (e) {
-                          console.error("Mobile SignOut failed", e);
-                          window.location.href = `/api/auth/signout?callbackUrl=${encodeURIComponent(`${window.location.origin}/login`)}`;
-                        }
-                        setMobileMenuOpen(false);
-                      }}
+                      onClick={() => { setMobileMenuOpen(false); handleSignOut(); }}
                       className="block w-full text-left px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all"
                     >
                       {t("signout")}

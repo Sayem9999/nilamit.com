@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-guard";
 import { getAdminStats } from "@/actions/admin";
 import { getSystemConfig, getFeaturedAuctions } from "@/actions/admin-content";
 import { AdminLayout } from "./AdminLayout";
@@ -144,14 +144,10 @@ function StatCard({
 
 
 export default async function AdminPage() {
-  // Gate: redirect to login if not authenticated or not an admin.
-  // requireAdmin() inside the actions would throw a plain Error which Next.js
-  // surfaces as a 500 Application Error page — redirect is cleaner UX.
-  const session = await auth();
-  const user = session?.user as ({ id?: string; isAdmin?: boolean }) | undefined;
-  if (!user?.id || !user?.isAdmin) {
-    redirect("/login");
-  }
+  // DB-deep admin gate — JWT alone is insufficient because revoked admins
+  // retain a valid session token until expiry.
+  const session = await requireAdmin().catch(() => null);
+  if (!session) redirect("/login");
 
   const [systemConfigRes, featuredAuctionsRes, adminStatsRes] = await Promise.all([
     getSystemConfig(),
