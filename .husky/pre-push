@@ -1,0 +1,9 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Automatically deploy Firestore rules and indexes when pushing to the main branch
+current_branch=$(git branch --show-current)
+if [ "$current_branch" = "main" ]; then
+  echo "🚀 [Husky] Automating Firestore Rules & Indexes Deployment..."
+  npx firebase deploy --only firestore --project=nilamit-52073 || echo "⚠️ [Husky] Firebase CLI not authenticated or offline. Skipping auto-indexing."
+fi
