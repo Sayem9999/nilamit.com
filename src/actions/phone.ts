@@ -8,10 +8,9 @@ import {
   phoneOtpSendLimiter,
   phoneOtpVerifyLimiter,
   emailOtpSendLimiter,
-  emailOtpVerifyLimiter,
 } from '@/lib/ratelimit';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 import crypto from 'crypto';
 
 const OTP_EXPIRY_MS        = 5 * 60 * 1000;
@@ -139,10 +138,9 @@ async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
   const hashedOTP = hashOTP(otp);
   const now       = new Date();
 
+  // 1. Fetch the latest pending verification doc for this phone number
   let query: FirebaseFirestore.Query = db.collection('phoneVerifications')
     .where('phone', '==', phone)
-    .where('otp', '==', hashedOTP)
-    .where('expiresAt', '>', now)
     .where('verified', '==', false);
   if (userId) query = query.where('userId', '==', userId);
   query = query.orderBy('createdAt', 'desc').limit(1);
@@ -150,23 +148,33 @@ async function internalVerifyOTP(phone: string, otp: string, userId?: string) {
   const snap = await query.get();
 
   if (snap.empty) {
-    // Increment attempt counter on the latest pending doc so MAX_ATTEMPTS is enforced
-    const latestSnap = await db.collection('phoneVerifications')
-      .where('phone', '==', phone)
-      .where('verified', '==', false)
-      .orderBy('createdAt', 'desc')
-      .limit(1).get();
-    if (!latestSnap.empty) {
-      const latest = latestSnap.docs[0];
-      if ((latest.data().attempts ?? 0) < MAX_ATTEMPTS) {
-        await latest.ref.update({ attempts: (latest.data().attempts ?? 0) + 1 });
-      }
-    }
+    return errorResponse(ErrorType.VALIDATION, 'Invalid or expired OTP.');
+  }
+
+  const latestDoc = snap.docs[0];
+  const latestData = latestDoc.data();
+
+  // 2. Enforce MAX_ATTEMPTS
+  if ((latestData.attempts ?? 0) >= MAX_ATTEMPTS) {
+    return errorResponse(ErrorType.RATE_LIMIT, 'Too many verification attempts. Please request a new code.');
+  }
+
+  // 3. Check expiration
+  const { toDate: fsToDate } = await import('@/lib/db');
+  if (fsToDate(latestData.expiresAt) < now) {
+    return errorResponse(ErrorType.VALIDATION, 'Verification code has expired.');
+  }
+
+  // 4. Verify OTP hash
+  if (latestData.otp !== hashedOTP) {
+    await latestDoc.ref.update({
+      attempts: (latestData.attempts ?? 0) + 1
+    });
     return errorResponse(ErrorType.VALIDATION, 'Invalid or expired OTP.');
   }
 
   // Delete on consumption — spent OTPs have no audit value and bloat rate-limit queries
-  await snap.docs[0].ref.delete();
+  await latestDoc.ref.delete();
   return successResponse(null);
 }
 

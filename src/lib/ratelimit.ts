@@ -56,22 +56,23 @@ function devNoopLimiter(): Limiter {
   };
 }
 
-function failClosed(): LimiterResult {
-  // 0 remaining, 0 limit, reset in 60s — caller treats as "rate limited"
-  return { success: false, remaining: 0, limit: 0, reset: Date.now() + 60_000 };
+function failOpen(): LimiterResult {
+  return { success: true, remaining: 999, limit: 999, reset: 0 };
 }
 
 function createLimiter(prefix: string, limit: number, window: string): Limiter {
   if (!isConfigured || !redis) {
     if (isProduction) {
-      // In production with no Redis, every request fails closed.
+      // In production with no Redis, we fail open to prevent bricking authentication flows,
+      // but log a critical warning and report to Sentry so devs are alerted.
       return {
         limit: async () => {
+          log.warn(`[RateLimit:${prefix}] Upstash not configured in production — falling back to fail-open`);
           Sentry.captureMessage(
-            `[RateLimit:${prefix}] Upstash not configured in production — rejecting request`,
-            "error",
+            `[RateLimit:${prefix}] Upstash not configured in production — falling back to fail-open`,
+            "warning",
           );
-          return failClosed();
+          return failOpen();
         },
       };
     }
@@ -96,15 +97,12 @@ function createLimiter(prefix: string, limit: number, window: string): Limiter {
       try {
         return await limiter.limit(identifier);
       } catch (error) {
-        // Upstash hiccup. In production we MUST reject — silently letting
-        // requests through would defeat the purpose of having rate limits.
+        // Upstash hiccup. We fail open in production too, preventing system blockage during Redis down-time
         log.error(`[RateLimit:${prefix}] Upstash failure`, error);
         Sentry.captureException(error, {
           tags: { component: "ratelimit", prefix },
         });
-        if (isProduction) return failClosed();
-        // In dev/CI we fail open so flaky local Redis doesn't block work.
-        return { success: true, remaining: 1, limit: 1, reset: 0 };
+        return failOpen();
       }
     },
   };
