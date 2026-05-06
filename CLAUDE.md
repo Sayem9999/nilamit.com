@@ -14,7 +14,11 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **Live URL:** `https://nilamit--nilamit-52073.asia-southeast1.hosted.app`
 
-**Admin panel:** `/en/admin` — requires `isAdmin: true` in JWT (derived from `ADMIN_EMAILS=sayemf21@gmail.com`)
+**Admin panel:** `/admin` — gated by `requireAdmin()` in [src/lib/admin-guard.ts](src/lib/admin-guard.ts) (DB-deep check, not JWT-only). Admin emails come from `ADMIN_EMAILS` (`sayemf21@gmail.com`).
+
+**Cron:** GitHub Actions workflow in [.github/workflows/cron.yml](.github/workflows/cron.yml) hits the `/api/cron/*` POST endpoints with `Bearer ${CRON_SECRET}`. There is **no** Cloud Scheduler. Five jobs scheduled: `close-auctions` + `process-alerts` (every 5 min), `closing-soon` (every 15 min), `enforce-policies` (hourly), `gc-uploads` (weekly Sun 04:00 UTC).
+
+**i18n:** English-only. `next-intl` is wired as the message-loading layer for future expansion but only `messages/en.json` ships. Adding a locale = update `src/i18n/routing.ts` + `src/i18n.ts` + add `messages/<locale>.json`.
 
 ## Documentation
 
@@ -50,7 +54,11 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 11. **Authorized PII Gating** — Never return user phone numbers or emails in public actions or views. Use `AuctionService.getById(id, userId)` to gate sensitive data based on the viewer's role (seller or winner).
 
-12. **Secure Uploads** — All image uploads must use the `/api/upload` endpoint (magic-byte validation). Never allow direct client-side storage uploads for user content.
+12. **Secure Uploads** — All image uploads must use the `/api/upload` endpoint (magic-byte + Cloud Vision SafeSearch validation). Never allow direct client-side storage uploads for user content. Auction images are served via 90-day signed URLs (revocable on object delete) — never call `makePublic()`.
+
+13. **Logistics writes go through `src/lib/logistics.ts`, not Server Actions.** `createLogisticsOrder` takes pre-loaded addresses from a transaction; never re-export it as `'use server'`. Admin-only override is exposed via `src/actions/logistics.ts::updateLogisticsStatus()`.
+
+14. **Refunds go through `adminRefundEscrow()` in `src/actions/dispute.ts`.** Single source of truth — validates escrow status, increments `defectCount`, writes to `admin_logs`, kicks off seller-performance recompute. `refundEscrow()` in `src/actions/escrow.ts` is a thin compat shim.
 
 ---
 
@@ -94,12 +102,17 @@ Browser (React 19)
 | `src/actions/chat.ts` | `sendMessage()` — validated, PII-filtered, stores buyerId/sellerId |
 | `src/actions/review.ts` | Reviews — batch-fetched, reputation capped at 100 reviews |
 | `src/actions/user.ts` | `updateProfile()` (validated), `getPublicProfile()` (count aggregations) |
-| `src/middleware.ts` | Auth check, ban redirect, i18n routing |
-| `src/app/[locale]/admin/page.tsx` | Checks `isAdmin` and redirects before fetching |
-| `src/app/api/cron/` | 4 cron routes — all POST, all `verifyCronSecret()` |
-| `firestore.rules` | `allow write: if false` everywhere |
+| `src/middleware.ts` | Auth check, ban redirect, legacy `/en/*` → `/*` redirect |
+| `src/app/admin/page.tsx` | Calls `requireAdmin()` + `redirect('/login')` before fetching |
+| `src/app/admin/disputes/page.tsx` | Server-side admin gate; client at `AdminDisputesClient.tsx` |
+| `src/app/api/cron/` | 5 cron routes — all POST, all `verifyCronSecret()` |
+| `src/lib/logistics.ts` | Internal `server-only` module — caller must pass pre-loaded addresses |
+| `src/lib/image-moderation.ts` | Cloud Vision SafeSearch wrapper — auto-skips when `IMAGE_MODERATION != "enabled"` |
+| `src/app/api/cron/gc-uploads/` | Weekly GC for orphaned Storage objects |
+| `.github/workflows/cron.yml` | The actual scheduler — all 5 cron jobs live here |
+| `firestore.rules` | `allow write: if false` everywhere; `isAdmin` claim from `/api/firebase/token` |
 | `firestore.indexes.json` | All composite indexes — update and `firebase deploy --only firestore:indexes` |
-| `apphosting.yaml` | Firebase App Hosting config + all 16 secret mappings |
+| `apphosting.yaml` | Firebase App Hosting config + secret mappings + `IMAGE_MODERATION` flag |
 | `cloudbuild.yaml` | Build pipeline — uses `npm install` (not `npm ci`, see Known Issues) |
 | `messages/en.json` | English translations — every `useTranslations` key must be defined here |
 
@@ -164,6 +177,7 @@ DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (ad
 | `UPSTASH_REDIS_REST_URL` | ✓ Real | `https://safe-stallion-50421.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | ✓ Real | Real Upstash token |
 | `GREENWEB_TOKEN` | ⚠️ Placeholder | `"console"` — OTPs log to stdout, not real SMS |
+| `IMAGE_MODERATION` | env var | Set to `enabled` (May 2026); disable here to bypass Cloud Vision SafeSearch |
 
 ---
 
