@@ -127,13 +127,20 @@ placeBid(auctionId, amount)
 ## Escrow State Machine
 
 ```
-PENDING → payEscrowAdvance()       → HELD
-HELD    → confirmItemReceived()    → RELEASED
-HELD    → raiseDispute()           → DISPUTED
-HELD    → refundEscrow() (admin)   → REFUNDED
-HELD    → resolveAdminDispute()    → RELEASED or REFUNDED
-DISPUTED→ resolveAdminDispute()    → RELEASED or REFUNDED
+PENDING              → payEscrowAdvance()       → VERIFICATION_PENDING
+VERIFICATION_PENDING → approveEscrowPayment()   → HELD          (admin; src/actions/admin/treasury.ts:81)
+HELD                 → confirmItemReceived()    → RELEASED
+HELD                 → markAsShipped()          → HELD          (status stays; sets deliveryStatus=SHIPPED)
+HELD                 → raiseDispute()           → DISPUTED
+HELD                 → adminRefundEscrow()      → REFUNDED      (admin; src/actions/dispute.ts)
+PENDING              → adminRefundEscrow()      → REFUNDED      (admin)
+VERIFICATION_PENDING → adminRefundEscrow()      → REFUNDED      (admin)
+DISPUTED             → adminRefundEscrow()      → REFUNDED      (admin)
+DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (admin)
 ```
+
+`refundEscrow()` is a thin backwards-compat wrapper that delegates to
+`adminRefundEscrow()` — never call it directly in new code.
 
 ---
 
