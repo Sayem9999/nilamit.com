@@ -6,9 +6,10 @@
  * `closeAllEndedAuctions` function and would race on the same expiring
  * auctions. Prefer scheduling /api/cron/close-auctions.
  *
- * This file re-exports the close-auctions handler so removing one of the
- * two from Cloud Scheduler is the only operational change required to
- * eliminate the duplicate.
+ * Next.js' route-segment-config validator rejects re-exports of `dynamic`,
+ * so we declare it locally and only forward the POST handler.
  */
 
-export { POST, dynamic } from '../close-auctions/route';
+export const dynamic = 'force-dynamic';
+
+export { POST } from '../close-auctions/route';
