@@ -1,48 +1,9 @@
-import { db } from "@/lib/db";
+import { getLeaderboardData } from "@/actions/social";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BadgeList } from "@/components/social/BadgeDisplay";
 import { Trophy, Flame, TrendingUp } from "lucide-react";
 import { type BadgeType } from "@/lib/gamification-config";
-import { type User } from "@/types";
-
-export async function getLeaderboardData() {
-  const streaksSnap = await db.collection('users')
-    .where('winningStreak', '>', 0)
-    .orderBy('winningStreak', 'desc')
-    .limit(5)
-    .get();
-
-  const topStreaks = streaksSnap.docs.map(doc => {
-    const data = doc.data() as User & { badges?: { badgeId: string }[] };
-    return {
-      id: doc.id,
-      name: data.name,
-      image: data.image,
-      winningStreak: data.winningStreak || 0,
-      badges: data.badges || [],
-    };
-  });
-
-  const buyersSnap = await db.collection('users')
-    .orderBy('rating', 'desc')
-    .limit(5)
-    .get();
-
-  const topBuyers = buyersSnap.docs.map(doc => {
-    const data = doc.data() as User & { badges?: { badgeId: string }[] };
-    return {
-      id: doc.id,
-      name: data.name,
-      image: data.image,
-      badges: data.badges || [],
-      rating: data.rating || 3.5,
-    };
-  });
-
-  return { topStreaks, topBuyers };
-}
-
 export default async function Leaderboard() {
   const { topStreaks, topBuyers } = await getLeaderboardData();
 

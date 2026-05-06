@@ -75,3 +75,40 @@ export async function getUserConversations() {
     };
   }));
 }
+
+export async function getLeaderboardData() {
+  const streaksSnap = await db.collection('users')
+    .where('winningStreak', '>', 0)
+    .orderBy('winningStreak', 'desc')
+    .limit(5)
+    .get();
+
+  const topStreaks = streaksSnap.docs.map(doc => {
+    const data = doc.data() as User & { badges?: { badgeId: string }[] };
+    return {
+      id: doc.id,
+      name: data.name,
+      image: data.image,
+      winningStreak: data.winningStreak || 0,
+      badges: data.badges || [],
+    };
+  });
+
+  const buyersSnap = await db.collection('users')
+    .orderBy('rating', 'desc')
+    .limit(5)
+    .get();
+
+  const topBuyers = buyersSnap.docs.map(doc => {
+    const data = doc.data() as User & { badges?: { badgeId: string }[] };
+    return {
+      id: doc.id,
+      name: data.name,
+      image: data.image,
+      badges: data.badges || [],
+      rating: data.rating || 3.5,
+    };
+  });
+
+  return { topStreaks, topBuyers };
+}

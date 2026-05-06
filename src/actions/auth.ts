@@ -50,6 +50,7 @@ export async function registerUser(data: unknown): Promise<ServiceResponse<{ mes
     await userRef.set({
       id: userRef.id,
       name,
+      nameLowercase: name.toLowerCase(),
       email,
       password: hashedPassword,
       isRetailer,
@@ -127,6 +128,7 @@ export async function signupWithPhone(data: unknown): Promise<ServiceResponse<{ 
     await userRef.set({
       id: userRef.id,
       name,
+      nameLowercase: name.toLowerCase(),
       phone,
       email: email || null,
       password: hashedPassword,

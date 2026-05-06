@@ -91,8 +91,8 @@ export async function getAdminUsers(opts: {
     let query: FirebaseFirestore.Query = db.collection('users');
 
     if (opts.search?.trim()) {
-      const s = opts.search.trim();
-      query = query.where('name', '>=', s).where('name', '<=', s + '\uf8ff');
+      const s = opts.search.trim().toLowerCase();
+      query = query.where('nameLowercase', '>=', s).where('nameLowercase', '<=', s + '\uf8ff');
     }
 
     query = query.orderBy('createdAt', 'desc');
