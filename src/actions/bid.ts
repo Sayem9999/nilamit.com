@@ -38,7 +38,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
 
   const h = await headers();
   const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
-  // bidLimiter already fail-closes in production on Redis unavailability (see ratelimit.ts).
+  // bidLimiter is fail-closed in production (see ratelimit.ts).
   const { success: rateLimitOk } = await bidLimiter.limit(`bid_${userId}_${ip}`);
   if (!rateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, 'Too many bids placed rapidly. Please wait a moment.');
 
@@ -103,9 +103,13 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
         attempts++;
         const message = error instanceof Error ? error.message : '';
         
-        // Handle outbid / bid too low gracefully without retrying
+        // Handle outbid / bid too low gracefully without retrying.
+        // Format: `BID_TOO_LOW: ৳<amount>` — extract digits only from the trailing
+        // amount portion to avoid concatenating digits embedded in the prefix.
         if (message.startsWith(ERROR_CODES.BID_TOO_LOW)) {
-           return errorResponse(ErrorType.CONFLICT, message, ERROR_CODES.BID_TOO_LOW, { newMinimum: parseInt(message.replace(/\D/g, '')) });
+          const amountPart = message.slice(ERROR_CODES.BID_TOO_LOW.length);
+          const newMinimum = parseInt(amountPart.replace(/\D/g, ''), 10) || undefined;
+          return errorResponse(ErrorType.CONFLICT, message, ERROR_CODES.BID_TOO_LOW, { newMinimum });
         }
         
         // Only retry on transient contention/transaction errors

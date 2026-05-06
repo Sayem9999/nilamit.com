@@ -1,11 +1,11 @@
 /**
- * GET /api/cron/close-auctions
+ * POST /api/cron/close-auctions
  *
  * Closes all ACTIVE auctions whose endTime has passed.
- * Called every minute by Vercel Cron (or external scheduler).
+ * Scheduled every minute by Cloud Scheduler.
  *
  * Features:
- *  - Authorization via CRON_SECRET header
+ *  - Authorization via CRON_SECRET (Bearer or x-cron-secret header)
  *  - Retry logic with exponential backoff (up to 3 attempts)
  *  - Structured success/error response
  */

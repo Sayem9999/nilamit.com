@@ -6,7 +6,7 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 ## What This Project Is
 
-**nilamit.app** is a live production C2C auction marketplace for Bangladesh. Users list items, others bid in real-time, and the winner pays through an escrow system backed by bKash/Nagad mobile money. Bilingual: English + Bengali.
+**nilamit.app** is a live production C2C auction marketplace for Bangladesh. Users list items, others bid in real-time, and the winner pays through an escrow system backed by bKash/Nagad mobile money. English-only (Bengali was dropped — `next-intl` is still wired as the message-loading layer but only `en.json` ships).
 
 **Stack:** Next.js 16 App Router, Firebase (Firestore + RTDB + Storage + Auth), Auth.js v5, Upstash Redis, Sentry (EU region), Tailwind CSS 4.
 
@@ -44,7 +44,7 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 8. **After running `npm install`, always re-patch `@emnapi` in the lockfile** (see Known Issues below).
 
-9. **After adding i18n keys to a component, add them to BOTH `messages/en.json` AND `messages/bn.json`** under the correct namespace. Missing keys throw `MISSING_MESSAGE` exceptions that crash Server Components in production.
+9. **After adding i18n keys to a component, add them to `messages/en.json`** under the correct namespace. Missing keys throw `MISSING_MESSAGE` exceptions that crash Server Components in production. (English-only deployment — see `src/i18n/routing.ts`.)
 
 10. **Admin pages must check `isAdmin` and redirect before fetching data.** If `requireAdmin()` throws, Next.js shows a 500 error page. Always use `auth()` check + `redirect('/login')` at the top of admin Server Components.
 
@@ -101,8 +101,7 @@ Browser (React 19)
 | `firestore.indexes.json` | All composite indexes — update and `firebase deploy --only firestore:indexes` |
 | `apphosting.yaml` | Firebase App Hosting config + all 16 secret mappings |
 | `cloudbuild.yaml` | Build pipeline — uses `npm install` (not `npm ci`, see Known Issues) |
-| `messages/en.json` | English translations — every component key must be here |
-| `messages/bn.json` | Bengali translations — must mirror en.json structure |
+| `messages/en.json` | English translations — every `useTranslations` key must be defined here |
 
 ---
 
@@ -127,13 +126,20 @@ placeBid(auctionId, amount)
 ## Escrow State Machine
 
 ```
-PENDING → payEscrowAdvance()       → HELD
-HELD    → confirmItemReceived()    → RELEASED
-HELD    → raiseDispute()           → DISPUTED
-HELD    → refundEscrow() (admin)   → REFUNDED
-HELD    → resolveAdminDispute()    → RELEASED or REFUNDED
-DISPUTED→ resolveAdminDispute()    → RELEASED or REFUNDED
+PENDING              → payEscrowAdvance()       → VERIFICATION_PENDING
+VERIFICATION_PENDING → approveEscrowPayment()   → HELD          (admin; src/actions/admin/treasury.ts:81)
+HELD                 → confirmItemReceived()    → RELEASED
+HELD                 → markAsShipped()          → HELD          (status stays; sets deliveryStatus=SHIPPED)
+HELD                 → raiseDispute()           → DISPUTED
+HELD                 → adminRefundEscrow()      → REFUNDED      (admin; src/actions/dispute.ts)
+PENDING              → adminRefundEscrow()      → REFUNDED      (admin)
+VERIFICATION_PENDING → adminRefundEscrow()      → REFUNDED      (admin)
+DISPUTED             → adminRefundEscrow()      → REFUNDED      (admin)
+DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (admin)
 ```
+
+`refundEscrow()` is a thin backwards-compat wrapper that delegates to
+`adminRefundEscrow()` — never call it directly in new code.
 
 ---
 
@@ -204,10 +210,9 @@ export async function doSomething(input: unknown) {
 // Component declares: const t = useTranslations('MyNamespace')
 // Then calls: t('myKey')
 ```
-Add to BOTH files:
+Add to `messages/en.json`:
 ```json
-// messages/en.json → "MyNamespace": { "myKey": "English text" }
-// messages/bn.json → "MyNamespace": { "myKey": "বাংলা টেক্সট" }
+// "MyNamespace": { "myKey": "English text" }
 ```
 Missing keys throw `Error: MISSING_MESSAGE` in production and crash the page.
 

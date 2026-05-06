@@ -14,22 +14,29 @@ export type RealTimeBid = {
   createdAt:  string;
 };
 
-export function useAuctionBids(auctionId: string) {
-  const [newBids,        setNewBids]        = useState<RealTimeBid[]>([]);
+export interface UseAuctionBidsOptions {
+  /**
+   * Server-rendered initial bids — populates the live list before the first
+   * RTDB event arrives, so a page refresh on a busy auction doesn't show an
+   * empty "live" panel until the next bid lands.
+   */
+  initialBids?: RealTimeBid[];
+}
+
+export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions = {}) {
+  const [newBids,        setNewBids]        = useState<RealTimeBid[]>(options.initialBids ?? []);
   const [currentEndTime, setCurrentEndTime] = useState<Date | string | null>(null);
-  const [isConnected,     setIsConnected]    = useState(true);
+  const [isConnected,    setIsConnected]    = useState(true);
 
   useEffect(() => {
     let mounted = true;
     const db = getClientDB();
 
-    // Monitor Firebase Connection State
     const connectedRef = ref(db, ".info/connected");
     const unsubConn = onValue(connectedRef, (snap) => {
       if (mounted) setIsConnected(!!snap.val());
     });
 
-    // Subscribe to latest bid state
     const bidRef = ref(db, RTDB_PATHS.auctionBid(auctionId));
     const unsubBid = onValue(bidRef, (snapshot) => {
       if (!mounted) return;
@@ -45,7 +52,12 @@ export function useAuctionBids(auctionId: string) {
           bidderId:   data.bidderId || 'unknown',
           createdAt:  data.createdAt || new Date().toISOString(),
         };
-        setNewBids(prev => [bid, ...prev].slice(0, 10));
+        // Prepend, dedupe by id (server hydration may overlap with the latest
+        // RTDB event), keep the 10 most recent.
+        setNewBids(prev => {
+          const next = [bid, ...prev.filter(b => b.id !== bid.id)];
+          return next.slice(0, 10);
+        });
         if (data.endTime) setCurrentEndTime(data.endTime);
       } else if (
         data.event === FIREBASE_EVENTS.AUCTION_SOLD ||

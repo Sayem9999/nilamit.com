@@ -1,16 +1,81 @@
-name: Auction Closure Cron
+name: Nilamit Cron Jobs
+
+# All cron routes are POST (CLAUDE.md rule #6) and behind Bearer ${CRON_SECRET}.
+# Base URL points at the App Hosting backend; the .com domain is currently
+# not routable from GitHub Actions runners.
+#
+# GitHub Actions enforces a 5-minute minimum cron interval — we can't run
+# close-auctions every minute as documented. 5-minute granularity is fine in
+# practice because bid validation already rejects post-endTime bids.
 
 on:
   schedule:
-    # Run every 15 minutes
-    - cron: "*/15 * * * *"
-  workflow_dispatch: # Allow manual trigger
+    - cron: "*/5 * * * *"      # every 5 min  → close-auctions, process-alerts
+    - cron: "*/15 * * * *"     # every 15 min → closing-soon
+    - cron: "0 * * * *"        # hourly       → enforce-policies
+    - cron: "0 4 * * 0"        # weekly Sun 04:00 UTC → gc-uploads
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Specific job to run (close-auctions | closing-soon | process-alerts | enforce-policies | gc-uploads | all)"
+        required: false
+        default: "all"
+
+env:
+  BASE_URL: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
 
 jobs:
   close-auctions:
+    if: github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Auction Closure API
+      - name: POST /api/cron/close-auctions
         run: |
-          curl -X GET "https://nilamit.com/api/cron/close-auctions" \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/close-auctions" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 60
+
+  process-alerts:
+    if: github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/process-alerts
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/process-alerts" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 60
+
+  closing-soon:
+    if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/closing-soon
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/closing-soon" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 90
+
+  enforce-policies:
+    if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/enforce-policies
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/enforce-policies" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 90
+
+  gc-uploads:
+    if: github.event.schedule == '0 4 * * 0' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/gc-uploads
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/gc-uploads" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 300

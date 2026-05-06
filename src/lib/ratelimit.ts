@@ -6,13 +6,14 @@ import { log } from "@/lib/logger";
 /**
  * Rate limiting layer.
  *
- * Production policy: FAIL CLOSED.
- *   - In production, every limiter must succeed against Upstash. If Upstash is
- *     unreachable or env vars are missing, requests are REJECTED (success: false)
- *     and an alert is sent to Sentry. Brute-force windows must never silently
- *     open up because of an infra outage.
- *   - In non-production we keep the dev DX of "no Redis, no problem" — limiters
- *     are no-ops so local development isn't blocked.
+ * Production policy: FAIL CLOSED for financial / abuse-sensitive limiters.
+ *
+ *   - bid / login / OTP send / OTP verify must reject when Upstash is
+ *     unreachable. Brute-force windows must never silently open up because
+ *     of an infra outage.
+ *   - api / generic limiters fail OPEN to keep the site usable; the user
+ *     experience win outweighs the marginal abuse risk on those paths.
+ *   - In non-production we keep the dev DX of "no Redis, no problem".
  */
 
 const isConfigured = Boolean(
@@ -23,7 +24,7 @@ const isProduction = process.env.NODE_ENV === "production";
 if (!isConfigured) {
   if (isProduction) {
     log.error(
-      "[RateLimit] CRITICAL: UPSTASH_REDIS_REST_URL/TOKEN missing in production. All rate-limited endpoints will REJECT requests.",
+      "[RateLimit] CRITICAL: UPSTASH_REDIS_REST_URL/TOKEN missing in production. Financial limiters will REJECT all requests.",
     );
   } else {
     log.warn(
@@ -50,29 +51,36 @@ export interface Limiter {
   limit: (identifier: string) => Promise<LimiterResult>;
 }
 
+type Policy = "fail-closed" | "fail-open";
+
 function devNoopLimiter(): Limiter {
   return {
     limit: async () => ({ success: true, remaining: 999, limit: 999, reset: 0 }),
   };
 }
 
-function failOpen(): LimiterResult {
+function failOpenResult(): LimiterResult {
   return { success: true, remaining: 999, limit: 999, reset: 0 };
 }
 
-function createLimiter(prefix: string, limit: number, window: string): Limiter {
+function failClosedResult(): LimiterResult {
+  return { success: false, remaining: 0, limit: 0, reset: Date.now() + 60_000 };
+}
+
+function createLimiter(
+  prefix: string,
+  limit: number,
+  window: string,
+  policy: Policy = "fail-open",
+): Limiter {
   if (!isConfigured || !redis) {
     if (isProduction) {
-      // In production with no Redis, we fail open to prevent bricking authentication flows,
-      // but log a critical warning and report to Sentry so devs are alerted.
       return {
         limit: async () => {
-          log.warn(`[RateLimit:${prefix}] Upstash not configured in production — falling back to fail-open`);
-          Sentry.captureMessage(
-            `[RateLimit:${prefix}] Upstash not configured in production — falling back to fail-open`,
-            "warning",
-          );
-          return failOpen();
+          const msg = `[RateLimit:${prefix}] Upstash not configured in production — policy=${policy}`;
+          log.error(msg);
+          Sentry.captureMessage(msg, "error");
+          return policy === "fail-closed" ? failClosedResult() : failOpenResult();
         },
       };
     }
@@ -81,9 +89,6 @@ function createLimiter(prefix: string, limit: number, window: string): Limiter {
 
   const limiter = new Ratelimit({
     redis,
-    // Upstash's Duration is a branded template-literal type. Window strings
-    // are validated by callers (e.g. "60s", "5m", "1h") so we narrow via the
-    // function's own parameter type rather than fight the inference.
     limiter: Ratelimit.slidingWindow(
       limit,
       window as Parameters<typeof Ratelimit.slidingWindow>[1],
@@ -97,28 +102,27 @@ function createLimiter(prefix: string, limit: number, window: string): Limiter {
       try {
         return await limiter.limit(identifier);
       } catch (error) {
-        // Upstash hiccup. We fail open in production too, preventing system blockage during Redis down-time
-        log.error(`[RateLimit:${prefix}] Upstash failure`, error);
+        log.error(`[RateLimit:${prefix}] Upstash failure (policy=${policy})`, error);
         Sentry.captureException(error, {
-          tags: { component: "ratelimit", prefix },
+          tags: { component: "ratelimit", prefix, policy },
         });
-        return failOpen();
+        return policy === "fail-closed" ? failClosedResult() : failOpenResult();
       }
     },
   };
 }
 
-/** Specialized rate limiters for different traffic patterns */
-export const apiLimiter   = createLimiter("rl_api",   100, "60s");
-export const authLimiter  = createLimiter("rl_auth",   10, "15m");
-export const bidLimiter   = createLimiter("rl_bid",    60, "60s");
-export const loginLimiter = createLimiter("rl_login",  20, "5m");
+// Generic / read-mostly traffic — fail open so brief Redis hiccups don't brick the site.
+export const apiLimiter   = createLimiter("rl_api",   100, "60s", "fail-open");
 
-// Per-phone-number limiters (independent of IP) for SMS abuse protection.
-// Sends are expensive (real money). Verify attempts must be capped to prevent
-// 6-digit OTP brute force.
-export const phoneOtpSendLimiter   = createLimiter("rl_phone_otp_send",   5, "1h");
-export const phoneOtpVerifyLimiter = createLimiter("rl_phone_otp_verify", 5, "15m");
-export const emailOtpSendLimiter   = createLimiter("rl_email_otp_send",   5, "1h");
-// Mirrors phoneOtpVerifyLimiter — prevents brute-force of 6-digit email OTP space
-export const emailOtpVerifyLimiter = createLimiter("rl_email_otp_verify", 5, "15m");
+// Financial and credential paths — fail closed. A 429 is recoverable; a free
+// brute-force window is not.
+export const authLimiter  = createLimiter("rl_auth",   10, "15m", "fail-closed");
+export const bidLimiter   = createLimiter("rl_bid",    60, "60s", "fail-closed");
+export const loginLimiter = createLimiter("rl_login",  20, "5m",  "fail-closed");
+
+// Per-phone / per-email OTP limiters — must fail closed (6-digit space is small).
+export const phoneOtpSendLimiter   = createLimiter("rl_phone_otp_send",   5, "1h",  "fail-closed");
+export const phoneOtpVerifyLimiter = createLimiter("rl_phone_otp_verify", 5, "15m", "fail-closed");
+export const emailOtpSendLimiter   = createLimiter("rl_email_otp_send",   5, "1h",  "fail-closed");
+export const emailOtpVerifyLimiter = createLimiter("rl_email_otp_verify", 5, "15m", "fail-closed");

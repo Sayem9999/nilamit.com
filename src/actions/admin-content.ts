@@ -7,19 +7,29 @@ import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
+const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
+  id: 'default',
+  heroTitle: '',
+  heroSubtitle: '',
+  heroImage: null,
+  announcement: null,
+  showAnnouncement: false,
+  treasuryBkash: null,
+  treasuryNagad: null,
+  updatedAt: new Date(),
+} as SystemConfig;
+
 export async function getSystemConfig(): Promise<ServiceResponse<SystemConfig>> {
+  try {
+    await requireAdmin();
+  } catch {
+    return errorResponse(ErrorType.FORBIDDEN, 'Admin access required');
+  }
+
   try {
     const snap = await db.collection('systemConfig').doc('default').get();
     const data = docData<SystemConfig>(snap);
-    if (!data) {
-      return successResponse({
-        id: 'default', heroTitle: '', heroSubtitle: '', heroImage: null,
-        announcement: null, showAnnouncement: false,
-        treasuryBkash: null, treasuryNagad: null,
-        updatedAt: new Date(),
-      } as SystemConfig);
-    }
-    return successResponse(data);
+    return successResponse(data ?? DEFAULT_SYSTEM_CONFIG);
   } catch (e) {
     log.error('[admin-content] getSystemConfig failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch system config');
@@ -61,6 +71,12 @@ export async function toggleFeaturedAuction(auctionId: string, featured: boolean
 }
 
 export async function getFeaturedAuctions(): Promise<ServiceResponse<Auction[]>> {
+  try {
+    await requireAdmin();
+  } catch {
+    return errorResponse(ErrorType.FORBIDDEN, 'Admin access required');
+  }
+
   try {
     const snap = await db.collection('auctions')
       .where('isFeatured', '==', true)

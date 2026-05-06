@@ -34,7 +34,7 @@ Browser (React 19)
 
 - **Server Components** pre-fetch and render initial page state.
 - **Client Components** manage interactive UI: bid panel, countdown timer, RTDB listeners.
-- **Routing:** `src/app/[locale]/` provides English/Bengali i18n via `next-intl`. All UI routes are locale-prefixed.
+- **Routing:** flat `src/app/` (no locale prefix). `next-intl` is wired as a message-loading layer for future expansion but only English (`messages/en.json`) ships today.
 - **Bifurcated Registration:** The `/register` entry point implements a multi-step flow that branches into **Personal** or **Business** account paths, ensuring appropriate data capture and UI theming from the first touchpoint.
 
 ### Layer 2 — Server Actions (`src/actions/`)

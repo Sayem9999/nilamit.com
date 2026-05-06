@@ -21,13 +21,20 @@ interface SaleNotifyPayload {
   auctionId:   string;
   title:       string;
   finalPrice:  number;
+  // Carried out of the transaction so the caller can run side-effects
+  // (revenue stat, gamification, email) AFTER commit — fixes double-counting
+  // on transaction retries.
+  fee:         number;
 }
 
 // ─── processAuctionSale ──────────────────────────────────────────────────────
 /**
  * Called inside a Firestore transaction — writes auction + escrow updates only.
+ * MUST NOT perform any side-effects (stat increments, RTDB writes, emails) —
+ * Firestore retries the closure on contention and side-effects would multiply.
+ *
  * Returns notification data; the CALLER is responsible for firing notifications
- * AFTER the transaction commits to prevent duplicate sends on tx retries.
+ * AFTER the transaction commits (see sendSaleNotifications).
  */
 export function processAuctionSale(
   transaction: FirebaseFirestore.Transaction,
@@ -57,18 +64,12 @@ export function processAuctionSale(
   });
 
   // Always escrow the full final price regardless of seller verification status.
-  // Previously unverified sellers only had fee+delivery held, leaving buyers with
-  // almost no protection on large purchases. Commission is extracted on release.
+  // Commission is extracted on release (not on creation) so refunds remain whole.
   const deliveryCharge = auction.deliveryCharge ?? 0;
   const escrowAmount   = finalPrice + deliveryCharge;
 
-  // ─── Aggregator: Increment Global Revenue ──────────────────────────────────
-  // Track platform revenue in a single document to avoid O(N) scans in Admin UI.
-  // Fired outside the transaction as it is non-critical for auction finalization
-  incrementGlobalStat('totalRevenue', fee).catch(() => {});
-
   const escrowRef = db.collection('escrowTransactions').doc(auction.id);
-  // set() without merge so a second call can never silently re-open a closed escrow
+  // set() without merge so a second call can never silently re-open a closed escrow.
   transaction.set(escrowRef, {
     id:               auction.id,
     auctionId:        auction.id,
@@ -83,14 +84,27 @@ export function processAuctionSale(
     updatedAt:        now,
   });
 
-  // Return payload — notifications fired by caller AFTER commit
-  return { winnerId: winner.id, sellerId: auction.sellerId, winnerEmail: winner.email, auctionId: auction.id, title: auction.title, finalPrice };
+  return {
+    winnerId:    winner.id,
+    sellerId:    auction.sellerId,
+    winnerEmail: winner.email,
+    auctionId:   auction.id,
+    title:       auction.title,
+    finalPrice,
+    fee,
+  };
 }
 
 import { processSaleGamification } from '@/actions/gamification';
 
 // ─── sendSaleNotifications ───────────────────────────────────────────────────
+/** Caller invokes this AFTER the auction-sale transaction commits. */
 export function sendSaleNotifications(payload: SaleNotifyPayload) {
+  // Revenue stat — moved out of the transaction body so retries don't double-count.
+  incrementGlobalStat('totalRevenue', payload.fee).catch((e) =>
+    log.error('auction-logic: revenue stat increment failed', e, { auctionId: payload.auctionId }),
+  );
+
   if (payload.winnerEmail) {
     sendAuctionWonEmail(payload.winnerEmail, payload.title, payload.finalPrice, payload.auctionId)
       .catch((e) => log.error('auction-logic: winner email failed', e, { auctionId: payload.auctionId }));
@@ -102,13 +116,21 @@ export function sendSaleNotifications(payload: SaleNotifyPayload) {
     amount:    payload.finalPrice,
   }).catch((e) => log.error('auction-logic: winner RTDB notification failed', e, { auctionId: payload.auctionId }));
 
-  // Gamification: XP and Streaks
-  processSaleGamification(payload.winnerId, payload.sellerId).catch((e) => 
-    log.error('auction-logic: sale gamification failed', e, { auctionId: payload.auctionId })
+  processSaleGamification(payload.winnerId, payload.sellerId).catch((e) =>
+    log.error('auction-logic: sale gamification failed', e, { auctionId: payload.auctionId }),
   );
 }
 
 // ─── closeAuctionIfEnded ─────────────────────────────────────────────────────
+function coerceEndTime(raw: unknown): Date | null {
+  if (!raw) return null;
+  const d = (raw as { toDate?: () => Date })?.toDate
+    ? (raw as { toDate: () => Date }).toDate()
+    : new Date(raw as string | number | Date);
+  if (!(d instanceof Date) || isNaN(d.getTime())) return null;
+  return d;
+}
+
 export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
   try {
     const notifyPayload = await db.runTransaction(async (tx) => {
@@ -120,7 +142,12 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
       if (a.status !== 'ACTIVE') return null;
 
       const now     = new Date();
-      const endTime = a.endTime?.toDate ? a.endTime.toDate() : new Date(a.endTime);
+      const endTime = coerceEndTime(a.endTime);
+      if (!endTime) {
+        // Malformed auction — mark expired so it stops being picked up by cron.
+        tx.update(aRef, { status: 'EXPIRED', updatedAt: now });
+        return null;
+      }
       if (now < endTime) return null;
 
       // Winner is denormalised onto the auction doc — transactionally safe;
@@ -151,7 +178,6 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
       );
     });
 
-    // Fire notifications only after the transaction has committed successfully
     if (notifyPayload) sendSaleNotifications(notifyPayload);
   } catch (e) {
     log.error('[auction-logic] closeAuctionIfEnded failed', e, { auctionId });
@@ -160,8 +186,6 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
 
 // ─── closeAllEndedAuctions ───────────────────────────────────────────────────
 export async function closeAllEndedAuctions(): Promise<void> {
-  // Increase limit to 200 to handle flash-sale surges.
-  // 200 auctions @ 10 concurrency = ~20-30s execution, safe for Cloud Run.
   const snap = await db.collection('auctions')
     .where('status', '==', 'ACTIVE')
     .where('endTime', '<=', new Date())
@@ -170,9 +194,9 @@ export async function closeAllEndedAuctions(): Promise<void> {
 
   if (snap.empty) return;
 
-  const CONCURRENCY = 15; // Slightly higher concurrency for faster drainage
+  const CONCURRENCY = 15;
   const ids = snap.docs.map((d) => d.id);
-  
+
   log.info(`[Cron] Closing ${ids.length} ended auctions...`);
 
   for (let i = 0; i < ids.length; i += CONCURRENCY) {

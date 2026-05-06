@@ -21,6 +21,7 @@ import { adminStorage } from '@/lib/firebase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { detectImageMime, SUPPORTED_IMAGE_MIMES } from '@/lib/image-sniff';
+import { moderateImage } from '@/lib/image-moderation';
 import { apiLimiter } from '@/lib/ratelimit';
 import { log } from '@/lib/logger';
 
@@ -36,6 +37,13 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/webp': 'webp',
   'image/gif':  'gif',
 };
+
+function sanitizeFilenameForStorage(name: unknown): string {
+  if (typeof name !== 'string') return '';
+  // Drop control chars and HTML-significant chars before truncation.
+   
+  return name.replace(/[\x00-\x1f\x7f<>"'`]/g, '').slice(0, 256);
+}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -86,6 +94,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // SafeSearch — auto-no-ops if IMAGE_MODERATION env var isn't set.
+  const moderation = await moderateImage(buffer);
+  if (!moderation.allowed) {
+    log.warn('[Upload] Rejected by SafeSearch', {
+      userId: session.user.id, reason: moderation.reason, scores: moderation.scores,
+    });
+    return NextResponse.json(
+      { error: 'This image violates our content policy and cannot be uploaded.' },
+      { status: 422 },
+    );
+  }
+
   try {
     const ext      = MIME_TO_EXT[detectedMime];
     const folder   = type === 'chat' ? 'chat' : 'auctions';
@@ -98,26 +118,26 @@ export async function POST(req: NextRequest) {
         contentType:  detectedMime,
         cacheControl: 'public, max-age=31536000, immutable',
         metadata: {
-          uploadedBy: session.user.id,
-          // Capture the originally claimed name for forensics, but never use
-          // it for anything that touches a filesystem path.
-          originalName: typeof file.name === 'string' ? file.name.slice(0, 256) : '',
+          uploadedBy:   session.user.id,
+          uploadedFor:  type,
+          uploadedAtMs: String(Date.now()),
+          // Sanitised — control chars and HTML-significant chars stripped before
+          // storage so the value can never become an injection vector.
+          originalName: sanitizeFilenameForStorage(file.name),
         },
       },
     });
 
-    // Auction images are public-read at the storage layer (matches storage.rules).
-    // Chat uploads are kept behind a signed URL strategy via storage.rules instead
-    // of being made world-public.
-    if (type === 'auction') {
-      await fileRef.makePublic();
-    }
+    // Both auction and chat uploads are served via signed URLs.
+    // Auction URL TTL is intentionally long (90 days) so listings keep working
+    // through the bid lifecycle, but the URL is still revocable by deleting the
+    // underlying object — `makePublic()` is irrevocable and was removed because
+    // a deleted auction's images stayed world-readable forever.
+    const expiresMs = type === 'auction'
+      ? Date.now() + 90 * 24 * 60 * 60 * 1000
+      : Date.now() +  7 * 24 * 60 * 60 * 1000;
 
-    const url = type === 'auction'
-      ? `https://storage.googleapis.com/${bucket.name}/${filename}`
-      : await fileRef
-          .getSignedUrl({ action: 'read', expires: Date.now() + 7 * 24 * 60 * 60 * 1000 })
-          .then(([signed]) => signed);
+    const [url] = await fileRef.getSignedUrl({ action: 'read', expires: expiresMs });
 
     return NextResponse.json({ url });
   } catch (error) {

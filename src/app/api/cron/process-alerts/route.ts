@@ -70,12 +70,17 @@ export async function POST(req: Request) {
       triggered++;
     }
 
+    // Chunk deactivations — Firestore batches cap at 500 writes.
     if (alertsToDeactivate.length > 0) {
-      const batch = db.batch();
-      for (const id of alertsToDeactivate) {
-        batch.update(db.collection('alerts').doc(id), { isActive: false, updatedAt: new Date() });
+      const BATCH_LIMIT = 450;
+      for (let i = 0; i < alertsToDeactivate.length; i += BATCH_LIMIT) {
+        const slice = alertsToDeactivate.slice(i, i + BATCH_LIMIT);
+        const batch = db.batch();
+        for (const id of slice) {
+          batch.update(db.collection('alerts').doc(id), { isActive: false, updatedAt: new Date() });
+        }
+        await batch.commit();
       }
-      await batch.commit();
     }
 
     return { checked: activeAlerts.length, triggered };

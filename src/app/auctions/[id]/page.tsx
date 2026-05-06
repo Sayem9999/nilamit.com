@@ -23,7 +23,6 @@ import {
   DollarSign,
   Truck,
   Info,
-  RefreshCw,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { canReviewAuction } from "@/actions/review";
@@ -108,7 +107,7 @@ export default async function AuctionDetailPage({ params }: Props) {
 
   const [bidsRes, watchedRes, chatRes, reviewRes] = await Promise.all([
     getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
-    isWatched(id).catch((e) => { log.error('[AuctionDetail] isWatched failed', e); return { success: false } as any; }),
+    isWatched(id).catch((e) => { log.error('[AuctionDetail] isWatched failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed') as unknown as Awaited<ReturnType<typeof isWatched>>; }),
     getAuctionChat(id).catch((e) => { log.error('[AuctionDetail] getAuctionChat failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     canReviewAuction(id).catch((e) => { log.error('[AuctionDetail] canReviewAuction failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
   ]);
@@ -298,6 +297,14 @@ export default async function AuctionDetailPage({ params }: Props) {
             buyItNowPrice={auction.buyItNowPrice}
             proxyMaxBid={auction.proxyMaxBid}
             proxyBidderId={auction.proxyBidderId}
+            initialBids={bids.slice(0, 10).map((b) => ({
+              id:         b.id,
+              amount:     b.amount,
+              endTime:    auction.endTime,
+              bidderName: b.bidder.name ?? 'Someone',
+              bidderId:   b.bidder.id,
+              createdAt:  b.createdAt.toString(),
+            }))}
           />
 
           {/* Seller Info */}

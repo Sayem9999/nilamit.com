@@ -2,6 +2,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // ─── AUTH HELPERS ───
+    //
+    // request.auth is populated when the client signs in via Firebase Auth
+    // with a custom token minted at GET /api/firebase/token. That endpoint
+    // embeds `isAdmin` as a custom claim when the NextAuth session indicates
+    // admin (see src/app/api/firebase/token/route.ts).
+    //
+    // Trust model: the isAdmin claim can lag behind a server-side admin
+    // revocation by up to one Firebase token TTL (~1h). All write paths and
+    // sensitive read paths route through Server Actions that DB-verify via
+    // requireAdmin(); these client-side rules govern only direct reads of
+    // public/user-owned docs, where a brief staleness window is acceptable.
     function signedIn() {
       return request.auth != null;
     }
