@@ -14,6 +14,9 @@ import { ErrorType, errorResponse, successResponse, ServiceResponse } from "@/li
 import { verifyStandaloneOTP } from "./phone";
 import { log } from "@/lib/logger";
 
+import { headers } from "next/headers";
+import { authLimiter } from "@/lib/ratelimit";
+
 export async function logoutAction(): Promise<ServiceResponse<null>> {
   await signOut({ redirect: false });
   revalidatePath("/");
@@ -21,6 +24,11 @@ export async function logoutAction(): Promise<ServiceResponse<null>> {
 }
 
 export async function registerUser(data: unknown): Promise<ServiceResponse<{ message: string }>> {
+  const h = await headers();
+  const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
+  const { success: rateLimitOk } = await authLimiter.limit(`auth_${ip}`);
+  if (!rateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, "Too many attempts. Please wait before trying again.");
+
   const parsed = registerSchema.safeParse(data);
   if (!parsed.success) {
     return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
@@ -79,6 +87,11 @@ export async function registerUser(data: unknown): Promise<ServiceResponse<{ mes
 }
 
 export async function signupWithPhone(data: unknown): Promise<ServiceResponse<{ message: string }>> {
+  const h = await headers();
+  const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
+  const { success: rateLimitOk } = await authLimiter.limit(`auth_${ip}`);
+  if (!rateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, "Too many attempts. Please wait before trying again.");
+
   const parsed = phoneSignupSchema.safeParse(data);
   if (!parsed.success) {
     return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
@@ -138,6 +151,11 @@ export async function signupWithPhone(data: unknown): Promise<ServiceResponse<{ 
 }
 
 export async function resetPasswordWithOTP(data: unknown): Promise<ServiceResponse<{ message: string }>> {
+  const h = await headers();
+  const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
+  const { success: rateLimitOk } = await authLimiter.limit(`auth_${ip}`);
+  if (!rateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, "Too many attempts. Please wait before trying again.");
+
   const parsed = passwordResetSchema.safeParse(data);
   if (!parsed.success) {
     return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));

@@ -112,10 +112,6 @@ export async function getAdminUsers(opts: {
 
     const pagedUsers = await Promise.all(pageDocs.map(async (doc) => {
       const data = doc.data()!;
-      const [bidCountSnap, auctionCountSnap] = await Promise.all([
-        db.collection('bids').where('bidderId', '==', doc.id).count().get(),
-        db.collection('auctions').where('sellerId', '==', doc.id).count().get(),
-      ]);
 
       return {
         id: doc.id,
@@ -130,8 +126,8 @@ export async function getAdminUsers(opts: {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         createdAt: toDate(data.createdAt as any),
         _count: {
-          bids: bidCountSnap.data().count,
-          auctionsAsSeller: auctionCountSnap.data().count,
+          bids: (data.bidCount as number) ?? 0,
+          auctionsAsSeller: (data.auctionCount as number) ?? 0,
         },
       };
     }));

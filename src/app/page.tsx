@@ -1,6 +1,6 @@
 import { HomeContent } from "@/components/home/HomeContent";
 import ForYouFeed from "@/components/home/components/ForYouFeed";
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // Cache the homepage for 60 seconds to prevent DB exhaustion
 import { getAuctions, getSpecializedFeeds } from "@/actions/auction";
 import { db } from "@/lib/db";
 import { SystemConfig } from "@/types/common";
