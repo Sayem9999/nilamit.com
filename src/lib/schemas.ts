@@ -144,6 +144,22 @@ export const createAuctionSchema = z
   });
 export type CreateAuctionInputValidated = z.infer<typeof createAuctionSchema>;
 
+/**
+ * Edit-while-no-bids schema.
+ * Only description and images are editable post-publish, and only while
+ * bidCount === 0. Title/pricing/timing are locked once published — bidders
+ * shouldn't have the listing change underneath them.
+ */
+export const editAuctionSchema = z.object({
+  auctionId:   z.string().trim().min(1).max(128),
+  description: z.string().trim().min(10, 'Description is too short').max(5000, 'Description is too long').optional(),
+  images:      z.array(imageUrlSchema).min(1, 'At least one image is required').max(10, 'Maximum 10 images per listing').optional(),
+}).refine(
+  (d) => d.description !== undefined || d.images !== undefined,
+  { message: 'Provide at least one field to update.' },
+);
+export type EditAuctionInputValidated = z.infer<typeof editAuctionSchema>;
+
 // ─── Bids ──────────────────────────────────────────────────────────────────
 
 export const placeBidSchema = z.object({
