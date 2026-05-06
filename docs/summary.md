@@ -33,7 +33,7 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 - **Database**: Firebase Firestore (NoSQL).
 - **Monitoring**: Sentry (Errors, Performance, Session Replay).
 - **Real-time**: Firebase Realtime Database for instant bid updates and alerts.
-- **Localization**: English-First experience with Bengali support via `next-intl`.
+- **Localization**: English-only (Bengali dropped; `next-intl` layer retained for future expansion).
 - **UI/UX**: Tailwind CSS 4, shadcn/ui, and Framer Motion for a premium, mobile-responsive aesthetic.
 
 ---

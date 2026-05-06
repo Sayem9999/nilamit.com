@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { RealTimeBid } from "@/hooks/useAuctionBids";
 /**
  * Client-side wrapper for BidPanel to handle dynamic loading and SSR exclusion.
  */
@@ -17,6 +18,7 @@ interface BidPanelProps {
   buyItNowPrice?: number | null;
   proxyMaxBid?: number | null;
   proxyBidderId?: string | null;
+  initialBids?: RealTimeBid[];
   onBidPlaced?: () => void;
 }
 

@@ -91,3 +91,9 @@ env:
   - variable: RESEND_API_KEY
     secret: RESEND_API_KEY
 
+  # Set to "enabled" once Cloud Vision API is provisioned and the service
+  # account has roles/cloudvision.user. Until then, image-moderation auto-skips
+  # so uploads aren't blocked by an infra gap.
+  - variable: IMAGE_MODERATION
+    value: disabled
+

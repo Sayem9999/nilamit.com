@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { CountdownTimer } from "./CountdownTimer";
 import { useSettings } from "@/context/SettingsContext";
-import { useAuctionBids } from "@/hooks/useAuctionBids";
+import { useAuctionBids, type RealTimeBid } from "@/hooks/useAuctionBids";
 import { useSound } from "@/hooks/useSound";
 import { useTranslations } from "next-intl";
 import { ERROR_CODES } from "@/lib/constants";
@@ -56,6 +56,7 @@ interface BidPanelProps {
   buyItNowPrice?: number | null;
   proxyMaxBid?: number | null;
   proxyBidderId?: string | null;
+  initialBids?: RealTimeBid[];
   onBidPlaced?: () => void;
 }
 
@@ -71,13 +72,14 @@ export function BidPanel({
   buyItNowPrice,
   proxyMaxBid,
   proxyBidderId,
+  initialBids,
   onBidPlaced,
 }: BidPanelProps) {
   const { data: session } = useSession();
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
   const { play: playGavel } = useSound("/sounds/gavel.mp3");
   const t = useTranslations("BidPanel");
-  const { newBids, currentEndTime, isConnected } = useAuctionBids(auctionId);
+  const { newBids, currentEndTime, isConnected } = useAuctionBids(auctionId, { initialBids });
   const [optimisticBid, setOptimisticBid] = useState<number | null>(null);
 
   const displayPrice = optimisticBid ?? (newBids.length > 0 ? newBids[0].amount : currentPrice);
@@ -104,6 +106,7 @@ export function BidPanel({
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showMFSModal, setShowMFSModal] = useState(false);
   const [showEliteModal, setShowEliteModal] = useState(false);
+  const [showBinConfirm, setShowBinConfirm] = useState(false);
 
   // Track previous bid count via ref so we only fire the gavel on an actual
   // increase. Depending on `playGavel` would re-fire whenever useSound returns
@@ -191,19 +194,17 @@ export function BidPanel({
     });
   }, [isPending, session, bidAmount, minBid, playGavel, auctionId, minBidIncrement, onBidPlaced]);
 
-  const handleBuyItNow = useCallback(() => {
+  const openBuyItNow = useCallback(() => {
     if (isPending) return;
     if (!session) {
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
+      if (typeof window !== "undefined") window.location.href = "/login";
       return;
     }
+    setShowBinConfirm(true);
+  }, [isPending, session]);
 
-    if (!confirm(`Are you sure you want to buy this item now for ${formatBDT(buyItNowPrice as number)}?`)) {
-      return;
-    }
-
+  const confirmBuyItNow = useCallback(() => {
+    setShowBinConfirm(false);
     startTransition(async () => {
       const res = await executeBuyItNow(auctionId);
       setResult(res);
@@ -218,7 +219,7 @@ export function BidPanel({
         onBidPlaced?.();
       }
     });
-  }, [isPending, session, buyItNowPrice, auctionId, playGavel, onBidPlaced]);
+  }, [auctionId, playGavel, onBidPlaced]);
 
   const isOwnAuction = useMemo(() => session?.user?.id === sellerId, [session?.user?.id, sellerId]);
 
@@ -291,7 +292,7 @@ export function BidPanel({
             <div className="mb-4">
               <VerificationGuard>
                 <button
-                  onClick={handleBuyItNow}
+                  onClick={openBuyItNow}
                   disabled={isPending}
                   className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center gap-0.5 overflow-hidden relative"
                 >
@@ -369,11 +370,55 @@ export function BidPanel({
       {showPhoneModal && <PhoneVerificationPrompt onClose={() => setShowPhoneModal(false)} />}
       {showMFSModal && <MFSLinkagePrompt onClose={() => setShowMFSModal(false)} />}
       {showEliteModal && (
-        <EliteBarrierPrompt 
-          onClose={() => setShowEliteModal(false)} 
+        <EliteBarrierPrompt
+          onClose={() => setShowEliteModal(false)}
           auctionId={auctionId}
           amount={Number(bidAmount)}
         />
+      )}
+
+      {showBinConfirm && buyItNowPrice && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowBinConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-heading font-bold text-gray-900 mb-1">
+              Confirm Buy It Now
+            </h2>
+            <p className="text-sm text-gray-600 mb-2">
+              You are about to purchase this item instantly for:
+            </p>
+            <p className="price text-2xl text-primary-700 mb-4">
+              {formatBDT(buyItNowPrice as number)}
+            </p>
+            <p className="text-xs text-gray-500 mb-5">
+              This is a binding purchase. After confirmation an escrow transaction
+              is created and you&apos;ll be guided to pay the advance fee.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowBinConfirm(false)}
+                disabled={isPending}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmBuyItNow}
+                disabled={isPending}
+                className="px-5 py-2 text-sm font-bold text-white rounded-xl shadow-sm bg-accent-600 hover:bg-accent-700 disabled:opacity-50"
+              >
+                {isPending ? "Processing..." : "Confirm Purchase"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

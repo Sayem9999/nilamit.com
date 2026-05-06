@@ -1,15 +1,13 @@
 import {defineRouting} from 'next-intl/routing';
 import {createNavigation} from 'next-intl/navigation';
 
+// English-only deployment. next-intl is retained as the message-loading
+// layer (every component uses useTranslations) but no locale switching
+// happens. To re-introduce a locale, add it here AND in src/i18n.ts.
 export const routing = defineRouting({
-  // A list of all locales that are supported
-  locales: ['en', 'bn'],
-
-  // Used when no locale matches
+  locales: ['en'],
   defaultLocale: 'en'
 });
 
-// Lightweight wrappers around Next.js' navigation APIs
-// that will consider the routing configuration
 export const {Link, redirect, usePathname, useRouter, getPathname} =
   createNavigation(routing);

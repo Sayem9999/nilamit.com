@@ -22,7 +22,7 @@
 | Auth | Auth.js v5 — Email/Password + Phone OTP + Google OAuth |
 | Rate Limiting | Upstash Redis (fail-closed in production) |
 | Monitoring | Sentry (errors + performance + session replay) |
-| i18n | next-intl — English and Bengali |
+| i18n | next-intl — English (single locale; layer retained for future expansion) |
 | Styling | Tailwind CSS 4 + shadcn/ui + Framer Motion |
 | SMS | Pluggable — GreenWeb (production) or Console (dev) |
 | Deployment | Firebase App Hosting (git-triggered, Cloud Run backend) |
@@ -55,7 +55,6 @@ src/
 │   ├── admin/      # Modular administrative actions (Stats, Disputes, Treasury, etc.)
 ├── services/       # Pure business logic — AdminService, BiddingService, AuctionService
 ├── app/            # App Router — pages, API routes, cron endpoints
-│   ├── [locale]/   # i18n-wrapped pages (en/bn)
 │   └── api/        # REST endpoints (upload, cron, health, firebase token)
 ├── components/     # React components — domain-driven, memoized, lazy-loaded
 ├── lib/            # Infrastructure — auth, db, ratelimit, logger, sanitization
@@ -91,7 +90,7 @@ Nilamit v2.0 implements a **Service-Layer Architecture** to ensure long-term mai
 - **Zero-Loss Logistics** — Formalized 120 BDT RTO deduction for frivolous rejections to protect sellers from courier losses
 - **Bulk upload** — CSV-driven mass auction creation for **Verified Retailers**
 - **Second Chance Offer** — Sellers can offer items to underbidders on closed auctions
-- **i18n** — Full English and Bengali support
+- **i18n** — English-only (Bengali removed; `next-intl` layer retained)
 - **PII filtering** — Phone numbers and emails stripped from public listings automatically
 
 ---

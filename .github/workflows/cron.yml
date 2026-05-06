@@ -13,10 +13,11 @@ on:
     - cron: "*/5 * * * *"      # every 5 min  → close-auctions, process-alerts
     - cron: "*/15 * * * *"     # every 15 min → closing-soon
     - cron: "0 * * * *"        # hourly       → enforce-policies
+    - cron: "0 4 * * 0"        # weekly Sun 04:00 UTC → gc-uploads
   workflow_dispatch:
     inputs:
       job:
-        description: "Specific job to run (close-auctions | closing-soon | process-alerts | enforce-policies | all)"
+        description: "Specific job to run (close-auctions | closing-soon | process-alerts | enforce-policies | gc-uploads | all)"
         required: false
         default: "all"
 
@@ -67,3 +68,14 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             --data '{}' --max-time 90
+
+  gc-uploads:
+    if: github.event.schedule == '0 4 * * 0' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/gc-uploads
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/gc-uploads" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 300
