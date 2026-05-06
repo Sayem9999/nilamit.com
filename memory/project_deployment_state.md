@@ -14,12 +14,16 @@ Platform is LIVE at https://nilamit--nilamit-52073.asia-southeast1.hosted.app
 
 ## Working
 - /api/health → { status: ok, db: ok }
-- Homepage (RESTORED): Correct images and system config data.
+- Homepage (RESTORED): Real self-healing dynamic database stats (users, sellers, listings, bids) with firestore .count().get() aggregations.
 - Authentication: Email/Google Login working with linked account support.
+- Rate Limiting: Premium sliding-window protection live using Upstash Redis configured via GCP secrets. Backed by try-catch fail-open and Firestore attempt counting.
+- Phone & Email Verification: Safe-fails open without Redis. Hardened OTP brute-force security enforcing a 5-attempt threshold directly in Firestore transactions.
+- Product/Auction Uploads: Stable server-side image processing utilizing Firebase Admin Storage, completely immune to client-side auth configuration limitations.
+- Media Rendering: Localized bKash and Nagad vector SVG paths in `/public`, completely bypassing CSP blockades and browser hotlink failures.
 - Dashboard (watchlist, bids, escrow, listings, coordination)
-- Admin panel at /en/admin (requires login as sayemf21@gmail.com)
+- Admin panel at /admin (requires login as sayemf21@gmail.com)
 - Firestore rules + indexes deployed
-- All 17 secrets stored in Secret Manager with correct IAM grants (including new GOOGLE_CLIENT_ID/SECRET).
+- All 19 secrets stored in Secret Manager with correct IAM grants (including new UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN).
 
 ## Needs attention
 - GREENWEB_TOKEN is placeholder "console" — OTPs log to stdout, not SMS
