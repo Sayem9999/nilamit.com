@@ -5,10 +5,10 @@ export const locales = ['en'] as const;
 export type Locale = (typeof locales)[number];
 
 export default getRequestConfig(async ({requestLocale}) => {
-  const locale = await requestLocale;
+  let locale = await requestLocale;
 
   if (!locale || !locales.includes(locale as Locale)) {
-    notFound();
+    locale = 'en';
   }
 
   return {
