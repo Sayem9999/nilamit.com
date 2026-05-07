@@ -82,7 +82,9 @@ export async function POST(req: Request) {
   }, { maxAttempts: 3, initialDelayMs: 1000 });
 
   if (result.error) {
-    Sentry.captureException(result.error, { tags: { component: 'cron', job: 'enforce-policies' } });
+    Sentry.captureException(result.error, {
+      tags: { component: 'cron', job: 'enforce-policies', area: 'cron', severity: 'critical' },
+    });
     return cronError(`enforce-policies failed after ${result.attempts} attempts: ${result.error.message}`);
   }
 

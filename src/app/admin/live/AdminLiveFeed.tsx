@@ -164,18 +164,18 @@ export default function AdminLiveFeed() {
             >
               <ShieldAlert className="w-8 h-8 text-primary-400 mb-4" aria-hidden="true" />
               <h2 id="moderation-mode-heading" className="text-lg font-bold mb-2">
-                Moderation mode
+                Moderation queue
               </h2>
               <p className="text-primary-200 text-xs leading-relaxed mb-4">
-                Click any bid to view full user history and auction details. Suspicious
-                patterns are flagged automatically.
+                The live ticker is read-only. Open disputes, escrow holds, and reported
+                listings are actioned from the moderation panels below.
               </p>
-              <button
-                type="button"
-                className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold uppercase tracking-widest transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              <Link
+                href="/admin/disputes"
+                className="block w-full text-center py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold uppercase tracking-widest transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
-                View risk flags
-              </button>
+                Open dispute queue
+              </Link>
             </section>
           </aside>
 

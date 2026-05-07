@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getAdminStats } from "@/actions/admin";
 import { getSystemConfig, getFeaturedAuctions } from "@/actions/admin-content";
@@ -15,7 +16,7 @@ import { Users, Package, TrendingUp, DollarSign } from "lucide-react";
 import { SystemConfig } from "@/types";
 import AdminLiveFeed from "./live/AdminLiveFeed";
 
-function OverviewTab({
+async function OverviewTab({
   stats,
 }: {
   stats: {
@@ -32,17 +33,18 @@ function OverviewTab({
     }[];
   };
 }) {
+  const t = await getTranslations("Admin.overview");
   return (
     <div className="space-y-8">
       {/* Stats Grid */}
       <section aria-labelledby="admin-stats-heading">
         <h2 id="admin-stats-heading" className="sr-only">
-          Platform statistics
+          {t("statsHeading")}
         </h2>
         <ul className="grid grid-cols-2 md:grid-cols-4 gap-4 list-none p-0">
           <li>
             <StatCard
-              label="Total Users"
+              label={t("totalUsers")}
               value={stats.totalUsers}
               icon={<Users className="w-5 h-5 text-blue-600" aria-hidden="true" />}
               color="bg-blue-50"
@@ -50,7 +52,7 @@ function OverviewTab({
           </li>
           <li>
             <StatCard
-              label="Active Auctions"
+              label={t("activeAuctions")}
               value={stats.activeAuctions}
               icon={<Package className="w-5 h-5 text-indigo-600" aria-hidden="true" />}
               color="bg-indigo-50"
@@ -58,7 +60,7 @@ function OverviewTab({
           </li>
           <li>
             <StatCard
-              label="Total Bids"
+              label={t("totalBids")}
               value={stats.totalBids}
               icon={<TrendingUp className="w-5 h-5 text-green-600" aria-hidden="true" />}
               color="bg-green-50"
@@ -66,7 +68,7 @@ function OverviewTab({
           </li>
           <li>
             <StatCard
-              label="Revenue"
+              label={t("revenue")}
               value={`৳${stats.totalRevenue}`}
               icon={<DollarSign className="w-5 h-5 text-amber-600" aria-hidden="true" />}
               color="bg-amber-50"
@@ -84,19 +86,17 @@ function OverviewTab({
           id="recent-users-heading"
           className="font-heading font-semibold text-lg text-gray-900 mb-4"
         >
-          Recent Users
+          {t("recentUsersHeading")}
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <caption className="sr-only">
-              Most recently registered users with reputation and verification status
-            </caption>
+            <caption className="sr-only">{t("tableCaption")}</caption>
             <thead className="text-xs text-gray-500 uppercase bg-gray-50/50">
               <tr>
-                <th scope="col" className="px-4 py-3">Name</th>
-                <th scope="col" className="px-4 py-3">Email</th>
-                <th scope="col" className="px-4 py-3">Reputation</th>
-                <th scope="col" className="px-4 py-3">Verified</th>
+                <th scope="col" className="px-4 py-3">{t("colName")}</th>
+                <th scope="col" className="px-4 py-3">{t("colEmail")}</th>
+                <th scope="col" className="px-4 py-3">{t("colReputation")}</th>
+                <th scope="col" className="px-4 py-3">{t("colVerified")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -119,11 +119,11 @@ function OverviewTab({
                     <td className="px-4 py-3">
                       {user.isVerifiedSeller ? (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                          Verified
+                          {t("badgeVerified")}
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                          Member
+                          {t("badgeMember")}
                         </span>
                       )}
                     </td>

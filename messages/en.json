@@ -391,6 +391,23 @@
     "trader": "Trader",
     "score": "Trust Score"
   },
+  "Admin": {
+    "overview": {
+      "statsHeading": "Platform statistics",
+      "totalUsers": "Total users",
+      "activeAuctions": "Active auctions",
+      "totalBids": "Total bids",
+      "revenue": "Revenue",
+      "recentUsersHeading": "Recent users",
+      "tableCaption": "Most recently registered users with reputation and verification status",
+      "colName": "Name",
+      "colEmail": "Email",
+      "colReputation": "Reputation",
+      "colVerified": "Verified",
+      "badgeVerified": "Verified",
+      "badgeMember": "Member"
+    }
+  },
   "Profile": {
     "title": "Profile Settings",
     "mfsNote": "Please link your bKash or Nagad account for payments and escrow protection.",
