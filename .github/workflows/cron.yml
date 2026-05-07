@@ -22,7 +22,10 @@ on:
         default: "all"
 
 env:
-  BASE_URL: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
+  # Production custom domain. The App Hosting URL
+  # (nilamit--nilamit-52073.asia-southeast1.hosted.app) remains a valid
+  # fallback target — switch this back if the apex DNS goes south.
+  BASE_URL: https://nilamit.com
 
 jobs:
   close-auctions:

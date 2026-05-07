@@ -64,14 +64,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!auction) return { title: "Auction Not Found" };
 
-  const rawBaseUrl = (env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://nilamit--nilamit-52073.asia-southeast1.hosted.app");
+  const rawBaseUrl = (env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://nilamit.com");
   let baseUrl = rawBaseUrl;
   let ogUrl: URL;
   try {
     ogUrl = new URL(`${baseUrl}/api/og`);
   } catch {
     console.error(`[AuctionPage] ❌ Invalid baseUrl/ogUrl: "${baseUrl}"`);
-    baseUrl = "https://nilamit--nilamit-52073.asia-southeast1.hosted.app";
+    baseUrl = "https://nilamit.com";
     ogUrl = new URL(`${baseUrl}/api/og`);
   }
   ogUrl.searchParams.set("title", auction.title);

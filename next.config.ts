@@ -39,18 +39,21 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    // CSP includes both nilamit.com (production custom domain) and *.hosted.app
+    // (App Hosting fallback URL). 'self' covers the apex when served from nilamit.com.
+    const NILAMIT = "https://nilamit.com https://www.nilamit.com";
     const csp = [
-      "default-src 'self' https://*.hosted.app https://*.firebaseapp.com https://*.web.app",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.hosted.app https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://*.firebasedatabase.app https://www.gstatic.com https://*.googleapis.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.hosted.app",
-      "img-src 'self' data: blob: https://*.googleusercontent.com https://utfs.io https://*.uploadthing.com https://firebasestorage.googleapis.com https://storage.googleapis.com https://avatars.githubusercontent.com https://i.pravatar.cc https://images.unsplash.com https://*.ingest.sentry.io https://*.hosted.app",
+      `default-src 'self' ${NILAMIT} https://*.hosted.app https://*.firebaseapp.com https://*.web.app`,
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${NILAMIT} https://*.hosted.app https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://*.firebasedatabase.app https://www.gstatic.com https://*.googleapis.com`,
+      `style-src 'self' 'unsafe-inline' ${NILAMIT} https://fonts.googleapis.com https://*.hosted.app`,
+      `img-src 'self' data: blob: ${NILAMIT} https://*.googleusercontent.com https://utfs.io https://*.uploadthing.com https://firebasestorage.googleapis.com https://storage.googleapis.com https://avatars.githubusercontent.com https://i.pravatar.cc https://images.unsplash.com https://*.ingest.sentry.io https://*.hosted.app`,
       "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com",
-      "connect-src 'self' https://*.googleapis.com https://storage.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.cloudfunctions.net https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.sentry.io https://utfs.io https://*.uploadthing.com https://*.hosted.app https://*.firebaseapp.com",
-      "frame-src 'self' https://*.firebaseapp.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.hosted.app",
-      "media-src 'self' https://*.hosted.app",
+      `connect-src 'self' ${NILAMIT} https://*.googleapis.com https://storage.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.cloudfunctions.net https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.sentry.io https://utfs.io https://*.uploadthing.com https://*.hosted.app https://*.firebaseapp.com`,
+      `frame-src 'self' ${NILAMIT} https://*.firebaseapp.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.hosted.app`,
+      `media-src 'self' ${NILAMIT} https://*.hosted.app`,
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self' https://*.hosted.app https://*.firebaseapp.com",
+      `form-action 'self' ${NILAMIT} https://*.hosted.app https://*.firebaseapp.com`,
       "frame-ancestors 'none'",
     ].join('; ');
 
