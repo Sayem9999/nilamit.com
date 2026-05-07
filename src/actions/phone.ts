@@ -27,6 +27,7 @@ function generateOTP(): string {
 }
 
 export async function sendPhoneOTP(phone: string) {
+  try {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'You must be logged in.');
 
@@ -44,15 +45,24 @@ export async function sendPhoneOTP(phone: string) {
     return errorResponse(ErrorType.CONFLICT, 'This phone number is already verified by another account.');
   }
 
-  return internalSendOTP(normalizedPhone, session.user.id, session.user.email ?? undefined);
+  return await internalSendOTP(normalizedPhone, session.user.id, session.user.email ?? undefined);
+  } catch (error) {
+    log.error('[phone] sendPhoneOTP failed', error);
+    return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred during phone verification.');
+  }
 }
 
 export async function requestStandaloneOTP(phone: string) {
+  try {
   const normalizedPhone = normalizePhone(phone);
   if (!/^\+8801\d{9}$/.test(normalizedPhone)) {
     return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladesh phone number.');
   }
-  return internalSendOTP(normalizedPhone);
+  return await internalSendOTP(normalizedPhone);
+  } catch (error) {
+    log.error('[phone] requestStandaloneOTP failed', error);
+    return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred during phone verification.');
+  }
 }
 
 async function internalSendOTP(phone: string, userId?: string, email?: string) {
@@ -107,6 +117,7 @@ async function internalSendOTP(phone: string, userId?: string, email?: string) {
 }
 
 export async function verifyPhoneOTP(phone: string, otp: string) {
+  try {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'You must be logged in.');
 
@@ -122,10 +133,19 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
     updatedAt: new Date(),
   });
   return successResponse(null);
+  } catch (error) {
+    log.error('[phone] verifyPhoneOTP failed', error);
+    return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred during OTP verification.');
+  }
 }
 
 export async function verifyStandaloneOTP(phone: string, otp: string) {
-  return internalVerifyOTP(normalizePhone(phone), otp);
+  try {
+    return await internalVerifyOTP(normalizePhone(phone), otp);
+  } catch (error) {
+    log.error('[phone] verifyStandaloneOTP failed', error);
+    return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred during OTP verification.');
+  }
 }
 
 async function internalVerifyOTP(phone: string, otp: string, userId?: string) {

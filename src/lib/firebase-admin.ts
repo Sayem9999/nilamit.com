@@ -64,13 +64,29 @@ export function getAdminApp(): App {
     privateKey = `-----BEGIN PRIVATE KEY-----\n${chunks.join('\n')}\n-----END PRIVATE KEY-----`;
   }
 
-  return initializeApp({
+  // Safe diagnostics (NO actual key content is logged)
+  const newlineCount = (privateKey.match(/\n/g) || []).length;
+  console.log(`[Firebase Admin Init] Private Key Metadata: ` +
+    `rawLength=${privateKeyRaw.length}, ` +
+    `parsedLength=${privateKey.length}, ` +
+    `startsWithHeader=${privateKey.startsWith('-----BEGIN PRIVATE KEY-----')}, ` +
+    `endsWithFooter=${privateKey.endsWith('-----END PRIVATE KEY-----')}, ` +
+    `newlines=${newlineCount}, ` +
+    `hasCarriageReturn=${privateKey.includes('\r')}`
+  );
+
+  try {
+    return initializeApp({
     credential: cert({ projectId, clientEmail, privateKey }),
     databaseURL: process.env.FIREBASE_DATABASE_URL ??
       `https://${projectId}-default-rtdb.firebaseio.com`,
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET ??
       `${projectId}.firebasestorage.app`,
-  });
+    });
+  } catch (err) {
+    console.error(`[Firebase Admin Init] Failed to initialize App with credentials.`, err);
+    throw err;
+  }
 }
 
 // Lazy singletons — safe for Cloud Run (persistent process)
