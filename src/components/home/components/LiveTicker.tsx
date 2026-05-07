@@ -46,23 +46,23 @@ export function LiveTicker({ initialActivity }: LiveTickerProps) {
   if (activities.length === 0) return null;
 
   return (
-    <div className="bg-gray-900 overflow-hidden py-2 block">
-      <div className="flex animate-marquee whitespace-nowrap">
+    <aside aria-label="Live activity ticker" className="bg-gray-900 overflow-hidden py-2 block">
+      <div className="flex animate-marquee motion-reduce:animate-none whitespace-nowrap">
         {[...activities, ...activities].map((activity, i) => (
           <div key={i} className="flex items-center gap-2 mx-8 text-[11px] font-bold text-gray-400">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse motion-reduce:animate-none" aria-hidden="true" />
             <span className="text-white">{activity.bidder.name}</span>
             <span>bid ৳{activity.amount.toLocaleString()} on</span>
-            <Link href={`/auctions/${activity.auction.id}`} className="text-primary-400 hover:underline">
+            <Link href={`/auctions/${activity.auction.id}`} className="text-primary-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 rounded">
               {activity.auction.title}
             </Link>
-            <Clock className="w-3 h-3 ml-1" />
+            <Clock className="w-3 h-3 ml-1" aria-hidden="true" />
             <span>
               {new Date(activity.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           </div>
         ))}
       </div>
-    </div>
+    </aside>
   );
 }

@@ -49,9 +49,9 @@ export default function LiveTicker() {
   if (items.length === 0) return null;
 
   return (
-    <div className="bg-gray-900 text-white overflow-hidden h-10 flex items-center border-b border-white/5">
+    <aside aria-label="Live activity ticker" className="bg-gray-900 text-white overflow-hidden h-10 flex items-center border-b border-white/5">
       <div className="flex-shrink-0 px-4 bg-primary-600 h-full flex items-center gap-2 relative z-10 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
-        <Zap className="w-4 h-4 fill-white text-white animate-pulse" />
+        <Zap className="w-4 h-4 fill-white text-white animate-pulse motion-reduce:animate-none" aria-hidden="true" />
         <span className="text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">Live Ticker</span>
       </div>
 
@@ -66,11 +66,12 @@ export default function LiveTicker() {
               transition={{ duration: 0.5, ease: "circOut" }}
               className="inline-flex items-center px-4 whitespace-nowrap"
             >
-              <Link 
+              <Link
                 href={`/auctions/${item.auctionId}`}
-                className="flex items-center gap-2 text-[11px] hover:text-primary-400 transition-colors"
+                aria-label={`${item.bidderName} placed ${item.amount} BDT on ${item.auctionTitle}`}
+                className="flex items-center gap-2 text-[11px] hover:text-primary-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 rounded"
               >
-                <Trophy className="w-3 h-3 text-amber-500" />
+                <Trophy className="w-3 h-3 text-amber-500" aria-hidden="true" />
                 <span className="font-bold text-gray-200">{item.bidderName}</span>
                 <span className="text-gray-500">placed</span>
                 <span className="font-black text-primary-400">{item.amount} BDT</span>
@@ -81,6 +82,6 @@ export default function LiveTicker() {
           ))}
         </AnimatePresence>
       </div>
-    </div>
+    </aside>
   );
 }

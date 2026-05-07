@@ -20,8 +20,8 @@ export function TrendingSection({
 }: TrendingSectionProps) {
   const t = useTranslations("Home");
   return (
-    <section className="pb-24 pt-12 bg-white relative">
-      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-gray-50 to-transparent pointer-events-none" />
+    <section className="pb-24 pt-12 bg-white relative" aria-labelledby="trending-heading">
+      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-gray-50 to-transparent pointer-events-none" aria-hidden="true" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -31,24 +31,25 @@ export function TrendingSection({
         >
           <div>
             <div className="inline-flex items-center gap-2 text-primary-600 bg-primary-50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
-              <TrendingUp className="w-4 h-4" /> {t("trendingTag")}
+              <TrendingUp className="w-4 h-4" aria-hidden="true" /> {t("trendingTag")}
             </div>
-            <h2 className="font-heading font-black text-4xl sm:text-5xl text-gray-900 tracking-tight">
+            <h2 id="trending-heading" className="font-heading font-black text-4xl sm:text-5xl text-gray-900 tracking-tight">
               {t("trendingTitle")}
             </h2>
           </div>
           <Link
             href="/auctions?sortBy=bids&sortOrder=desc"
-            className="group flex items-center gap-2 bg-gray-50 hover:bg-primary-50 text-gray-900 hover:text-primary-700 px-6 py-3 rounded-2xl font-bold transition-all border border-gray-100"
+            aria-label={`${t("viewMore")} — most active auctions`}
+            className="group flex items-center gap-2 bg-gray-50 hover:bg-primary-50 text-gray-900 hover:text-primary-700 px-6 py-3 rounded-2xl font-bold transition-all border border-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
           >
             {t("viewMore")}{" "}
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </Link>
         </motion.div>
 
         {trendingAuctions.length === 0 ? (
           <div className="bg-gray-50/50 rounded-[2.5rem] p-12 text-center border-2 border-dashed border-gray-100">
-            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4" aria-hidden="true">
               <Zap className="w-8 h-8 text-gray-300" />
             </div>
             <p className="text-gray-500 font-medium">
