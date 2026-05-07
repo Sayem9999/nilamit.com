@@ -5,6 +5,8 @@ import { filterPII } from '@/lib/pii-filter';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
 import type { CreateAuctionInputValidated } from '@/lib/schemas';
+import { rtdbPush } from '@/lib/firebase-admin';
+import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 
 export class AuctionService {
   /**
@@ -183,17 +185,59 @@ export class AuctionService {
       };
 
       await db.collection('auctions').doc(id).set(auction);
-      
+
       // Increment global stats (Fire and forget)
       incrementGlobalStat('totalAuctions').catch(() => {});
-      
+
+      // Fan out NEW_LISTING notifications to followers — fire-and-forget, never
+      // blocks the create response. Caps at 500 followers/listing to keep RTDB
+      // pushes bounded; busier sellers can move to a queue later.
+      AuctionService.notifyFollowersOfNewListing(id, userId, sanitizedInput.title, sanitizedInput.images?.[0])
+        .catch((e) => log.error('[AuctionService] follower fan-out failed', e, { auctionId: id }));
+
       log.info('Auction created successfully', { auctionId: id, sellerId: userId });
-      
+
       return successResponse(auction);
     } catch (err) {
       log.error('Failed to create auction', err, { userId });
       return errorResponse(ErrorType.INTERNAL, 'Failed to create auction listing');
     }
+  }
+
+  /**
+   * Push a NEW_LISTING notification to every user that follows this seller.
+   * Best-effort: each push is independent, errors are logged not thrown, and
+   * the whole operation is hard-capped at FOLLOWER_FAN_OUT_CAP recipients per
+   * listing to keep RTDB write counts predictable.
+   */
+  private static FOLLOWER_FAN_OUT_CAP = 500;
+  private static async notifyFollowersOfNewListing(
+    auctionId: string,
+    sellerId: string,
+    title: string,
+    coverImage: string | undefined,
+  ): Promise<void> {
+    const snap = await db.collection('sellerFollows')
+      .where('sellerId', '==', sellerId)
+      .orderBy('createdAt', 'desc')
+      .limit(this.FOLLOWER_FAN_OUT_CAP)
+      .get();
+
+    if (snap.empty) return;
+
+    const tasks = snap.docs.map((d) => {
+      const followerId = d.data().followerId as string | undefined;
+      if (!followerId) return Promise.resolve();
+      return rtdbPush(RTDB_PATHS.userNotifications(followerId), {
+        event:        FIREBASE_EVENTS.NEW_LISTING,
+        auctionId,
+        sellerId,
+        auctionTitle: title,
+        coverImage:   coverImage ?? null,
+      }).catch((e) => log.error(`[AuctionService] notify follower ${followerId} failed`, e, { auctionId }));
+    });
+
+    await Promise.allSettled(tasks);
   }
   /**
    * Transition an auction to a "Second Chance Offer" for the next highest bidder.

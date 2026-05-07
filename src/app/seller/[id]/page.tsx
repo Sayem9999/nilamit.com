@@ -6,6 +6,8 @@ import { Star, ShieldCheck, MapPin, Calendar, Gavel, History, Award, MessageSqua
 import Image from "next/image";
 import { type User, type Auction, type Review, type AuctionWithSeller } from "@/types";
 import { formatBDT } from "@/lib/format";
+import { FollowSellerButton } from "@/components/social/FollowSellerButton";
+import { isFollowingSeller, getFollowerCount } from "@/actions/seller-follow";
 
 interface Props {
   params: Promise<{ locale: string; id: string }>;
@@ -47,12 +49,19 @@ export default async function SellerProfilePage({ params }: Props) {
     _count: { bids: bidsSnap.size },
   };
 
-  const auctionsSnap = await db.collection('auctions')
-    .where('sellerId', '==', id)
-    .where('status', 'in', ['ACTIVE', 'SOLD'])
-    .orderBy('createdAt', 'desc')
-    .limit(20)
-    .get();
+  const [auctionsSnap, followingRes, followerCountRes] = await Promise.all([
+    db.collection('auctions')
+      .where('sellerId', '==', id)
+      .where('status', 'in', ['ACTIVE', 'SOLD'])
+      .orderBy('createdAt', 'desc')
+      .limit(20)
+      .get(),
+    isFollowingSeller(id),
+    getFollowerCount(id),
+  ]);
+
+  const initialFollowing     = followingRes.success ? followingRes.data!.following : false;
+  const initialFollowerCount = followerCountRes.success ? followerCountRes.data!.count : 0;
 
   const auctions = await Promise.all(auctionsSnap.docs.map(async d => {
     const a = d.data() as Auction;
@@ -144,6 +153,13 @@ export default async function SellerProfilePage({ params }: Props) {
                 <h1 className="text-3xl md:text-4xl font-heading font-black text-gray-900 tracking-tight">
                   {seller.name}
                 </h1>
+                <div className="flex items-center justify-center md:justify-start">
+                  <FollowSellerButton
+                    sellerId={seller.id}
+                    initialFollowing={initialFollowing}
+                    initialFollowerCount={initialFollowerCount}
+                  />
+                </div>
                 <div className="flex items-center justify-center md:justify-start gap-2">
                   {seller.isVerifiedSeller && (
                     <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100 flex items-center gap-1.5 shadow-sm">

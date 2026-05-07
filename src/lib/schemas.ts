@@ -191,6 +191,27 @@ export const reportAuctionSchema = z.object({
 });
 export type ReportAuctionInput = z.infer<typeof reportAuctionSchema>;
 
+// ─── Seller follow ─────────────────────────────────────────────────────────
+
+export const followSellerSchema = z.object({
+  sellerId: firestoreIdSchema,
+});
+export type FollowSellerInput = z.infer<typeof followSellerSchema>;
+
+// ─── Auction Q&A ───────────────────────────────────────────────────────────
+
+export const askQuestionSchema = z.object({
+  auctionId: firestoreIdSchema,
+  question:  z.string().trim().min(5, 'Question must be at least 5 characters').max(500, 'Question is too long'),
+});
+export type AskQuestionInput = z.infer<typeof askQuestionSchema>;
+
+export const answerQuestionSchema = z.object({
+  questionId: firestoreIdSchema,
+  answer:     z.string().trim().min(1, 'Answer is required').max(2000, 'Answer is too long'),
+});
+export type AnswerQuestionInput = z.infer<typeof answerQuestionSchema>;
+
 export const updateProfileSchema = z.object({
   name:  z.string().trim().min(2, 'Name too short').max(80, 'Name too long').optional(),
   image: z.string().url('Invalid image URL').max(2048).optional(),

@@ -32,6 +32,7 @@ export const AuctionCard = memo(({
   const t = useTranslations("Auction");
   const tCat = useTranslations("Categories");
   const tLoc = useTranslations("Locations");
+  const tOwner = useTranslations("Owner");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -47,10 +48,10 @@ export const AuctionCard = memo(({
     startTransition(async () => {
       const res = await cancelAuction(auction.id);
       if (res.success) {
-        toast.success("Listing cancelled.");
+        toast.success(tOwner("listingCancelled"));
         router.refresh();
       } else {
-        toast.error(res.error?.message ?? "Failed to cancel listing.");
+        toast.error(res.error?.message ?? tOwner("cancelFailed"));
       }
     });
   };
@@ -59,10 +60,10 @@ export const AuctionCard = memo(({
     startTransition(async () => {
       const res = await relistAuction(auction.id);
       if (res.success && res.data) {
-        toast.success("Relisted — review and adjust the new auction below.");
+        toast.success(tOwner("relistedSuccess"));
         router.push(`/auctions/${res.data.auctionId}`);
       } else {
-        toast.error(res.error?.message ?? "Failed to relist.");
+        toast.error(res.error?.message ?? tOwner("relistFailed"));
       }
     });
   };
@@ -237,7 +238,7 @@ export const AuctionCard = memo(({
                   disabled={isPending}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
                 >
-                  <Pencil className="w-3.5 h-3.5" /> Edit
+                  <Pencil className="w-3.5 h-3.5" /> {tOwner("edit")}
                 </button>
               )}
               {canCancel && (
@@ -247,7 +248,7 @@ export const AuctionCard = memo(({
                   disabled={isPending}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
                 >
-                  <X className="w-3.5 h-3.5" /> Cancel
+                  <X className="w-3.5 h-3.5" /> {tOwner("cancel")}
                 </button>
               )}
               {canRelist && (
@@ -257,7 +258,7 @@ export const AuctionCard = memo(({
                   disabled={isPending}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-primary-200 text-primary-600 hover:bg-primary-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" /> {isPending ? "Relisting..." : "Relist"}
+                  <RotateCcw className="w-3.5 h-3.5" /> {isPending ? tOwner("relisting") : tOwner("relist")}
                 </button>
               )}
             </div>
@@ -287,25 +288,22 @@ export const AuctionCard = memo(({
             className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
           >
-            <h2 className="text-lg font-heading font-bold text-gray-900 mb-1">Cancel listing?</h2>
-            <p className="text-sm text-gray-600 mb-2">
-              This auction will be marked CANCELLED and removed from search results. This is only possible
-              because no bids have been placed yet — once cancelled it can be relisted from your dashboard.
-            </p>
+            <h2 className="text-lg font-heading font-bold text-gray-900 mb-1">{tOwner("cancelTitle")}</h2>
+            <p className="text-sm text-gray-600 mb-2">{tOwner("cancelDescription")}</p>
             <div className="flex justify-end gap-2 mt-4">
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCancelConfirm(false); }}
                 disabled={isPending}
                 className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl disabled:opacity-50"
               >
-                Keep listing
+                {tOwner("keepListing")}
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCancel(); }}
                 disabled={isPending}
                 className="px-5 py-2 text-sm font-bold text-white rounded-xl shadow-sm bg-red-600 hover:bg-red-700 disabled:opacity-50"
               >
-                {isPending ? "Cancelling..." : "Yes, cancel"}
+                {isPending ? tOwner("cancelling") : tOwner("confirmCancel")}
               </button>
             </div>
           </div>

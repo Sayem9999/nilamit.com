@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { X, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import { ImageUpload } from "@/components/upload/ImageUpload";
 import { editAuction } from "@/actions/auction";
@@ -28,6 +29,7 @@ export function EditListingModal({
   onClose,
   onSaved,
 }: EditListingModalProps) {
+  const t = useTranslations("Owner");
   const [description, setDescription] = useState(initialDescription);
   const [images, setImages] = useState<string[]>(initialImages);
   const [errors, setErrors] = useState<{ description?: string; images?: string }>({});
@@ -73,10 +75,10 @@ export function EditListingModal({
 
   const validate = () => {
     const next: typeof errors = {};
-    if (descLen < DESC_MIN) next.description = `Description must be at least ${DESC_MIN} characters.`;
-    if (descLen > DESC_MAX) next.description = `Description cannot exceed ${DESC_MAX} characters.`;
-    if (images.length < IMG_MIN) next.images = "Add at least one photo.";
-    if (images.length > IMG_MAX) next.images = `Maximum ${IMG_MAX} photos.`;
+    if (descLen < DESC_MIN) next.description = t("errDescriptionMin", { min: DESC_MIN });
+    if (descLen > DESC_MAX) next.description = t("errDescriptionMax", { max: DESC_MAX });
+    if (images.length < IMG_MIN) next.images = t("errImageMin");
+    if (images.length > IMG_MAX) next.images = t("errImageMax", { max: IMG_MAX });
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -97,7 +99,7 @@ export function EditListingModal({
     startTransition(async () => {
       const res = await editAuction(patch);
       if (res.success) {
-        toast.success("Listing updated.");
+        toast.success(t("listingUpdated"));
         onSaved?.();
         onClose();
         return;
@@ -106,12 +108,12 @@ export function EditListingModal({
       const msg = res.error?.message ?? "";
       // Race: someone bid between modal open and submit. Tell the user, refresh.
       if (msg.includes("Cannot edit after bids")) {
-        toast.error("A bid was placed while you were editing — refreshing.", { duration: 5000 });
+        toast.error(t("editRaceMessage"), { duration: 5000 });
         onSaved?.();
         onClose();
         return;
       }
-      toast.error(msg || "Failed to update listing.");
+      toast.error(msg || t("editFailed"));
     });
   };
 
@@ -139,11 +141,10 @@ export function EditListingModal({
         <div className="flex items-start justify-between px-6 pt-6 pb-3 border-b border-gray-100">
           <div>
             <h2 id="edit-listing-title" className="text-lg font-heading font-bold text-gray-900 mb-1">
-              Edit listing
+              {t("editTitle")}
             </h2>
             <p id="edit-listing-hint" className="text-xs text-gray-500 leading-relaxed max-w-md">
-              Title, pricing, and timing are locked once published. Only description
-              and photos can change — and only while no bids have been placed.
+              {t("editHint")}
             </p>
           </div>
           <button
@@ -163,7 +164,7 @@ export function EditListingModal({
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label htmlFor="edit-desc" className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                Description
+                {t("descLabel")}
               </label>
               <span className={`text-[10px] font-mono ${counterColor}`}>
                 {descLen.toLocaleString()} / {DESC_MAX.toLocaleString()}
@@ -185,7 +186,7 @@ export function EditListingModal({
                   ? "border-red-400 focus:ring-2 focus:ring-red-200"
                   : "border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               } disabled:bg-gray-50 disabled:cursor-not-allowed`}
-              placeholder="Describe the item's condition, history, what's included, etc."
+              placeholder={t("descPlaceholder")}
             />
             {errors.description && (
               <p className="text-xs text-red-600 mt-1.5">{errors.description}</p>
@@ -196,7 +197,7 @@ export function EditListingModal({
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                Photos
+                {t("photosLabel")}
               </label>
               <span className="text-[10px] font-mono text-gray-400">
                 {images.length} / {IMG_MAX}
@@ -216,7 +217,7 @@ export function EditListingModal({
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
           <p className="text-[11px] text-gray-400 leading-tight max-w-[40%]">
-            {isDirty ? "Unsaved changes" : "No changes yet"}
+            {isDirty ? t("unsavedChanges") : t("noChanges")}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -225,7 +226,7 @@ export function EditListingModal({
               disabled={isPending}
               className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 hover:bg-white rounded-xl transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t("cancel")}
             </button>
             <button
               type="button"
@@ -234,7 +235,7 @@ export function EditListingModal({
               className="px-5 py-2 text-sm font-bold text-white rounded-xl shadow-sm bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isPending ? "Saving..." : "Save changes"}
+              {isPending ? t("saving") : t("save")}
             </button>
           </div>
         </div>

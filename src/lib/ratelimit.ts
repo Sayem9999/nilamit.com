@@ -126,3 +126,8 @@ export const phoneOtpSendLimiter   = createLimiter("rl_phone_otp_send",   5, "1h
 export const phoneOtpVerifyLimiter = createLimiter("rl_phone_otp_verify", 5, "15m", "fail-closed");
 export const emailOtpSendLimiter   = createLimiter("rl_email_otp_send",   5, "1h",  "fail-closed");
 export const emailOtpVerifyLimiter = createLimiter("rl_email_otp_verify", 5, "15m", "fail-closed");
+
+// Anti-spam for the public Q&A feature. Fail-open is fine — abusive volumes
+// of questions are annoying, not financial. Per-user, not per-IP, so account
+// gating still throttles even if Upstash is down.
+export const qaLimiter             = createLimiter("rl_qa",                10, "10m", "fail-open");
