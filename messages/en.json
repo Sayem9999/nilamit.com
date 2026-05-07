@@ -84,7 +84,12 @@
     "passwordsMismatch": "Passwords do not match.",
     "verifyEmailTitle": "Verify Your Email",
     "verifyEmailDesc": "We've sent a verification link to your email address.",
-    "resendEmailBtn": "Resend Verification Email"
+    "resendEmailBtn": "Resend Verification Email",
+    "verifyEmailMissingParams": "This verification link is missing details. Open the link from your email — that one will work.",
+    "verifyEmailSuccessBody": "Your email is verified. You can now use every feature of Nilamit.",
+    "verifyEmailFailedBody": "This verification link is invalid or has expired. Request a new one from your profile.",
+    "goToDashboard": "Go to Dashboard",
+    "tryAgain": "Try again"
   },
   "Home": {
     "title": "Trusted Auctions",
