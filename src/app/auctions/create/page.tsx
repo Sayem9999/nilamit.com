@@ -111,7 +111,7 @@ export default function CreateAuctionPage() {
         </h1>
         {session.user.isVerifiedSeller && (
           <Link 
-            href={`/${locale}/seller/inventory/bulk`}
+            href={`/seller/inventory/bulk`}
             className="text-xs font-bold text-primary-600 hover:text-primary-700 bg-primary-50 px-3 py-1.5 rounded-lg border border-primary-100 transition-all"
           >
             Switch to Bulk Upload

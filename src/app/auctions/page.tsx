@@ -8,49 +8,62 @@ import { Search as SearchIcon, SlidersHorizontal, MapPin } from "lucide-react";
 import { CATEGORIES, LOCATIONS, AuctionWithSeller, AuctionStatus } from "@/types";
 import { getTranslations } from "next-intl/server";
 
-interface Props {
-  searchParams: Promise<{
-    category?: string;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: string;
-    status?: string;
-    location?: string;
-    locale?: string;
-  }>;
+interface AuctionsSearchParams {
+  category?: string;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: string;
+  status?: string;
+  location?: string;
 }
 
-export default async function AuctionsPage({ params: routeParams, searchParams }: { params: Promise<{ locale: string }>, searchParams: Props['searchParams'] }) {
-  const { locale } = await routeParams;
+interface Props {
+  searchParams: Promise<AuctionsSearchParams>;
+}
+
+/**
+ * Build a query string from a base param set + overrides. Used to construct
+ * filter links that preserve other active filters (e.g. clicking a location
+ * keeps the current category selection).
+ */
+function buildQs(base: AuctionsSearchParams, overrides: Partial<AuctionsSearchParams>): string {
+  const merged: Record<string, string> = {};
+  for (const [k, v] of Object.entries({ ...base, ...overrides })) {
+    if (v !== undefined && v !== null && v !== "") merged[k] = String(v);
+  }
+  const qs = new URLSearchParams(merged).toString();
+  return qs ? `/auctions?${qs}` : "/auctions";
+}
+
+export default async function AuctionsPage({ searchParams }: Props) {
   const params = await searchParams;
-  const t = await getTranslations("Search");
+  const t    = await getTranslations("Search");
   const tCat = await getTranslations("Categories");
   const tLoc = await getTranslations("Locations");
-  
+
   const filters = {
     category: params.category,
-    search: params.search,
-    sortBy:
-      (params.sortBy as "endTime" | "currentPrice" | "createdAt" | "bids") ||
-      "endTime",
-    sortOrder: (params.sortOrder as "asc" | "desc") || "asc",
-    status: (params.status as AuctionStatus) || "ACTIVE",
+    search:   params.search,
+    sortBy:   (params.sortBy as "endTime" | "currentPrice" | "createdAt" | "bids") || "endTime",
+    sortOrder:(params.sortOrder as "asc" | "desc") || "asc",
+    status:   (params.status as AuctionStatus) || "ACTIVE",
     location: params.location,
-    limit: 12,
+    limit:    12,
   };
 
   const response = await getAuctions(filters);
-
   const { auctions: initialAuctions, total } = (response.success && response.data)
-    ? response.data 
+    ? response.data
     : { auctions: [] as AuctionWithSeller[], total: 0 };
+
+  const hasActiveFilter = !!(params.category || params.location || params.search);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">
+          <h1 className="font-heading font-bold text-3xl sm:text-4xl text-gray-900 tracking-tight">
             {params.category
               ? tCat(params.category)
               : params.search
@@ -61,101 +74,129 @@ export default async function AuctionsPage({ params: routeParams, searchParams }
             {t("found", { count: total })}
           </p>
         </div>
-      </div>
+        {hasActiveFilter && (
+          <Link
+            href="/auctions"
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-primary-600 transition-colors uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+          >
+            {t("clearFilters")}
+          </Link>
+        )}
+      </header>
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar Filters */}
-        <aside className="lg:w-56 flex-shrink-0">
+        <aside className="lg:w-56 flex-shrink-0" aria-label={t("filters")}>
           {/* Search */}
-          <form className="mb-6">
+          <form className="mb-6" role="search" action="/auctions">
+            <label htmlFor="auctions-search" className="sr-only">{t("searchPlaceholder")}</label>
             <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
               <input
-                type="text"
+                id="auctions-search"
+                type="search"
                 name="search"
                 defaultValue={params.search}
-                placeholder={t("searchPlaceholder") || "Search auctions..."}
+                placeholder={t("searchPlaceholder")}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
           </form>
 
           {/* Categories */}
-          <div className="mb-6">
-            <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4" /> {t("category")}
-            </h3>
-            <div className="space-y-1">
-              <Link
-                href={`/${locale}/auctions`}
-                className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                  !params.category
-                    ? "bg-primary-50 text-primary-700 font-medium"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                {t("allCategories")}
-              </Link>
-              {CATEGORIES.map((cat) => (
+          <nav className="mb-6" aria-labelledby="filter-category-heading">
+            <h2 id="filter-category-heading" className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4" aria-hidden="true" /> {t("category")}
+            </h2>
+            <ul className="space-y-1">
+              <li>
                 <Link
-                  key={cat.slug}
-                  href={`/${locale}/auctions?category=${cat.slug}`}
-                  className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                    params.category === cat.slug
+                  href={buildQs(params, { category: undefined })}
+                  aria-current={!params.category ? "page" : undefined}
+                  className={`block px-3 py-2 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                    !params.category
                       ? "bg-primary-50 text-primary-700 font-medium"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  {tCat(cat.slug)}
+                  {t("allCategories")}
                 </Link>
+              </li>
+              {CATEGORIES.map((cat) => (
+                <li key={cat.slug}>
+                  <Link
+                    href={buildQs(params, { category: cat.slug })}
+                    aria-current={params.category === cat.slug ? "page" : undefined}
+                    className={`block px-3 py-2 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                      params.category === cat.slug
+                        ? "bg-primary-50 text-primary-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {tCat(cat.slug)}
+                  </Link>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </nav>
 
           {/* Location */}
-          <div className="mb-6">
-            <h3 className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> {t("location")}
-            </h3>
-            <div className="space-y-1">
-              <Link
-                href={`/${locale}/auctions`}
-                className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                  !params.location
-                    ? "bg-primary-50 text-primary-700 font-medium"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                {t("allLocations")}
-              </Link>
-              {LOCATIONS.map((loc) => (
+          <nav aria-labelledby="filter-location-heading">
+            <h2 id="filter-location-heading" className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+              <MapPin className="w-4 h-4" aria-hidden="true" /> {t("location")}
+            </h2>
+            <ul className="space-y-1">
+              <li>
                 <Link
-                  key={loc.id}
-                  href={`/${locale}/auctions?location=${loc.id}`}
-                  className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                    params.location === loc.id
+                  href={buildQs(params, { location: undefined })}
+                  aria-current={!params.location ? "page" : undefined}
+                  className={`block px-3 py-2 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                    !params.location
                       ? "bg-primary-50 text-primary-700 font-medium"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  {tLoc(loc.id)}
+                  {t("allAreas")}
                 </Link>
+              </li>
+              {LOCATIONS.map((loc) => (
+                <li key={loc.id}>
+                  <Link
+                    href={buildQs(params, { location: loc.id })}
+                    aria-current={params.location === loc.id ? "page" : undefined}
+                    className={`block px-3 py-2 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                      params.location === loc.id
+                        ? "bg-primary-50 text-primary-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {tLoc(loc.id)}
+                  </Link>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </nav>
         </aside>
 
         {/* Results Grid */}
-        <div className="flex-1">
+        <section className="flex-1" aria-label="Auction results">
           {initialAuctions.length === 0 ? (
             <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-              <SearchIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900">
+              <SearchIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" aria-hidden="true" />
+              <h2 className="text-lg font-semibold text-gray-900">
                 {t("noResults")}
-              </h3>
+              </h2>
               <p className="text-gray-500 max-w-xs mx-auto mt-2">
                 {t("noResultsDesc")}
               </p>
+              {hasActiveFilter && (
+                <Link
+                  href="/auctions"
+                  className="inline-block mt-4 text-sm font-bold text-primary-600 hover:text-primary-700"
+                >
+                  {t("clearFilters")}
+                </Link>
+              )}
             </div>
           ) : (
             <div className="space-y-8">
@@ -168,7 +209,7 @@ export default async function AuctionsPage({ params: routeParams, searchParams }
               <LoadMore filters={filters} />
             </div>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );

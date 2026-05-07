@@ -73,7 +73,7 @@ export default async function SearchPage({
                 </h3>
                 <div className="space-y-1">
                   <Link
-                    href={`/${locale}/search?q=${query}&category=All&sort=${sortBy}&location=${locFilter}&condition=${condition || ''}`}
+                    href={`/search?q=${query}&category=All&sort=${sortBy}&location=${locFilter}&condition=${condition || ''}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       catFilter === "All"
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -85,7 +85,7 @@ export default async function SearchPage({
                   {CATEGORIES.map((cat) => (
                     <Link
                       key={cat.slug}
-                      href={`/${locale}/search?q=${query}&category=${cat.slug}&sort=${sortBy}&location=${locFilter}&condition=${condition || ''}`}
+                      href={`/search?q=${query}&category=${cat.slug}&sort=${sortBy}&location=${locFilter}&condition=${condition || ''}`}
                       className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                         catFilter === cat.slug
                           ? "bg-primary-50 text-primary-700 font-medium"
@@ -105,7 +105,7 @@ export default async function SearchPage({
                 </h3>
                 <div className="space-y-1 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
                   <Link
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=&condition=${condition || ''}`}
+                    href={`/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=&condition=${condition || ''}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       !locFilter
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -117,7 +117,7 @@ export default async function SearchPage({
                   {LOCATIONS.map((loc) => (
                     <Link
                       key={loc.id}
-                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${loc.id}&condition=${condition || ''}`}
+                      href={`/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${loc.id}&condition=${condition || ''}`}
                       className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                         locFilter === loc.id
                           ? "bg-primary-50 text-primary-700 font-medium"
@@ -139,7 +139,7 @@ export default async function SearchPage({
                   {['All', 'NEW', 'USED', 'REFURBISHED'].map((cond) => (
                     <Link
                       key={cond}
-                      href={`/${locale}/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${locFilter}&condition=${cond === 'All' ? '' : cond}`}
+                      href={`/search?q=${query}&category=${catFilter}&sort=${sortBy}&location=${locFilter}&condition=${cond === 'All' ? '' : cond}`}
                       className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                         (condition === cond || (!condition && cond === 'All'))
                           ? "bg-primary-50 text-primary-700 font-medium"
@@ -160,7 +160,7 @@ export default async function SearchPage({
                 </h3>
                 <div className="space-y-1">
                   <Link
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=endTime&location=${locFilter}`}
+                    href={`/search?q=${query}&category=${catFilter}&sort=endTime&location=${locFilter}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       sortBy === "endTime"
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -170,7 +170,7 @@ export default async function SearchPage({
                     {t("endingSoon")}
                   </Link>
                   <Link
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_asc&location=${locFilter}`}
+                    href={`/search?q=${query}&category=${catFilter}&sort=price_asc&location=${locFilter}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       sortBy === "price_asc"
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -180,7 +180,7 @@ export default async function SearchPage({
                     {t("lowestPrice")}
                   </Link>
                   <Link
-                    href={`/${locale}/search?q=${query}&category=${catFilter}&sort=price_desc&location=${locFilter}`}
+                    href={`/search?q=${query}&category=${catFilter}&sort=price_desc&location=${locFilter}`}
                     className={`block text-sm px-3 py-1.5 rounded-lg transition-colors ${
                       sortBy === "price_desc"
                         ? "bg-primary-50 text-primary-700 font-medium"
@@ -227,7 +227,7 @@ export default async function SearchPage({
                   {t("noResultsDesc")}
                 </p>
                 <Link
-                  href={`/${locale}/search`}
+                  href={`/search`}
                   className="px-6 py-2.5 bg-primary-50 text-primary-700 font-medium rounded-xl hover:bg-primary-100 transition-colors"
                 >
                   {t("clearFilters")}

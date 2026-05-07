@@ -53,7 +53,7 @@ export default async function BannedPage({
           </p>
 
           <Link
-            href={`/${locale}`}
+            href={`/`}
             className="inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
           >
             <Home className="w-5 h-5" />

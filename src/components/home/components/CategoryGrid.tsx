@@ -32,7 +32,7 @@ export function CategoryGrid() {
           {CATEGORIES.filter((c) => c.slug !== "other").map((cat) => (
             <Link
               key={cat.slug}
-              href={`/${locale}/auctions?category=${cat.slug}`}
+              href={`/auctions?category=${cat.slug}`}
               className="group flex flex-col items-center bg-gray-50/50 hover:bg-white p-6 rounded-3xl transition-all border border-transparent hover:border-primary-100 hover:shadow-xl hover:shadow-primary-600/5"
             >
               <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-2xl group-hover:scale-110 transition-transform mb-4">
