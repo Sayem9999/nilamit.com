@@ -23,6 +23,7 @@ import {
   DollarSign,
   Truck,
   Info,
+  MapPin,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { canReviewAuction } from "@/actions/review";
@@ -159,35 +160,35 @@ export default async function AuctionDetailPage({ params }: Props) {
         targetId="mobile-bid-anchor"
       />
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Left: Details */}
-        <div className="flex-1">
+        {/* Left: Details — uniform 8-unit vertical rhythm via space-y */}
+        <div className="flex-1 space-y-8">
           {/* Image Gallery */}
-          <div className="mb-6">
-            <ImageGallery images={auction.images} title={auction.title} />
-          </div>
+          <ImageGallery images={auction.images} title={auction.title} />
 
           {/* Title & Meta */}
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-2 text-xs font-medium uppercase tracking-wider mb-2">
-              <span className="bg-primary-50 text-primary-700 px-2 py-1 rounded-md border border-primary-100">
-                {auction.category}
-              </span>
-              {auction.location && (
-                <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md border border-gray-200">
-                  📍 {auction.location}
+          <div>
+            {/* Action row above title — keeps the title on its own line at any width */}
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex flex-wrap gap-2 text-xs font-medium uppercase tracking-wider">
+                <span className="bg-primary-50 text-primary-700 px-2.5 py-1 rounded-md border border-primary-100">
+                  {auction.category}
                 </span>
-              )}
-              {auction.status === AuctionStatus.ACTIVE && (
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold animate-pulse">
-                  <TrendingUp className="w-3.5 h-3.5" /> {t("live")}
-                </div>
-              )}
-            </div>
-            <div className="flex items-center justify-between gap-4 mb-3">
-              <h1 className="font-heading font-bold text-2xl sm:text-3xl text-gray-900">
-                {auction.title}
-              </h1>
-              <div className="flex items-center gap-2">
+                {auction.location && (
+                  <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md border border-gray-200">
+                    <MapPin className="w-3 h-3" aria-hidden="true" /> {auction.location}
+                  </span>
+                )}
+                {auction.status === AuctionStatus.ACTIVE && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-md border border-green-100 text-xs font-semibold">
+                    <span className="relative flex w-2 h-2" aria-hidden="true">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                    </span>
+                    {t("live")}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
                 <ShareButton
                   title={auction.title}
                   auctionId={id}
@@ -199,31 +200,36 @@ export default async function AuctionDetailPage({ params }: Props) {
                 />
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
+
+            <h1 className="font-heading font-bold text-2xl sm:text-3xl lg:text-4xl text-gray-900 leading-tight tracking-tight mb-4">
+              {auction.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-500">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" aria-hidden="true" />
                 <CountdownTimer endTime={auction.endTime} serverTime={serverTime} />
               </div>
-              <div className="flex items-center gap-1">
-                <Users className="w-4 h-4" />
-                {auction._count?.bids || 0} {t("bids")}
+              <div className="flex items-center gap-1.5">
+                <Users className="w-4 h-4" aria-hidden="true" />
+                <span>{auction._count?.bids || 0} {t("bids")}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Eye className="w-4 h-4" />
-                {t("listed")} {formatRelativeTime(auction.createdAt, now)}
+              <div className="flex items-center gap-1.5">
+                <Eye className="w-4 h-4" aria-hidden="true" />
+                <span>{t("listed")} {formatRelativeTime(auction.createdAt, now)}</span>
               </div>
             </div>
           </div>
 
           {/* Description */}
-          <div className="mb-8">
-            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-3">
+          <section aria-labelledby="auction-description-heading">
+            <h2 id="auction-description-heading" className="font-heading font-semibold text-lg text-gray-900 mb-3">
               {t("description")}
             </h2>
             <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
               {auction.description}
             </p>
-          </div>
+          </section>
 
           {/* Bid History */}
           <BidHistory
@@ -237,18 +243,16 @@ export default async function AuctionDetailPage({ params }: Props) {
           />
 
           {/* Public Q&A */}
-          <div className="mt-8">
-            <QnaSection
-              auctionId={id}
-              sellerId={auction.sellerId}
-              initialQuestions={questions}
-              isActive={auction.status === AuctionStatus.ACTIVE}
-            />
-          </div>
+          <QnaSection
+            auctionId={id}
+            sellerId={auction.sellerId}
+            initialQuestions={questions}
+            isActive={auction.status === AuctionStatus.ACTIVE}
+          />
 
           {/* Review Section (Phase 3) */}
           {auction.status === AuctionStatus.SOLD && (
-            <div className="mt-12 pt-12 border-t border-gray-100">
+            <section className="pt-8 border-t border-gray-100">
               {canReview ? (
                 <div className="max-w-2xl">
                   <ReviewForm
@@ -267,13 +271,13 @@ export default async function AuctionDetailPage({ params }: Props) {
                 </div>
               ) : (
                 <div className="bg-gray-50 rounded-2xl p-6 flex items-center gap-4 text-gray-500">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <CheckCircle className="w-6 h-6 text-green-500" aria-hidden="true" />
                   <p className="font-bold uppercase tracking-tight text-xs">
                     {t("feedbackRecorded")}
                   </p>
                 </div>
               )}
-            </div>
+            </section>
           )}
         </div>
 
@@ -424,7 +428,7 @@ export default async function AuctionDetailPage({ params }: Props) {
             <Card className="border-primary-100 bg-primary-50/30 overflow-hidden">
               <CardHeader className="bg-white/50 py-3 border-b border-primary-100">
                 <CardTitle className="text-sm flex items-center gap-2 text-primary-800">
-                  <DollarSign className="w-4 h-4" /> {t("financialSummary")}
+                  <DollarSign className="w-4 h-4" aria-hidden="true" /> {t("financialSummary")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-3">
@@ -432,11 +436,11 @@ export default async function AuctionDetailPage({ params }: Props) {
                   <span className="text-xs text-slate-500">{t("grossSale")}</span>
                   <span className="text-sm font-bold text-slate-900">{formatBDT(auction.currentPrice)}</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center p-2 bg-white rounded border border-primary-50">
                   <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-bold text-primary-600 flex items-center gap-1">
-                      <Shield className="w-3 h-3" /> {t("successFee")}
+                      <Shield className="w-3 h-3" aria-hidden="true" /> {t("successFee")}
                     </span>
                     <span className="text-[9px] text-slate-400">{t("platformCommission")}</span>
                   </div>
@@ -446,7 +450,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
-                      <Truck className="w-3 h-3" /> {t("deliveryCharge")}
+                      <Truck className="w-3 h-3" aria-hidden="true" /> {t("deliveryCharge")}
                     </span>
                     <span className="text-[9px] text-slate-400">{t("sellerProtection")}</span>
                   </div>
@@ -458,15 +462,15 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <span className="text-[10px] font-black text-primary-900 uppercase">{t("netToYou")}</span>
                     <span className="text-xl font-black text-primary-700">{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</span>
                   </div>
-                  
+
                   {/* Second Chance Offer Action */}
                   {session?.user?.id === auction.sellerId && auction.status === AuctionStatus.SOLD && (
                     <SecondChanceButton auctionId={id} />
                   )}
                 </div>
-                
+
                 <div className="p-2 bg-blue-50 rounded text-[10px] text-blue-700 flex items-start gap-2">
-                  <Info className="w-3 h-3 mt-0.5" />
+                  <Info className="w-3 h-3 mt-0.5" aria-hidden="true" />
                   <p>{t("advanceUnlockNote", { amount: formatBDT(auction.currentPrice - (auction.commissionEarned || 0)) })}</p>
                 </div>
               </CardContent>
@@ -476,14 +480,17 @@ export default async function AuctionDetailPage({ params }: Props) {
           <div className="flex justify-center border-t border-gray-50 pt-2">
             <ReportModal auctionId={id} />
           </div>
-
-          <div className="mt-8 p-4 bg-gray-50/50 rounded-xl border border-gray-100/50">
-            <p className="text-[10px] text-gray-400 leading-tight text-center italic">
-              Nilamit is a marketplace facilitator. By bidding or listing, you agree to our 18+ eligibility rule and the binding nature of bids under the ICT Act 2006.
-            </p>
-          </div>
         </div>
       </div>
+
+      {/* Page-level legal footer — meta-content, not bid-panel content */}
+      <aside className="mt-12 pt-6 border-t border-gray-100 max-w-3xl mx-auto">
+        <p className="text-[11px] text-gray-400 leading-relaxed text-center">
+          Nilamit is a marketplace facilitator. By bidding or listing you agree to our{" "}
+          <a href="/terms" className="text-gray-500 underline hover:text-primary-600">terms</a>,
+          the 18+ eligibility rule, and the binding nature of bids under the ICT Act 2006.
+        </p>
+      </aside>
     </div>
   );
 }

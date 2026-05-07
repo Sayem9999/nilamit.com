@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Star } from "lucide-react";
 import { submitReview } from "@/actions/review";
 import toast from "react-hot-toast";
+import { useTranslations } from "next-intl";
 
 interface QuickReviewProps {
   auctionId: string;
@@ -16,10 +17,12 @@ export function QuickReview({ auctionId, toId, onComplete }: QuickReviewProps) {
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const t = useTranslations("Review");
+  const tc = useTranslations("Common");
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      toast.error("Please select a rating");
+      toast.error(t("selectRating"));
       return;
     }
     setSubmitting(true);
@@ -31,13 +34,13 @@ export function QuickReview({ auctionId, toId, onComplete }: QuickReviewProps) {
         comment: comment.trim() || undefined,
       });
       if (result.success) {
-        toast.success("Review submitted!");
+        toast.success(t("submitted"));
         onComplete?.();
       } else {
-        toast.error(result.error?.message ?? "Failed to submit review");
+        toast.error(result.error?.message ?? t("submitFailed"));
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error(tc("unexpectedError"));
     }
     setSubmitting(false);
   };

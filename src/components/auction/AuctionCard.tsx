@@ -73,14 +73,17 @@ export const AuctionCard = memo(({
       (w: { userId: string }) => w.userId === session?.user?.id,
     ) ?? false;
 
+  const sellerName = auction.seller.name || t("seller");
+  const cardLabel = `${auction.title} — ${formatBDT(auction.currentPrice)}, by ${sellerName}, ${bidCount} bid${bidCount === 1 ? "" : "s"}`;
+
   return (
-    <Link href={`/auctions/${auction.id}`} className="group block">
+    <Link href={`/auctions/${auction.id}`} className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[2rem]" aria-label={cardLabel}>
       <div className="bg-white rounded-[2rem] border border-gray-100/60 shadow- premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden group-hover:-translate-y-2 flex flex-col h-full">
         {/* Image Area */}
         <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
           {lightweightMode ? (
             <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center gap-2 p-4 text-center">
-              <Zap className="w-8 h-8 text-amber-500 animate-pulse" />
+              <Zap className="w-8 h-8 text-amber-500 animate-pulse" aria-hidden="true" />
               <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
                 {t("liteModeActive")}
               </span>
@@ -90,7 +93,7 @@ export const AuctionCard = memo(({
               {auction.images?.[0] ? (
                 <Image
                   src={auction.images[0]}
-                  alt={auction.title}
+                  alt={`${auction.title} — auction listing photo`}
                   fill
                   priority={priority}
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
@@ -98,10 +101,10 @@ export const AuctionCard = memo(({
                 />
               ) : (
                 <div className="w-full h-full bg-gray-50 flex items-center justify-center">
-                  <Package className="w-8 h-8 text-gray-200" />
+                  <Package className="w-8 h-8 text-gray-200" aria-hidden="true" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
             </div>
           )}
 
@@ -112,12 +115,12 @@ export const AuctionCard = memo(({
             </span>
             {auction.condition && (
               <span className="glass px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-gray-700 border border-gray-200/50 shadow-sm flex items-center gap-1.5 backdrop-blur-md">
-                ✨ {auction.condition}
+                <span aria-hidden="true">✨</span> {auction.condition}
               </span>
             )}
             {auction.reservePrice && (auction.isReserveMet === false || auction.currentPrice < (auction.reservePrice || 0)) && (
               <span className="bg-amber-500/90 text-white px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md backdrop-blur-md flex items-center gap-1.5 border border-amber-400/50">
-                <Shield className="w-3 h-3" /> Reserve not met
+                <Shield className="w-3 h-3" aria-hidden="true" /> Reserve not met
               </span>
             )}
           </div>
@@ -135,7 +138,7 @@ export const AuctionCard = memo(({
           <div className="absolute bottom-4 inset-x-4 flex items-center justify-between gap-2 z-10">
             <div className="glass px-2.5 py-1.5 rounded-xl text-[11px] flex items-center gap-2 backdrop-blur-md border border-white/20 shadow-lg">
               <div className="flex items-center gap-1.5 text-gray-500 font-bold">
-                <MapPin className="w-3 h-3 text-primary-500" />
+                <MapPin className="w-3 h-3 text-primary-500" aria-hidden="true" />
                 {auction.location ? tLoc(auction.location) : tLoc("mirpur")}
               </div>
             </div>
@@ -149,10 +152,13 @@ export const AuctionCard = memo(({
           </h3>
 
           <div className="flex items-center gap-2 mt-1.5">
-            <Link 
-              href={`/seller/${auction.sellerId}`} 
-              className="flex items-center gap-1.5 min-w-0 hover:text-primary-600 transition-colors relative z-20"
-              onClick={(e) => e.stopPropagation()}
+            {/* Seller chip — uses router.push instead of a nested <Link> so we
+                don't produce invalid HTML inside the outer <Link>. */}
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/seller/${auction.sellerId}`); }}
+              aria-label={`View ${auction.seller.name || t("seller")}'s profile`}
+              className="flex items-center gap-1.5 min-w-0 hover:text-primary-600 transition-colors relative z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded"
             >
               <span className="text-xs font-semibold text-gray-600 truncate">
                 {auction.seller.name || t("seller")}
@@ -164,10 +170,10 @@ export const AuctionCard = memo(({
                 size="sm"
                 showText={false}
               />
-            </Link>
+            </button>
             {(auction.seller.rating ?? 0) > 0 && (
-              <TrustBadge 
-                rating={auction.seller.rating ?? 0} 
+              <TrustBadge
+                rating={auction.seller.rating ?? 0}
                 ratingCount={auction.seller.ratingCount ?? 0}
                 size="sm"
                 className="scale-95 origin-left"
@@ -182,7 +188,7 @@ export const AuctionCard = memo(({
                 {t("currentPrice")}
               </span>
               <span className="flex items-center gap-1 text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md">
-                <Users className="w-3 h-3" />
+                <Users className="w-3 h-3" aria-hidden="true" />
                 {bidCount} {t("bids")}
               </span>
             </div>

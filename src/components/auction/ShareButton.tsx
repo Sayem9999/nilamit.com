@@ -14,8 +14,8 @@ export function ShareButton({ title, auctionId, price }: ShareButtonProps) {
   const [open, setOpen] = useState(false);
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/en/auctions/${auctionId}`
-      : `https://nilamit.com/en/auctions/${auctionId}`;
+      ? `${window.location.origin}/auctions/${auctionId}`
+      : `https://nilamit.com/auctions/${auctionId}`;
   const text = `${title} — ৳${price.toLocaleString()} on Nilamit`;
 
   const share = async (platform: string) => {
@@ -49,17 +49,20 @@ export function ShareButton({ title, auctionId, price }: ShareButtonProps) {
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
-        className="p-2 rounded-full bg-white/80 backdrop-blur-md text-gray-500 hover:text-indigo-600 hover:bg-white transition-all"
-        title="Share"
+        aria-label="Share auction"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-white/80 backdrop-blur-md text-gray-500 hover:text-indigo-600 hover:bg-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
       >
-        <Share2 className="w-5 h-5" />
+        <Share2 className="w-5 h-5" aria-hidden="true" />
       </button>
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 z-50 bg-white rounded-xl shadow-lg border border-gray-100 p-2 min-w-[180px] animate-in fade-in slide-in-from-top-2">
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden="true" />
+          <div role="menu" aria-label="Share menu" className="absolute right-0 top-full mt-2 z-50 bg-white rounded-xl shadow-lg border border-gray-100 p-2 min-w-[180px] animate-in fade-in slide-in-from-top-2">
             {typeof navigator !== "undefined" && "share" in navigator && (
               <button
                 onClick={() => share("native")}
