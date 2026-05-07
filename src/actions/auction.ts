@@ -23,7 +23,7 @@ export const getAuctions = cache(async (filters: AuctionFilters = {}): Promise<S
   });
   
   if (!response.success) {
-    log.error('[Action] getAuctions failed', undefined, { error: response.error?.message });
+    log.error('[auction] getAuctions failed', undefined, { error: response.error?.message });
     return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to fetch auctions');
   }
   return successResponse(response.data!);
@@ -70,7 +70,7 @@ export async function createAuction(input: unknown): Promise<ServiceResponse<{ a
     
     return successResponse({ auctionId: response.data!.id });
   } catch (error) {
-    log.error('[Action] createAuction failed', error);
+    log.error('[auction] createAuction failed', error);
     return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred.');
   }
 }
@@ -115,7 +115,7 @@ export async function triggerSecondChanceOffer(auctionId: string): Promise<Servi
     
     return result;
   } catch (error) {
-    log.error('[Action] triggerSecondChanceOffer failed', error);
+    log.error('[auction] triggerSecondChanceOffer failed', error);
     return errorResponse(ErrorType.INTERNAL, 'Failed to create second chance offer');
   }
 }

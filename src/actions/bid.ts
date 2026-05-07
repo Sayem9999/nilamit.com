@@ -118,14 +118,14 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
           continue;
         }
 
-        log.error('placeBid failed', error, { userId, auctionId, amount, attempts });
+        log.error('[bid] placeBid failed', error, { userId, auctionId, amount, attempts });
         return errorResponse(ErrorType.INTERNAL, message || 'Failed to place bid.');
       }
     }
     
     return errorResponse(ErrorType.INTERNAL, 'The bidding system is currently very busy. Please try again in a moment.');
   } catch (error) {
-    log.error('placeBid outer failed', error, { userId, auctionId, amount });
+    log.error('[bid] placeBid outer failed', error, { userId, auctionId, amount });
     return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred.');
   }
 }
@@ -160,7 +160,7 @@ export async function executeBuyItNow(auctionId: string): Promise<ServiceRespons
     return successResponse(null);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-    log.error('executeBuyItNow failed', error, { userId, auctionId });
+    log.error('[bid] executeBuyItNow failed', error, { userId, auctionId });
     return errorResponse(ErrorType.INTERNAL, message);
   }
 }
@@ -174,7 +174,7 @@ export async function getAuctionBids(auctionId: string): Promise<ServiceResponse
     const bids = await BiddingService.getAuctionBids(auctionId);
     return successResponse(bids);
   } catch (error) {
-    log.error('[Action] getAuctionBids failed', error);
+    log.error('[bid] getAuctionBids failed', error);
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch bids');
   }
 }

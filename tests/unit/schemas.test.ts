@@ -123,8 +123,12 @@ describe('bdPhoneSchema', () => {
     expect(bdPhoneSchema.safeParse('+8801912345678').success).toBe(true);
   });
 
-  it('rejects numbers without country code', () => {
-    expect(bdPhoneSchema.safeParse('01712345678').success).toBe(false);
+  it('accepts numbers without country code (local form) and normalizes them', () => {
+    const result = bdPhoneSchema.safeParse('01712345678');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toBe('+8801712345678');
+    }
   });
 
   it('rejects a non-Bangladesh prefix', () => {

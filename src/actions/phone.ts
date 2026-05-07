@@ -217,7 +217,7 @@ export async function sendEmailOTP(email: string) {
     });
     return successResponse(null);
   } catch (e) {
-    log.error('[sendEmailOTP] failed', e);
+    log.error('[phone] sendEmailOTP failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to send email.');
   }
 }

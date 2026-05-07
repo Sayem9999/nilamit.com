@@ -61,7 +61,7 @@ export async function createLogisticsOrder(auctionId: string, sellerId: string, 
     return successResponse({ trackingId, labelUrl });
   } catch (error) {
     const e = error as Error;
-    log.error('Logistics initialization error:', e);
+    log.error('[logistics] Logistics initialization error:', e);
     return errorResponse(ErrorType.INTERNAL, e.message);
   }
 }
@@ -96,7 +96,7 @@ export async function updateLogisticsStatus(auctionId: string, status: Logistics
     
     return successResponse(null);
   } catch (error) {
-    log.error('Failed to update logistics status:', error);
+    log.error('[logistics] Failed to update logistics status:', error);
     return errorResponse(ErrorType.INTERNAL, 'Update failed');
   }
 }

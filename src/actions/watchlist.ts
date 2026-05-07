@@ -38,7 +38,7 @@ export async function toggleWatchlist(auctionId: string): Promise<ServiceRespons
       return successResponse({ watching: true });
     }
   } catch (e) {
-    log.error('toggleWatchlist failed', e);
+    log.error('[watchlist] toggleWatchlist failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to update watchlist');
   }
 }
@@ -67,7 +67,7 @@ export async function getWatchlist(): Promise<ServiceResponse<unknown[]>> {
 
     return successResponse(result);
   } catch (e) {
-    log.error('getWatchlist failed', e);
+    log.error('[watchlist] getWatchlist failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch watchlist');
   }
 }
