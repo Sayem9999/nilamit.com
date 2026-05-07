@@ -35,46 +35,68 @@ function OverviewTab({
   return (
     <div className="space-y-8">
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Users"
-          value={stats.totalUsers}
-          icon={<Users className="w-5 h-5 text-blue-600" />}
-          color="bg-blue-50"
-        />
-        <StatCard
-          label="Active Auctions"
-          value={stats.activeAuctions}
-          icon={<Package className="w-5 h-5 text-indigo-600" />}
-          color="bg-indigo-50"
-        />
-        <StatCard
-          label="Total Bids"
-          value={stats.totalBids}
-          icon={<TrendingUp className="w-5 h-5 text-green-600" />}
-          color="bg-green-50"
-        />
-        <StatCard
-          label="Revenue"
-          value={`৳${stats.totalRevenue}`}
-          icon={<DollarSign className="w-5 h-5 text-amber-600" />}
-          color="bg-amber-50"
-        />
-      </div>
+      <section aria-labelledby="admin-stats-heading">
+        <h2 id="admin-stats-heading" className="sr-only">
+          Platform statistics
+        </h2>
+        <ul className="grid grid-cols-2 md:grid-cols-4 gap-4 list-none p-0">
+          <li>
+            <StatCard
+              label="Total Users"
+              value={stats.totalUsers}
+              icon={<Users className="w-5 h-5 text-blue-600" aria-hidden="true" />}
+              color="bg-blue-50"
+            />
+          </li>
+          <li>
+            <StatCard
+              label="Active Auctions"
+              value={stats.activeAuctions}
+              icon={<Package className="w-5 h-5 text-indigo-600" aria-hidden="true" />}
+              color="bg-indigo-50"
+            />
+          </li>
+          <li>
+            <StatCard
+              label="Total Bids"
+              value={stats.totalBids}
+              icon={<TrendingUp className="w-5 h-5 text-green-600" aria-hidden="true" />}
+              color="bg-green-50"
+            />
+          </li>
+          <li>
+            <StatCard
+              label="Revenue"
+              value={`৳${stats.totalRevenue}`}
+              icon={<DollarSign className="w-5 h-5 text-amber-600" aria-hidden="true" />}
+              color="bg-amber-50"
+            />
+          </li>
+        </ul>
+      </section>
 
       {/* Recent Activity Section */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <h3 className="font-heading font-semibold text-lg text-gray-900 mb-4">
+      <section
+        aria-labelledby="recent-users-heading"
+        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+      >
+        <h2
+          id="recent-users-heading"
+          className="font-heading font-semibold text-lg text-gray-900 mb-4"
+        >
           Recent Users
-        </h3>
+        </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
+            <caption className="sr-only">
+              Most recently registered users with reputation and verification status
+            </caption>
             <thead className="text-xs text-gray-500 uppercase bg-gray-50/50">
               <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Reputation</th>
-                <th className="px-4 py-3">Verified</th>
+                <th scope="col" className="px-4 py-3">Name</th>
+                <th scope="col" className="px-4 py-3">Email</th>
+                <th scope="col" className="px-4 py-3">Reputation</th>
+                <th scope="col" className="px-4 py-3">Verified</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -111,7 +133,7 @@ function OverviewTab({
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

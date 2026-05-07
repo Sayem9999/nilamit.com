@@ -10,33 +10,27 @@ export default async function FAQPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pt-24 pb-12">
+    <main className="min-h-screen bg-gray-50/50 pt-24 pb-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <header className="text-center mb-12">
           <h1 className="text-4xl font-heading font-bold text-gray-900 mb-4">
             {t("title")}
           </h1>
-          <p className="text-gray-600">
-            {t("subtitle")}
-          </p>
-        </div>
+          <p className="text-gray-600">{t("subtitle")}</p>
+        </header>
 
-        <div className="space-y-6">
+        <ul className="space-y-6 list-none p-0">
           {faqs.map((faq, index) => (
-            <div
+            <li
               key={index}
-              className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow motion-reduce:transition-none"
             >
-              <h3 className="text-lg font-bold text-gray-900 mb-3">
-                {faq.q}
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                {faq.a}
-              </p>
-            </div>
+              <h2 className="text-lg font-bold text-gray-900 mb-3">{faq.q}</h2>
+              <p className="text-gray-600 leading-relaxed">{faq.a}</p>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
-    </div>
+    </main>
   );
 }

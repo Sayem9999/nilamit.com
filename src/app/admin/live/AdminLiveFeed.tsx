@@ -6,18 +6,15 @@ import { getAdminStats } from "@/actions/admin";
 import { getClientDB } from "@/lib/firebase-client";
 import { RTDB_PATHS } from "@/lib/firebase-events";
 import { formatBDT } from "@/lib/format";
-import { 
-  Activity, 
-  Gavel, 
-  Clock, 
-  ExternalLink, 
+import {
+  Activity,
+  Gavel,
+  ExternalLink,
   ShieldAlert,
   Zap,
-  User,
-  Package
+  Package,
 } from "lucide-react";
 import Link from "next/link";
-import { useLocale } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface GlobalBid {
@@ -44,7 +41,6 @@ export default function AdminLiveFeed() {
   const [bids, setBids] = useState<GlobalBid[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [isLive, setIsLive] = useState(true);
-  const locale = useLocale();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,7 +50,7 @@ export default function AdminLiveFeed() {
     const globalRef = ref(db, RTDB_PATHS.globalActivity());
     const recentQuery = query(globalRef, limitToLast(50));
 
-    const unsub = onChildAdded(recentQuery, (snapshot) => {
+    onChildAdded(recentQuery, (snapshot) => {
       const data = snapshot.val();
       if (!data) return;
 
@@ -80,102 +76,152 @@ export default function AdminLiveFeed() {
   }, [isLive]);
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6">
+    <main className="min-h-screen bg-gray-50/50 p-6">
       <div className="max-w-6xl mx-auto">
-        <header className="flex items-center justify-between mb-8">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20">
+              <span
+                className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20"
+                aria-hidden="true"
+              >
                 <Activity className="w-6 h-6 text-white" />
-              </div>
+              </span>
               Live Platform Ticker
             </h1>
-            <p className="text-gray-500 font-medium mt-1">Real-time monitoring of all bidding activity across Nilamit.</p>
+            <p className="text-gray-500 font-medium mt-1">
+              Real-time monitoring of all bidding activity across Nilamit.
+            </p>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-gray-100 shadow-sm">
-              <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`} />
+            <div
+              className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-gray-100 shadow-sm"
+              role="status"
+              aria-live="polite"
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${isLive ? "bg-green-500 animate-pulse motion-reduce:animate-none" : "bg-gray-300"}`}
+                aria-hidden="true"
+              />
               <span className="text-xs font-bold uppercase tracking-wider text-gray-600">
-                {isLive ? 'Live Stream Active' : 'Stream Paused'}
+                {isLive ? "Live stream active" : "Stream paused"}
               </span>
             </div>
-            <button 
+            <button
+              type="button"
               onClick={() => setIsLive(!isLive)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                isLive ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'
+              aria-pressed={!isLive}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                isLive
+                  ? "bg-red-50 text-red-600 hover:bg-red-100 focus-visible:ring-red-500"
+                  : "bg-green-50 text-green-600 hover:bg-green-100 focus-visible:ring-green-500"
               }`}
             >
-              {isLive ? 'Pause Feed' : 'Resume Feed'}
+              {isLive ? "Pause feed" : "Resume feed"}
             </button>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Stats Summary */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Quick Stats</h3>
-              <div className="space-y-4">
+          <aside aria-label="Platform summary" className="lg:col-span-1 space-y-6">
+            <section
+              aria-labelledby="quick-stats-heading"
+              className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm"
+            >
+              <h2
+                id="quick-stats-heading"
+                className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4"
+              >
+                Quick stats
+              </h2>
+              <dl className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Total Bids</span>
-                  <span className="font-bold text-gray-900">{stats?.totalBids?.toLocaleString() || "..."}</span>
+                  <dt className="text-sm text-gray-500">Total bids</dt>
+                  <dd className="font-bold text-gray-900">
+                    {stats?.totalBids?.toLocaleString() || "—"}
+                  </dd>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Total Auctions</span>
-                  <span className="font-bold text-gray-900">{stats?.totalAuctions?.toLocaleString() || "..."}</span>
+                  <dt className="text-sm text-gray-500">Total auctions</dt>
+                  <dd className="font-bold text-gray-900">
+                    {stats?.totalAuctions?.toLocaleString() || "—"}
+                  </dd>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Total Revenue</span>
-                  <span className="font-bold text-primary-600">{stats ? formatBDT(stats.totalRevenue) : "..."}</span>
+                  <dt className="text-sm text-gray-500">Total revenue</dt>
+                  <dd className="font-bold text-primary-600">
+                    {stats ? formatBDT(stats.totalRevenue) : "—"}
+                  </dd>
                 </div>
-              </div>
-            </div>
+              </dl>
+            </section>
 
-            <div className="bg-primary-900 p-6 rounded-3xl text-white shadow-xl shadow-primary-900/20">
-              <ShieldAlert className="w-8 h-8 text-primary-400 mb-4" />
-              <h3 className="text-lg font-bold mb-2">Moderation Mode</h3>
+            <section
+              aria-labelledby="moderation-mode-heading"
+              className="bg-primary-900 p-6 rounded-3xl text-white shadow-xl shadow-primary-900/20"
+            >
+              <ShieldAlert className="w-8 h-8 text-primary-400 mb-4" aria-hidden="true" />
+              <h2 id="moderation-mode-heading" className="text-lg font-bold mb-2">
+                Moderation mode
+              </h2>
               <p className="text-primary-200 text-xs leading-relaxed mb-4">
-                Click on any bid to view full user history and auction details. Suspicious patterns are flagged automatically.
+                Click any bid to view full user history and auction details. Suspicious
+                patterns are flagged automatically.
               </p>
-              <button className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">
-                View Risk Flags
+              <button
+                type="button"
+                className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold uppercase tracking-widest transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                View risk flags
               </button>
-            </div>
-          </div>
+            </section>
+          </aside>
 
           {/* Feed List */}
-          <div className="lg:col-span-3">
+          <section aria-labelledby="recent-activity-heading" className="lg:col-span-3">
             <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden min-h-[600px] flex flex-col">
               <div className="p-6 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
-                <span className="text-sm font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary-600" />
-                  Recent Activity
-                </span>
+                <h2
+                  id="recent-activity-heading"
+                  className="text-sm font-bold text-gray-900 tracking-tight flex items-center gap-2"
+                >
+                  <Zap className="w-4 h-4 text-primary-600" aria-hidden="true" />
+                  Recent activity
+                </h2>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                   Showing last {bids.length} events
                 </span>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 max-h-[700px] custom-scrollbar" ref={scrollRef}>
+              <div
+                className="flex-1 overflow-y-auto p-6 max-h-[700px] custom-scrollbar"
+                ref={scrollRef}
+                aria-live="polite"
+                aria-relevant="additions"
+              >
                 <AnimatePresence initial={false}>
                   {bids.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 opacity-20">
-                      <Gavel className="w-16 h-16 mb-4" />
-                      <p className="font-bold">Waiting for platform activity...</p>
+                    <div className="flex flex-col items-center justify-center py-20 opacity-50">
+                      <Gavel className="w-16 h-16 mb-4 text-gray-300" aria-hidden="true" />
+                      <p className="font-bold text-gray-500">Waiting for platform activity…</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <ul className="space-y-4 list-none p-0">
                       {bids.map((bid) => (
-                        <motion.div
+                        <motion.li
                           key={bid.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 20 }}
-                          className="group bg-gray-50/50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 border border-transparent hover:border-gray-100 p-5 rounded-2xl transition-all duration-300 flex items-center gap-4"
+                          className="group bg-gray-50/50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 border border-transparent hover:border-gray-100 p-5 rounded-2xl transition-all duration-300 motion-reduce:transition-none flex items-center gap-4"
                         >
-                          <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-600 group-hover:border-primary-600 transition-colors">
-                            <Gavel className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />
+                          <div
+                            className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-600 group-hover:border-primary-600 transition-colors motion-reduce:transition-none"
+                            aria-hidden="true"
+                          >
+                            <Gavel className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors motion-reduce:transition-none" />
                           </div>
 
                           <div className="flex-1 min-w-0">
@@ -183,13 +229,18 @@ export default function AdminLiveFeed() {
                               <span className="font-black text-gray-900 tracking-tight uppercase text-xs">
                                 {bid.bidderName}
                               </span>
-                              <span className="text-[10px] text-gray-400 font-bold">•</span>
-                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                                {new Date(bid.timestamp).toLocaleTimeString()}
+                              <span className="text-[10px] text-gray-400 font-bold" aria-hidden="true">
+                                •
                               </span>
+                              <time
+                                dateTime={new Date(bid.timestamp).toISOString()}
+                                className="text-[10px] text-gray-400 font-bold uppercase tracking-widest"
+                              >
+                                {new Date(bid.timestamp).toLocaleTimeString()}
+                              </time>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-gray-500 font-medium truncate">
-                              <Package className="w-3.5 h-3.5 flex-shrink-0" />
+                              <Package className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
                               {bid.auctionTitle}
                             </div>
                           </div>
@@ -198,23 +249,24 @@ export default function AdminLiveFeed() {
                             <div className="text-lg font-black text-primary-600 tracking-tight">
                               {formatBDT(bid.amount)}
                             </div>
-                            <Link 
+                            <Link
                               href={`/auctions/${bid.auctionId}`}
-                              className="inline-flex items-center gap-1 text-[10px] font-black text-gray-400 hover:text-primary-600 uppercase tracking-widest transition-colors"
+                              aria-label={`View details for ${bid.auctionTitle}`}
+                              className="inline-flex items-center gap-1 text-[10px] font-black text-gray-400 hover:text-primary-600 uppercase tracking-widest transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
                             >
-                              Details <ExternalLink className="w-2.5 h-2.5" />
+                              Details <ExternalLink className="w-2.5 h-2.5" aria-hidden="true" />
                             </Link>
                           </div>
-                        </motion.div>
+                        </motion.li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                 </AnimatePresence>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
