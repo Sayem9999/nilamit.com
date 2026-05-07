@@ -18,6 +18,40 @@ import { getStorage, type Storage } from 'firebase-admin/storage';
 import { getAuth, type Auth } from 'firebase-admin/auth';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
+/** Robust private key parsing: handles literal newlines, escaped \n, 
+ * and potential JSON-stringified wrappers from secret managers. */
+export function parsePrivateKey(raw: string): string {
+  let key = raw.trim();
+  
+  // Handle escaped quotes from environment variables
+  if (key.startsWith('"') && key.endsWith('"')) {
+    key = key.slice(1, -1);
+  }
+
+  // Handle escaped newlines
+  if (key.includes('\\n')) {
+    key = key.replace(/\\n/g, '\n');
+  }
+
+  // Ensure key is wrapped correctly if it was stripped or partially formatted
+  if (!key.startsWith('-----BEGIN PRIVATE KEY-----')) {
+    // If it's a single line of base64 data, wrap it
+    key = `-----BEGIN PRIVATE KEY-----\n${key}\n-----END PRIVATE KEY-----`;
+  } else if (!key.includes('\n') && key.length > 100) {
+    // If it has headers but no newlines, it's likely a single line that needs formatting
+    const body = key
+      .replace('-----BEGIN PRIVATE KEY-----', '')
+      .replace('-----END PRIVATE KEY-----', '')
+      .replace(/\s/g, '');
+    
+    // Chunk the base64 body into 64-char lines as per PEM spec
+    const chunks = body.match(/.{1,64}/g) || [];
+    key = `-----BEGIN PRIVATE KEY-----\n${chunks.join('\n')}\n-----END PRIVATE KEY-----`;
+  }
+
+  return key;
+}
+
 /** Single source of truth for Firebase Admin initialization */
 export function getAdminApp(): App {
   const apps = getApps();
@@ -34,35 +68,7 @@ export function getAdminApp(): App {
     );
   }
 
-  // Robust private key parsing: handles literal newlines, escaped \n, 
-  // and potential JSON-stringified wrappers from secret managers.
-  let privateKey = privateKeyRaw.trim();
-  
-  // Handle escaped quotes from environment variables
-  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-    privateKey = privateKey.slice(1, -1);
-  }
-
-  // Handle escaped newlines
-  if (privateKey.includes('\\n')) {
-    privateKey = privateKey.replace(/\\n/g, '\n');
-  }
-
-  // Ensure key is wrapped correctly if it was stripped or partially formatted
-  if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
-    // If it's a single line of base64 data, wrap it
-    privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
-  } else if (!privateKey.includes('\n') && privateKey.length > 100) {
-    // If it has headers but no newlines, it's likely a single line that needs formatting
-    const body = privateKey
-      .replace('-----BEGIN PRIVATE KEY-----', '')
-      .replace('-----END PRIVATE KEY-----', '')
-      .replace(/\s/g, '');
-    
-    // Chunk the base64 body into 64-char lines as per PEM spec
-    const chunks = body.match(/.{1,64}/g) || [];
-    privateKey = `-----BEGIN PRIVATE KEY-----\n${chunks.join('\n')}\n-----END PRIVATE KEY-----`;
-  }
+  const privateKey = parsePrivateKey(privateKeyRaw);
 
   // Safe diagnostics (NO actual key content is logged)
   const newlineCount = (privateKey.match(/\n/g) || []).length;

@@ -68,6 +68,12 @@ export async function doSomething(input: unknown): Promise<ServiceResponse<null>
 - Pre-existing CI lint debt on `main` doesn't block merges, but **don't add to it** — your PR's diff must lint-clean.
 - After merging to `main`, Firebase App Hosting auto-deploys via Cloud Build (`apphosting.yaml`). Allow 5–10 min before smoke-testing prod.
 
+## CLI & Cloud Environment Access
+The local workspace has active, pre-authenticated, and fully authorized CLI toolchains. Agents have direct execution access to:
+- **Google Cloud SDK (`gcloud`)**: Fully authenticated for project `nilamit-52073`. You can query container logs (`gcloud logging read`), list services (`gcloud run services list`), or fetch Cloud Build states directly.
+- **Firebase CLI (`firebase`)**: Configured to deploy database indexes, rules (`firebase deploy --only firestore`), or manage App Hosting rollout environments.
+- **Local PowerShell & Git**: Fully enabled to stage, format check, commit, and securely push changes to remote repositories for automated container delivery.
+
 ## Documentation
 - **Project guide**: `CLAUDE.md` — primary reference for conventions, file map, state machines.
 - **Wiki**: `docs/` — Architecture, security, deployment, audit reports.

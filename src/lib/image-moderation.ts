@@ -1,4 +1,5 @@
 import 'server-only';
+import { parsePrivateKey } from '@/lib/firebase-admin';
 
 import { log } from '@/lib/logger';
 import * as Sentry from '@sentry/nextjs';
@@ -36,7 +37,8 @@ async function getClient() {
     const { ImageAnnotatorClient } = await import('@google-cloud/vision');
     const projectId   = process.env.FIREBASE_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey  = (process.env.FIREBASE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n');
+    const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
+    const privateKey  = privateKeyRaw ? parsePrivateKey(privateKeyRaw) : '';
 
     if (!projectId || !clientEmail || !privateKey) {
       _initFailed = true;
