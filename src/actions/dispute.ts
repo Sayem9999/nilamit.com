@@ -47,7 +47,7 @@ export async function raiseDispute(transactionId: string, reason: string): Promi
     revalidatePath('/dashboard/escrow');
     return successResponse(null);
   } catch (e) {
-    log.error('[dispute] raiseDispute failed', e);
+    log.error('[dispute] raiseDispute failed', e, { area: 'dispute', severity: 'warning' });
     return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Failed to raise dispute.');
   }
 }
@@ -121,7 +121,7 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
     revalidatePath('/dashboard/escrow');
     return successResponse(null);
   } catch (e) {
-    log.error('[dispute] resolveDispute failed', e);
+    log.error('[dispute] resolveDispute failed', e, { area: 'dispute', severity: 'critical' });
     return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Resolution failed.');
   }
 }
@@ -188,7 +188,7 @@ export async function adminRefundEscrow(transactionId: string, reason: string): 
     revalidatePath('/dashboard');
     return successResponse(null);
   } catch (e) {
-    log.error('[dispute] adminRefundEscrow failed', e);
+    log.error('[dispute] adminRefundEscrow failed', e, { area: 'escrow', severity: 'critical' });
     return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Refund failed.');
   }
 }

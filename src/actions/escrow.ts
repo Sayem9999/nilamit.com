@@ -113,13 +113,13 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         message:      `Payment submitted for "${result.auction.title}". Verification pending.`,
       });
     } catch (sideEffectErr) {
-      log.error('[escrow] side-effects failed after successful TX', sideEffectErr);
+      log.error('[escrow] side-effects failed after successful TX', sideEffectErr, { area: 'escrow', severity: 'warning' });
     }
 
     revalidatePath('/dashboard');
     return successResponse(null);
   } catch (e) {
-    log.error('[escrow] payEscrowAdvance failed', e);
+    log.error('[escrow] payEscrowAdvance failed', e, { area: 'escrow', severity: 'critical' });
     const msg = e instanceof Error ? e.message : 'Internal error';
     return errorResponse(ErrorType.INTERNAL, msg);
   }
@@ -172,14 +172,14 @@ export async function confirmItemReceived(transactionId: string): Promise<Servic
           ]);
         }
       } catch (err) {
-        log.error('[escrow] background updates failed', err);
+        log.error('[escrow] background updates failed', err, { area: 'escrow', severity: 'warning' });
       }
     })();
 
     revalidatePath('/dashboard');
     return successResponse(null);
   } catch (e) {
-    log.error('[escrow] confirmItemReceived failed', e);
+    log.error('[escrow] confirmItemReceived failed', e, { area: 'escrow', severity: 'critical' });
     return errorResponse(ErrorType.INTERNAL, 'Confirmation failed');
   }
 }
@@ -221,7 +221,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
     buyerId   = result.buyerId;
     auctionId = result.auctionId;
   } catch (e) {
-    log.error('[escrow] markAsShipped failed', e);
+    log.error('[escrow] markAsShipped failed', e, { area: 'escrow', severity: 'warning' });
     return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Failed to mark as shipped.');
   }
 

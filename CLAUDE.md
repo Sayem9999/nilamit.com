@@ -60,6 +60,8 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 14. **Refunds go through `adminRefundEscrow()` in `src/actions/dispute.ts`.** Single source of truth — validates escrow status, increments `defectCount`, writes to `admin_logs`, kicks off seller-performance recompute. `refundEscrow()` in `src/actions/escrow.ts` is a thin compat shim.
 
+15. **Sentry-tag every error in a critical path.** `log.error()` accepts `area` + `severity` in its context; pass them whenever the failure should page someone. The alert rules in `docs/SENTRY_ALERTS.md` filter on these tags — a missing tag means the alert silently won't fire. Areas: `bid`, `escrow`, `auth`, `cron`, `upload`, `dispute`, `chat`, `logistics`, `admin`. Severities: `critical` (page), `warning` (slack), `info` (first-seen only).
+
 ---
 
 ## Architecture
@@ -115,6 +117,10 @@ Browser (React 19)
 | `apphosting.yaml` | Firebase App Hosting config + secret mappings + `IMAGE_MODERATION` flag |
 | `cloudbuild.yaml` | Build pipeline — uses `npm install` (not `npm ci`, see Known Issues) |
 | `messages/en.json` | English translations — every `useTranslations` key must be defined here |
+| `src/lib/logger.ts` | `log.info/warn/error/debug` — `error`/`warn` auto-capture to Sentry; pass `area` + `severity` in context to tag for alert rules |
+| `src/lib/sentry-tags.ts` | `tagSentryArea(area, severity)` + `captureWithArea(err, area, severity)` — single source of truth for Sentry alert tags |
+| `docs/SENTRY_ALERTS.md` | Canonical list of Sentry alert rules (must be created in the Sentry UI) |
+| `src/app/api/sentry-test/route.ts` | Admin-only `GET ?area=&severity=` endpoint to verify alert rules end-to-end |
 
 ---
 

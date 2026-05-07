@@ -1,8 +1,14 @@
 import * as Sentry from '@sentry/nextjs';
+import type { SentryArea, SentrySeverity } from './sentry-tags';
 
 /**
  * Structured Production Logger
  * Provides categorized logging with automatic Sentry integration for errors.
+ *
+ * Pass `area` and/or `severity` in the context object to tag the captured
+ * Sentry event so the alert rules in `docs/SENTRY_ALERTS.md` can filter on it:
+ *
+ *   log.error('placeBid failed', err, { userId, area: 'bid', severity: 'critical' });
  */
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -14,6 +20,10 @@ interface LogContext {
   auctionId?: string;
   bidId?: string;
   path?: string;
+  /** Functional area for Sentry alert rule filtering. See sentry-tags.ts. */
+  area?: SentryArea;
+  /** Alert severity for Sentry alert rule filtering. See sentry-tags.ts. */
+  severity?: SentrySeverity;
   [key: string]: unknown;
 }
 
@@ -23,6 +33,19 @@ function formatMessage(level: LogLevel, message: string, context?: LogContext): 
   return `[${level.toUpperCase()}] ${timestamp}: ${message}${contextStr}`;
 }
 
+/**
+ * Run `fn` inside a Sentry scope that has area + severity tags applied
+ * when present in the context. No-op outside of production.
+ */
+function withSentryTags(context: LogContext | undefined, fn: () => void): void {
+  if (!IS_PRODUCTION) return;
+  Sentry.withScope((scope) => {
+    if (context?.area) scope.setTag('area', context.area);
+    if (context?.severity) scope.setTag('severity', context.severity);
+    fn();
+  });
+}
+
 export const log = {
   info: (message: string, context?: LogContext) => {
     console.log(formatMessage('info', message, context));
@@ -30,18 +53,18 @@ export const log = {
 
   warn: (message: string, context?: LogContext) => {
     console.warn(formatMessage('warn', message, context));
-    if (IS_PRODUCTION) {
+    withSentryTags(context, () => {
       Sentry.captureMessage(message, { level: 'warning', extra: context });
-    }
+    });
   },
 
   error: (message: string, error?: unknown, context?: LogContext) => {
     console.error(formatMessage('error', message, context), error);
-    if (IS_PRODUCTION) {
+    withSentryTags(context, () => {
       Sentry.captureException(error || new Error(message), {
         extra: { message, ...context },
       });
-    }
+    });
   },
 
   debug: (message: string, context?: LogContext) => {
