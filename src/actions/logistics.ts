@@ -40,7 +40,7 @@ export async function updateLogisticsStatus(
 
     return successResponse(null);
   } catch (e) {
-    log.error('Failed to update logistics status:', e);
+    log.error('[logistics] Failed to update logistics status:', e);
     return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Update failed');
   }
 }

@@ -46,7 +46,7 @@ export async function adminWipeTestData() {
     return successResponse({ message: 'All auction data wiped successfully.' });
   } catch (error: unknown) {
     const err = error as Error;
-    log.error('Wipe Error', err);
+    log.error('[admin-system] Wipe Error', err);
     return errorResponse(ErrorType.INTERNAL, 'Failed to wipe data: ' + err.message);
   }
 }
@@ -99,7 +99,7 @@ export async function exportTransactionsCSV() {
     return successResponse({ data: csv });
   } catch (error: unknown) {
     const err = error as Error;
-    log.error('CSV Export Error', err);
+    log.error('[admin-system] CSV Export Error', err);
     return errorResponse(ErrorType.INTERNAL, 'Failed to generate CSV: ' + err.message);
   }
 }

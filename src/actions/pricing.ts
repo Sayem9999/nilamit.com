@@ -60,7 +60,7 @@ export async function getSmartPricingSuggestion(category: string): Promise<Smart
       dataPoints: validAuctions
     };
   } catch (error) {
-    log.error('Failed to get smart pricing suggestion', error);
+    log.error('[pricing] Failed to get smart pricing suggestion', error);
     return null;
   }
 }

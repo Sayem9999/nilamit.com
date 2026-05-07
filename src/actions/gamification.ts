@@ -35,7 +35,7 @@ export async function checkAndAwardBadges(
       });
     });
   } catch (e) {
-    log.error('gamification: xp update failed', e, { userId });
+    log.error('[gamification] xp update failed', e, { userId });
   }
 
   async function awardBadge(badgeId: string) {
@@ -76,7 +76,7 @@ export async function checkAndAwardBadges(
       event:   FIREBASE_EVENTS.TRUST_UPDATE,
       message: `You earned ${badgesAwarded.length} new badge(s): ${badgesAwarded.join(', ')}!`,
       badges:  badgesAwarded,
-    }).catch((e) => log.error('gamification: badge notification push failed', e));
+    }).catch((e) => log.error('[gamification] badge notification push failed', e));
   }
 }
 
@@ -113,7 +113,7 @@ export async function processSaleGamification(winnerId: string, sellerId: string
       });
     });
   } catch (e) {
-    log.error('gamification: winner sale update failed', e, { winnerId });
+    log.error('[gamification] winner sale update failed', e, { winnerId });
   }
 
   // 2. Process Seller
@@ -135,6 +135,6 @@ export async function processSaleGamification(winnerId: string, sellerId: string
       });
     });
   } catch (e) {
-    log.error('gamification: seller sale update failed', e, { sellerId });
+    log.error('[gamification] seller sale update failed', e, { sellerId });
   }
 }

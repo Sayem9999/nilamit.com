@@ -71,7 +71,7 @@ export async function sendMessage(conversationId: string, content: string, image
   rtdbPush(RTDB_PATHS.userNotifications(recipientId), {
     event: FIREBASE_EVENTS.NEW_MESSAGE, conversationId, auctionId: conv.auctionId,
     senderName: session.user.name ?? 'Someone', preview: filtered.slice(0, 60),
-  }).catch((e) => log.error('chat: recipient notification push failed', e));
+  }).catch((e) => log.error('[chat] recipient notification push failed', e));
 
   return successResponse({ id: msgId, content: filtered, createdAt: now });
 }

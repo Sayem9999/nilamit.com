@@ -109,7 +109,7 @@ export async function resolveAdminDispute(transactionId: string, resolution: 'RE
     revalidatePath('/admin');
     return successResponse(null);
   } catch (_e) {
-    log.error('resolveAdminDispute failed', _e, { transactionId, resolution });
+    log.error('[admin] resolveAdminDispute failed', _e, { transactionId, resolution });
     return errorResponse(ErrorType.INTERNAL, _e instanceof Error ? _e.message : 'Resolution failed');
   }
 }

@@ -9,6 +9,7 @@
 
 import { z } from 'zod';
 import { CATEGORIES } from '@/types';
+import { normalizePhone } from './utils';
 
 // ─── Primitives ────────────────────────────────────────────────────────────
 
@@ -31,10 +32,10 @@ export const emailSchema = z
 export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters').max(128, 'Password is too long');
 
 /** Bangladesh mobile: accepts local (01...) or international (+8801...) form. */
-export const bdPhoneSchema = z
-  .string()
-  .trim()
-  .regex(/^\+8801\d{9}$/, 'Invalid Bangladesh phone number');
+export const bdPhoneSchema = z.preprocess(
+  (val) => typeof val === 'string' ? normalizePhone(val) : val,
+  z.string().trim().regex(/^\+8801\d{9}$/, 'Invalid Bangladesh phone number')
+);
 
 /** 6-digit numeric OTP. */
 export const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be 6 digits');
