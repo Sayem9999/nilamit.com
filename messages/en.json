@@ -649,6 +649,32 @@
     "newQuestionBody": "Open the auction to reply.",
     "questionAnsweredToast": "Seller answered: {title}"
   },
+  "Common": {
+    "errorGeneric": "Something went wrong. Please try again.",
+    "signInRequired": "Sign in to continue",
+    "linkCopied": "Link copied to clipboard",
+    "unexpectedError": "An unexpected error happened — please refresh and try again."
+  },
+  "Watchlist": {
+    "signInPrompt": "Sign in to save auctions to your watchlist",
+    "added": "Added to watchlist",
+    "removed": "Removed from watchlist",
+    "updateFailed": "Couldn't update your watchlist. Please try again."
+  },
+  "SecondChance": {
+    "sent": "Offer sent to the next bidder.",
+    "failed": "Couldn't send the second chance offer."
+  },
+  "Dispute": {
+    "reasonTooShort": "Add a few more details about what went wrong (at least 10 characters).",
+    "submitted": "Dispute submitted — an admin will review it shortly.",
+    "submitFailed": "Couldn't submit your dispute. Please try again."
+  },
+  "Review": {
+    "selectRating": "Tap a star to choose a rating before submitting.",
+    "submitted": "Review submitted",
+    "submitFailed": "Couldn't submit your review. Please try again."
+  },
   "ListingStats": {
     "netEarnings": "Net earnings",
     "afterCommission": "After {amount} commission",

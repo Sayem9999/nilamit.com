@@ -6,6 +6,7 @@ import { triggerSecondChanceOffer } from '@/actions/auction';
 import { toast } from 'react-hot-toast';
 import { RefreshCcw, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface Props {
   auctionId: string;
@@ -14,21 +15,23 @@ interface Props {
 export function SecondChanceOfferButton({ auctionId }: Props) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const t = useTranslations('SecondChance');
+  const tc = useTranslations('Common');
 
   const handleTrigger = async () => {
-    if (!confirm('Are you sure you want to offer a second chance to the next bidder? This will cancel the original winner\'s claim.')) return;
+    if (!confirm("Offer this auction to the next-highest bidder? This cancels the original winner's claim.")) return;
 
     setLoading(true);
     try {
       const res = await triggerSecondChanceOffer(auctionId);
       if (res.success) {
-        toast.success('Second chance offer sent to the next bidder!');
+        toast.success(t('sent'));
         router.refresh();
       } else {
-        toast.error(res.error?.message || 'Failed to trigger second chance offer.');
+        toast.error(res.error?.message || t('failed'));
       }
-    } catch (error) {
-      toast.error('An unexpected error occurred.');
+    } catch {
+      toast.error(tc('unexpectedError'));
     } finally {
       setLoading(false);
     }

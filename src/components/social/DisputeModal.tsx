@@ -7,6 +7,7 @@ import { X, AlertTriangle, Upload, Loader2 } from 'lucide-react';
 import { raiseDispute } from '@/actions/dispute';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface DisputeModalProps {
   transactionId: string;
@@ -18,10 +19,12 @@ export default function DisputeModal({ transactionId, isOpen, onClose }: Dispute
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const t = useTranslations('Dispute');
+  const tc = useTranslations('Common');
 
   const handleSubmit = async () => {
     if (reason.length < 10) {
-      toast.error('Please provide a more detailed reason (min 10 chars).');
+      toast.error(t('reasonTooShort'));
       return;
     }
 
@@ -29,14 +32,14 @@ export default function DisputeModal({ transactionId, isOpen, onClose }: Dispute
     try {
       const res = await raiseDispute(transactionId, reason);
       if (res.success) {
-        toast.success('Dispute raised successfully. An admin will review it shortly.');
+        toast.success(t('submitted'));
         router.refresh();
         onClose();
       } else {
-        toast.error(res.error?.message || 'Failed to raise dispute');
+        toast.error(res.error?.message || t('submitFailed'));
       }
-    } catch (error) {
-      toast.error('An unexpected error occurred');
+    } catch {
+      toast.error(tc('unexpectedError'));
     } finally {
       setIsSubmitting(false);
     }

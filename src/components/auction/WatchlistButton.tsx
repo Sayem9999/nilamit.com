@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { Heart } from "lucide-react";
 import { toggleWatchlist } from "@/actions/watchlist";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 
 interface WatchlistButtonProps {
@@ -22,6 +23,8 @@ export function WatchlistButton({
 }: WatchlistButtonProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const router = useRouter();
+  const t = useTranslations("Watchlist");
   const [isPending, startTransition] = useTransition();
   const [isWatchlisted, setIsWatchlisted] = useState(initialIsWatchlisted);
 
@@ -30,7 +33,8 @@ export function WatchlistButton({
     e.stopPropagation();
 
     if (!session) {
-      toast.error("Please sign in to add to watchlist");
+      toast.error(t("signInPrompt"));
+      router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
       return;
     }
 
@@ -47,31 +51,32 @@ export function WatchlistButton({
       if (!result.success) {
         setIsWatchlisted(previous);
         if (result.error?.type !== "UNAUTHORIZED_ERROR") {
-          toast.error(result.error?.message || "Failed to update watchlist");
+          toast.error(result.error?.message || t("updateFailed"));
         }
       } else if (result.data?.watching !== undefined) {
         setIsWatchlisted(result.data.watching);
-        toast.success(
-          result.data.watching
-            ? "Added to watchlist"
-            : "Removed from watchlist",
-        );
+        toast.success(result.data.watching ? t("added") : t("removed"));
       }
     });
   };
 
+  const label = isWatchlisted ? "Remove from watchlist" : "Add to watchlist";
   return (
     <button
+      type="button"
       onClick={handleToggle}
       disabled={isPending}
-      className={`p-2 rounded-full backdrop-blur-md transition-all ${
+      aria-label={label}
+      aria-pressed={isWatchlisted}
+      title={label}
+      className={`inline-flex items-center justify-center w-11 h-11 rounded-full backdrop-blur-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
         isWatchlisted
           ? "bg-red-50 text-red-500 hover:bg-red-100"
           : "bg-white/80 text-gray-500 hover:text-red-500 hover:bg-white"
       } ${hoverOnly ? "opacity-0 group-hover:opacity-100" : ""} ${className}`}
-      title={isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist"}
     >
       <Heart
+        aria-hidden="true"
         className="w-5 h-5 transition-transform"
         fill={isWatchlisted ? "currentColor" : "none"}
       />
