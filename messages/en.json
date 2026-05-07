@@ -374,7 +374,15 @@
     "subNote": "Zero-Technicality Protection",
     "warningTitle": "Notice to All Traders",
     "warningDesc": "Never share your personal phone number or payment details outside the Coordination Hub. Nilamit staff will never ask for your password or OTP.",
-    "heroDesc": "Every transaction on Nilamit is backed by our coordinate-first safety protocol."
+    "heroDesc": "Every transaction on Nilamit is backed by our coordinate-first safety protocol.",
+    "escrowTitle": "Escrow protection",
+    "escrowDesc": "Your payment is held by Nilamit until you confirm the item arrived as described. If something goes wrong, raise a dispute and we mediate.",
+    "identityTitle": "Verified identities",
+    "identityDesc": "Sellers verify their phone, email, and (for retailers) business documents. Look for the verification badge on every listing.",
+    "coordTitle": "Coordination Hub",
+    "coordDesc": "All buyer-seller communication happens inside the platform after escrow is paid. Off-platform contact is a red flag — keep it on Nilamit.",
+    "disputeTitle": "Fair dispute resolution",
+    "disputeDesc": "If a delivery is delayed past 72 hours or the item doesn't match its description, our moderators step in within one business day."
   },
   "Leaderboard": {
     "title": "Platform Champions",
