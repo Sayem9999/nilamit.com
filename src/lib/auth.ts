@@ -109,7 +109,9 @@ async function verifyUser(field: 'email' | 'phone', value: string, passwordRaw: 
       userLevel: Number(user.userLevel || 1), 
       xp: Number(user.xp || 0), 
       winningStreak: Number(user.winningStreak || 0),
-      isBanned: Boolean(user.isBanned) 
+      isBanned: Boolean(user.isBanned),
+      bkashNumber: user.bkashNumber as string | null | undefined,
+      nagadNumber: user.nagadNumber as string | null | undefined
     };
   } catch (e) {
     log.error(`[Auth] verifyUser failed for ${field}`, e);
@@ -191,6 +193,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.defectCount      = user.defectCount ?? 0;
         token.phone            = user.phone ?? null;
         token.emailVerified    = user.emailVerified ?? null;
+        token.bkashNumber      = user.bkashNumber ?? null;
+        token.nagadNumber      = user.nagadNumber ?? null;
         token.lastDbRefresh    = Date.now();
       }
 
@@ -217,6 +221,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.defectCount      = u.defectCount ?? 0;
             token.phone            = u.phone ?? null;
             token.emailVerified    = u.emailVerified ?? null;
+            token.bkashNumber      = u.bkashNumber ?? null;
+            token.nagadNumber      = u.nagadNumber ?? null;
             token.lastDbRefresh    = Date.now();
           }
         } catch (e) {
@@ -249,6 +255,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.isTopRated       = token.isTopRated as any;
         session.user.salesCount       = token.salesCount as any;
         session.user.defectCount      = token.defectCount as any;
+        session.user.bkashNumber     = token.bkashNumber as any;
+        session.user.nagadNumber     = token.nagadNumber as any;
         /* eslint-enable @typescript-eslint/no-explicit-any */
       }
       return session;

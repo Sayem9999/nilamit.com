@@ -262,12 +262,14 @@ export default function ProfilePage() {
               >
                 <div className="flex items-center gap-1.5 text-primary-100 font-bold text-sm bg-black/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
                   <Mail size={14} />
-                  {session.user?.email}
+                  <span>{session.user?.email}</span>
+                  {isEmailVerifiedLocal && <BadgeCheck size={14} className="text-emerald-400 fill-emerald-950/20" />}
                 </div>
                 {user.phone && (
                   <div className="flex items-center gap-1.5 text-primary-100 font-bold text-sm bg-black/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
                     <Smartphone size={14} />
-                    {maskPhone(user.phone)}
+                    <span>{maskPhone(user.phone)}</span>
+                    {isPhoneVerifiedLocal && <BadgeCheck size={14} className="text-emerald-400 fill-emerald-950/20" />}
                   </div>
                 )}
               </motion.div>
@@ -547,16 +549,42 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t_prof("emailAddress") || "Email Address"}</label>
-                    <div className="flex items-center gap-2 text-gray-700 font-bold">
-                      <Mail size={16} className="text-primary-400" />
-                      {session.user?.email}
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-gray-700 font-bold">
+                        <Mail size={16} className="text-primary-400" />
+                        <span>{session.user?.email}</span>
+                      </div>
+                      {isEmailVerifiedLocal ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-black rounded-full border border-green-200 shadow-sm">
+                          <BadgeCheck size={12} className="text-green-600 fill-green-600/10" />
+                          VERIFIED
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-black rounded-full border border-amber-200 shadow-sm">
+                          UNVERIFIED
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div>
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t_prof("phoneNumber") || "Phone Number"}</label>
-                    <div className="flex items-center gap-2 text-gray-700 font-bold">
-                      <Phone size={16} className="text-primary-400" />
-                      {user.phone ? maskPhone(user.phone) : t_prof("notVerified") || "Not Verified"}
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-gray-700 font-bold">
+                        <Phone size={16} className="text-primary-400" />
+                        <span>{user.phone ? maskPhone(user.phone) : (t_prof("notVerified") || "Not Verified")}</span>
+                      </div>
+                      {user.phone && (
+                        isPhoneVerifiedLocal ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-black rounded-full border border-green-200 shadow-sm">
+                            <BadgeCheck size={12} className="text-green-600 fill-green-600/10" />
+                            VERIFIED
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-black rounded-full border border-amber-200 shadow-sm">
+                            UNVERIFIED
+                          </span>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -571,9 +599,9 @@ export default function ProfilePage() {
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* bKash Card */}
-                  <div className={`p-6 rounded-[2.5rem] border transition-all ${user.bkashNumber ? 'bg-white border-gray-100' : 'bg-[#E2125D]/5 border-[#E2125D]/10'}`}>
+                  <div className={`p-6 rounded-[2.5rem] border transition-all ${user.bkashNumber ? 'bg-gradient-to-br from-white to-pink-50/10 border-pink-100 shadow-sm' : 'bg-[#E2125D]/5 border-[#E2125D]/10'}`}>
                     <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2">
+                      <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2 border border-pink-100/50">
                         <Image 
                           src={BKASH_LOGO_PRIMARY} 
                           alt="bKash" 
@@ -582,11 +610,25 @@ export default function ProfilePage() {
                           className="object-contain" 
                         />
                       </div>
-                      {user.bkashNumber && <BadgeCheck className="text-green-500" size={24} />}
+                      {user.bkashNumber ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-full border border-green-200 shadow-sm">
+                          <BadgeCheck className="text-green-600 fill-green-600/10" size={14} />
+                          ACTIVE LINK
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-50 text-gray-500 text-[10px] font-black rounded-full border border-gray-200">
+                          UNLINKED
+                        </span>
+                      )}
                     </div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">bKash Account</p>
                     {user.bkashNumber ? (
-                      <p className="text-lg font-black text-gray-900 font-mono tracking-wider">{maskPhone(user.bkashNumber)}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xl font-black text-gray-900 font-mono tracking-wider">{maskPhone(user.bkashNumber)}</p>
+                        <span className="text-xs text-green-600 font-black flex items-center gap-1">
+                          <ShieldCheck size={14} /> Linked
+                        </span>
+                      </div>
                     ) : (
                       <div className="space-y-3">
                         <label htmlFor="profile-bkash" className="sr-only">bKash account number</label>
@@ -615,9 +657,9 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Nagad Card */}
-                  <div className={`p-6 rounded-[2.5rem] border transition-all ${user.nagadNumber ? 'bg-white border-gray-100' : 'bg-[#F69320]/5 border-[#F69320]/10'}`}>
+                  <div className={`p-6 rounded-[2.5rem] border transition-all ${user.nagadNumber ? 'bg-gradient-to-br from-white to-orange-50/10 border-orange-100 shadow-sm' : 'bg-[#F69320]/5 border-[#F69320]/10'}`}>
                     <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2">
+                      <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center p-2 border border-orange-100/50">
                         <Image 
                           src={NAGAD_LOGO_PRIMARY} 
                           alt="Nagad" 
@@ -626,11 +668,25 @@ export default function ProfilePage() {
                           className="object-contain" 
                         />
                       </div>
-                      {user.nagadNumber && <BadgeCheck className="text-green-500" size={24} />}
+                      {user.nagadNumber ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black rounded-full border border-green-200 shadow-sm">
+                          <BadgeCheck className="text-green-600 fill-green-600/10" size={14} />
+                          ACTIVE LINK
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-gray-50 text-gray-500 text-[10px] font-black rounded-full border border-gray-200">
+                          UNLINKED
+                        </span>
+                      )}
                     </div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Nagad Account</p>
                     {user.nagadNumber ? (
-                      <p className="text-lg font-black text-gray-900 font-mono tracking-wider">{maskPhone(user.nagadNumber)}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xl font-black text-gray-900 font-mono tracking-wider">{maskPhone(user.nagadNumber)}</p>
+                        <span className="text-xs text-green-600 font-black flex items-center gap-1">
+                          <ShieldCheck size={14} /> Linked
+                        </span>
+                      </div>
                     ) : (
                       <div className="space-y-3">
                         <label htmlFor="profile-nagad" className="sr-only">Nagad account number</label>
