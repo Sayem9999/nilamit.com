@@ -3,10 +3,11 @@
 import Link from "next/link";
 
 import Image from "next/image";
-import { Clock, Users, Zap, MapPin, Package, Shield, X, RotateCcw } from "lucide-react";
+import { Clock, Users, Zap, MapPin, Package, Shield, X, RotateCcw, Pencil } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
+import { EditListingModal } from "./EditListingModal";
 import type { AuctionWithSeller } from "@/types";
 import { useSession } from "next-auth/react";
 import { useSettings } from "@/context/SettingsContext";
@@ -34,9 +35,11 @@ export const AuctionCard = memo(({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const bidCount = auction._count?.bids ?? auction.bidCount ?? 0;
   const isOwner = !!session?.user?.id && session.user.id === auction.sellerId;
   const canCancel = isOwner && auction.status === "ACTIVE" && bidCount === 0;
+  const canEdit   = isOwner && auction.status === "ACTIVE" && bidCount === 0;
   const canRelist = isOwner && (auction.status === "EXPIRED" || auction.status === "CANCELLED");
 
   const handleCancel = () => {
@@ -225,8 +228,18 @@ export const AuctionCard = memo(({
 
           {/* Owner controls — only visible to the seller on their own listings.
               Buttons stop the parent <Link> from navigating to the auction page. */}
-          {(canCancel || canRelist) && (
+          {(canCancel || canEdit || canRelist) && (
             <div className="mt-3 flex gap-2 relative z-20">
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEditModal(true); }}
+                  disabled={isPending}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> Edit
+                </button>
+              )}
               {canCancel && (
                 <button
                   type="button"
@@ -250,6 +263,17 @@ export const AuctionCard = memo(({
             </div>
           )}
         </div>
+      </div>
+
+      <div onClick={(e) => { if (showEditModal) { e.preventDefault(); e.stopPropagation(); } }}>
+        <EditListingModal
+          auctionId={auction.id}
+          initialDescription={auction.description ?? ""}
+          initialImages={auction.images ?? []}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSaved={() => router.refresh()}
+        />
       </div>
 
       {showCancelConfirm && (
