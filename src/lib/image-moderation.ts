@@ -50,7 +50,7 @@ async function getClient() {
     return _client;
   } catch (e) {
     _initFailed = true;
-    log.error('[image-moderation] Failed to init Vision client', e);
+    log.error('[image-moderation] Failed to init Vision client', e, { area: 'upload', severity: 'warning' });
     return null;
   }
 }
@@ -93,7 +93,7 @@ export async function moderateImage(buffer: Buffer): Promise<ModerationResult> {
 
     return { allowed: true, scores };
   } catch (e) {
-    log.error('[image-moderation] SafeSearch call failed (fail-open)', e);
+    log.error('[image-moderation] SafeSearch call failed (fail-open)', e, { area: 'upload', severity: 'warning' });
     Sentry.captureException(e, {
       tags: { component: 'image-moderation', state: 'api-error' },
     });

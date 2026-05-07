@@ -72,7 +72,7 @@ export async function registerUser(data: unknown): Promise<ServiceResponse<{ mes
       await sendEmailVerificationByEmail(email);
       log.info(`[Auth] Verification email sent to ${email}`);
     } catch (verifErr) {
-      log.error("[Auth] Background email verification trigger failed", verifErr);
+      log.error("[Auth] Background email verification trigger failed", verifErr, { area: 'auth', severity: 'warning' });
       // We don't fail the registration if the email fails, but we log it.
     }
 
@@ -82,7 +82,7 @@ export async function registerUser(data: unknown): Promise<ServiceResponse<{ mes
         : "Registration successful. Please check your email for a verification link." 
     });
   } catch (e) {
-    log.error("[Auth] registerUser failed", e);
+    log.error("[Auth] registerUser failed", e, { area: 'auth', severity: 'warning' });
     return errorResponse(ErrorType.INTERNAL, "Failed to register user.");
   }
 }
@@ -147,7 +147,7 @@ export async function signupWithPhone(data: unknown): Promise<ServiceResponse<{ 
 
     return successResponse({ message: "Registration successful. You can now log in." });
   } catch (e) {
-    log.error("[Auth] signupWithPhone failed", e);
+    log.error("[Auth] signupWithPhone failed", e, { area: 'auth', severity: 'warning' });
     return errorResponse(ErrorType.INTERNAL, "Failed to register user.");
   }
 }
@@ -206,7 +206,7 @@ export async function resetPasswordWithOTP(data: unknown): Promise<ServiceRespon
 
     return successResponse({ message: "Password reset successful." });
   } catch (e) {
-    log.error("[Auth] resetPasswordWithOTP failed", e);
+    log.error("[Auth] resetPasswordWithOTP failed", e, { area: 'auth', severity: 'warning' });
     return errorResponse(ErrorType.INTERNAL, "Failed to reset password.");
   }
 }

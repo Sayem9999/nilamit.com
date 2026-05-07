@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url });
   } catch (error) {
-    log.error('[Upload] Firebase Storage error', error);
+    log.error('[Upload] Firebase Storage error', error, { area: 'upload', severity: 'warning' });
     return NextResponse.json({ error: 'Upload failed. Please try again.' }, { status: 500 });
   }
 }
