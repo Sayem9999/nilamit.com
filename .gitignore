@@ -54,3 +54,6 @@ lint*.txt
 lint.json
 lint.log
 final-lint.txt
+
+playwright-report/
+test-results/

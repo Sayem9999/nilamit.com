@@ -9,10 +9,10 @@ test.describe('Auction Lifecycle', () => {
   test('should allow a verified user to create a new auction', async ({ page }) => {
     // 1. Visit Homepage
     await page.goto('/');
-    await expect(page).toHaveTitle(/Nilamit/);
+    await expect(page).toHaveTitle(/nilamit/i);
 
     // 2. Navigate to Login (assuming link in header)
-    await page.click('text=Login');
+    await page.click('a[href="/login"]');
     await expect(page).toHaveURL(/.*login/);
 
     // 3. Perform Mock Login (using test credentials)

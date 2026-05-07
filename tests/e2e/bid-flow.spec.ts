@@ -9,10 +9,27 @@ test.describe('End-to-End Bid Flow Happy Path', () => {
   test('complete cycle: register, list, bid, win, confirm escrow', async ({ page }) => {
     // 1. REGISTER THE SELLER
     await page.goto('/register');
-    await page.fill('input[name="name"]', 'Nilamit Seller');
-    await page.fill('input[name="email"]', sellerEmail);
-    await page.fill('input[name="phone"]', '01712345678');
-    await page.fill('input[name="password"]', 'SellerPass123!');
+    
+    // Step 1: Account Type
+    await page.click('text=Personal Account');
+    
+    // Step 2: Switch to Email signup to bypass real SMS OTP
+    await page.click('button:has-text("Email")');
+
+    // Step 3: Fill form using correct IDs
+    await page.fill('#email-signup-name', 'Nilamit Seller');
+    await page.fill('#email-signup-email', sellerEmail);
+    await page.fill('#email-signup-password', 'SellerPass123!');
+    await page.fill('#email-signup-confirm', 'SellerPass123!');
+    await page.click('button[type="submit"]');
+
+    // Wait for the success screen, click to login, then login
+    await expect(page.locator('h2')).toContainText(/Welcome|Successful/i);
+    await page.click('a[href="/login"]');
+    
+    // Fill login
+    await page.fill('input[type="email"]', sellerEmail);
+    await page.fill('input[type="password"]', 'SellerPass123!');
     await page.click('button[type="submit"]');
 
     // Wait for redirect to dashboard/profile
@@ -46,11 +63,29 @@ test.describe('End-to-End Bid Flow Happy Path', () => {
 
     // 3. REGISTER THE BIDDER
     await page.goto('/register');
-    await page.fill('input[name="name"]', 'Nilamit Bidder');
-    await page.fill('input[name="email"]', bidderEmail);
-    await page.fill('input[name="phone"]', '01812345678');
-    await page.fill('input[name="password"]', 'BidderPass123!');
+    
+    // Step 1: Account Type
+    await page.click('text=Personal Account');
+    
+    // Step 2: Switch to Email signup
+    await page.click('button:has-text("Email")');
+
+    // Step 3: Fill form using correct IDs
+    await page.fill('#email-signup-name', 'Nilamit Bidder');
+    await page.fill('#email-signup-email', bidderEmail);
+    await page.fill('#email-signup-password', 'BidderPass123!');
+    await page.fill('#email-signup-confirm', 'BidderPass123!');
     await page.click('button[type="submit"]');
+    
+    // Wait for the success screen, click to login, then login
+    await expect(page.locator('h2')).toContainText(/Welcome|Successful/i);
+    await page.click('a[href="/login"]');
+    
+    // Fill login
+    await page.fill('input[type="email"]', bidderEmail);
+    await page.fill('input[type="password"]', 'BidderPass123!');
+    await page.click('button[type="submit"]');
+
     await expect(page).toHaveURL(/.*dashboard|.*profile/);
 
     // 4. PLACE A BID (AS BIDDER)
