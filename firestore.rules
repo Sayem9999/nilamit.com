@@ -63,6 +63,26 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Seller follows — composite ID `{followerId}_{sellerId}`. Each user can
+    // see their own follows; sellers can see who follows them. Writes only
+    // via Server Actions (followSeller / unfollowSeller).
+    match /sellerFollows/{docId} {
+      allow read: if signedIn() && (
+        isAdmin() ||
+        resource.data.followerId == request.auth.uid ||
+        resource.data.sellerId   == request.auth.uid
+      );
+      allow write: if false;
+    }
+
+    // Auction Q&A — public discovery feature. Anyone can read; writes only
+    // via Server Actions to enforce PII filter, rate limiting, and seller-only
+    // answer authorization.
+    match /auctionQuestions/{questionId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /conversations/{conversationId} {
       allow read: if signedIn() && (
         isAdmin() || 

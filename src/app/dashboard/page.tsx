@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import type { AuctionWithSeller } from "@/types";
+import { formatBDT } from "@/lib/format";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 import { getTranslations } from "next-intl/server";
 import { getSystemConfig } from "@/actions/admin-content";
@@ -26,14 +27,32 @@ import {
 
 export const dynamic = "force-dynamic";
 
+type ListingFilter = "all" | "active" | "sold" | "expired" | "cancelled";
+const VALID_LISTING_FILTERS: ListingFilter[] = ["all", "active", "sold", "expired", "cancelled"];
+
+interface ListingStats {
+  totalListings: number;
+  active: number;
+  sold: number;
+  expired: number;
+  cancelled: number;
+  /** Net seller earnings = sum(currentPrice - commissionEarned) for SOLD listings. */
+  netEarnings: number;
+  /** Gross sales = sum(currentPrice) for SOLD listings. */
+  grossSales: number;
+  /** Total platform commission paid across all SOLD listings. */
+  totalCommission: number;
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; status?: string }>;
 }) {
   const session = await auth();
   const t = await getTranslations("Dashboard");
   const te = await getTranslations("Escrow");
+  const tStats = await getTranslations("ListingStats");
 
   if (!session?.user) {
     redirect("/login?callbackUrl=/dashboard");
@@ -52,14 +71,19 @@ export default async function DashboardPage({
     treasuryNagad: configFromDb?.treasuryNagad || "018XXXXXXXX",
   };
 
-  const { tab } = await searchParams;
+  const { tab, status: rawStatus } = await searchParams;
   const currentTab = tab || "watchlist";
+  const listingFilter: ListingFilter = (VALID_LISTING_FILTERS.includes(rawStatus as ListingFilter) ? rawStatus : "all") as ListingFilter;
 
   const userId = session.user.id;
 
   // Fetch relevant data based on tab
   let watchlistAuctions: AuctionWithSeller[] = [];
   let myListings: AuctionWithSeller[] = [];
+  const listingStats: ListingStats = {
+    totalListings: 0, active: 0, sold: 0, expired: 0, cancelled: 0,
+    netEarnings: 0, grossSales: 0, totalCommission: 0,
+  };
   let activeBids: AuctionWithSeller[] = [];
   let escrowTransactions: HydratedEscrowTransaction[] = [];
   let coordinationItems: CoordinationHubItem[] = [];
@@ -84,7 +108,7 @@ export default async function DashboardPage({
       const seller = sellerSnap.data() ?? {};
       const bidCountMap = new Map(auctionIds.map((id, i) => [id, bidCountSnaps[i].data().count]));
 
-      myListings = rawSnap.docs.map(d => {
+      const allListings = rawSnap.docs.map(d => {
         const a = d.data();
         return {
           ...a, id: d.id,
@@ -95,6 +119,35 @@ export default async function DashboardPage({
           watchlist: [],
         };
       }) as unknown as AuctionWithSeller[];
+
+      // Aggregate stats across ALL listings, regardless of UI filter, so the
+      // header summary stays consistent as the user toggles tabs.
+      for (const a of allListings) {
+        listingStats.totalListings++;
+        const status = (a.status as string) ?? "";
+        if (status === "ACTIVE")    listingStats.active++;
+        if (status === "SOLD") {
+          listingStats.sold++;
+          const gross      = Number(a.currentPrice ?? 0);
+          const commission = Number((a as { commissionEarned?: number }).commissionEarned ?? 0);
+          listingStats.grossSales      += gross;
+          listingStats.totalCommission += commission;
+          listingStats.netEarnings     += Math.max(0, gross - commission);
+        }
+        if (status === "EXPIRED")   listingStats.expired++;
+        if (status === "CANCELLED") listingStats.cancelled++;
+      }
+
+      // Apply user-selected status filter for rendering.
+      const matches = (status: string): boolean => {
+        if (listingFilter === "all")       return true;
+        if (listingFilter === "active")    return status === "ACTIVE";
+        if (listingFilter === "sold")      return status === "SOLD";
+        if (listingFilter === "expired")   return status === "EXPIRED";
+        if (listingFilter === "cancelled") return status === "CANCELLED";
+        return true;
+      };
+      myListings = allListings.filter(a => matches((a.status as string) ?? ""));
     }
 
   // ─── WATCHLIST ─────────────────────────────────────────────────────────────
@@ -453,17 +506,76 @@ export default async function DashboardPage({
 
             {currentTab === "listings" && (
               <div>
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-heading font-semibold text-gray-900">
-                    {t("myListings")} ({myListings.length})
+                    {t("myListings")} ({listingStats.totalListings})
                   </h2>
                   <Link
                     href="/auctions/create"
                     className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl shadow-sm transition-all"
                   >
-                    + New Listing
+                    {tStats("newListingBtn")}
                   </Link>
                 </div>
+
+                {listingStats.totalListings > 0 && (
+                  <>
+                    {/* Earnings + counts header */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{tStats("netEarnings")}</p>
+                        <p className="text-lg font-black text-emerald-600 truncate">{formatBDT(listingStats.netEarnings)}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{tStats("afterCommission", { amount: formatBDT(listingStats.totalCommission) })}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{tStats("grossSales")}</p>
+                        <p className="text-lg font-black text-gray-900 truncate">{formatBDT(listingStats.grossSales)}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{tStats("soldSuffix", { count: listingStats.sold })}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{tStats("liveNow")}</p>
+                        <p className="text-lg font-black text-primary-600">{listingStats.active}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{tStats("activeAuctions")}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{tStats("closedNoSale")}</p>
+                        <p className="text-lg font-black text-gray-700">{listingStats.expired + listingStats.cancelled}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{tStats("closedDetail", { expired: listingStats.expired, cancelled: listingStats.cancelled })}</p>
+                      </div>
+                    </div>
+
+                    {/* Status filter pills */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {([
+                        { key: "all",       label: tStats("filterAll"),       count: listingStats.totalListings },
+                        { key: "active",    label: tStats("filterActive"),    count: listingStats.active },
+                        { key: "sold",      label: tStats("filterSold"),      count: listingStats.sold },
+                        { key: "expired",   label: tStats("filterExpired"),   count: listingStats.expired },
+                        { key: "cancelled", label: tStats("filterCancelled"), count: listingStats.cancelled },
+                      ] as const).map(({ key, label, count }) => {
+                        const isActive = listingFilter === key;
+                        const href = key === "all" ? "/dashboard?tab=listings" : `/dashboard?tab=listings&status=${key}`;
+                        return (
+                          <Link
+                            key={key}
+                            href={href}
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors ${
+                              isActive
+                                ? "bg-primary-600 text-white shadow-sm"
+                                : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                            }`}
+                          >
+                            {label}
+                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                              isActive ? "bg-white/20 text-white/90" : "bg-gray-100 text-gray-500"
+                            }`}>{count}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+
                 {myListings.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {myListings.map((auction) => (
@@ -473,13 +585,26 @@ export default async function DashboardPage({
                 ) : (
                   <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
                     <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-4">{t("emptyListings")}</p>
-                    <Link
-                      href="/auctions/create"
-                      className="inline-block bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl shadow-sm transition-all"
-                    >
-                      Create your first listing
-                    </Link>
+                    <p className="text-gray-500 mb-4">
+                      {listingStats.totalListings === 0
+                        ? t("emptyListings")
+                        : tStats("noFiltered", { status: listingFilter })}
+                    </p>
+                    {listingStats.totalListings === 0 ? (
+                      <Link
+                        href="/auctions/create"
+                        className="inline-block bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl shadow-sm transition-all"
+                      >
+                        {tStats("createFirst")}
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/dashboard?tab=listings"
+                        className="inline-block text-primary-600 hover:text-primary-700 text-xs font-bold uppercase tracking-wider"
+                      >
+                        {tStats("showAll")}
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>

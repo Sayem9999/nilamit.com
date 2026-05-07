@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { canReviewAuction } from "@/actions/review";
+import { getAuctionQuestions } from "@/actions/qa";
+import { QnaSection } from "@/components/auction/QnaSection";
 // Static imports — `dynamic({ ssr: false })` is no longer permitted from
 // Server Components in Next.js 16, and these are all client components so
 // Next handles the client/server boundary on its own.
@@ -105,17 +107,19 @@ export default async function AuctionDetailPage({ params }: Props) {
   const t = await getTranslations("Auction");
   if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
 
-  const [bidsRes, watchedRes, chatRes, reviewRes] = await Promise.all([
+  const [bidsRes, watchedRes, chatRes, reviewRes, questionsRes] = await Promise.all([
     getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     isWatched(id).catch((e) => { log.error('[AuctionDetail] isWatched failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed') as unknown as Awaited<ReturnType<typeof isWatched>>; }),
     getAuctionChat(id).catch((e) => { log.error('[AuctionDetail] getAuctionChat failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     canReviewAuction(id).catch((e) => { log.error('[AuctionDetail] canReviewAuction failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
+    getAuctionQuestions(id).catch((e) => { log.error('[AuctionDetail] getAuctionQuestions failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
   ]);
 
   const bids = (bidsRes.success && bidsRes.data ? bidsRes.data : []) as (Bid & { bidder: { id: string, name: string, image: string | null } })[];
   const watched = (watchedRes.success && watchedRes.data) ? watchedRes.data : false;
   const chat = (chatRes.success && chatRes.data) ? chatRes.data : null;
   const canReview = (reviewRes.success && reviewRes.data) ? reviewRes.data : false;
+  const questions = (questionsRes.success && questionsRes.data) ? questionsRes.data : [];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -231,6 +235,16 @@ export default async function AuctionDetailPage({ params }: Props) {
               bidder: { name: b.bidder.name, id: b.bidder.id },
             }))}
           />
+
+          {/* Public Q&A */}
+          <div className="mt-8">
+            <QnaSection
+              auctionId={id}
+              sellerId={auction.sellerId}
+              initialQuestions={questions}
+              isActive={auction.status === AuctionStatus.ACTIVE}
+            />
+          </div>
 
           {/* Review Section (Phase 3) */}
           {auction.status === AuctionStatus.SOLD && (

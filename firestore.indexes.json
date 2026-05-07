@@ -213,6 +213,30 @@
         { "fieldPath": "status",    "order": "ASCENDING" },
         { "fieldPath": "updatedAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sellerFollows",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sellerId",  "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sellerFollows",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "followerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "auctionQuestions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "auctionId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

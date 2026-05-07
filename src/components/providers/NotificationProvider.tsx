@@ -138,6 +138,45 @@ function handleNotification(data: Record<string, unknown>) {
       break;
     }
 
+    case FIREBASE_EVENTS.NEW_LISTING: {
+      const title = "New listing from a seller you follow";
+      const body  = `"${data.auctionTitle}" just went live.`;
+      showNotification(title, { body });
+      toast.custom(
+        (t) => (
+          <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-sm w-full bg-white shadow-lg rounded-2xl pointer-events-auto border border-primary-100 flex items-start gap-3 p-4`}>
+            <div className="text-2xl leading-none">🛍️</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-gray-900">New listing</p>
+              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{body}</p>
+              <a href={`/auctions/${data.auctionId}`} className="mt-2 inline-block text-xs font-bold text-primary-600 hover:text-primary-700">
+                View →
+              </a>
+            </div>
+          </div>
+        ),
+        { duration: 10000 },
+      );
+      break;
+    }
+
+    case FIREBASE_EVENTS.NEW_QUESTION: {
+      toast(`❓ New question on "${data.auctionTitle}"`, {
+        duration: 6000,
+        icon: "❓",
+      });
+      showNotification("New question on your listing", {
+        body: `Open the auction to reply.`,
+      });
+      break;
+    }
+
+    case FIREBASE_EVENTS.QUESTION_ANSWERED: {
+      const auctionTitle = (data.auctionTitle as string | null) ?? "your question";
+      toast(`💬 Seller answered: ${auctionTitle}`, { duration: 6000 });
+      break;
+    }
+
     default:
       break;
   }

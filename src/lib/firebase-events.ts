@@ -62,6 +62,11 @@ export const FIREBASE_EVENTS = {
   // Payments & Escrow
   PAYMENT_SUCCESS:      'payment_success',
   ESCROW_HELD:          'escrow_held',
+
+  // Discovery / fan-out
+  NEW_LISTING:          'new_listing',          // pushed to followers when a seller publishes
+  NEW_QUESTION:         'new_question',         // pushed to seller when a buyer asks a Q
+  QUESTION_ANSWERED:    'question_answered',    // pushed to asker when seller answers
 } as const;
 
 export type FirebaseEvent = typeof FIREBASE_EVENTS[keyof typeof FIREBASE_EVENTS];
