@@ -655,6 +655,16 @@
     "linkCopied": "Link copied to clipboard",
     "unexpectedError": "An unexpected error happened — please refresh and try again."
   },
+  "ForYou": {
+    "title": "Recommended for you",
+    "subtitle": "Based on your activity and interests"
+  },
+  "Ticker": {
+    "regionLabel": "Live activity ticker",
+    "label": "Live Ticker",
+    "placed": "placed",
+    "on": "on"
+  },
   "Watchlist": {
     "signInPrompt": "Sign in to save auctions to your watchlist",
     "added": "Added to watchlist",
