@@ -407,13 +407,18 @@ export default function ProfilePage() {
                           initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                           className="space-y-3"
                         >
+                          <label htmlFor="profile-phone" className="sr-only">{t_prof("phoneNumber")}</label>
                           <input
+                            id="profile-phone"
+                            type="tel"
+                            autoComplete="tel"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             placeholder="+8801XXXXXXXXX"
                             className="w-full bg-white border border-amber-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-amber-500 transition-all"
                           />
                           <button
+                            type="button"
                             onClick={handleSendOTP}
                             disabled={isPending || phone.length < 11}
                             className="w-full bg-amber-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
@@ -424,15 +429,23 @@ export default function ProfilePage() {
                       )}
 
                       {phoneStep === "otp" && (
-                        <motion.div 
+                        <motion.div
                           key="otp"
                           initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                           className="space-y-3"
                         >
+                          <label htmlFor="profile-otp" className="sr-only">6-digit verification code</label>
                           <input
+                            id="profile-otp"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            autoComplete="one-time-code"
+                            maxLength={6}
                             value={otp}
                             onChange={(e) => setOtp(e.target.value)}
                             placeholder="OTP"
+                            aria-label="6-digit verification code"
                             className="w-full bg-white border border-amber-100 rounded-xl px-4 py-3 text-center text-lg font-black tracking-widest text-gray-900 outline-none focus:border-amber-500"
                           />
                           <button
@@ -504,21 +517,26 @@ export default function ProfilePage() {
 
               <div className="space-y-6">
                 <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t_prof("fullName") || "Full Name"}</label>
+                  <label htmlFor="profile-fullname" className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t_prof("fullName") || "Full Name"}</label>
                   {editing ? (
                     <div className="flex gap-2">
                       <input
+                        id="profile-fullname"
+                        type="text"
+                        autoComplete="name"
                         value={name}
                         placeholder={session.user?.name || ""}
                         onChange={(e) => setName(e.target.value)}
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary-500"
                       />
-                      <button 
+                      <button
+                        type="button"
                         onClick={handleSaveName}
                         disabled={isPending}
-                        className="bg-primary-600 text-white px-5 rounded-2xl hover:bg-primary-700 transition-all disabled:opacity-50"
+                        aria-label="Save name"
+                        className="bg-primary-600 text-white px-5 rounded-2xl hover:bg-primary-700 transition-all disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                       >
-                        <Save size={20} />
+                        <Save size={20} aria-hidden="true" />
                       </button>
                     </div>
                   ) : (
@@ -571,13 +589,21 @@ export default function ProfilePage() {
                       <p className="text-lg font-black text-gray-900 font-mono tracking-wider">{maskPhone(user.bkashNumber)}</p>
                     ) : (
                       <div className="space-y-3">
+                        <label htmlFor="profile-bkash" className="sr-only">bKash account number</label>
                         <input
+                          id="profile-bkash"
+                          type="tel"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={14}
+                          autoComplete="off"
                           placeholder="01XXXXXXXXX"
                           value={bkash}
                           onChange={(e) => setBkash(e.target.value)}
                           className="w-full bg-white border border-[#E2125D]/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#E2125D]"
                         />
                         <button
+                          type="button"
                           onClick={() => handleLinkMFS('bkash', bkash)}
                           disabled={isPending || bkash.length < 11}
                           className="w-full bg-[#E2125D] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
@@ -607,13 +633,21 @@ export default function ProfilePage() {
                       <p className="text-lg font-black text-gray-900 font-mono tracking-wider">{maskPhone(user.nagadNumber)}</p>
                     ) : (
                       <div className="space-y-3">
+                        <label htmlFor="profile-nagad" className="sr-only">Nagad account number</label>
                         <input
+                          id="profile-nagad"
+                          type="tel"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={14}
+                          autoComplete="off"
                           placeholder="01XXXXXXXXX"
                           value={nagad}
                           onChange={(e) => setNagad(e.target.value)}
                           className="w-full bg-white border border-[#F69320]/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#F69320]"
                         />
                         <button
+                          type="button"
                           onClick={() => handleLinkMFS('nagad', nagad)}
                           disabled={isPending || nagad.length < 11}
                           className="w-full bg-[#F69320] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"

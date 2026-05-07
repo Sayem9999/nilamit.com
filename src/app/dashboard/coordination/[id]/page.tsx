@@ -20,7 +20,7 @@ export default async function CoordinationPage({
   const t = await getTranslations("Escrow");
 
   if (!session?.user) {
-    redirect(`/${locale}/login`);
+    redirect(`/login`);
   }
 
   const configRes = await getSystemConfig();
@@ -65,14 +65,14 @@ export default async function CoordinationPage({
 
   // Ensure user is part of the conversation
   if (conversation.buyerId !== userId && conversation.sellerId !== userId) {
-    redirect(`/${locale}/dashboard`);
+    redirect(`/dashboard`);
   }
 
   // Ensure escrow is HELD or DISPUTED (Post-advance coordination)
   const escrowStatus = conversation.auction.escrowTransaction?.status;
   if (!escrowStatus || (escrowStatus !== 'HELD' && escrowStatus !== 'DISPUTED' && escrowStatus !== 'RELEASED')) {
      // If not yet advanced, redirect back to dashboard escrow tab
-     redirect(`/${locale}/dashboard?tab=escrow`);
+     redirect(`/dashboard?tab=escrow`);
   }
 
   const isBuyer = conversation.buyerId === userId;
@@ -83,7 +83,7 @@ export default async function CoordinationPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center gap-4">
           <Link
-            href={`/${locale}/dashboard?tab=coordination`}
+            href={`/dashboard?tab=coordination`}
             className="p-2 bg-white rounded-xl border border-gray-100 hover:bg-gray-50 transition"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -147,7 +147,7 @@ export default async function CoordinationPage({
                  <h4 className="font-bold text-lg mb-2">{t("needHelp")}</h4>
                  <p className="text-sm opacity-80 mb-4">{t("helpDesc")}</p>
                  <Link 
-                   href={`/${locale}/support`}
+                   href={`/support`}
                    className="inline-block px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition"
                  >
                    {t("guidelines")}

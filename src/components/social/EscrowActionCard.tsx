@@ -245,7 +245,7 @@ export function EscrowActionCard({
                   </Button>
 
                   <Button
-                    onClick={() => router.push(`/${locale}/dashboard?tab=coordination`)}
+                    onClick={() => router.push(`/dashboard?tab=coordination`)}
                     variant="secondary"
                     className="w-full flex items-center justify-center gap-2 bn border border-purple-100 bg-purple-50 text-purple-700 hover:bg-purple-100"
                   >

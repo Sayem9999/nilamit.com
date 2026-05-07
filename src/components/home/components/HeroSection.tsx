@@ -107,12 +107,15 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
             <motion.form
               variants={itemVariants}
               onSubmit={handleSearch}
+              role="search"
               className="mt-10 relative max-w-xl bg-white rounded-2xl shadow-xl shadow-gray-200/50 border-2 border-primary-100 p-2 flex gap-2"
             >
+              <label htmlFor="hero-search" className="sr-only">{t("searchPlaceholder")}</label>
               <div className="flex-1 px-4 flex items-center gap-3">
-                <Search className="w-5 h-5 text-gray-400" />
+                <Search className="w-5 h-5 text-gray-400" aria-hidden="true" />
                 <input
-                  type="text"
+                  id="hero-search"
+                  type="search"
                   placeholder={t("searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -121,7 +124,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
               </div>
               <button
                 type="submit"
-                className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2"
+                className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2"
               >
                 {t("searchBtn")}
               </button>

@@ -284,12 +284,14 @@ export default function RegisterPage() {
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">
+                    <label htmlFor="email-signup-name" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">
                       {accountType === "business" ? "Shop Name / Rep Name" : t("nameLabel")}
                     </label>
                     <input
+                      id="email-signup-name"
                       required
                       type="text"
+                      autoComplete={accountType === "business" ? "organization" : "name"}
                       placeholder={accountType === "business" ? "e.g. Dhaka Electronics" : "e.g. Sayem Ahmed"}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -298,10 +300,12 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("emailLabel")}</label>
+                    <label htmlFor="email-signup-email" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("emailLabel")}</label>
                     <input
+                      id="email-signup-email"
                       required
                       type="email"
+                      autoComplete="email"
                       placeholder="email@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -310,10 +314,13 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("passwordLabel")}</label>
+                    <label htmlFor="email-signup-password" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("passwordLabel")}</label>
                     <input
+                      id="email-signup-password"
                       required
                       type="password"
+                      autoComplete="new-password"
+                      minLength={8}
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -322,10 +329,13 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("confirmPasswordLabel")}</label>
+                    <label htmlFor="email-signup-confirm" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("confirmPasswordLabel")}</label>
                     <input
+                      id="email-signup-confirm"
                       required
                       type="password"
+                      autoComplete="new-password"
+                      minLength={8}
                       placeholder="••••••••"
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
@@ -360,11 +370,14 @@ export default function RegisterPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="relative group">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center">
+                    <label htmlFor="phone-signup-name" className="sr-only">{accountType === "business" ? "Shop name" : t("nameLabel")}</label>
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center" aria-hidden="true">
                       <User className="w-5 h-5 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
                     </div>
                     <input
+                      id="phone-signup-name"
                       type="text"
+                      autoComplete={accountType === "business" ? "organization" : "name"}
                       placeholder={accountType === "business" ? "Shop Name" : t("nameLabel")}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -372,9 +385,12 @@ export default function RegisterPage() {
                     />
                   </div>
                   <div className="relative group">
-                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
+                    <label htmlFor="phone-signup-phone" className="sr-only">{t("phoneLabel")}</label>
+                    <Smartphone aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
                     <input
+                      id="phone-signup-phone"
                       type="tel"
+                      autoComplete="tel"
                       placeholder="+8801XXXXXXXXX"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
@@ -411,10 +427,16 @@ export default function RegisterPage() {
                   </p>
                 </div>
                 <div className="space-y-6">
+                  <label htmlFor="phone-otp-input" className="sr-only">6-digit verification code</label>
                   <input
+                    id="phone-otp-input"
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="one-time-code"
                     maxLength={6}
                     placeholder="000000"
+                    aria-label="6-digit verification code"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                     className="w-full bg-gray-50 border border-gray-100 rounded-3xl px-4 py-6 text-5xl font-black tracking-[0.5em] text-center focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
@@ -452,9 +474,11 @@ export default function RegisterPage() {
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("emailLabel")} ({t("maybeLater")})</label>
+                    <label htmlFor="details-email" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("emailLabel")} ({t("maybeLater")})</label>
                     <input
+                      id="details-email"
                       type="email"
+                      autoComplete="email"
                       placeholder="email@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -463,10 +487,13 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("passwordLabel")}</label>
+                    <label htmlFor="details-password" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("passwordLabel")}</label>
                     <input
+                      id="details-password"
                       required
                       type="password"
+                      autoComplete="new-password"
+                      minLength={8}
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -475,10 +502,13 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("confirmPasswordLabel")}</label>
+                    <label htmlFor="details-confirm" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("confirmPasswordLabel")}</label>
                     <input
+                      id="details-confirm"
                       required
                       type="password"
+                      autoComplete="new-password"
+                      minLength={8}
                       placeholder="••••••••"
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
