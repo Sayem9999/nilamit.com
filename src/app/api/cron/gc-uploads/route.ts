@@ -106,7 +106,7 @@ export async function POST(req: Request) {
 
   if (result.error) {
     Sentry.captureException(result.error, {
-      tags: { component: 'cron', job: 'gc-uploads' },
+      tags: { component: 'cron', job: 'gc-uploads', area: 'cron', severity: 'warning' },
     });
     return cronError(`gc-uploads failed: ${result.error.message}`);
   }

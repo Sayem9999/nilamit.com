@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import Papa from 'papaparse';
 import { bulkCreateAuctions } from '@/actions/bulk-auction';
+import { createAuctionSchema, formatZodError } from '@/lib/schemas';
 import {
   Upload,
   FileSpreadsheet,
@@ -29,14 +30,23 @@ interface BulkAuctionItem {
   images: string[];
 }
 
+interface QueueRow {
+  item: BulkAuctionItem;
+  /** Null when the row passes client-side schema validation. */
+  error: string | null;
+}
+
 export default function BulkUploadPage() {
-  const [items, setItems] = useState<BulkAuctionItem[]>([]);
+  const [rows, setRows] = useState<QueueRow[]>([]);
   const [isPending, startTransition] = useTransition();
   const [results, setResults] = useState<{
     success: number;
     failures: number;
     errors: { index: number; error: string; details?: unknown }[];
   } | null>(null);
+
+  const validRows = useMemo(() => rows.filter((r) => r.error === null), [rows]);
+  const invalidCount = rows.length - validRows.length;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,24 +55,44 @@ export default function BulkUploadPage() {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => {
-        const mapped = (results.data as Record<string, string>[]).map((row) => ({
-          title: row.title,
-          description: row.description,
-          category: row.category?.toLowerCase() || 'electronics',
-          startingPrice: Number(row.startingPrice || 100),
-          minBidIncrement: Number(row.minBidIncrement || 10),
-          startTime: row.startTime,
-          endTime: row.endTime,
-          location: row.location?.toLowerCase() || 'mirpur',
-          condition: (row.condition?.toUpperCase() || 'USED') as
-            | 'NEW'
-            | 'USED'
-            | 'REFURBISHED',
-          images: row.images ? row.images.split('|') : [],
-        }));
-        setItems(mapped);
-        toast.success(`Parsed ${mapped.length} items from CSV`);
+      complete: (parseResults) => {
+        const validated: QueueRow[] = (parseResults.data as Record<string, string>[]).map(
+          (row) => {
+            const item: BulkAuctionItem = {
+              title: row.title,
+              description: row.description,
+              category: row.category?.toLowerCase() || 'electronics',
+              startingPrice: Number(row.startingPrice || 100),
+              minBidIncrement: Number(row.minBidIncrement || 10),
+              startTime: row.startTime,
+              endTime: row.endTime,
+              location: row.location?.toLowerCase() || 'mirpur',
+              condition: (row.condition?.toUpperCase() || 'USED') as
+                | 'NEW'
+                | 'USED'
+                | 'REFURBISHED',
+              images: row.images ? row.images.split('|').map((u) => u.trim()).filter(Boolean) : [],
+            };
+
+            // Mirror the server-side schema so users see errors before sync.
+            const parsed = createAuctionSchema.safeParse(item);
+            return {
+              item,
+              error: parsed.success ? null : formatZodError(parsed.error),
+            };
+          },
+        );
+
+        setRows(validated);
+        const validCount = validated.filter((r) => r.error === null).length;
+        const invalidLocal = validated.length - validCount;
+        if (invalidLocal === 0) {
+          toast.success(`Parsed ${validated.length} items — all valid`);
+        } else {
+          toast(`Parsed ${validated.length} items — ${invalidLocal} need fixing`, {
+            icon: '⚠️',
+          });
+        }
       },
       error: (error) => {
         toast.error(`Failed to parse CSV: ${error.message}`);
@@ -71,8 +101,12 @@ export default function BulkUploadPage() {
   };
 
   const handleProcess = () => {
+    if (validRows.length === 0) {
+      toast.error('No valid rows to sync. Fix errors in your CSV first.');
+      return;
+    }
     startTransition(async () => {
-      const res = await bulkCreateAuctions(items);
+      const res = await bulkCreateAuctions(validRows.map((r) => r.item));
       if (res.success) {
         setResults({
           success: res.data!.successCount,
@@ -211,12 +245,18 @@ export default function BulkUploadPage() {
                     className="font-bold text-gray-900 flex items-center gap-2"
                   >
                     <FileSpreadsheet className="w-5 h-5 text-indigo-500" aria-hidden="true" />
-                    Queue preview ({items.length} {items.length === 1 ? 'item' : 'items'})
+                    Queue preview ({rows.length} {rows.length === 1 ? 'row' : 'rows'}
+                    {invalidCount > 0 && (
+                      <span className="ml-1 text-red-600 text-xs font-bold">
+                        · {invalidCount} invalid
+                      </span>
+                    )}
+                    )
                   </h2>
-                  {items.length > 0 && (
+                  {rows.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setItems([])}
+                      onClick={() => setRows([])}
                       className="text-xs font-bold text-red-500 hover:text-red-600 inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
                     >
                       <Trash2 className="w-3 h-3" aria-hidden="true" /> Clear
@@ -225,22 +265,33 @@ export default function BulkUploadPage() {
                 </div>
 
                 <div className="flex-1 overflow-auto max-h-[500px]">
-                  {items.length > 0 ? (
+                  {rows.length > 0 ? (
                     <table className="w-full text-left border-collapse">
-                      <caption className="sr-only">Items queued for bulk upload</caption>
+                      <caption className="sr-only">
+                        Items queued for bulk upload, with per-row validation status
+                      </caption>
                       <thead className="sticky top-0 bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">
                         <tr>
+                          <th scope="col" className="px-4 py-4 w-10">#</th>
                           <th scope="col" className="px-6 py-4">Title</th>
                           <th scope="col" className="px-6 py-4">Category</th>
                           <th scope="col" className="px-6 py-4">Start price</th>
-                          <th scope="col" className="px-6 py-4">Condition</th>
+                          <th scope="col" className="px-6 py-4">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {items.map((item, i) => (
-                          <tr key={i} className="hover:bg-gray-50/50 transition-colors motion-reduce:transition-none">
+                        {rows.map(({ item, error }, i) => (
+                          <tr
+                            key={i}
+                            className={`transition-colors motion-reduce:transition-none ${
+                              error ? 'bg-red-50/40 hover:bg-red-50/60' : 'hover:bg-gray-50/50'
+                            }`}
+                          >
+                            <td className="px-4 py-4 text-xs text-gray-400 font-mono">
+                              {i + 1}
+                            </td>
                             <td className="px-6 py-4 text-sm font-bold text-gray-900 truncate max-w-[200px]">
-                              {item.title}
+                              {item.title || <span className="italic text-gray-400">(missing)</span>}
                             </td>
                             <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide">
                               {item.category}
@@ -249,9 +300,20 @@ export default function BulkUploadPage() {
                               ৳{item.startingPrice}
                             </td>
                             <td className="px-6 py-4">
-                              <span className="text-[9px] font-black px-2 py-0.5 rounded bg-gray-100 text-gray-500">
-                                {item.condition}
-                              </span>
+                              {error ? (
+                                <span
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700"
+                                  title={error}
+                                >
+                                  <AlertCircle className="w-3 h-3 shrink-0" aria-hidden="true" />
+                                  <span className="truncate max-w-[180px]">{error}</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700">
+                                  <CheckCircle2 className="w-3 h-3 shrink-0" aria-hidden="true" />
+                                  Valid
+                                </span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -272,13 +334,23 @@ export default function BulkUploadPage() {
                   )}
                 </div>
 
-                {items.length > 0 && (
+                {rows.length > 0 && (
                   <div className="p-6 bg-gray-50 border-t border-gray-100">
+                    {invalidCount > 0 && (
+                      <p
+                        role="status"
+                        className="mb-3 text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl p-3 leading-relaxed"
+                      >
+                        <strong>{invalidCount}</strong>{' '}
+                        {invalidCount === 1 ? 'row has' : 'rows have'} validation errors and
+                        will be skipped. Fix them in your CSV and re-upload to include them.
+                      </p>
+                    )}
                     <button
                       type="button"
                       onClick={handleProcess}
-                      disabled={isPending}
-                      className="w-full py-4 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white rounded-2xl font-bold text-sm transition-all motion-reduce:transition-none shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                      disabled={isPending || validRows.length === 0}
+                      className="w-full py-4 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-sm transition-all motion-reduce:transition-none shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                     >
                       {isPending ? (
                         <Loader2
@@ -290,7 +362,9 @@ export default function BulkUploadPage() {
                       )}
                       {isPending
                         ? 'Syncing…'
-                        : `Sync ${items.length} ${items.length === 1 ? 'item' : 'items'} to marketplace`}
+                        : validRows.length === 0
+                          ? 'No valid rows to sync'
+                          : `Sync ${validRows.length} ${validRows.length === 1 ? 'item' : 'items'} to marketplace`}
                     </button>
                     <p className="text-[10px] text-gray-400 text-center mt-3 font-medium">
                       By proceeding, you agree to our Retailer Policy. All listings will
@@ -394,7 +468,7 @@ export default function BulkUploadPage() {
                   type="button"
                   onClick={() => {
                     setResults(null);
-                    setItems([]);
+                    setRows([]);
                   }}
                   className="w-full py-4 text-gray-500 hover:text-gray-700 font-bold text-sm transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 rounded-2xl"
                 >
