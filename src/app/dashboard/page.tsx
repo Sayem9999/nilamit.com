@@ -58,6 +58,16 @@ export default async function DashboardPage({
     redirect("/login?callbackUrl=/dashboard");
   }
 
+  const userId = session.user.id;
+
+  // Pre-fetch count stats for the sidebar to provide high-fidelity UX badges
+  const [listingsCountSnap, watchlistCountSnap] = await Promise.all([
+    db.collection("auctions").where("sellerId", "==", userId).count().get(),
+    db.collection("watchlist").where("userId", "==", userId).count().get(),
+  ]);
+  const totalListingsCount = listingsCountSnap.data().count;
+  const watchlistCount = watchlistCountSnap.data().count;
+
   const configRes = await getSystemConfig();
   const configFromDb = configRes.success ? configRes.data : null;
 
@@ -75,7 +85,7 @@ export default async function DashboardPage({
   const currentTab = tab || "watchlist";
   const listingFilter: ListingFilter = (VALID_LISTING_FILTERS.includes(rawStatus as ListingFilter) ? rawStatus : "all") as ListingFilter;
 
-  const userId = session.user.id;
+  // userId pre-declared at the top for badge queries
 
   // Fetch relevant data based on tab
   let watchlistAuctions: AuctionWithSeller[] = [];
@@ -266,65 +276,102 @@ export default async function DashboardPage({
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-2">
               <Link
                 href="/dashboard?tab=watchlist"
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold text-sm group ${
                   currentTab === "watchlist"
-                    ? "bg-red-50 text-red-600"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-red-500 text-white shadow-md shadow-red-100 scale-[1.02] border border-red-400"
+                    : "text-gray-700 hover:bg-red-50/50 hover:text-red-600 border border-dashed border-transparent hover:border-red-100"
                 }`}
               >
-                <Heart className="w-4 h-4" />
-                {t("watchlist")}
+                <div className="flex items-center gap-3">
+                  <Heart className={`w-4 h-4 transition-colors ${
+                    currentTab === "watchlist" ? "text-white" : "text-red-500 group-hover:text-red-600"
+                  }`} />
+                  <span>{t("watchlist")}</span>
+                </div>
+                {watchlistCount > 0 ? (
+                  <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                    currentTab === "watchlist" ? "bg-white/20 text-white" : "bg-red-100 text-red-700"
+                  }`}>
+                    {watchlistCount}
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-100 text-gray-400 rounded">
+                    0
+                  </span>
+                )}
               </Link>
               <Link
                 href="/dashboard?tab=bids"
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm group ${
                   currentTab === "bids"
-                    ? "bg-primary-50 text-primary-600"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-primary-600 text-white shadow-md shadow-primary-100 scale-[1.02]"
+                    : "text-gray-700 hover:bg-primary-50/50 hover:text-primary-600"
                 }`}
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className={`w-4 h-4 ${
+                  currentTab === "bids" ? "text-white" : "text-primary-500 group-hover:text-primary-600"
+                }`} />
                 {t("activeBids")}
               </Link>
               <Link
                 href="/dashboard?tab=escrow"
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm group ${
                   currentTab === "escrow"
-                    ? "bg-emerald-50 text-emerald-600"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-100 scale-[1.02]"
+                    : "text-gray-700 hover:bg-emerald-50/50 hover:text-emerald-600"
                 }`}
               >
-                <CheckCircle className="w-4 h-4" />
+                <CheckCircle className={`w-4 h-4 ${
+                  currentTab === "escrow" ? "text-white" : "text-emerald-500 group-hover:text-emerald-600"
+                }`} />
                 {t("wonEscrow")}
               </Link>
               <Link
                 href="/dashboard?tab=listings"
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold text-sm group ${
                   currentTab === "listings"
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-100 scale-[1.02] border border-blue-500"
+                    : "text-gray-700 hover:bg-blue-50/50 hover:text-blue-600 border border-dashed border-transparent hover:border-blue-100"
                 }`}
               >
-                {t("myListings")}
+                <div className="flex items-center gap-3">
+                  <Store className={`w-4 h-4 transition-colors ${
+                    currentTab === "listings" ? "text-white" : "text-blue-500 group-hover:text-blue-600"
+                  }`} />
+                  <span>{t("myListings")}</span>
+                </div>
+                {totalListingsCount > 0 ? (
+                  <span className={`text-[10px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                    currentTab === "listings" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
+                  }`}>
+                    {totalListingsCount}
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-100 text-gray-400 rounded">
+                    0
+                  </span>
+                )}
               </Link>
               {session.user.isVerifiedSeller && (
                  <Link
                   href="/auctions/create?bulk=true"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 border border-transparent hover:border-emerald-100`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm text-gray-700 hover:bg-emerald-50/50 hover:text-emerald-600 border border-dashed border-transparent hover:border-emerald-100`}
                 >
-                  <Package className="w-4 h-4" />
+                  <Package className="w-4 h-4 text-emerald-500" />
                   Bulk Inventory
-                </Link>
+                 </Link>
               )}
               <Link
                 href="/dashboard?tab=coordination"
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm group ${
                   currentTab === "coordination"
-                    ? "bg-purple-50 text-purple-600"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-purple-600 text-white shadow-md shadow-purple-100 scale-[1.02]"
+                    : "text-gray-700 hover:bg-purple-50/50 hover:text-purple-600"
                 }`}
               >
-                <MessageSquare className="w-4 h-4" />
+                <MessageSquare className={`w-4 h-4 ${
+                  currentTab === "coordination" ? "text-white" : "text-purple-500 group-hover:text-purple-600"
+                }`} />
                 {t("coordinationHub")}
               </Link>
               <div className="pt-4 mt-4 border-t border-gray-100">

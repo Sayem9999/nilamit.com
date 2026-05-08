@@ -31,8 +31,8 @@ const VerificationBadge = memo(({
 
   let level = 0;
   if (isPhoneVerified) level = 1;
-  if (isPhoneVerified && emailVerified) level = 2;
-  if (isPhoneVerified && emailVerified && isVerifiedSeller) level = 3;
+  if (emailVerified) level = 2;
+  if (isVerifiedSeller && (isPhoneVerified || emailVerified)) level = 3;
 
   const getConfig = () => {
     switch (level) {

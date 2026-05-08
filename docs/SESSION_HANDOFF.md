@@ -33,6 +33,11 @@ This document captures the work completed in the May 2026 audit-and-fix session 
 * **Search console Indexing**: Used browser-automation tool to log into Google Search Console as `md.moimsarkar22@gmail.com`, run a live inspection on `https://nilamit.com/`, and successfully trigger an immediate **"Request Indexing"** priority queue crawl.
 * **Localization Updates**: Capitalized `"Nilamit"` and updated keywords in `messages/en.json` to improve brand query mapping.
 
+### Verification & Navigation Fixes (May 2026)
+* **Profile Banner Verification Badge Logic**: Resolved an issue where users with verified email addresses but unverified phone numbers incorrectly showed as "Unverified" on their profile banner and auction card badges. Re-architected `VerificationBadge` to dynamically elevate the verification tier to "Email Verified" (Level 2) or "Phone Verified" (Level 1) independently, matching the updated email-or-phone business validation rules.
+* **"Place Your Bid" Button Redirection**: Linked the landing page hero's "Place Your Bid" featured auction card button to redirect users directly to `/auctions` (Browse), creating an intuitive and active entrance funnel.
+* **"My Listings" Sidebar & Navigation Overhaul**: Integrated dynamic pre-fetching of user metrics (`watchlistCountSnap`, `listingsCountSnap`) into the dashboard sidebar, generating high-fidelity live UX count badges. Overhauled the dashboard sidebar layout with premium active states (e.g., scale transitions `scale-[1.02]`, vibrant gradient fills like `bg-blue-600 text-white`, and custom outline accents). Introduced an ultra-accessible "My Listings" navigation link with a stylized Store icon in the root Navbar (desktop and mobile layouts) right beside the "Sell" button to make listings instantly discoverable.
+
 ### Money / authz hardening
 - `src/lib/ratelimit.ts` — per-limiter `Policy` flag. Financial limiters (`bidLimiter`, `authLimiter`, `loginLimiter`, all OTP limiters) now **fail CLOSED** in production. `apiLimiter` keeps fail-open. Closes a CLAUDE.md rule #3 violation that was silent.
 - `src/actions/dispute.ts::resolveDispute` — verifies `escrow.exists` and `escrow.status === 'DISPUTED'` before flipping. Closes a race where an admin refund + dispute resolution could double-pay.
