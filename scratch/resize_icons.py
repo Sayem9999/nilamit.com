@@ -7,9 +7,9 @@ def resize_and_convert():
         print(f"Error: Master icon not found at {master_path}")
         return
 
-    # Load master image
-    img = Image.open(master_path)
-    print(f"Loaded master image: {img.size} {img.format}")
+    # Load master image and convert to RGBA
+    img = Image.open(master_path).convert("RGBA")
+    print(f"Loaded master image: {img.size}")
 
     # 1. Create standard size PNGs
     sizes_to_create = {
