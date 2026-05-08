@@ -19,6 +19,13 @@ This document captures the work completed in the May 2026 audit-and-fix session 
 
 ## What this session shipped
 
+### SEO & Brand Logo Optimization (May 2026)
+* **Favicon Sizing Audit & Resize**: Identified that the codebase was using a raw, heavy `325KB` `512x512` JPEG/PNG file as `/favicon.ico` (which is invalid as an ICO format and was causing Googlebot-Image crawler dropouts). Created a Python PIL script at `scratch/resize_icons.py` to compile true multi-resolution `.ico` assets (`16x16`, `32x32`, `48x48` layers, size reduced to **`15KB`**) and optimized png targets (`icon-32.png`, `icon-48.png` [4KB], `icon-192.png`, and `apple-icon.png`).
+* **Metadata Upgrades**: Mapped explicit standard pixel dimensions (`sizes="48x48"`, `sizes="32x32"`) within `src/app/layout.tsx` to establish perfect crawl pathways for spiders.
+* **JSON-LD Schema Integration**: Added global JSON-LD WebSite and Organization schema markup to the root layout, authoritative mapping site name `"Nilamit"` along with alternative brand spellings (`"nilamit"`, `"nilamit.com"`, `"নিলামিত"`, `"নীলামিত"`).
+* **Search console Indexing**: Used browser-automation tool to log into Google Search Console as `md.moimsarkar22@gmail.com`, run a live inspection on `https://nilamit.com/`, and successfully trigger an immediate **"Request Indexing"** priority queue crawl.
+* **Localization Updates**: Capitalized `"Nilamit"` and updated keywords in `messages/en.json` to improve brand query mapping.
+
 ### Money / authz hardening
 - `src/lib/ratelimit.ts` — per-limiter `Policy` flag. Financial limiters (`bidLimiter`, `authLimiter`, `loginLimiter`, all OTP limiters) now **fail CLOSED** in production. `apiLimiter` keeps fail-open. Closes a CLAUDE.md rule #3 violation that was silent.
 - `src/actions/dispute.ts::resolveDispute` — verifies `escrow.exists` and `escrow.status === 'DISPUTED'` before flipping. Closes a race where an admin refund + dispute resolution could double-pay.
