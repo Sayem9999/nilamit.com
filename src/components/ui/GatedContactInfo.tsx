@@ -38,20 +38,20 @@ export function GatedContactInfo({
     startTransition(async () => {
       const result = await payEscrowAdvance(transactionId);
       if (result.success) {
-        toast.success("Advance paid — information unlocked.");
+        toast.success(t("unlockedSuccess"));
         return;
       }
       const msg = result.error?.message ?? "";
       if (msg.includes("ADDRESS_REQUIRED")) {
-        toast.error("Please add your delivery address in your profile before paying advance.", { duration: 6000 });
+        toast.error(t("addressRequired"), { duration: 6000 });
         router.push("/profile");
       } else if (msg.includes("SELLER_ADDRESS_MISSING")) {
-        toast.error("The seller hasn't set a pickup address yet — please contact support.", { duration: 6000 });
+        toast.error(t("sellerAddressMissing"), { duration: 6000 });
       } else if (msg.includes("MFS_LINKAGE_REQUIRED")) {
-        toast.error("Link bKash or Nagad in your profile before paying advance.", { duration: 6000 });
+        toast.error(t("linkMFSProfile"), { duration: 6000 });
         router.push("/profile");
       } else {
-        toast.error(msg || "Failed to unlock contact information.");
+        toast.error(msg || t("unlockFailed"));
       }
     });
   };
@@ -100,25 +100,23 @@ export function GatedContactInfo({
 
       <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-slate-100/10 dark:bg-black/20 backdrop-blur-[1px] transition-all group-hover:backdrop-blur-none">
         <div className="bg-white/95 dark:bg-slate-900/95 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 scale-95 transition-transform group-hover:scale-100">
-           <div className="flex items-center justify-center gap-2 mb-2">
-             <div className="p-1 px-3 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-bold flex items-center gap-1 uppercase tracking-wide">
-               <Lock className="w-3 h-3" /> Secured information
+             <div className="flex items-center justify-center gap-2 mb-2">
+               <div className="p-1 px-3 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-bold flex items-center gap-1 uppercase tracking-wide">
+                 <Lock className="w-3 h-3" /> {t("securedInfo")}
+               </div>
              </div>
-           </div>
-           <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal mb-4">
-             For everyone&apos;s safety this information is hidden. Complete the
-             <span className="font-bold text-slate-900 dark:text-white underline decoration-amber-500 decoration-2 underline-offset-2"> advance </span>
-             payment to deal with the seller.
-           </p>
-           <Button
-             variant="default"
-             size="sm"
-             onClick={handleUnlock}
-             disabled={isPending}
-             className="w-full text-xs h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20"
-           >
-             {isPending ? "Processing..." : "Unlock information"}
-           </Button>
+             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal mb-4">
+               {t("gatedInfoReason")}
+             </p>
+             <Button
+               variant="default"
+               size="sm"
+               onClick={handleUnlock}
+               disabled={isPending}
+               className="w-full text-xs h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20"
+             >
+               {isPending ? t("processing") : t("unlockInfoBtn")}
+             </Button>
         </div>
       </div>
 

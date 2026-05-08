@@ -67,10 +67,10 @@ export function EscrowActionCard({
       } else {
         const msg = result.error?.message ?? "";
         if (msg.includes("ADDRESS_REQUIRED")) {
-          toast.error("Please add your delivery address in your profile before paying advance.", { duration: 6000 });
+          toast.error(t("addressRequired"), { duration: 6000 });
           router.push("/profile");
         } else if (msg.includes("SELLER_ADDRESS_MISSING")) {
-          toast.error("The seller hasn't set a pickup address yet — please contact support.", { duration: 6000 });
+          toast.error(t("sellerAddressMissing"), { duration: 6000 });
         } else if (msg.includes("MFS_LINKAGE_REQUIRED")) {
           toast.error(t("linkMFSProfile"), { duration: 6000 });
           router.push("/profile");
@@ -121,7 +121,7 @@ export function EscrowActionCard({
             {isReleased && t("fundsReleased")}
             {isHeld && t("paymentSecured")}
             {isPending && t("awaitingPayment")}
-            {isVerifying && "Verification in Progress"}
+            {isVerifying && t("verificationInProgress")}
             {isDisputed && t("underDispute")}
             {isRefunded && t("refunded")}
           </CardTitle>
@@ -151,9 +151,9 @@ export function EscrowActionCard({
             <div className="mt-3 flex items-center gap-2">
               <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest bn">Logistics Protected</span>
+                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest bn">{t("logisticsProtected")}</span>
               </div>
-              <span className="text-[10px] text-slate-400 font-medium bn italic">Covers RTO shipping up to 120 BDT</span>
+              <span className="text-[10px] text-slate-400 font-medium bn italic">{t("logisticsProtectedDesc")}</span>
             </div>
 
             <div className="mt-4 flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
@@ -195,7 +195,7 @@ export function EscrowActionCard({
                 <div className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800">
                   <AlertTriangle className="w-3 h-3 text-slate-400 mt-0.5" />
                   <p className="text-[9px] text-slate-500 leading-tight bn">
-                    Rejections without cause (e.g. &quot;change of mind&quot;) will incur a 120 BDT deduction from refund to cover seller&apos;s shipping.
+                    {t("rejectionPolicyWarning")}
                   </p>
                 </div>
               </div>
@@ -205,10 +205,10 @@ export function EscrowActionCard({
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-600">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-4 h-4 text-amber-500 animate-spin" />
-                  <p className="text-xs font-bold bn uppercase">Awaiting Admin Review</p>
+                  <p className="text-xs font-bold bn uppercase">{t("awaitingAdminReview")}</p>
                 </div>
                 <p className="text-[10px] leading-relaxed bn">
-                  Your payment reference is in our verification queue. Once an admin confirms the MFS statement, the auction will proceed to shipment.
+                  {t("verificationQueueDesc")}
                 </p>
               </div>
             )}

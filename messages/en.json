@@ -89,7 +89,9 @@
     "verifyEmailSuccessBody": "Your email is verified. You can now use every feature of Nilamit.",
     "verifyEmailFailedBody": "This verification link is invalid or has expired. Request a new one from your profile.",
     "goToDashboard": "Go to Dashboard",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "accountRestricted": "Account Restricted",
+    "bannedDesc": "Your account has been restricted from performing this action due to policy violations."
   },
   "Home": {
     "title": "Trusted Auctions",
@@ -328,7 +330,20 @@
     "status_HELD": "Payment Secured",
     "status_RELEASED": "Funds Released",
     "status_DISPUTED": "Under Dispute",
-    "status_REFUNDED": "Refunded"
+    "status_REFUNDED": "Refunded",
+    "verificationInProgress": "Verification in Progress",
+    "addressRequired": "Please add your delivery address in your profile before paying advance.",
+    "sellerAddressMissing": "The seller hasn't set a pickup address yet — please contact support.",
+    "logisticsProtected": "Logistics Protected",
+    "logisticsProtectedDesc": "Covers RTO shipping up to 120 BDT",
+    "rejectionPolicyWarning": "Rejections without cause (e.g. 'change of mind') will incur a 120 BDT deduction from refund to cover seller's shipping.",
+    "awaitingAdminReview": "Awaiting Admin Review",
+    "verificationQueueDesc": "Your payment reference is in our verification queue. Once an admin confirms the MFS statement, the auction will proceed to shipment.",
+    "unlockedSuccess": "Advance paid — information unlocked.",
+    "unlockFailed": "Failed to unlock contact information.",
+    "securedInfo": "Secured information",
+    "gatedInfoReason": "For everyone's safety this information is hidden. Complete the advance payment to deal with the seller.",
+    "unlockInfoBtn": "Unlock information"
   },
   "Social": {
     "activeChats": "Active Chats",
