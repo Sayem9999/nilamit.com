@@ -4,10 +4,12 @@
 
 ## Core Decisions
 - **Mobile-First Orientation**: Target Bangladeshi market on low-bandwidth (3G/4G). No feature ships without mobile viewport validation.
-- **Trust Anchor**: Phone number (+880) is the non-negotiable identity anchor.
+- **Trust Anchor**: Hybrid identity (Phone number (+880) or verified email) is the identity anchor.
 - **Currency**: Strictly BDT (৳).
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
+- **v2.3.2 (Verification Flexibilization)**:
+    - **Hybrid Verification Model**: Allowed users to create auction listings, relist, or place bids if they have verified *either* their phone number or their email address (previously restricted to phone only).
 - **v2.3.1 (Treasury Logic Hardening)**:
     - **Smart Logistics Protection**: Implemented the `refundWithDeduction` server action, replacing simulated logic in `TreasuryTab` with a production-ready resolution flow.
     - **Commitment Service Activation**: Integrated `CommitmentService` to handle atomic 120 BDT deductions for RTO protection.

@@ -21,9 +21,9 @@
 
 ### 2. Trust Without Friction
 
-- Phone verification (+880) is the Trust Anchor — not NID, not passport
+- Phone or Email verification (+880 / OTP / Email link) is the Trust Anchor — not NID, not passport
 - Users should be able to **browse** freely; verification gates only at **action points** (bid, sell)
-- A verified phone number creates accountability in a culture where phone numbers are persistent identities
+- A verified phone number or email creates accountability in a culture of trusted commerce
 
 ### 3. Data Integrity & Trust Shield
 
@@ -51,7 +51,7 @@
 
 1. **Never trust the client** — all bid validation happens server-side in Server Actions
 2. **Never store OTP plaintext** — hash before storage
-3. **Never skip phone verification** — no backdoors for bidding/selling
+3. **Never skip verification (phone or email)** — no backdoors for bidding/selling
 4. **Always use parameterized queries** — Firestore handles this, never raw-dog SQL
 5. **Always handle errors gracefully** — show Bengali-friendly error messages
 6. **No Quick Fixes / Placeholders** — Implementation must be production-ready. No `console.log` for critical notifications (email/SMS). No bypassing logic. If a feature isn't ready, disable it.
