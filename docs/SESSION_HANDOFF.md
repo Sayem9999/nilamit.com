@@ -33,6 +33,10 @@ This document captures the work completed in the May 2026 audit-and-fix session 
 * **Search console Indexing**: Used browser-automation tool to log into Google Search Console as `md.moimsarkar22@gmail.com`, run a live inspection on `https://nilamit.com/`, and successfully trigger an immediate **"Request Indexing"** priority queue crawl.
 * **Localization Updates**: Capitalized `"Nilamit"` and updated keywords in `messages/en.json` to improve brand query mapping.
 
+### Verification & Navigation Fixes (May 2026)
+* **Profile Banner Verification Badge Logic**: Resolved an issue where users with verified email addresses but unverified phone numbers incorrectly showed as "Unverified" on their profile banner and auction card badges. Re-architected `VerificationBadge` to dynamically elevate the verification tier to "Email Verified" (Level 2) or "Phone Verified" (Level 1) independently, matching the updated email-or-phone business validation rules.
+* **"Place Your Bid" Button Redirection**: Linked the landing page hero's "Place Your Bid" featured auction card button to redirect users directly to `/auctions` (Browse), creating an intuitive and active entrance funnel.
+
 ### Money / authz hardening
 - `src/lib/ratelimit.ts` — per-limiter `Policy` flag. Financial limiters (`bidLimiter`, `authLimiter`, `loginLimiter`, all OTP limiters) now **fail CLOSED** in production. `apiLimiter` keeps fail-open. Closes a CLAUDE.md rule #3 violation that was silent.
 - `src/actions/dispute.ts::resolveDispute` — verifies `escrow.exists` and `escrow.status === 'DISPUTED'` before flipping. Closes a race where an admin refund + dispute resolution could double-pay.
