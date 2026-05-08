@@ -100,7 +100,7 @@ This document captures the work completed in the May 2026 audit-and-fix session 
 
 ### Could do (P2, not urgent)
 
-5. **Translate `useTranslations` text in dynamically-imported components.** `BidPrompts` (eliteBarrier modal) and `VerificationGuard` use the i18n layer — fine for English but a future locale would need keys mirrored. Also: `EscrowActionCard.tsx` and `GatedContactInfo.tsx` still have a few hardcoded English strings (and `GatedContactInfo.tsx` had hardcoded Bengali strings; replaced 2026-05-07 — now uses English literals; the right long-term fix is to move them into `messages/en.json`).
+5. **~~Translate `useTranslations` text in dynamically-imported components~~ — DONE 2026-05-08.** Localized `EscrowActionCard.tsx` and `GatedContactInfo.tsx` entirely using `next-intl` dictionary hooks under `"Escrow"`. Added all missing keys (such as `verificationInProgress`, `addressRequired`, `sellerAddressMissing`, `logisticsProtected`, etc.) to `messages/en.json`. Also implemented and deployed critical Firestore compound indexes for `messages` and `bids` query pathways to prevent production QueryExceptions.
 
 6. **~~`payEscrowAdvance` UX for missing addresses~~ — DONE 2026-05-07.** `src/components/social/EscrowActionCard.tsx` and `src/components/ui/GatedContactInfo.tsx` now detect `ADDRESS_REQUIRED`, `SELLER_ADDRESS_MISSING`, and `MFS_LINKAGE_REQUIRED` error codes and show specific toasts + redirect to `/profile` where appropriate.
 
