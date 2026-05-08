@@ -3,6 +3,7 @@ import { verifyEmailToken } from '@/actions/email';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { VerifySuccessClient } from './VerifySuccessClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,7 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
   if (result.success) {
     return (
       <main className={CARD_WRAPPER}>
+        <VerifySuccessClient />
         <div className={CARD_INNER}>
           <div
             className="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-bounce motion-reduce:animate-none"

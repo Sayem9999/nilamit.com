@@ -38,16 +38,17 @@ export async function sendEmailVerification() {
   try {
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const emailNormalized = session.user.email.trim().toLowerCase();
 
     // Store token using SHA256 (consistent with FirestoreAdapter)
-    const id = crypto.createHash('sha256').update(`${session.user.email}:${token}`).digest('hex');
+    const id = crypto.createHash('sha256').update(`${emailNormalized}:${token}`).digest('hex');
     await db.collection('verificationTokens').doc(id).set({
-      identifier: session.user.email,
+      identifier: emailNormalized,
       token: token,
       expires: expires,
     });
 
-    const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(session.user.email)}`;
+    const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(emailNormalized)}`;
 
     await getResend().emails.send({
       from: 'Nilamit <onboarding@resend.dev>', // Should be a verified domain in production
@@ -78,7 +79,8 @@ export async function sendEmailVerification() {
  */
 export async function verifyEmailToken(token: string, email: string) {
   try {
-    const id = crypto.createHash('sha256').update(`${email}:${token}`).digest('hex');
+    const emailNormalized = email.trim().toLowerCase();
+    const id = crypto.createHash('sha256').update(`${emailNormalized}:${token}`).digest('hex');
     const snap = await db.collection('verificationTokens').doc(id).get();
 
     if (!snap.exists) {
@@ -95,7 +97,7 @@ export async function verifyEmailToken(token: string, email: string) {
     }
 
     // Find user by email
-    const userSnap = await db.collection('users').where('email', '==', email).limit(1).get();
+    const userSnap = await db.collection('users').where('email', '==', emailNormalized).limit(1).get();
     if (userSnap.empty) {
       return errorResponse(ErrorType.NOT_FOUND, 'User not found.');
     }

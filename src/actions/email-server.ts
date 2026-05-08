@@ -24,18 +24,19 @@ function getResend() {
  */
 export async function sendEmailVerificationByEmail(email: string) {
   try {
+    const emailNormalized = email.trim().toLowerCase();
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Store token using SHA256 (consistent with FirestoreAdapter and email.ts)
-    const id = crypto.createHash('sha256').update(`${email}:${token}`).digest('hex');
+    const id = crypto.createHash('sha256').update(`${emailNormalized}:${token}`).digest('hex');
     await db.collection('verificationTokens').doc(id).set({
-      identifier: email,
+      identifier: emailNormalized,
       token: token,
       expires: expires,
     });
 
-    const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+    const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(emailNormalized)}`;
 
     await getResend().emails.send({
       from: 'Nilamit <onboarding@resend.dev>', // Should be verified domain in production
