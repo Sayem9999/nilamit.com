@@ -51,27 +51,39 @@ export async function sendMessage(conversationId: string, content: string, image
     lastMessageSenderId: session.user.id,
     updatedAt: now,
   });
-  await adminDB.ref(`${RTDB_PATHS.conversation(conversationId)}/meta`).update({
-    auctionId: conv.auctionId,
-    participants: {
-      [conv.buyerId]: true,
-      [conv.sellerId]: true,
-    },
-  });
-  await rtdbPush(RTDB_PATHS.conversation(conversationId), {
-    event: FIREBASE_EVENTS.NEW_MESSAGE,
-    id: msgId,
-    senderId: session.user.id,
-    content: filtered,
-    imageUrl: imageUrl ?? null,
-    createdAt: now.toISOString(),
-  });
+  // Decouple Realtime Database signaling from transactional Firestore writes to ensure
+  // high availability if RTDB is temporarily throttled or offline.
+  try {
+    await adminDB.ref(`${RTDB_PATHS.conversation(conversationId)}/meta`).update({
+      auctionId: conv.auctionId,
+      participants: {
+        [conv.buyerId]: true,
+        [conv.sellerId]: true,
+      },
+    });
+    await rtdbPush(RTDB_PATHS.conversation(conversationId), {
+      event: FIREBASE_EVENTS.NEW_MESSAGE,
+      id: msgId,
+      senderId: session.user.id,
+      content: filtered,
+      imageUrl: imageUrl ?? null,
+      createdAt: now.toISOString(),
+    });
 
-  const recipientId = session.user.id === conv.buyerId ? conv.sellerId : conv.buyerId;
-  rtdbPush(RTDB_PATHS.userNotifications(recipientId), {
-    event: FIREBASE_EVENTS.NEW_MESSAGE, conversationId, auctionId: conv.auctionId,
-    senderName: session.user.name ?? 'Someone', preview: filtered.slice(0, 60),
-  }).catch((e) => log.error('[chat] recipient notification push failed', e));
+    const recipientId = session.user.id === conv.buyerId ? conv.sellerId : conv.buyerId;
+    // Deliver notification in background
+    rtdbPush(RTDB_PATHS.userNotifications(recipientId), {
+      event: FIREBASE_EVENTS.NEW_MESSAGE, conversationId, auctionId: conv.auctionId,
+      senderName: session.user.name ?? 'Someone', preview: filtered.slice(0, 60),
+    }).catch((e) => log.error('[chat] recipient notification push failed', e, { area: 'chat', severity: 'warning' }));
+  } catch (rtdbErr) {
+    log.error('[chat] RTDB real-time signaling failed; gracefully falling back to Firestore', rtdbErr, {
+      area: 'chat',
+      severity: 'warning',
+      conversationId,
+      messageId: msgId,
+    });
+  }
 
   return successResponse({ id: msgId, content: filtered, createdAt: now });
 }
