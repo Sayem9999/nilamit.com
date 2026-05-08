@@ -123,7 +123,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded">
-            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-sm" aria-hidden="true">
+            <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center shadow-sm" aria-hidden="true">
               <Gavel className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-xl text-gray-900">

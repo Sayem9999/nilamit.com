@@ -1,4 +1,4 @@
-﻿import { ImageResponse } from 'next/og';
+import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
@@ -170,8 +170,25 @@ export async function GET(req: NextRequest) {
                   gap: '10px',
                 }}
               >
-                <div style={{ width: '40px', height: '40px', backgroundColor: '#6366f1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyItems: 'center' }}>
-                   <div style={{ color: 'white', fontWeight: 'bold', fontSize: '20px', margin: 'auto' }}>N</div>
+                <div style={{ width: '40px', height: '40px', backgroundColor: '#6366f1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ margin: 'auto' }}
+                  >
+                    <path d="m14.5 6.5 3 3" />
+                    <path d="m18.5 10.5-9.4 9.4a2 2 0 0 1-2.8 0l-3.3-3.3a2 2 0 0 1 0-2.8l9.4-9.4" />
+                    <path d="m13.4 7.6 3.6 3.6" />
+                    <path d="m9.6 11.4 3.6 3.6" />
+                    <path d="M5 21h14" />
+                  </svg>
                 </div>
                 <div style={{ fontSize: '24px', color: '#475569', fontWeight: 600 }}>nilamit.com</div>
               </div>

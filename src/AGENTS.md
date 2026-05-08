@@ -19,6 +19,7 @@ This directory contains the core application code for Nilamit. It is structured 
 - **Zero-Loss Logistics**: All logistics coordination must respect the 120 BDT RTO deduction rule in the escrow service.
 - **Strict Typing**: Never use `any`. Use specific interfaces or `unknown` with type guards. Enforced by `@typescript-eslint/no-explicit-any`.
 - **Standardized Payloads**: All frontend components must use `Hydrated` types (e.g., `HydratedEscrowTransaction`) to ensure data consistency between frontend and backend.
+- **Brand Logo Consistency**: Maintain a unified brand logo across all user-facing layouts and pages. The platform's authoritative logo consists of a white Lucide `Gavel` icon inside a perfect circular badge (`rounded-full`). Avoid using rounded squircles/rectangles (such as `rounded-xl`, `rounded-lg`) or alternative icons (such as `ShieldCheck` or text characters) in place of the Gavel logo badge.
 
 ## Boundaries
 - ✅ **Always do**: Use the Service layer for logic. Check `isRetailer` for role-based UI.

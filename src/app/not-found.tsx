@@ -4,8 +4,8 @@ import { Gavel } from "lucide-react";
 export default function NotFound() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
-      <div className="w-20 h-20 bg-primary-100 rounded-3xl flex items-center justify-center mb-6 shadow-sm">
-        <Gavel className="w-10 h-10 text-primary-600" />
+      <div className="w-20 h-20 bg-primary-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+        <Gavel className="w-10 h-10 text-white" />
       </div>
       <h1 className="font-heading font-bold text-6xl text-gray-900 mb-2">
         404

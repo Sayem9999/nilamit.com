@@ -31,6 +31,7 @@ Nilamit is a mobile-first, trust-focused C2C auction marketplace for Bangladesh.
 - **Naming**: camelCase for functions/variables, PascalCase for components/classes.
 - **i18n**: All UI text must use `next-intl`. **English-only** — only `messages/en.json` ships. To add a locale, update `src/i18n/routing.ts`, `src/i18n.ts`, and add a new messages file.
 - **Comments**: Default to none. Add only when the WHY is non-obvious (hidden constraint, workaround for a specific bug).
+- **Brand Logo Consistency**: The authoritative, canonical brand logo of Nilamit is a **white Lucide Gavel icon inside a perfect circular container** (using the `rounded-full` utility). This circular badge must be used uniformly across all views (such as Navbar, Footer, Login, Register, Forgot Password, and Not Found screens) with either a solid brand-blue background (`bg-primary-600`) or gradient (`bg-gradient-to-br from-primary-500 to-primary-700`). Squircles or alternative icon types (e.g., `ShieldCheck` or letters like "N") are forbidden for primary brand representations.
 
 ### Example Server Action Pattern
 ```typescript

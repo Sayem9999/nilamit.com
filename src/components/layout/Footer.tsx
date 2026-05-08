@@ -13,7 +13,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center">
                 <Gavel className="w-4 h-4 text-primary-300" />
               </div>
               <span className="font-heading font-bold text-lg">

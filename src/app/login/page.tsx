@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "next-intl";
-import { Loader2, Mail, Lock, ShieldCheck, ArrowRight } from "lucide-react";
+import { Loader2, Mail, Lock, Gavel, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { sanitizeRedirect } from "@/lib/url-safety";
@@ -73,8 +73,8 @@ function LoginContent() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary-600 rounded-[2rem] shadow-xl shadow-primary-500/20 mb-6" aria-hidden="true">
-             <ShieldCheck className="w-10 h-10 text-white" aria-hidden="true" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary-600 rounded-full shadow-xl shadow-primary-500/20 mb-6" aria-hidden="true">
+             <Gavel className="w-10 h-10 text-white" aria-hidden="true" />
           </div>
           <p className="text-4xl font-black text-gray-900 tracking-tight mb-2">
             nilam<span className="text-primary-600 font-bold">it</span>

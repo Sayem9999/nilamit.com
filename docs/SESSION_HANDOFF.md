@@ -21,6 +21,13 @@ This document captures the work completed in the May 2026 audit-and-fix session 
 
 ### SEO & Brand Logo Optimization (May 2026)
 * **Favicon Sizing Audit & Resize**: Identified that the codebase was using a raw, heavy `325KB` `512x512` JPEG/PNG file as `/favicon.ico` (which is invalid as an ICO format and was causing Googlebot-Image crawler dropouts). Created a Python PIL script at `scratch/resize_icons.py` to compile true multi-resolution `.ico` assets (`16x16`, `32x32`, `48x48` layers, size reduced to **`15KB`**) and optimized png targets (`icon-32.png`, `icon-48.png` [4KB], `icon-192.png`, and `apple-icon.png`).
+* **Unified Brand Logo Standardization**: Replaced inconsistent squircle/rounded-xl, shield-check, and plain letter/text logos across all user-facing pages with a unified **white Gavel inside a perfect circular badge** design (represented as a `rounded-full` container). Updated elements include:
+  - **Navbar & Footer Logos**: Upgraded to use perfect circles (`rounded-full`) rather than rounded-xl and rounded-lg squircles.
+  - **Login Page Banner**: Replaced the non-standard `ShieldCheck` squircle badge with the unified `Gavel` circular brand logo.
+  - **Register & Forgot Password Logos**: Standardized top headers to circular `rounded-full` containers.
+  - **404 / NotFound Page**: Replaced the primary-100 squircle with a bold brand-blue perfect circle housing a white gavel.
+  - **OpenGraph API**: Synchronized the edge image generator (`src/app/api/og/route.tsx`) to render the custom inline Gavel SVG inside a perfect circle badge instead of the letter "N".
+* **Master Asset Generation & Compilation**: Generated a beautiful, high-resolution master logo (`public/icon-512.png`) using professional image tools and executed the PIL compilation script to synchronize and rebuild all browser/OS assets seamlessly.
 * **Metadata Upgrades**: Mapped explicit standard pixel dimensions (`sizes="48x48"`, `sizes="32x32"`) within `src/app/layout.tsx` to establish perfect crawl pathways for spiders.
 * **JSON-LD Schema Integration**: Added global JSON-LD WebSite and Organization schema markup to the root layout, authoritative mapping site name `"Nilamit"` along with alternative brand spellings (`"nilamit"`, `"nilamit.com"`, `"নিলামিত"`, `"নীলামিত"`).
 * **Search console Indexing**: Used browser-automation tool to log into Google Search Console as `md.moimsarkar22@gmail.com`, run a live inspection on `https://nilamit.com/`, and successfully trigger an immediate **"Request Indexing"** priority queue crawl.
