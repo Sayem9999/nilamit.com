@@ -58,7 +58,22 @@ async function loadHomeData(): Promise<ResolvedHomeData> {
   ]);
 
   let statsData = docData<GlobalStats>(globalStatsSnap);
-  if (!statsData || !statsData.isReal) {
+
+  let cacheDate: Date | null = null;
+  if (statsData?.updatedAt) {
+    const rawVal = statsData.updatedAt as unknown;
+    if (rawVal && typeof rawVal === "object" && "toDate" in rawVal && typeof (rawVal as { toDate: () => unknown }).toDate === "function") {
+      cacheDate = (rawVal as { toDate: () => Date }).toDate();
+    } else {
+      cacheDate = new Date(statsData.updatedAt);
+    }
+  }
+
+  const isStale = cacheDate
+    ? (Date.now() - cacheDate.getTime() > 30 * 1000) // 30s cache TTL
+    : true;
+
+  if (!statsData || !statsData.isReal || isStale) {
     try {
       const [userCountSnap, bidCountSnap, auctionCountSnap, sellerCountSnap] = await Promise.all([
         db.collection("users").count().get(),

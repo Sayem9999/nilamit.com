@@ -166,7 +166,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
               </div>
               <div className="text-sm font-medium">
                 <span className="text-gray-900 font-bold">
-                  {totalUsers ? `${(totalUsers / 1000).toFixed(1)}k+` : "2.4k+"}
+                  {totalUsers ? (totalUsers >= 1000 ? `${(totalUsers / 1000).toFixed(1)}k+` : `${totalUsers}+`) : "2.4k+"}
                 </span>{" "}
                 {t("activeMembers")}
               </div>
