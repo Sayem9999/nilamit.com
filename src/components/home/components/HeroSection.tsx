@@ -231,7 +231,10 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                     <Users className="w-3 h-3 text-primary-500" /> 24 {t("people")}
                   </span>
                 </div>
-                <button className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-all shadow-lg hover:shadow-black/20">
+                <button
+                  onClick={() => router.push("/auctions")}
+                  className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-all shadow-lg hover:shadow-black/20"
+                >
                   {t("placeYourBid")}
                 </button>
               </div>
