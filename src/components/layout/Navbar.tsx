@@ -17,6 +17,7 @@ import {
   Trophy,
   ChevronDown,
   LogOut,
+  Store,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { logoutAction } from "@/actions/auth";
@@ -118,6 +119,12 @@ export function Navbar() {
                     className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
                   >
                     <Plus className="w-4 h-4" /> {t("sell")}
+                  </Link>
+                  <Link
+                    href="/dashboard?tab=listings"
+                    className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
+                  >
+                    <Store className="w-4 h-4 text-blue-500" /> {t("myListings")}
                   </Link>
                   <Link
                     href="/dashboard"
@@ -250,6 +257,13 @@ export function Navbar() {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {t("sell")}
+                    </Link>
+                    <Link
+                      href="/dashboard?tab=listings"
+                      className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {t("myListings")}
                     </Link>
                     <Link
                       href="/dashboard"
