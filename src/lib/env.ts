@@ -46,6 +46,7 @@ const envSchema = z.object({
     (v) => typeof v === 'string' ? v.trim().replace(/^.*?(https?:\/\/)/, '$1') : v,
     z.string().url()
   ).default('http://localhost:3000'),
+  NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   SENTRY_DSN: z.string().url().optional(),

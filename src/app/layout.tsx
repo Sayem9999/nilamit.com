@@ -44,7 +44,7 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-const DOMAIN = "https://nilamit--nilamit-52073.asia-southeast1.hosted.app";
+const DOMAIN = "https://nilamit.com";
 
 function getMetadataBase() {
   const urlString = env.NEXT_PUBLIC_APP_URL || DOMAIN;
@@ -58,9 +58,11 @@ function getMetadataBase() {
 export async function generateMetadata(): Promise<Metadata> {
   const locale = "en";
   const t = await getTranslations({ locale, namespace: "Meta" });
+  const metadataBase = getMetadataBase();
+  const canonicalUrl = metadataBase.toString();
   
   return {
-    metadataBase: getMetadataBase(),
+    metadataBase,
     title: {
       default: t("title") || "Nilamit — Bangladesh's Trusted Auction Marketplace",
       template: "%s | Nilamit",
@@ -81,7 +83,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       locale: "en_US",
-      url: DOMAIN,
+      url: canonicalUrl,
       siteName: "Nilamit",
       title: t("title"),
       description: t("description"),
@@ -90,6 +92,9 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: t("title"),
       description: t("description"),
+    },
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "OjlKaSD-ma3NBt0SaALVbjPUuaPGkHzpyNdhbFQ2qrE",
     },
   };
 }

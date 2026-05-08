@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://nilamit--nilamit-52073.asia-southeast1.hosted.app';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || 'https://nilamit.com';
   return {
     rules: [
       {
