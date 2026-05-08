@@ -94,7 +94,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: t("description"),
     },
     verification: {
-      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "OjlKaSD-ma3NBt0SaALVbjPUuaPGkHzpyNdhbFQ2qrE",
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "OjIKaSD-ma3NBt0SaALVbjPUuaPGkHzpyNdhbFQ2qrE",
     },
   };
 }
