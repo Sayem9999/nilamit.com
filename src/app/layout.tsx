@@ -77,7 +77,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: "/icon.png", type: "image/png" },
+        { url: "/icon.png", sizes: "48x48", type: "image/png" },
+        { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
         { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
         { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
       ],
@@ -114,12 +115,53 @@ export default async function RootLayout({
   const locale = "en";
   const messages = await getMessages();
 
+  const metadataBase = getMetadataBase();
+  const baseUrl = metadataBase.toString().replace(/\/$/, "");
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${baseUrl}/#website`,
+        "url": `${baseUrl}/`,
+        "name": "Nilamit",
+        "alternateName": ["nilamit", "nilamit.com", "নিলামিত", "নীলামিত"],
+        "description": "Bangladesh's Trusted C2C Auction Marketplace",
+        "publisher": {
+          "@id": `${baseUrl}/#organization`
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": `${baseUrl}/#organization`,
+        "name": "Nilamit",
+        "url": `${baseUrl}/`,
+        "logo": {
+          "@type": "ImageObject",
+          "@id": `${baseUrl}/#logo`,
+          "url": `${baseUrl}/icon-512.png`,
+          "caption": "Nilamit"
+        },
+        "image": {
+          "@id": `${baseUrl}/#logo`
+        }
+      }
+    ]
+  };
+
   return (
     <html lang={locale}>
       <body
         className={`${plusJakarta.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased bg-white text-gray-900 font-body`}
       >
         <NextIntlClientProvider messages={messages} locale={locale}>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
+            }}
+          />
           <Providers>
             <Toaster
               position="top-right"

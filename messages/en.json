@@ -373,7 +373,7 @@
   },
   "FAQ": {
     "title": "Frequently Asked Questions",
-    "subtitle": "Everything you need to know about nilamit.",
+    "subtitle": "Everything you need to know about Nilamit.",
     "q1": "How does the bidding work?",
     "a1": "Every bid is recorded in real-time. If someone bids in the last 2 minutes, the auction is extended by another 2 minutes to prevent 'sniping'.",
     "q2": "What is the Escrow Advance?",
@@ -480,7 +480,7 @@
   },
   "HowItWorks": {
     "title": "Bidding, Built for Trust.",
-    "subtitle": "nilamit.com isn't just a marketplace—it's a verifiable coordinate system for Bangladeshi commerce. Here is how we protect your deals.",
+    "subtitle": "Nilamit (nilamit.com) isn't just a marketplace—it's a verifiable coordinate system for Bangladeshi commerce. Here is how we protect your deals.",
     "step1Title": "Verified Signup",
     "step1Desc": "Join our community of trusted traders with a simple phone verification.",
     "step2Title": "Place Your Bid",
@@ -611,9 +611,9 @@
     "farmgate": "Farmgate"
   },
   "Meta": {
-    "title": "nilamit.com — Bangladesh's Trusted Auction Marketplace",
+    "title": "Nilamit — Bangladesh's Trusted Auction Marketplace",
     "description": "Buy and sell through transparent auctions. Verified sellers, anti-sniping protection, and real-time bidding. Bangladesh's #1 C2C auction platform.",
-    "keywords": "nilam,auction,bangladesh,bidding,marketplace,নিলাম"
+    "keywords": "nilamit,nilamit.com,nilam,auction,bangladesh,bidding,marketplace,নিলাম,নিলামিত,নীলামিত"
   },
   "Banned": {
     "title": "Account Suspended",
