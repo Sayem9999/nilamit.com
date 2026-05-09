@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { env } from '@/lib/env';
 import { log } from '@/lib/logger';
-import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, successResponse, type ServiceResponse } from '@/lib/errors';
 import { apiLimiter } from '@/lib/ratelimit';
 import { headers } from 'next/headers';
 import crypto from 'crypto';
@@ -49,6 +49,16 @@ export async function sendEmailVerification() {
     });
 
     const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(emailNormalized)}`;
+
+    if (!env.RESEND_API_KEY) {
+      log.warn(`[email] RESEND_API_KEY is missing. Falling back to console logging.`);
+      console.log(`\n\n==================================================`);
+      console.log(`[EMAIL VERIFICATION LINK - CONSOLE FALLBACK]`);
+      console.log(`To: ${emailNormalized}`);
+      console.log(`URL: ${verifyUrl}`);
+      console.log(`==================================================\n\n`);
+      return successResponse(null);
+    }
 
     await getResend().emails.send({
       from: 'Nilamit <onboarding@resend.dev>', // Should be a verified domain in production
@@ -117,5 +127,36 @@ export async function verifyEmailToken(token: string, email: string) {
   } catch (e) {
     log.error('[email] verifyEmailToken failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to verify email.');
+  }
+}
+
+/**
+ * Marks the email as verified in Firestore if it was successfully verified in Firebase Auth.
+ * This is a highly secure endpoint that double-checks client-side assertions on the server.
+ */
+export async function markEmailVerifiedNatively(): Promise<ServiceResponse<null>> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
+  }
+
+  try {
+    const { adminAuth } = await import('@/lib/firebase-admin');
+    const userRecord = await adminAuth.instance.getUser(session.user.id);
+    
+    if (!userRecord.emailVerified) {
+      return errorResponse(ErrorType.VALIDATION, 'Email not verified in Firebase.');
+    }
+
+    await db.collection('users').doc(session.user.id).update({
+      emailVerified: new Date(),
+      updatedAt: new Date(),
+    });
+
+    log.info(`[Email] Email verified natively via Firebase for user ${session.user.id}`);
+    return successResponse(null);
+  } catch (e) {
+    log.error('[email] markEmailVerifiedNatively failed', e);
+    return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred.');
   }
 }

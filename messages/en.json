@@ -477,7 +477,8 @@
     "emailVerifiedSuccess": "Email verified successfully!",
     "emailVerifiedError": "Invalid or expired verification link.",
     "resendEmailBtn": "Resend Verification Email",
-    "sendVerificationLink": "Send Verification Link"
+    "sendVerificationLink": "Send Verification Link",
+    "emailVerificationSent": "Verification email sent successfully!"
   },
   "HowItWorks": {
     "title": "Bidding, Built for Trust.",

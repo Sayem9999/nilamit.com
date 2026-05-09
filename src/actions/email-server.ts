@@ -38,6 +38,16 @@ export async function sendEmailVerificationByEmail(email: string) {
 
     const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(emailNormalized)}`;
 
+    if (!env.RESEND_API_KEY) {
+      log.warn(`[email-server] RESEND_API_KEY is missing. Falling back to console logging.`);
+      console.log(`\n\n==================================================`);
+      console.log(`[EMAIL VERIFICATION LINK - CONSOLE FALLBACK]`);
+      console.log(`To: ${emailNormalized}`);
+      console.log(`URL: ${verifyUrl}`);
+      console.log(`==================================================\n\n`);
+      return { success: true };
+    }
+
     await getResend().emails.send({
       from: 'Nilamit <onboarding@resend.dev>', // Should be verified domain in production
       to: email,

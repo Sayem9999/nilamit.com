@@ -22,6 +22,24 @@ export async function GET() {
   }
 
   try {
+    // Sync user email and displayName to Firebase Authentication user record
+    try {
+      await adminAuth.instance.updateUser(session.user.id, {
+        email: session.user.email ?? undefined,
+        displayName: session.user.name ?? undefined,
+      });
+    } catch (err) {
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'auth/user-not-found') {
+        await adminAuth.instance.createUser({
+          uid: session.user.id,
+          email: session.user.email ?? undefined,
+          displayName: session.user.name ?? undefined,
+        });
+      } else {
+        throw err;
+      }
+    }
+
     const customClaims: Record<string, unknown> = {};
     if ('isAdmin' in session.user && session.user.isAdmin) {
       customClaims.isAdmin = true;

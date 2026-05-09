@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { logoutAction } from "@/actions/auth";
 import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
-import { sendEmailVerification } from "@/actions/email";
 import { calculateLevelProgress } from "@/lib/gamification-engine";
 import {
   User,
@@ -69,12 +68,37 @@ export default function ProfilePage() {
       // can optimistically flip them before the session refresh propagates
       // (see line ~150 — setIsPhoneVerifiedLocal(true) on success).
       const u = session.user as { isPhoneVerified?: boolean; emailVerified?: unknown };
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setIsPhoneVerifiedLocal(u.isPhoneVerified === true);
        
-      setIsEmailVerifiedLocal(u.emailVerified != null);
+      const isVerified = u.emailVerified != null;
+      setIsEmailVerifiedLocal(isVerified);
+
+      if (!isVerified) {
+        const syncFirebaseEmail = async () => {
+          try {
+            const { ensureFirebaseAuth, getClientAuth } = await import("@/lib/firebase-client");
+            await ensureFirebaseAuth();
+            const auth = getClientAuth();
+            if (auth.currentUser) {
+              await auth.currentUser.reload();
+              if (auth.currentUser.emailVerified) {
+                const { markEmailVerifiedNatively } = await import("@/actions/email");
+                const res = await markEmailVerifiedNatively();
+                if (res.success) {
+                  setIsEmailVerifiedLocal(true);
+                  await update();
+                }
+              }
+            }
+          } catch (e) {
+            console.error("[Profile Sync] Failed to check Firebase native verification:", e);
+          }
+        };
+        syncFirebaseEmail();
+      }
     }
-  }, [status, router, session]);
+  }, [status, router, session, update]);
 
   // Local SVG assets for robust cross-domain loading and full CSP/hotlink bypass
   const BKASH_LOGO_PRIMARY = "/bkash.svg";
@@ -165,14 +189,21 @@ export default function ProfilePage() {
     setMsg("");
     startTransition(async () => {
       try {
-        const res = await sendEmailVerification();
-        if (res.success) {
-          setMsg(t_prof("otpSent"));
-        } else {
-          setMsg(res.error?.message || t_prof("errorGeneric"));
+        const { ensureFirebaseAuth, getClientAuth } = await import("@/lib/firebase-client");
+        await ensureFirebaseAuth();
+        const auth = getClientAuth();
+        if (!auth.currentUser) {
+          setMsg(t_prof("errorGeneric"));
+          return;
         }
-      } catch (err) {
-        setMsg(t_prof("errorGeneric"));
+
+        const { sendEmailVerification: sendFirebaseEmailVerification } = await import("firebase/auth");
+        await sendFirebaseEmailVerification(auth.currentUser);
+        setMsg(t_prof("emailVerificationSent"));
+      } catch (err: unknown) {
+        console.error("Firebase sendEmailVerification failed:", err);
+        const errMsg = err instanceof Error ? err.message : String(err);
+        setMsg(errMsg || t_prof("errorGeneric"));
       }
     });
   };

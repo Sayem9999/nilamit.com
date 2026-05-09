@@ -4,7 +4,7 @@ import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { db } from '@/lib/db';
+import { db, Timestamp } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
 import { isAdminEmail } from '@/lib/admin-guard';
 import { log } from '@/lib/logger';
@@ -105,7 +105,7 @@ async function verifyUser(field: 'email' | 'phone', value: string, passwordRaw: 
       rating: Number(user.rating || user.reputationScore || 0),
       ratingCount: Number(user.ratingCount || 0),
       isPhoneVerified: Boolean(user.isPhoneVerified), 
-      emailVerified: user.emailVerified as Date | null,
+      emailVerified: user.emailVerified instanceof Timestamp ? user.emailVerified.toDate() : (user.emailVerified ? new Date(user.emailVerified as string) : null),
       userLevel: Number(user.userLevel || 1), 
       xp: Number(user.xp || 0), 
       winningStreak: Number(user.winningStreak || 0),
@@ -220,7 +220,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.salesCount       = u.salesCount ?? 0;
             token.defectCount      = u.defectCount ?? 0;
             token.phone            = u.phone ?? null;
-            token.emailVerified    = u.emailVerified ?? null;
+            token.emailVerified    = u.emailVerified instanceof Timestamp ? u.emailVerified.toDate() : (u.emailVerified ? new Date(u.emailVerified as string) : null);
             token.bkashNumber      = u.bkashNumber ?? null;
             token.nagadNumber      = u.nagadNumber ?? null;
             token.lastDbRefresh    = Date.now();
