@@ -1,6 +1,6 @@
 # 💡 Lessons: Patterns & Anti-Patterns
 
-> Last Updated: May 2, 2026
+> Last Updated: May 9, 2026
 
 ## Patterns to Follow
 - **Transactional Bidding**: Always use `SELECT FOR UPDATE` to prevent race conditions.
@@ -33,3 +33,9 @@
 - **Seller COD Liability**:
     - *Insight*: Sellers lose money on delivery fees when buyers flake.
     - *Solution*: Use the platform-held Advance to reimburse the seller's courier fee in case of buyer-side cancellation (Zero-Loss Logistics).
+- **Auth.js Callback Serialization with Firestore Timestamps**:
+    - *Lesson*: Passing raw Firestore `Timestamp` objects through Auth.js JWT/Session callbacks triggers client-side serialization errors (e.g., `Error: Only plain objects can be passed to Client Components from Server Components`).
+    - *Fix*: Explicitly detect `Timestamp` objects in auth callbacks and coerce them using `.toDate()` or cast them into serializable ISO strings/standard `Date` objects before returning the token.
+- **Client-side Firebase Auth Sync & Reload**:
+    - *Lesson*: Client-side Firebase Auth instances do not automatically update user metadata (like `emailVerified`) in real-time unless `.reload()` is explicitly called on the `currentUser`.
+    - *Fix*: Call `await auth.currentUser.reload()` before checking `auth.currentUser.emailVerified` inside profile synchronization hooks to capture native, client-side email verification states accurately.

@@ -1,6 +1,6 @@
 # ⚖️ Decisions: Project Governance & Versions
 
-> Last Updated: May 2, 2026
+> Last Updated: May 9, 2026
 
 ## Core Decisions
 - **Mobile-First Orientation**: Target Bangladeshi market on low-bandwidth (3G/4G). No feature ships without mobile viewport validation.
@@ -8,6 +8,11 @@
 - **Currency**: Strictly BDT (৳).
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
+- **v2.3.3 (Native Firebase Client Verification & Safe Auth)**:
+    - **Native Firebase Verification**: Migrated from unstable third-party SMTP email verification (Resend) to native, zero-cost, highly-reliable Firebase Client-Side Auth email verification.
+    - **Safe-Auth Object Coercion**: Patched database auth hooks and NextAuth callbacks to convert Firestore `Timestamp` objects into serializable `Date` objects, correcting NextAuth client-side serialization crashes.
+    - **Pre-Token Profile Auto-Registration**: Configured token generator endpoints to auto-sync emails/display names to Firebase Auth records, resolving empty-profile email triggers.
+    - **Secure Verified State Assertion**: Implemented custom server-action validation using Firebase Admin SDK to verify assertions before updating database records.
 - **v2.3.2 (Verification Flexibilization)**:
     - **Hybrid Verification Model**: Allowed users to create auction listings, relist, or place bids if they have verified *either* their phone number or their email address (previously restricted to phone only).
 - **v2.3.1 (Treasury Logic Hardening)**:

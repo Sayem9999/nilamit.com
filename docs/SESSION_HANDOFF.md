@@ -2,7 +2,7 @@
 
 This document captures the work completed in the May 2026 audit-and-fix session and the open items the next agent should pick up. It is written so a fresh model can resume without re-reading the full chat transcript.
 
-> **Updated 2026-05-07** — handoff items #2, #5, #6 are now done; #4 instrumented (Sentry hooks added to image-moderation, gc-uploads, sms-gateway). #3 still requires a real GreenWeb token from operations.
+> **Updated 2026-05-09** — handoff items #2, #5, #6 are now done; #4 instrumented (Sentry hooks added to image-moderation, gc-uploads, sms-gateway); **Option 1 Native Firebase Email Verification & Sync successfully implemented, tested, and shipped to main.**
 
 ---
 
@@ -10,14 +10,22 @@ This document captures the work completed in the May 2026 audit-and-fix session 
 
 - Branch protection: **off** (so unprotected; treat with care).
 - CI: red on lint with **pre-existing** technical debt (10 lint errors in files we did not touch — see "Known tech debt" below). Lint debt is out of scope for this session and should be its own PR.
-- Auto-deploy: Firebase App Hosting builds + deploys on every push to `main` via Cloud Build (`apphosting.yaml`). Live URL: `https://nilamit--nilamit-52073.asia-southeast1.hosted.app`.
+- Auto-deploy: Firebase App Hosting builds + deploys on every push to `main` via Cloud Build (`apphosting.yaml`). Live URL: **`https://www.nilamit.com`** (mapped custom domain).
 - Most recent merges:
   - **PR #8** (`05fdd21`, 2026-05-06 08:40 UTC) — primary audit fixes.
   - **PR #9** (`bb0b033`, 2026-05-06 08:43 UTC) — `IMAGE_MODERATION=enabled`.
+  - **Commit `a12ab7d`** — Native Firebase Client-Side Email Verification integration and date coercion session fix.
 
 ---
 
 ## What this session shipped
+
+### Native Firebase Client-Side Email Verification & Sync (May 2026)
+* **Native Verification Email Dispatch**: Rewrote verification dispatch button to trigger native client-side verification email delivery via standard client-side Firebase Auth SDK. Replaces reliance on unstable third-party SMTP servers.
+* **Pre-Token User Auto-Registration**: Configured `/api/firebase/token` router to check, update, or create corresponding auth profiles natively inside Firebase Authentication before generating the custom mint token, ensuring the client SDK possesses accurate and syncable profile information.
+* **Double-Check Security Endpoint**: Created `markEmailVerifiedNatively` server-action to securely double-check client verification states with the Google Firebase Admin SDK before committing status updates to Firestore, closing spoofing opportunities.
+* **Seamless Background Synchronization**: Added background state sync to the Profile layout useEffect. When a returning verified user opens their Profile, their verified state automatically updates both in Firestore and the active NextAuth cookie session in the background.
+* **Safe-Auth Date Coercion**: Patched database auth hooks and NextAuth token/session lifecycle callbacks to intercept Firestore `Timestamp` objects and convert them into standard serializable `Date` objects. This eliminates Next.js client component serialization crashes.
 
 ### SEO & Brand Logo Optimization (May 2026)
 * **Favicon Sizing Audit & Resize**: Identified that the codebase was using a raw, heavy `325KB` `512x512` JPEG/PNG file as `/favicon.ico` (which is invalid as an ICO format and was causing Googlebot-Image crawler dropouts). Created a Python PIL script at `scratch/resize_icons.py` to compile true multi-resolution `.ico` assets (`16x16`, `32x32`, `48x48` layers, size reduced to **`15KB`**) and optimized png targets (`icon-32.png`, `icon-48.png` [4KB], `icon-192.png`, and `apple-icon.png`).
