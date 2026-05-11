@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { logoutAction } from "@/actions/auth";
-import { sendPhoneOTP, verifyPhoneOTP } from "@/actions/phone";
+import { syncVerifiedPhoneNatively } from "@/actions/phone";
 import { calculateLevelProgress } from "@/lib/gamification-engine";
 import {
   User,
@@ -53,6 +53,10 @@ export default function ProfilePage() {
   // Instant Visibility State
   const [isPhoneVerifiedLocal, setIsPhoneVerifiedLocal] = useState(false);
   const [isEmailVerifiedLocal, setIsEmailVerifiedLocal] = useState(false);
+  
+  // Firebase Native Phone verification states
+  const [confirmationResult, setConfirmationResult] = useState<{ confirm: (code: string) => Promise<unknown> } | null>(null);
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState<unknown>(null);
 
   const maskPhone = (num: string) => {
     if (!num) return "";
@@ -160,12 +164,52 @@ export default function ProfilePage() {
   const handleSendOTP = () => {
     setMsg("");
     startTransition(async () => {
-      const res = await sendPhoneOTP(phone);
-      if (res.success) {
+      try {
+        const { getClientAuth, ensureFirebaseAuth } = await import("@/lib/firebase-client");
+        const { RecaptchaVerifier, linkWithPhoneNumber } = await import("firebase/auth");
+        
+        const auth = getClientAuth();
+        if (!auth.currentUser) {
+          await ensureFirebaseAuth();
+        }
+
+        if (!auth.currentUser) {
+          setMsg("Failed to authenticate with Firebase. Please try again.");
+          return;
+        }
+
+        // Initialize Recaptcha Verifier
+        let verifier = recaptchaVerifier;
+        if (!verifier) {
+          verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+            size: "invisible",
+            callback: () => {}
+          });
+          setRecaptchaVerifier(verifier);
+        }
+
+        // Ensure normalized phone number for Bangladesh
+        const normalizedPhone = phone.startsWith("+") ? phone : `+88${phone}`;
+
+        const confirmResult = await linkWithPhoneNumber(
+          auth.currentUser, 
+          normalizedPhone, 
+          verifier as import("firebase/auth").ApplicationVerifier
+        );
+        setConfirmationResult(confirmResult);
         setPhoneStep("otp");
         setMsg(t_prof("otpSent"));
-      } else {
-        setMsg(res.error?.message || t_prof("errorGeneric"));
+      } catch (err) {
+        let errMsg = t_prof("errorGeneric");
+        const fErr = err as { code?: string; message?: string };
+        if (fErr && fErr.code === "auth/invalid-phone-number") {
+          errMsg = "Invalid phone number format. Use international format (e.g. +8801XXXXXXXXX)";
+        } else if (fErr && fErr.code === "auth/too-many-requests") {
+          errMsg = "Too many OTP requests. Please try again later.";
+        } else if (fErr && fErr.message) {
+          errMsg = fErr.message;
+        }
+        setMsg(errMsg);
       }
     });
   };
@@ -173,14 +217,33 @@ export default function ProfilePage() {
   const handleVerifyOTP = () => {
     setMsg("");
     startTransition(async () => {
-      const res = await verifyPhoneOTP(phone, otp);
-      if (res.success) {
-        setPhoneStep("idle");
-        setIsPhoneVerifiedLocal(true);
-        setMsg(t_prof("verificationSuccess"));
-        await update();
-      } else {
-        setMsg(res.error?.message || t_prof("errorGeneric"));
+      if (!confirmationResult) {
+        setMsg("Verification session has expired. Please try again.");
+        return;
+      }
+      try {
+        // Confirm OTP on the client
+        await confirmationResult.confirm(otp);
+        
+        // Sync verified state to server
+        const res = await syncVerifiedPhoneNatively(phone);
+        if (res.success) {
+          setPhoneStep("idle");
+          setIsPhoneVerifiedLocal(true);
+          setMsg(t_prof("verificationSuccess"));
+          await update();
+        } else {
+          setMsg(res.error?.message || t_prof("errorGeneric"));
+        }
+      } catch (err) {
+        let errMsg = t_prof("errorGeneric");
+        const fErr = err as { code?: string; message?: string };
+        if (fErr && fErr.code === "auth/invalid-verification-code") {
+          errMsg = "Invalid verification code. Please check the SMS and try again.";
+        } else if (fErr && fErr.message) {
+          errMsg = fErr.message;
+        }
+        setMsg(errMsg);
       }
     });
   };
@@ -400,6 +463,7 @@ export default function ProfilePage() {
                   className="bg-amber-50 border border-amber-200 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl -mr-12 -mt-12" />
+                  <div id="recaptcha-container"></div>
                   <div className="relative z-10">
                     <div className="flex items-start gap-4 mb-4">
                       <div className="p-2.5 bg-white rounded-xl shadow-sm text-amber-600">

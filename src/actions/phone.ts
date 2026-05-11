@@ -241,3 +241,48 @@ export async function sendEmailOTP(email: string) {
     return errorResponse(ErrorType.INTERNAL, 'Failed to send email.');
   }
 }
+
+export async function syncVerifiedPhoneNatively(phone: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
+
+    const normalizedPhone = normalizePhone(phone);
+    if (!/^\+8801\d{9}$/.test(normalizedPhone)) {
+      return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladesh phone number.');
+    }
+
+    // Check if phone number is already verified by another user in our Firestore DB
+    const existingSnap = await db.collection('users')
+      .where('phone', '==', normalizedPhone)
+      .where('isPhoneVerified', '==', true)
+      .limit(1).get();
+    if (!existingSnap.empty && existingSnap.docs[0].id !== session.user.id) {
+      return errorResponse(ErrorType.CONFLICT, 'This phone number is already verified by another account.');
+    }
+
+    // Fetch user record from Firebase Auth to verify they actually successfully linked the phone number!
+    const { adminAuth } = await import('@/lib/firebase-admin');
+    const userRecord = await adminAuth.instance.getUser(session.user.id);
+    if (!userRecord.phoneNumber) {
+      return errorResponse(ErrorType.VALIDATION, 'Phone number is not verified in Firebase Auth.');
+    }
+
+    const firebasePhoneNormalized = normalizePhone(userRecord.phoneNumber);
+    if (firebasePhoneNormalized !== normalizedPhone) {
+      return errorResponse(ErrorType.VALIDATION, 'The verified phone number does not match the input phone number.');
+    }
+
+    // Update Firestore user document
+    await db.collection('users').doc(session.user.id).update({
+      phone: normalizedPhone,
+      isPhoneVerified: true,
+      updatedAt: new Date(),
+    });
+
+    return successResponse(null);
+  } catch (error) {
+    log.error('[phone] syncVerifiedPhoneNatively failed', error);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to verify phone number. Please try again.');
+  }
+}
