@@ -83,6 +83,10 @@ const nextConfig: NextConfig = {
         source: '/__/auth/action',
         destination: '/auth/action',
       },
+      {
+        source: '/__/auth/:path*',
+        destination: 'https://nilamit-52073.firebaseapp.com/__/auth/:path*',
+      },
     ];
   },
 };

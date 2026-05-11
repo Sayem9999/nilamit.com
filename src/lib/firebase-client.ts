@@ -25,7 +25,7 @@ import { log } from '@/lib/logger';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAOwypGtSAeCsZpHogZx7Jt_MPX2nh3GZM",
-  authDomain: "nilamit-52073.firebaseapp.com",
+  authDomain: "nilamit.com",
   databaseURL: "https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "nilamit-52073",
   storageBucket: "nilamit-52073.firebasestorage.app",
