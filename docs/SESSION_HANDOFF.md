@@ -2,7 +2,7 @@
 
 This document captures the work completed in the May 2026 audit-and-fix session and the open items the next agent should pick up. It is written so a fresh model can resume without re-reading the full chat transcript.
 
-> **Updated 2026-05-09** — handoff items #2, #5, #6 are now done; #4 instrumented (Sentry hooks added to image-moderation, gc-uploads, sms-gateway); **Option 1 Native Firebase Email Verification & Sync successfully implemented, tested, and shipped to main.**
+> **Updated 2026-05-11** — Integration of Direct Resend API Dispatch within `src/lib/firebase-email.ts` successfully resolved email verification delivery issues caused by the non-functional Firebase Trigger Email extension. **RESEND_API_KEY** environment mapping has been restored in `apphosting.yaml`.
 
 ---
 

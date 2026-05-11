@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "nilamit-52073"
+  },
+  "targets": {},
+  "etags": {
+    "nilamit-52073": {
+      "extensionInstances": {
+        "firestore-send-email": "1321398b815dda0bac52607593bbae2238b90162ff2760cac984f2da89da2a4e",
+        "storage-resize-images": "3e96a39987074c21a9200ecb8678c5ccfcfdc5bb68e3b580fe381119138d3533"
+      }
+    }
   }
 }

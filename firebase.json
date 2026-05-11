@@ -9,5 +9,9 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
+  },
+  "extensions": {
+    "firestore-send-email": "firebase/firestore-send-email@0.2.8",
+    "storage-resize-images": "firebase/storage-resize-images@0.3.3"
   }
 }

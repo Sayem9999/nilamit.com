@@ -22,6 +22,8 @@
 
 import 'server-only';
 import { adminFirestore } from '@/lib/firebase-admin';
+import { Resend } from 'resend';
+import { log } from '@/lib/logger';
 
 interface EmailPayload {
   to: string | string[];
@@ -31,20 +33,68 @@ interface EmailPayload {
   replyTo?: string;        // Optional reply-to address
 }
 
+let _resend: Resend | null = null;
+function getResend() {
+  if (!_resend) {
+    if (!process.env.RESEND_API_KEY) {
+      log.warn('[firebase-email] RESEND_API_KEY is missing. Only writing to firestore collection.');
+      return null;
+    }
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
+
 /**
- * Queue a transactional email.
- * Returns immediately — delivery is async via the Firebase extension.
+ * Sends a transactional email.
+ * Delivers instantly via Resend API and writes a copy to Firestore 'mail' collection for history & auditing.
  */
 export async function sendEmail({ to, subject, html, text, replyTo }: EmailPayload): Promise<void> {
   const message: Record<string, unknown> = { subject, html };
   if (text)    message.text    = text;
   if (replyTo) message.replyTo = replyTo;
 
-  await adminFirestore.collection('mail').add({
-    to: Array.isArray(to) ? to : [to],
-    message,
-    createdAt: new Date(),
-  });
+  try {
+    // 1. Create a log record in Firestore mail collection
+    const docRef = await adminFirestore.collection('mail').add({
+      to: Array.isArray(to) ? to : [to],
+      message,
+      createdAt: new Date(),
+    });
+
+    // 2. Dispatch via Resend API if available
+    const resend = getResend();
+    if (resend) {
+      log.info(`[firebase-email] Sending email via Resend API`, { to, subject });
+      const emailResponse = await resend.emails.send({
+        from: 'Nilamit <onboarding@resend.dev>',
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        html,
+        text,
+        replyTo,
+      });
+
+      if (emailResponse.error) {
+        log.error('[firebase-email] Resend API delivery failed', emailResponse.error);
+        await docRef.update({
+          'delivery.state': 'ERROR',
+          'delivery.error': emailResponse.error.message,
+        });
+      } else {
+        log.info('[firebase-email] Email delivered successfully via Resend API', { id: emailResponse.data?.id });
+        await docRef.update({
+          'delivery.state': 'SUCCESS',
+          'delivery.sentAt': new Date(),
+        });
+      }
+    } else {
+      log.warn('[firebase-email] Resend API key not available. Email written to mail collection but not dispatched.');
+    }
+  } catch (err) {
+    log.error('[firebase-email] sendEmail failed', err);
+    throw err;
+  }
 }
 
 // ─── Pre-built email senders ─────────────────────────────────────────────────
