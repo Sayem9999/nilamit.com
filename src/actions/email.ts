@@ -50,13 +50,12 @@ export async function sendEmailVerification() {
 
     const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(emailNormalized)}`;
 
+    // Always log the URL to console/server-logs for robust debugging and sandbox accessibility
+    log.info(`[Email Dispatch] Verification link generated`, { to: emailNormalized, url: verifyUrl });
+    console.log(`\n[EMAIL VERIFICATION URL] To: ${emailNormalized} | URL: ${verifyUrl}\n`);
+
     if (!env.RESEND_API_KEY) {
       log.warn(`[email] RESEND_API_KEY is missing. Falling back to console logging.`);
-      console.log(`\n\n==================================================`);
-      console.log(`[EMAIL VERIFICATION LINK - CONSOLE FALLBACK]`);
-      console.log(`To: ${emailNormalized}`);
-      console.log(`URL: ${verifyUrl}`);
-      console.log(`==================================================\n\n`);
       return successResponse(null);
     }
 
