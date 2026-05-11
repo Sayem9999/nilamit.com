@@ -189,19 +189,15 @@ export default function ProfilePage() {
     setMsg("");
     startTransition(async () => {
       try {
-        const { ensureFirebaseAuth, getClientAuth } = await import("@/lib/firebase-client");
-        await ensureFirebaseAuth();
-        const auth = getClientAuth();
-        if (!auth.currentUser) {
-          setMsg(t_prof("errorGeneric"));
-          return;
+        const { sendEmailVerification } = await import("@/actions/email");
+        const res = await sendEmailVerification();
+        if (res.success) {
+          setMsg(t_prof("emailVerificationSent"));
+        } else {
+          setMsg(res.error?.message || t_prof("errorGeneric"));
         }
-
-        const { sendEmailVerification: sendFirebaseEmailVerification } = await import("firebase/auth");
-        await sendFirebaseEmailVerification(auth.currentUser);
-        setMsg(t_prof("emailVerificationSent"));
       } catch (err: unknown) {
-        console.error("Firebase sendEmailVerification failed:", err);
+        console.error("sendEmailVerification failed:", err);
         const errMsg = err instanceof Error ? err.message : String(err);
         setMsg(errMsg || t_prof("errorGeneric"));
       }

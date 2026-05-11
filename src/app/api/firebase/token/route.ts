@@ -22,7 +22,7 @@ export async function GET() {
   }
 
   try {
-    // Sync user email and displayName to Firebase Authentication user record
+    // Sync user email and displayName to Firebase Authentication user record (best-effort)
     try {
       await adminAuth.instance.updateUser(session.user.id, {
         email: session.user.email ?? undefined,
@@ -30,13 +30,17 @@ export async function GET() {
       });
     } catch (err) {
       if (err && typeof err === 'object' && 'code' in err && err.code === 'auth/user-not-found') {
-        await adminAuth.instance.createUser({
-          uid: session.user.id,
-          email: session.user.email ?? undefined,
-          displayName: session.user.name ?? undefined,
-        });
+        try {
+          await adminAuth.instance.createUser({
+            uid: session.user.id,
+            email: session.user.email ?? undefined,
+            displayName: session.user.name ?? undefined,
+          });
+        } catch (createErr) {
+          log.warn('[Firebase Token] Failed to create user in Firebase Auth during sync', { error: createErr });
+        }
       } else {
-        throw err;
+        log.warn('[Firebase Token] Failed to update user in Firebase Auth during sync', { error: err });
       }
     }
 
