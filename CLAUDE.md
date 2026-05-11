@@ -182,7 +182,7 @@ DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (ad
 | `SENTRY_DSN` | ✓ Real | EU region: `ingest.de.sentry.io` |
 | `UPSTASH_REDIS_REST_URL` | ✓ Real | `https://safe-stallion-50421.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | ✓ Real | Real Upstash token |
-| `GREENWEB_TOKEN` | ⚠️ Placeholder | `"console"` — OTPs log to stdout, not real SMS |
+| `GREENWEB_TOKEN` | 🚫 Deprecated | Migrated entirely to native Google Firebase Phone Auth service |
 | `IMAGE_MODERATION` | env var | Set to `enabled` (May 2026); disable here to bypass Cloud Vision SafeSearch |
 
 ---

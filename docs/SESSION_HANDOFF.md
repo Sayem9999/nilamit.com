@@ -2,7 +2,7 @@
 
 This document captures the work completed in the May 2026 audit-and-fix session and the open items the next agent should pick up. It is written so a fresh model can resume without re-reading the full chat transcript.
 
-> **Updated 2026-05-11** — Implemented **Option C (Native Firebase Auth Verification Emails)**. The email verification triggers natively from the client via the Firebase Auth JS SDK (`sendEmailVerification`) both upon request on the Profile page and automatically on initial login when unverified. This drops Resend entirely, eliminating the need for domain verification.
+> **Updated 2026-05-11** — Implemented **Google Native Firebase Auth Phone Verification & Dual Sync**. Switching from third-party SMS GreenWeb gateway to Google's official native Phone Authentication service ensures zero-latency, high-reliability delivery with invisible bot-shielding (reCAPTCHA v3) and secure backend synchronizations.
 
 ---
 
@@ -15,10 +15,18 @@ This document captures the work completed in the May 2026 audit-and-fix session 
   - **PR #8** (`05fdd21`, 2026-05-06 08:40 UTC) — primary audit fixes.
   - **PR #9** (`bb0b033`, 2026-05-06 08:43 UTC) — `IMAGE_MODERATION=enabled`.
   - **Commit `a12ab7d`** — Native Firebase Client-Side Email Verification integration and date coercion session fix.
+  - **Commit `43dd494`** — Google Native Firebase Phone Authentication and Dual-Sync integration.
 
 ---
 
 ## What this session shipped
+
+### Google Native Firebase Phone Authentication & Dual Sync (May 2026)
+* **Invisible reCAPTCHA Guard**: Placed a dynamic, invisible reCAPTCHA container widget seamlessly within the phone verification layout. This protects SMS delivery bills from spam/abuse while maintaining a gorgeous, zero-friction interface.
+* **Native linkWithPhoneNumber API**: Migrated verification trigger to use client-side `linkWithPhoneNumber()`. This invokes Google's global SMS transit network to instantly dispatch high-deliverability codes to Bangladesh phone lines (+880).
+* **Double-Check Security Admin Sync**: Created the `syncVerifiedPhoneNatively(phone)` Server Action. The server directly queries Google's Firebase Auth server via the Firebase Admin SDK to check if the caller's linked profile actually has a validated number matching their submission, completely closing client spoofing pathways.
+* **Best-Effort Profile Dual-Sync**: Upgraded `/api/firebase/token` to dynamically synchronize the user's `email`, `displayName`, and verified `phoneNumber` directly to Firebase Auth on token generation. Added bulletproof warning-catch fallbacks to prevent session lockups in case of formatting or duplicate number conflicts.
+* **ESLint & Strict Typing Compliance**: Refactored states, imports, and handlers to completely eliminate explicit `any` keywords, fully typed the confirmation callbacks, and resolved all compiler/linter warnings.
 
 ### Native Firebase Client-Side Email Verification & Sync (May 2026)
 * **Native Verification Email Dispatch**: Rewrote verification dispatch button to trigger native client-side verification email delivery via standard client-side Firebase Auth SDK. Replaces reliance on unstable third-party SMTP servers.
