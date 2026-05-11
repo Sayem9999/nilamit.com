@@ -1,6 +1,5 @@
 'use server';
 
-import { Resend } from 'resend';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { env } from '@/lib/env';
@@ -9,18 +8,7 @@ import { ErrorType, errorResponse, successResponse, type ServiceResponse } from 
 import { apiLimiter } from '@/lib/ratelimit';
 import { headers } from 'next/headers';
 import crypto from 'crypto';
-
-let _resend: Resend | null = null;
-function getResend() {
-  if (!_resend) {
-    if (!env.RESEND_API_KEY) {
-      log.error('[email] RESEND_API_KEY is missing');
-      throw new Error('Email service is not configured');
-    }
-    _resend = new Resend(env.RESEND_API_KEY);
-  }
-  return _resend;
-}
+import { sendEmail } from '@/lib/firebase-email';
 
 /**
  * Sends a verification email to the current user
@@ -54,13 +42,7 @@ export async function sendEmailVerification() {
     log.info(`[Email Dispatch] Verification link generated`, { to: emailNormalized, url: verifyUrl });
     console.log(`\n[EMAIL VERIFICATION URL] To: ${emailNormalized} | URL: ${verifyUrl}\n`);
 
-    if (!env.RESEND_API_KEY) {
-      log.warn(`[email] RESEND_API_KEY is missing. Falling back to console logging.`);
-      return successResponse(null);
-    }
-
-    await getResend().emails.send({
-      from: 'Nilamit <onboarding@resend.dev>', // Should be a verified domain in production
+    await sendEmail({
       to: session.user.email,
       subject: 'Verify your email for Nilamit',
       html: `
