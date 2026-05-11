@@ -479,6 +479,9 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
+                    {/* Hidden Recaptcha Anchor for Firebase Phone Auth */}
+                    <div id="recaptcha-container"></div>
+
                     <AnimatePresence mode="wait">
                       {phoneStep === "idle" && (
                         <motion.button
