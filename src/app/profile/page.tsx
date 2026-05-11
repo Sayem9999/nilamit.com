@@ -189,20 +189,17 @@ export default function ProfilePage() {
     setMsg("");
     startTransition(async () => {
       try {
-        const { sendEmailVerification } = await import("@/actions/email");
-        const res = await sendEmailVerification();
-        if (res.success) {
-          setMsg(t_prof("emailVerificationSent"));
-        } else {
-          setMsg(res.error?.message || t_prof("errorGeneric"));
-        }
+        const { sendNativeVerificationEmail } = await import("@/lib/firebase-client");
+        await sendNativeVerificationEmail();
+        setMsg(t_prof("emailVerificationSent"));
       } catch (err: unknown) {
-        console.error("sendEmailVerification failed:", err);
+        console.error("sendNativeVerificationEmail failed:", err);
         const errMsg = err instanceof Error ? err.message : String(err);
         setMsg(errMsg || t_prof("errorGeneric"));
       }
     });
   };
+
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },

@@ -2,7 +2,7 @@
 
 This document captures the work completed in the May 2026 audit-and-fix session and the open items the next agent should pick up. It is written so a fresh model can resume without re-reading the full chat transcript.
 
-> **Updated 2026-05-11** — Integration of Direct Resend API Dispatch within `src/lib/firebase-email.ts` successfully resolved email verification delivery issues caused by the non-functional Firebase Trigger Email extension. **RESEND_API_KEY** environment mapping has been restored in `apphosting.yaml`.
+> **Updated 2026-05-11** — Implemented **Option C (Native Firebase Auth Verification Emails)**. The email verification triggers natively from the client via the Firebase Auth JS SDK (`sendEmailVerification`) both upon request on the Profile page and automatically on initial login when unverified. This drops Resend entirely, eliminating the need for domain verification.
 
 ---
 

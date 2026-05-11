@@ -19,7 +19,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getDatabase, type Database } from 'firebase/database';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
-import { getAuth, signInWithCustomToken, type Auth } from 'firebase/auth';
+import { getAuth, sendEmailVerification, signInWithCustomToken, type Auth, type User } from 'firebase/auth';
 import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 import { log } from '@/lib/logger';
 
@@ -95,7 +95,17 @@ export async function ensureFirebaseAuth(): Promise<void> {
         return;
       }
       const { token } = await res.json() as { token: string };
-      await signInWithCustomToken(auth, token);
+      const cred = await signInWithCustomToken(auth, token);
+
+      // Auto-send Firebase native verification email on first sign-in if email unverified.
+      if (cred.user.email && !cred.user.emailVerified) {
+        sendEmailVerification(cred.user).catch((err) => {
+          log.warn('[Firebase Client] Auto-send verification email failed (likely rate-limited)', {
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+      }
+
     } catch (err) {
       log.warn('[Firebase Client] Custom token authentication failed. Client auth not fully configured or enabled.', {
         error: err instanceof Error ? err.message : String(err)
@@ -104,4 +114,31 @@ export async function ensureFirebaseAuth(): Promise<void> {
   })();
 
   return _authPromise;
+}
+
+// ─── Native Email Verification ────────────────────────────────────────────────
+
+/**
+ * Sends a Firebase Auth native verification email to the currently signed-in user.
+ *
+ * Firebase Auth handles delivery entirely — no Resend, no SMTP, no domain setup required.
+ * The email comes from noreply@nilamit-52073.firebaseapp.com (configurable in Firebase Console
+ * under Authentication → Templates).
+ *
+ * Call this client-side after ensureFirebaseAuth() has completed.
+ */
+export async function sendNativeVerificationEmail(): Promise<void> {
+  await ensureFirebaseAuth();
+  const auth = getClientAuth();
+  const user = auth.currentUser as User | null;
+
+  if (!user) {
+    throw new Error('Not signed into Firebase — call ensureFirebaseAuth() first.');
+  }
+  if (user.emailVerified) {
+    return; // Already verified, nothing to do.
+  }
+
+  await sendEmailVerification(user);
+  log.info('[Firebase Client] Native verification email dispatched via Firebase Auth.');
 }
