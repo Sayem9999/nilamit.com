@@ -73,7 +73,7 @@ sequenceDiagram
     participant CA as closeAuction Logic
     participant DB as NoSQL
     participant ESC as Escrow Shield
-    participant RES as Resend (Email)
+    participant Mail as Firebase Trigger Email (SMTP)
     
     Sys->>CA: Trigger Close (EndTime hit)
     CA->>DB: Find Highest Bidder
@@ -81,7 +81,7 @@ sequenceDiagram
     CA->>DB: Update Auction -> SOLD
     CA->>ESC: Create EscrowTransaction (HELD if Verified)
     CA->>DB: Create Conversation record
-    CA->>RES: Send "Congratulations" Email
+    CA->>Mail: Send "Congratulations" Email (via mail collection)
     ESC-->>DB: Save transaction record
 ```
 

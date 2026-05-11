@@ -244,9 +244,9 @@ echo -n "https://xxx@xxx.ingest.sentry.io/xxx" \
 echo -n "sntrys_..." \
   | gcloud secrets create SENTRY_AUTH_TOKEN --data-file=- --project=$PROJECT_ID
 
-# Resend email (for notification emails)
-echo -n "re_..." \
-  | gcloud secrets create RESEND_API_KEY --data-file=- --project=$PROJECT_ID
+# Note: Nilamit uses the Firebase "Trigger Email from Firestore" Extension.
+# Configure your SMTP server connection (e.g., SendGrid, Mailgun, or Gmail) 
+# during the extension setup in the Firebase Console under the "Extensions" tab.
 
 # GreenWeb SMS gateway (for OTP SMS)
 echo -n "your-greenweb-token" \

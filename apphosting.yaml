@@ -88,9 +88,6 @@ env:
   - variable: GREENWEB_TOKEN
     secret: GREENWEB_TOKEN
 
-  - variable: RESEND_API_KEY
-    secret: RESEND_API_KEY
-
   # Cloud Vision SafeSearch is active in production. The image-moderation
   # module fails open (allows the upload + logs to Sentry) if the Vision API
   # is unreachable, so a brief outage won't brick listings.

@@ -118,7 +118,7 @@ Copy `.env.example` to `.env.local` and fill in all values. Required variables:
 | `SENTRY_AUTH_TOKEN` | Sentry authentication token (for source map uploads) |
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID (optional) |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret (optional) |
-| `RESEND_API_KEY` | Resend API key for emails (optional) |
+| `Firebase Extension` | "Trigger Email from Firestore" configured in Firebase Console (SMTP-based) |
 | `GREENWEB_TOKEN` | GreenWeb SMS API token (optional) |
 
 ---
