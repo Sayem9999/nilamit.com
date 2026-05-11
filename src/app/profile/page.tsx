@@ -178,15 +178,23 @@ export default function ProfilePage() {
           return;
         }
 
-        // Initialize Recaptcha Verifier
+        // Initialize Recaptcha Verifier and ensure any previous instances are cleared cleanly
         let verifier = recaptchaVerifier;
-        if (!verifier) {
-          verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-            size: "invisible",
-            callback: () => {}
-          });
-          setRecaptchaVerifier(verifier);
+        if (verifier) {
+          try {
+            (verifier as import("firebase/auth").RecaptchaVerifier).clear();
+          } catch (e) {
+            console.warn("Error clearing previous recaptcha verifier:", e);
+          }
+          setRecaptchaVerifier(null);
+          verifier = null;
         }
+
+        verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+          callback: () => {}
+        });
+        setRecaptchaVerifier(verifier);
 
         // Ensure normalized phone number for Bangladesh
         const normalizedPhone = phone.startsWith("+") ? phone : `+88${phone}`;
@@ -206,6 +214,8 @@ export default function ProfilePage() {
           errMsg = "Invalid phone number format. Use international format (e.g. +8801XXXXXXXXX)";
         } else if (fErr && fErr.code === "auth/too-many-requests") {
           errMsg = "Too many OTP requests. Please try again later.";
+        } else if (fErr && fErr.code === "auth/internal-error") {
+          errMsg = "Firebase Auth Internal Error. Ensure 'nilamit.com' and 'www.nilamit.com' are added to the 'Authorized Domains' list under Firebase Console > Authentication > Settings.";
         } else if (fErr && fErr.message) {
           errMsg = fErr.message;
         }
@@ -463,7 +473,6 @@ export default function ProfilePage() {
                   className="bg-amber-50 border border-amber-200 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl -mr-12 -mt-12" />
-                  <div id="recaptcha-container"></div>
                   <div className="relative z-10">
                     <div className="flex items-start gap-4 mb-4">
                       <div className="p-2.5 bg-white rounded-xl shadow-sm text-amber-600">
