@@ -105,6 +105,10 @@ export function createSMSGateway(): SMSGateway {
         log.warn('[SMS] GREENWEB_TOKEN missing — falling back to console gateway in non-production');
         return new ConsoleGateway();
       }
+      if (token === 'console') {
+        log.warn('[SMS] GREENWEB_TOKEN is set to "console" — falling back to console gateway');
+        return new ConsoleGateway();
+      }
       return new GreenWebGateway(token);
     }
     case 'bulksmsbd': {
@@ -118,9 +122,8 @@ export function createSMSGateway(): SMSGateway {
       return new BulksmsBDGateway(apiKey, senderId);
     }
     default:
-      // Refuse to log OTPs to stdout in production — that would leak secrets
-      // to the host logs and silently bypass real SMS delivery.
-      if (isProd) {
+      // Refuse to log OTPs to stdout in production unless explicitly requested via "console" provider
+      if (isProd && provider !== 'console') {
         throw new Error('[SMS] SMS_PROVIDER must be set to a real gateway (e.g. "greenweb" or "bulksmsbd") in production');
       }
       return new ConsoleGateway();
