@@ -12,6 +12,13 @@ export default auth((req) => {
   const protocol = req.headers.get('x-forwarded-proto') || 'http';
   const currentOrigin = `${protocol}://${host}`;
   
+  // 1. Canonical Redirect: www.nilamit.com -> nilamit.com (apex)
+  if (host.startsWith('www.')) {
+    const targetHost = host.replace(/^www\./, '');
+    const redirectUrl = new URL(pathname + req.nextUrl.search, `https://${targetHost}`);
+    return NextResponse.redirect(redirectUrl, 301);
+  }
+  
   const redirectBase = (env.NEXTAUTH_URL && !env.NEXTAUTH_URL.includes('nilamit.com'))
     ? env.NEXTAUTH_URL
     : currentOrigin;

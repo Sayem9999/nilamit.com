@@ -254,6 +254,43 @@
         { "fieldPath": "bidderId", "order": "ASCENDING" },
         { "fieldPath": "sellerId", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "phoneVerifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "phone", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "phoneVerifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "phone", "order": "ASCENDING" },
+        { "fieldPath": "verified", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "phoneVerifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "phone", "order": "ASCENDING" },
+        { "fieldPath": "verified", "order": "ASCENDING" },
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "auctions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "location", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "bidCount", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

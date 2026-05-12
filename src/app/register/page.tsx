@@ -397,6 +397,11 @@ export default function RegisterPage() {
                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-4 py-5 text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
                     />
                   </div>
+                  {error && (
+                    <p className="text-xs font-bold text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 text-center">
+                      {error}
+                    </p>
+                  )}
                   <button
                     onClick={handleRequestOTP}
                     disabled={isPending || phone.length < 11 || formData.name.length < 2}
@@ -441,6 +446,11 @@ export default function RegisterPage() {
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                     className="w-full bg-gray-50 border border-gray-100 rounded-3xl px-4 py-6 text-5xl font-black tracking-[0.5em] text-center focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
                   />
+                  {error && (
+                    <p className="text-xs font-bold text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 text-center">
+                      {error}
+                    </p>
+                  )}
                   <button
                     onClick={handleVerifyOTP}
                     disabled={otp.length !== 6}
