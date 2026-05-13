@@ -218,6 +218,8 @@ export default function ProfilePage() {
           errMsg = "Too many OTP requests. Please try again later.";
         } else if (fErr && fErr.code === "auth/internal-error") {
           errMsg = "Firebase Auth Internal Error. Ensure 'nilamit.com' and 'www.nilamit.com' are added to the 'Authorized Domains' list under Firebase Console > Authentication > Settings.";
+        } else if (fErr && fErr.code === "auth/network-request-failed") {
+          errMsg = "Network request failed. This is typically caused by an ad-blocker (like uBlock Origin, AdBlock, or Brave Shields) blocking Firebase/reCAPTCHA requests, or firewall/VPN settings. Please disable ad-blockers and try again.";
         } else if (fErr && fErr.message) {
           errMsg = fErr.message;
         }
@@ -252,6 +254,8 @@ export default function ProfilePage() {
         const fErr = err as { code?: string; message?: string };
         if (fErr && fErr.code === "auth/invalid-verification-code") {
           errMsg = "Invalid verification code. Please check the SMS and try again.";
+        } else if (fErr && fErr.code === "auth/network-request-failed") {
+          errMsg = "Network request failed. Please ensure your internet connection is stable, disable any ad-blockers, or turn off VPNs/proxies and try again.";
         } else if (fErr && fErr.message) {
           errMsg = fErr.message;
         }

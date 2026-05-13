@@ -90,6 +90,8 @@ export default function RegisterPage() {
           errMsg = "Invalid phone number format. Use international format (e.g. +8801XXXXXXXXX)";
         } else if (fErr && fErr.code === "auth/too-many-requests") {
           errMsg = "Too many OTP requests. Please try again later.";
+        } else if (fErr && fErr.code === "auth/network-request-failed") {
+          errMsg = "Network request failed. This is typically caused by an ad-blocker (like uBlock Origin, AdBlock, or Brave Shields) blocking Firebase/reCAPTCHA requests, or firewall/VPN settings. Please disable ad-blockers and try again.";
         } else if (fErr && fErr.message) {
           errMsg = fErr.message;
         }
@@ -126,6 +128,8 @@ export default function RegisterPage() {
         const fErr = err as { code?: string; message?: string };
         if (fErr && fErr.code === "auth/invalid-verification-code") {
           errMsg = "Invalid verification code. Please check the SMS and try again.";
+        } else if (fErr && fErr.code === "auth/network-request-failed") {
+          errMsg = "Network request failed. Please ensure your internet connection is stable, disable any ad-blockers, or turn off VPNs/proxies and try again.";
         } else if (fErr && fErr.message) {
           errMsg = fErr.message;
         }
