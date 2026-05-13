@@ -75,7 +75,7 @@ This document captures the work completed in the May 2026 audit-and-fix session 
 
 ### Cron + GitHub Actions
 - `.github/workflows/cron.yml` — was failing on every run before this session. Three bugs fixed:
-  1. URL pointed at `nilamit.com` (not routable from GHA runners) → switched to `nilamit--nilamit-52073.asia-southeast1.hosted.app`.
+  1. URL pointed at non-routable address → switched to `www.nilamit.com`.
   2. Used GET against POST-only routes → all `curl` calls now `-X POST`.
   3. POSTs without a body returned 411 → added `-H "Content-Type: application/json" --data '{}'`.
 - Added the previously-unscheduled jobs: `closing-soon` (15 min), `process-alerts` (5 min), `enforce-policies` (hourly), `gc-uploads` (weekly Sun 04:00 UTC).
@@ -170,7 +170,7 @@ gh secret set CRON_SECRET --repo Sayem9999/nilamit.com \
 
 # Smoke endpoints (expect 401 without real bearer)
 curl -s -o /dev/null -w "%{http_code}\n" -X POST \
-  "https://nilamit--nilamit-52073.asia-southeast1.hosted.app/api/cron/close-auctions" \
+  "https://www.nilamit.com/api/cron/close-auctions" \
   -H "Authorization: Bearer dummy" -H "Content-Type: application/json" --data '{}'
 
 # Index deploy

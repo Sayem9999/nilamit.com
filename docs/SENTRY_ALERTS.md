@@ -121,7 +121,7 @@ Each rule should fire end-to-end before you trust it. The cheapest way:
 
 ```bash
 # From the deployed app, hit the test endpoint (already exists):
-curl https://nilamit--nilamit-52073.asia-southeast1.hosted.app/api/sentry-test
+curl https://www.nilamit.com/api/sentry-test
 ```
 
 That endpoint deliberately throws an error tagged `area:test`. Confirm the

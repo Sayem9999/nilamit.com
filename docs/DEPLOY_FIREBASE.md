@@ -1,6 +1,6 @@
 # End-to-End Deployment Guide
 
-> nilamit.app — Firebase App Hosting on Google Cloud Run
+> www.nilamit.com — Firebase App Hosting on Google Cloud Run
 > Last Updated: April 29, 2026
 
 This guide takes you from zero to a running production deployment. Follow every step in order. Skipping steps causes silent failures — Firebase App Hosting injects secrets at runtime, so a missing secret means that feature silently breaks after deploy.
@@ -333,7 +333,7 @@ The CLI will ask you to:
 
 After this completes, Firebase will show you your App Hosting URL, e.g.:
 ```
-https://nilamit--nilamit-52073.asia-southeast1.hosted.app
+https://www.nilamit.com
 ```
 
 **Note this URL — you need it for the next two steps.**

@@ -12,7 +12,7 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **Deployed:** Firebase App Hosting (`nilamit` backend, project `nilamit-52073`). Push to `main` → auto-deploy via Cloud Build.
 
-**Live URL:** `https://nilamit--nilamit-52073.asia-southeast1.hosted.app`
+**Live URL:** `https://www.nilamit.com`
 
 **Admin panel:** `/admin` — gated by `requireAdmin()` in [src/lib/admin-guard.ts](src/lib/admin-guard.ts) (DB-deep check, not JWT-only). Admin emails come from `ADMIN_EMAILS` (`sayemf21@gmail.com`).
 
@@ -313,7 +313,7 @@ firebase apphosting:secrets:grantaccess SECRET_NAME --project nilamit-52073 --ba
 firebase deploy --only firestore:indexes --project nilamit-52073
 
 # Health check
-curl https://nilamit--nilamit-52073.asia-southeast1.hosted.app/api/health
+curl https://www.nilamit.com/api/health
 
 # View errors
 gcloud logging read "resource.type=cloud_run_revision AND severity>=ERROR" --project=nilamit-52073 --limit=20

@@ -4,7 +4,7 @@ description: Current live deployment status, what's working, what needs attentio
 type: project
 ---
 
-Platform is LIVE at https://nilamit--nilamit-52073.asia-southeast1.hosted.app
+Platform is LIVE at https://www.nilamit.com
 
 **Project:** nilamit-52073 | **Region:** asia-southeast1 | **Admin:** sayemf21@gmail.com
 
