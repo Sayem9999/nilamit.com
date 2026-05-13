@@ -76,9 +76,11 @@ export default function ProfilePage() {
       setIsPhoneVerifiedLocal(u.isPhoneVerified === true);
        
       const isVerified = u.emailVerified != null;
-      setIsEmailVerifiedLocal(isVerified);
+      if (isVerified) {
+        setIsEmailVerifiedLocal(true);
+      }
 
-      if (!isVerified) {
+      if (!isVerified && !isEmailVerifiedLocal) {
         const syncFirebaseEmail = async () => {
           try {
             const { ensureFirebaseAuth, getClientAuth } = await import("@/lib/firebase-client");
@@ -102,7 +104,7 @@ export default function ProfilePage() {
         syncFirebaseEmail();
       }
     }
-  }, [status, router, session, update]);
+  }, [status, router, session, update, isEmailVerifiedLocal]);
 
   // Local SVG assets for robust cross-domain loading and full CSP/hotlink bypass
   const BKASH_LOGO_PRIMARY = "/bkash.svg";
