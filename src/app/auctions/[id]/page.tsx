@@ -37,6 +37,8 @@ import { BidHistory } from "@/components/auction/BidHistory";
 import { ReviewForm } from "@/components/review/ReviewForm";
 import { ReportModal } from "@/components/auction/ReportModal";
 import ChatInterface from "@/components/social/ChatInterface";
+import { isAdminEmail } from "@/lib/admin-guard";
+import { AdminAuctionControls } from "@/components/auction/AdminAuctionControls";
 
 import { AuctionWithBids, Bid } from "@/types";
 import { auth } from "@/lib/auth";
@@ -103,6 +105,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AuctionDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await auth();
+  const isAdmin = isAdminEmail(session?.user?.email);
   const response = await getAuction(id);
   const auction = (response.success && response.data) ? response.data as AuctionWithBids : null;
   const t = await getTranslations("Auction");
@@ -159,6 +162,9 @@ export default async function AuctionDetailPage({ params }: Props) {
         serverTime={serverTime}
         targetId="mobile-bid-anchor"
       />
+      {isAdmin && (
+        <AdminAuctionControls auctionId={id} auctionTitle={auction.title} />
+      )}
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left: Details — uniform 8-unit vertical rhythm via space-y */}
         <div className="flex-1 space-y-8">

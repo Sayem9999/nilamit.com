@@ -6,6 +6,9 @@ import { revalidatePath } from 'next/cache';
 import { Auction, User, Report } from '@/types';
 import { updateSellerPerformance } from '@/lib/seller-performance';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { adminDB } from '@/lib/firebase-admin';
+import { RTDB_PATHS } from '@/lib/firebase-events';
+import { log } from '@/lib/logger';
 
 export async function getAdminReports(status?: string, page = 1, limit = 20): Promise<ServiceResponse<{ reports: unknown[], total: number, pages: number }>> {
   try {
@@ -193,5 +196,129 @@ export async function suspendAuction(auctionId: string, reportId: string, reason
     return successResponse(null);
   } catch (e) {
     return errorResponse(ErrorType.INTERNAL, 'Failed to suspend auction');
+  }
+}
+
+export async function adminTakeDownAuction(auctionId: string, reason: string): Promise<ServiceResponse<null>> {
+  try {
+    const session = await requireAdmin();
+
+    const batch = db.batch();
+    const aRef = db.collection('auctions').doc(auctionId);
+    const aSnap = await aRef.get();
+    if (!aSnap.exists) {
+      return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
+    }
+    const auctionData = aSnap.data();
+
+    batch.update(aRef, {
+      status: 'CANCELLED',
+      updatedAt: new Date(),
+    });
+
+    if (auctionData?.sellerId) {
+      batch.update(db.collection('users').doc(auctionData.sellerId), {
+        defectCount: FieldValue.increment(1),
+        updatedAt: new Date(),
+      });
+    }
+
+    // Mandatory Audit Log
+    const logRef = db.collection('admin_logs').doc();
+    batch.set(logRef, {
+      adminId: session.user.id,
+      action: 'TAKE_DOWN_AUCTION',
+      targetId: auctionId,
+      details: { reason },
+      createdAt: new Date()
+    });
+
+    await batch.commit();
+
+    if (auctionData?.sellerId) {
+      await updateSellerPerformance(auctionData.sellerId);
+    }
+
+    // RTDB Cleanup
+    try {
+      await adminDB.ref(RTDB_PATHS.auctionBid(auctionId)).remove();
+    } catch (e) {
+      log.error('Failed to clean up RTDB bid on takedown', e);
+    }
+
+    revalidatePath('/admin');
+    revalidatePath(`/auctions/${auctionId}`);
+    revalidatePath('/');
+    return successResponse(null);
+  } catch (e) {
+    return errorResponse(ErrorType.INTERNAL, 'Failed to take down auction');
+  }
+}
+
+export async function adminDeleteAuction(auctionId: string, reason: string): Promise<ServiceResponse<null>> {
+  try {
+    const session = await requireAdmin();
+
+    const aRef = db.collection('auctions').doc(auctionId);
+    const aSnap = await aRef.get();
+    if (!aSnap.exists) {
+      return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
+    }
+    const auctionData = aSnap.data();
+
+    // 1. Fetch related subcollections and documents to delete in a batch
+    const batch = db.batch();
+
+    // Delete the auction itself
+    batch.delete(aRef);
+
+    // Delete bids with auctionId
+    const bidsSnap = await db.collection('bids').where('auctionId', '==', auctionId).get();
+    bidsSnap.docs.forEach((doc) => batch.delete(doc.ref));
+
+    // Delete reports with auctionId
+    const reportsSnap = await db.collection('reports').where('auctionId', '==', auctionId).get();
+    reportsSnap.docs.forEach((doc) => batch.delete(doc.ref));
+
+    // Delete watchlist with auctionId
+    const watchlistSnap = await db.collection('watchlist').where('auctionId', '==', auctionId).get();
+    watchlistSnap.docs.forEach((doc) => batch.delete(doc.ref));
+
+    // Delete conversations with auctionId
+    const conversationsSnap = await db.collection('conversations').where('auctionId', '==', auctionId).get();
+    conversationsSnap.docs.forEach((doc) => batch.delete(doc.ref));
+
+    // Mandatory Audit Log
+    const logRef = db.collection('admin_logs').doc();
+    batch.set(logRef, {
+      adminId: session.user.id,
+      action: 'DELETE_AUCTION',
+      targetId: auctionId,
+      details: { reason, title: auctionData?.title },
+      createdAt: new Date()
+    });
+
+    await batch.commit();
+
+    if (auctionData?.sellerId) {
+      await updateSellerPerformance(auctionData.sellerId);
+    }
+
+    // RTDB Cleanups
+    try {
+      await Promise.all([
+        adminDB.ref(RTDB_PATHS.auctionBid(auctionId)).remove(),
+        adminDB.ref(RTDB_PATHS.auctionActivity(auctionId)).remove(),
+      ]);
+    } catch (e) {
+      log.error('Failed to clean up RTDB on auction delete', e);
+    }
+
+    revalidatePath('/admin');
+    revalidatePath(`/auctions/${auctionId}`);
+    revalidatePath('/');
+    return successResponse(null);
+  } catch (e) {
+    return errorResponse(ErrorType.INTERNAL, 'Failed to permanently delete auction');
   }
 }
