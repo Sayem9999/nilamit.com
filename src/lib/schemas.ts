@@ -103,10 +103,20 @@ const imageUrlSchema = z
   .max(2048, 'Image URL is too long');
 
 /**
- * ISO-8601 datetime string. We accept the string form (cheap to send from the
- * client) and validate parseability at the boundary.
+ * ISO-8601 datetime string or Date object. We accept both forms and validate
+ * parseability at the boundary with clear, user-friendly error messages.
  */
-const isoDatetime = z.coerce.date();
+const isoDatetime = z.preprocess(
+  (val) => {
+    if (val instanceof Date) return val;
+    if (typeof val === 'string' && val.trim() !== '') {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return undefined;
+  },
+  z.date({ message: 'Please select a valid date and time.' })
+);
 
 const VALID_CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug);
 
