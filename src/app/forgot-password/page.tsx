@@ -22,24 +22,85 @@ export default function ForgotPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
 
+  // Firebase Native Phone verification states
+  const [confirmationResult, setConfirmationResult] = useState<{ confirm: (code: string) => Promise<unknown> } | null>(null);
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState<unknown>(null);
+  const [firebaseToken, setFirebaseToken] = useState("");
+
+  // Clean up verifier on unmount
+  useEffect(() => {
+    return () => {
+      if (recaptchaVerifier) {
+        try {
+          (recaptchaVerifier as import("firebase/auth").RecaptchaVerifier).clear();
+        } catch (e) {
+          console.warn("Error clearing verifier on unmount:", e);
+        }
+      }
+    };
+  }, [recaptchaVerifier]);
+
   const handleRequestOTP = () => {
     if (!identifier) return;
     setError("");
     startTransition(async () => {
-      let result;
-      if (method === "phone") {
-        const { requestStandaloneOTP } = await import("@/actions/phone");
-        result = await requestStandaloneOTP(identifier);
-      } else {
-        const { sendEmailOTP } = await import("@/actions/phone");
-        result = await sendEmailOTP(identifier);
-      }
+      try {
+        if (method === "phone") {
+          const { getClientAuth } = await import("@/lib/firebase-client");
+          const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
 
-      if (result.success) {
-        setStep("otp");
-        setResendTimer(60);
-      } else {
-        setError(result.error?.message || t("errorGeneric"));
+          const auth = getClientAuth();
+
+          // Initialize Recaptcha Verifier and ensure any previous instances are cleared cleanly
+          let verifier = recaptchaVerifier;
+          if (verifier) {
+            try {
+              (verifier as import("firebase/auth").RecaptchaVerifier).clear();
+            } catch (e) {
+              console.warn("Error clearing previous recaptcha verifier:", e);
+            }
+            setRecaptchaVerifier(null);
+            verifier = null;
+          }
+
+          verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+            size: "invisible",
+            callback: () => {}
+          });
+          setRecaptchaVerifier(verifier);
+
+          // Ensure normalized phone number for Bangladesh
+          const normalizedPhone = identifier.startsWith("+") ? identifier : `+88${identifier}`;
+
+          const confirmResult = await signInWithPhoneNumber(
+            auth, 
+            normalizedPhone, 
+            verifier as import("firebase/auth").ApplicationVerifier
+          );
+          setConfirmationResult(confirmResult);
+          setStep("otp");
+          setResendTimer(60);
+        } else {
+          const { sendEmailOTP } = await import("@/actions/phone");
+          const result = await sendEmailOTP(identifier);
+          if (result.success) {
+            setStep("otp");
+            setResendTimer(60);
+          } else {
+            setError(result.error?.message || t("errorGeneric"));
+          }
+        }
+      } catch (err) {
+        let errMsg = t("errorGeneric");
+        const fErr = err as { code?: string; message?: string };
+        if (fErr && fErr.code === "auth/invalid-phone-number") {
+          errMsg = "Invalid phone number format. Use international format (e.g. +8801XXXXXXXXX)";
+        } else if (fErr && fErr.code === "auth/too-many-requests") {
+          errMsg = "Too many OTP requests. Please try again later.";
+        } else if (fErr && fErr.message) {
+          errMsg = fErr.message;
+        }
+        setError(errMsg);
       }
     });
   };
@@ -47,7 +108,41 @@ export default function ForgotPasswordPage() {
   const handleVerifyOTP = () => {
     if (otp.length < 6) return;
     setError("");
-    setStep("reset");
+    startTransition(async () => {
+      if (method === "phone") {
+        if (!confirmationResult) {
+          setError("Verification session has expired. Please try again.");
+          return;
+        }
+        try {
+          const { getClientAuth } = await import("@/lib/firebase-client");
+          const auth = getClientAuth();
+
+          // Confirm OTP on the client
+          await confirmationResult.confirm(otp);
+          
+          // Get Firebase ID Token
+          const token = await auth.currentUser?.getIdToken();
+          if (!token) {
+            setError("Failed to get verification token from Google.");
+            return;
+          }
+          setFirebaseToken(token);
+          setStep("reset");
+        } catch (err) {
+          let errMsg = t("errorGeneric");
+          const fErr = err as { code?: string; message?: string };
+          if (fErr && fErr.code === "auth/invalid-verification-code") {
+            errMsg = "Invalid verification code. Please check the SMS and try again.";
+          } else if (fErr && fErr.message) {
+            errMsg = fErr.message;
+          }
+          setError(errMsg);
+        }
+      } else {
+        setStep("reset");
+      }
+    });
   };
 
   const handleResetPassword = (e: React.FormEvent) => {
@@ -62,7 +157,8 @@ export default function ForgotPasswordPage() {
       const result = await resetPasswordWithOTP({
         phone: method === "phone" ? identifier : undefined,
         email: method === "email" ? identifier : undefined,
-        otp,
+        otp: method === "email" ? otp : undefined,
+        firebaseToken: method === "phone" ? firebaseToken : undefined,
         password,
       });
 
@@ -195,6 +291,7 @@ export default function ForgotPasswordPage() {
                   </p>
                 </div>
 
+                <div id="recaptcha-container" className="hidden"></div>
                 <div className="space-y-4">
                   <div className="relative group">
                     <label htmlFor="forgot-identifier" className="sr-only">

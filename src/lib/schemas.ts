@@ -60,21 +60,22 @@ export const registerSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const phoneSignupSchema = z.object({
-  name:       nameSchema,
-  phone:      bdPhoneSchema,
-  otp:        otpSchema,
-  password:   passwordSchema,
-  email:      emailSchema.optional(),
-  isRetailer: z.boolean().default(false),
+  name:          nameSchema,
+  phone:         bdPhoneSchema,
+  firebaseToken: z.string().min(1, 'Firebase token is required'),
+  password:      passwordSchema,
+  email:         emailSchema.optional(),
+  isRetailer:    z.boolean().default(false),
 });
 export type PhoneSignupInput = z.infer<typeof phoneSignupSchema>;
 
 export const passwordResetSchema = z
   .object({
-    phone:    bdPhoneSchema.optional(),
-    email:    emailSchema.optional(),
-    otp:      otpSchema,
-    password: passwordSchema,
+    phone:         bdPhoneSchema.optional(),
+    email:         emailSchema.optional(),
+    otp:           otpSchema.optional(),
+    firebaseToken: z.string().optional(),
+    password:      passwordSchema,
   })
   .refine((d) => d.phone || d.email, {
     message: 'Either phone or email is required',

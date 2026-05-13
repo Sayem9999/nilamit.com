@@ -52,8 +52,6 @@ const envSchema = z.object({
   SENTRY_DSN: z.string().url().optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   RESEND_API_KEY: z.string().optional(),
-  SMS_PROVIDER: z.enum(['console', 'greenweb']).default('console'),
-  GREENWEB_TOKEN: z.string().optional(),
 });
 
 type Env = z.infer<typeof envSchema>;

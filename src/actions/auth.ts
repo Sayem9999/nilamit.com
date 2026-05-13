@@ -11,7 +11,7 @@ import {
   formatZodError 
 } from "@/lib/schemas";
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from "@/lib/errors";
-import { verifyStandaloneOTP } from "./phone";
+import { normalizePhone } from "@/lib/utils";
 import { log } from "@/lib/logger";
 
 import { headers } from "next/headers";
@@ -87,17 +87,32 @@ export async function signupWithPhone(data: unknown): Promise<ServiceResponse<{ 
     return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
   }
 
-  const { name, phone, otp, password, email, isRetailer } = parsed.data;
+  const { name, phone, firebaseToken, password, email, isRetailer } = parsed.data;
 
   try {
-    // 1. Verify OTP
-    const otpResult = await verifyStandaloneOTP(phone, otp);
-    if (!otpResult.success) {
-      return otpResult as ServiceResponse<never>;
+    // 1. Verify Firebase ID Token Natively
+    const { adminAuth } = await import('@/lib/firebase-admin');
+    let decodedToken;
+    try {
+      decodedToken = await adminAuth.instance.verifyIdToken(firebaseToken);
+    } catch (e) {
+      log.error("[Auth] signupWithPhone ID token verification failed", e, { area: 'auth', severity: 'warning' });
+      return errorResponse(ErrorType.UNAUTHORIZED, "Invalid or expired verification session.");
+    }
+
+    const verifiedPhone = decodedToken.phone_number;
+    if (!verifiedPhone) {
+      return errorResponse(ErrorType.VALIDATION, "No verified phone number found in the token.");
+    }
+
+    const normalizedVerified = normalizePhone(verifiedPhone);
+    const normalizedInput = normalizePhone(phone);
+    if (normalizedVerified !== normalizedInput) {
+      return errorResponse(ErrorType.VALIDATION, "Verified phone number does not match registration phone number.");
     }
 
     // 2. Check if phone already taken
-    const existingPhone = await db.collection("users").where("phone", "==", phone).limit(1).get();
+    const existingPhone = await db.collection("users").where("phone", "==", normalizedInput).limit(1).get();
     if (!existingPhone.empty) {
       return errorResponse(ErrorType.CONFLICT, "This phone number is already registered.");
     }
@@ -118,7 +133,7 @@ export async function signupWithPhone(data: unknown): Promise<ServiceResponse<{ 
       id: userRef.id,
       name,
       nameLowercase: name.toLowerCase(),
-      phone,
+      phone: normalizedInput,
       email: email || null,
       password: hashedPassword,
       isRetailer,
@@ -152,21 +167,42 @@ export async function resetPasswordWithOTP(data: unknown): Promise<ServiceRespon
     return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
   }
 
-  const { phone, email, otp, password } = parsed.data;
+  const { phone, email, otp, firebaseToken, password } = parsed.data;
 
   try {
     let userSnap;
     if (phone) {
-      // Verify Phone OTP
-      const otpResult = await verifyStandaloneOTP(phone, otp);
-      if (!otpResult.success) return otpResult as ServiceResponse<never>;
+      const normalizedPhone = normalizePhone(phone);
+      if (firebaseToken) {
+        // Verify Firebase ID Token Natively
+        const { adminAuth } = await import('@/lib/firebase-admin');
+        let decodedToken;
+        try {
+          decodedToken = await adminAuth.instance.verifyIdToken(firebaseToken);
+        } catch (e) {
+          log.error("[Auth] resetPasswordWithOTP ID token verification failed", e, { area: 'auth', severity: 'warning' });
+          return errorResponse(ErrorType.UNAUTHORIZED, "Invalid or expired verification session.");
+        }
+
+        const verifiedPhone = decodedToken.phone_number;
+        if (!verifiedPhone) {
+          return errorResponse(ErrorType.VALIDATION, "No verified phone number found in the token.");
+        }
+
+        const normalizedVerified = normalizePhone(verifiedPhone);
+        if (normalizedVerified !== normalizedPhone) {
+          return errorResponse(ErrorType.VALIDATION, "Verified phone number does not match reset phone number.");
+        }
+      } else {
+        return errorResponse(ErrorType.VALIDATION, "Verification is required to reset password.");
+      }
       
-      userSnap = await db.collection("users").where("phone", "==", phone).limit(1).get();
+      userSnap = await db.collection("users").where("phone", "==", normalizedPhone).limit(1).get();
     } else if (email) {
-      // Verify Email OTP (using the same mechanism as phone for now if applicable, 
-      // but verifyEmailToken handles token links. For OTP, we might need a separate check)
-      // The forgot-password UI uses sendEmailOTP from phone.ts which stores in verificationTokens
-      
+      if (!otp) {
+        return errorResponse(ErrorType.VALIDATION, "OTP is required for email reset.");
+      }
+      // Verify Email OTP
       const normalizedEmail = email.trim().toLowerCase();
       const crypto = await import("crypto");
       const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
