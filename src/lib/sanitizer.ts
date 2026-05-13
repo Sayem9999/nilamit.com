@@ -14,8 +14,12 @@ export function sanitize(text: string): string {
 
 /**
  * Clean complex objects (like form inputs) recursively.
+ * Preserves Date objects and other custom class instances.
  */
 export function sanitizeObject<T>(obj: T): T {
+  if (obj instanceof Date) {
+    return obj;
+  }
   if (typeof obj !== 'object' || obj === null) {
     return typeof obj === 'string' ? (sanitize(obj) as unknown as T) : obj;
   }

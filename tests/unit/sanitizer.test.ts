@@ -23,6 +23,27 @@ describe('Security Sanitizer', () => {
     expect(output.tags[0]).toBe('safe');
     expect(output.tags[1]).toBe('legit');
   });
+
+  it('should preserve Date objects and not sanitize them into empty objects', () => {
+    const originalDate = new Date('2026-05-13T12:00:00Z');
+    const input = {
+      title: '<b>Item</b>',
+      createdAt: originalDate,
+      nested: {
+        updatedAt: originalDate,
+        list: [originalDate],
+      },
+    };
+
+    const output = sanitizeObject(input);
+    expect(output.title).toBe('Item');
+    expect(output.createdAt).toBeInstanceOf(Date);
+    expect(output.createdAt.getTime()).toBe(originalDate.getTime());
+    expect(output.nested.updatedAt).toBeInstanceOf(Date);
+    expect(output.nested.updatedAt.getTime()).toBe(originalDate.getTime());
+    expect(output.nested.list[0]).toBeInstanceOf(Date);
+    expect(output.nested.list[0].getTime()).toBe(originalDate.getTime());
+  });
 });
 
 describe('PII Filter — filterPII', () => {
