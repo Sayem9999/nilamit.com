@@ -1,10 +1,11 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShieldAlert, X, CheckCircle, Smartphone, Mail } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { getCurrentUserVerification } from "@/actions/user";
 
 interface VerificationGuardProps {
   children: React.ReactNode;
@@ -18,13 +19,32 @@ interface VerificationGuardProps {
  * It checks if EITHER phone OR email is verified.
  */
 export function VerificationGuard({ children }: VerificationGuardProps) {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [showModal, setShowModal] = useState(false);
+  const [isVerifiedOverride, setIsVerifiedOverride] = useState(false);
   const t = useTranslations("Auth");
 
   // Check verification and restriction status
   const isBanned = session?.user?.isBanned;
   const isVerified = (session?.user?.isPhoneVerified || !!session?.user?.emailVerified) && !isBanned;
+
+  useEffect(() => {
+    if (session && !isVerified) {
+      getCurrentUserVerification().then((res) => {
+        if (res.success && res.data) {
+          const { isPhoneVerified, isEmailVerified, isBanned: dbBanned } = res.data;
+          if ((isPhoneVerified || isEmailVerified) && !dbBanned) {
+            setIsVerifiedOverride(true);
+            update().catch((err) => {
+              console.error("[VerificationGuard] Failed to update session:", err);
+            });
+          }
+        }
+      }).catch((err) => {
+        console.error("[VerificationGuard] Sync check failed:", err);
+      });
+    }
+  }, [session, isVerified, update]);
 
   const handleClick = (e: React.MouseEvent) => {
     if (!session) {
@@ -32,7 +52,9 @@ export function VerificationGuard({ children }: VerificationGuardProps) {
       return;
     }
 
-    if (!isVerified) {
+    const verified = isVerified || isVerifiedOverride;
+
+    if (!verified) {
       e.preventDefault();
       e.stopPropagation();
       setShowModal(true);

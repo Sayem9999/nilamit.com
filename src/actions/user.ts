@@ -101,3 +101,23 @@ export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): P
     return errorResponse(ErrorType.INTERNAL, `Failed to link ${type}.`);
   }
 }
+
+export async function getCurrentUserVerification(): Promise<ServiceResponse<{ isPhoneVerified: boolean; isEmailVerified: boolean; isBanned: boolean }>> {
+  const session = await auth();
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
+
+  try {
+    const snap = await db.collection('users').doc(session.user.id).get();
+    if (!snap.exists) return errorResponse(ErrorType.NOT_FOUND, 'User not found');
+    const u = snap.data()!;
+    return successResponse({
+      isPhoneVerified: !!u.isPhoneVerified,
+      isEmailVerified: u.emailVerified != null,
+      isBanned: !!u.isBanned,
+    });
+  } catch (e) {
+    log.error('[user] getCurrentUserVerification failed', e, { area: 'auth', severity: 'warning' });
+    return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred.');
+  }
+}
+
