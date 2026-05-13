@@ -26,9 +26,9 @@ export async function sendEmailVerificationByEmail(email: string) {
 
     const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(emailNormalized)}`;
 
-    // Always log the URL to console/server-logs for robust debugging and sandbox accessibility
-    log.info(`[Email Dispatch] Verification link generated`, { to: emailNormalized, url: verifyUrl });
-    console.log(`\n[EMAIL VERIFICATION URL] To: ${emailNormalized} | URL: ${verifyUrl}\n`);
+    // Log operational metadata without leaking the sensitive verification token
+    const maskedUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=******&email=${encodeURIComponent(emailNormalized)}`;
+    log.info(`[Email Dispatch] Verification link generated`, { to: emailNormalized, url: maskedUrl });
 
     await sendEmail({
       to: email,
