@@ -26,14 +26,19 @@ export function VerificationGuard({ children }: VerificationGuardProps) {
 
   // Check verification and restriction status
   const isBanned = session?.user?.isBanned;
-  const isVerified = (session?.user?.isPhoneVerified || !!session?.user?.emailVerified) && !isBanned;
+  const isVerified = (
+    session?.user?.isPhoneVerified || 
+    !!session?.user?.emailVerified || 
+    session?.user?.isVerifiedSeller || 
+    session?.user?.isAdmin
+  ) && !isBanned;
 
   useEffect(() => {
     if (session && !isVerified) {
       getCurrentUserVerification().then((res) => {
         if (res.success && res.data) {
-          const { isPhoneVerified, isEmailVerified, isBanned: dbBanned } = res.data;
-          if ((isPhoneVerified || isEmailVerified) && !dbBanned) {
+          const { isPhoneVerified, isEmailVerified, isBanned: dbBanned, isVerifiedSeller, isAdmin } = res.data;
+          if ((isPhoneVerified || isEmailVerified || isVerifiedSeller || isAdmin) && !dbBanned) {
             setIsVerifiedOverride(true);
             update().catch((err) => {
               console.error("[VerificationGuard] Failed to update session:", err);

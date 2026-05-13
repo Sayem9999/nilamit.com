@@ -102,7 +102,7 @@ export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): P
   }
 }
 
-export async function getCurrentUserVerification(): Promise<ServiceResponse<{ isPhoneVerified: boolean; isEmailVerified: boolean; isBanned: boolean }>> {
+export async function getCurrentUserVerification(): Promise<ServiceResponse<{ isPhoneVerified: boolean; isEmailVerified: boolean; isBanned: boolean; isVerifiedSeller: boolean; isAdmin: boolean }>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
@@ -110,10 +110,13 @@ export async function getCurrentUserVerification(): Promise<ServiceResponse<{ is
     const snap = await db.collection('users').doc(session.user.id).get();
     if (!snap.exists) return errorResponse(ErrorType.NOT_FOUND, 'User not found');
     const u = snap.data()!;
+    const { isAdminEmail } = await import('@/lib/admin-guard');
     return successResponse({
       isPhoneVerified: !!u.isPhoneVerified,
       isEmailVerified: u.emailVerified != null,
       isBanned: !!u.isBanned,
+      isVerifiedSeller: !!u.isVerifiedSeller,
+      isAdmin: !!u.isAdmin || isAdminEmail(u.email || ''),
     });
   } catch (e) {
     log.error('[user] getCurrentUserVerification failed', e, { area: 'auth', severity: 'warning' });

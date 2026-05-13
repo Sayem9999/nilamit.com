@@ -12,10 +12,9 @@ export default auth((req) => {
   const protocol = req.headers.get('x-forwarded-proto') || 'http';
   const currentOrigin = `${protocol}://${host}`;
   
-  // 1. Canonical Redirect: www.nilamit.com -> nilamit.com (apex)
-  if (host.startsWith('www.')) {
-    const targetHost = host.replace(/^www\./, '');
-    const redirectUrl = new URL(pathname + req.nextUrl.search, `https://${targetHost}`);
+  // 1. Canonical Redirect: nilamit.com -> www.nilamit.com (canonical www)
+  if (host === 'nilamit.com') {
+    const redirectUrl = new URL(pathname + req.nextUrl.search, 'https://www.nilamit.com');
     return NextResponse.redirect(redirectUrl, 301);
   }
   
