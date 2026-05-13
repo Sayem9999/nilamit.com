@@ -20,6 +20,7 @@ interface BidPanelProps {
   proxyBidderId?: string | null;
   initialBids?: RealTimeBid[];
   onBidPlaced?: () => void;
+  startingPrice?: number;
 }
 
 const BidPanel = dynamic(

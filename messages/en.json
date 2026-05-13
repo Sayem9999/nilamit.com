@@ -234,6 +234,7 @@
     "auctionEnded": "This auction has ended.",
     "cannotBidOwn": "You cannot bid on your own auction.",
     "currentPrice": "Current Price",
+    "startingPrice": "Starting Price",
     "yourBid": "Your Bid Amount",
     "minimumBid": "Min Bid:",
     "bidBtnPrefix": "Confirm Bid of",

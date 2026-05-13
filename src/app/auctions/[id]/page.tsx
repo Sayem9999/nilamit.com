@@ -289,29 +289,11 @@ export default async function AuctionDetailPage({ params }: Props) {
 
         {/* Right: Bid Panel + Seller Info */}
         <div id="mobile-bid-anchor" className="lg:w-96 flex-shrink-0 space-y-6">
-          {/* Price Card */}
-          <div className="bg-gradient-to-br from-primary-50 to-white border border-primary-100 rounded-2xl p-6">
-            <p className="text-xs font-medium text-primary-600 mb-1">
-              {t("currentPrice")}
-            </p>
-            <p className="price text-3xl text-primary-700 mb-2">
-              {formatBDT(auction.currentPrice)}
-            </p>
-            <p className="text-xs text-gray-400">
-              {t("startingPrice")} {formatBDT(auction.startingPrice)}
-            </p>
-            <div className="mt-4 pt-4 border-t border-primary-100/50">
-              <PriceAlertButton
-                auctionId={id}
-                currentPrice={auction.currentPrice}
-              />
-            </div>
-          </div>
-
           {/* Bid Panel */}
           <BidPanelWrapper
             auctionId={id}
             currentPrice={auction.currentPrice}
+            startingPrice={auction.startingPrice}
             minBidIncrement={auction.minBidIncrement}
             endTime={auction.endTime}
             serverTime={serverTime}

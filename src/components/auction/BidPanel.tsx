@@ -43,6 +43,7 @@ const PhoneVerificationPrompt = dynamic(() => import("./components/BidPrompts").
 const MFSLinkagePrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.MFSLinkagePrompt), { ssr: false });
 const EliteBarrierPrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.EliteBarrierPrompt), { ssr: false });
 import { ViewerCount } from "./ViewerCount";
+import PriceAlertButton from "./PriceAlertButton";
 
 interface BidPanelProps {
   auctionId: string;
@@ -58,6 +59,7 @@ interface BidPanelProps {
   proxyBidderId?: string | null;
   initialBids?: RealTimeBid[];
   onBidPlaced?: () => void;
+  startingPrice?: number;
 }
 
 export function BidPanel({
@@ -74,6 +76,7 @@ export function BidPanel({
   proxyBidderId,
   initialBids,
   onBidPlaced,
+  startingPrice,
 }: BidPanelProps) {
   const { data: session } = useSession();
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
@@ -272,6 +275,11 @@ export function BidPanel({
           <div className="bg-primary-50 rounded-xl p-4 mb-4 transition-all duration-300">
             <p className="text-xs text-primary-600 font-medium mb-1">{t("currentPrice")}</p>
             <p className="price text-2xl text-primary-700">{formatBDT(displayPrice)}</p>
+            {startingPrice && (
+              <p className="text-xs text-gray-400 mt-1">
+                {t("startingPrice")}: {formatBDT(startingPrice)}
+              </p>
+            )}
             {reservePrice && (
               <p className={`text-[10px] font-bold uppercase tracking-tighter mt-1 px-2 py-0.5 rounded inline-block ${
                 displayPrice < reservePrice ? "text-amber-600 bg-amber-50" : "text-green-600 bg-green-50"
@@ -379,9 +387,15 @@ export function BidPanel({
             </div>
           )}
 
-          <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
-            <Shield className="w-3.5 h-3.5" />
-            <span>{t("trustIndicator")}</span>
+          <div className="mt-4 pt-4 border-t border-gray-100/80 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <Shield className="w-3.5 h-3.5" />
+              <span>{t("trustIndicator")}</span>
+            </div>
+            <PriceAlertButton
+              auctionId={auctionId}
+              currentPrice={displayPrice}
+            />
           </div>
         </>
       )}
