@@ -57,20 +57,46 @@ export class EscrowService {
         }
       });
 
+      const toDate = (val: unknown): Date | null => {
+        if (!val) return null;
+        if (typeof val === 'object' && val !== null && 'toDate' in val) {
+          const obj = val as Record<string, unknown>;
+          if (typeof obj.toDate === 'function') {
+            return (obj.toDate as () => Date)();
+          }
+        }
+        return new Date(val as string | number);
+      };
+
       const hydrated = escrowDocs.map(e => {
         const auction = auctionMap.get(e.auctionId);
         if (!auction) return null;
 
         const seller = sellerMap.get(auction.sellerId) || { name: 'Unknown', image: null };
 
+        const sanitizedAuction = {
+          ...auction,
+          startTime: toDate(auction.startTime),
+          endTime: toDate(auction.endTime),
+          createdAt: toDate(auction.createdAt),
+          updatedAt: toDate(auction.updatedAt),
+          seller
+        };
+
+        const rawDispute = disputeMap.get(e.id);
+        const sanitizedDispute = rawDispute ? {
+          ...rawDispute,
+          createdAt: toDate(rawDispute.createdAt),
+          updatedAt: toDate(rawDispute.updatedAt),
+        } : null;
+
         return {
           ...e,
-          auction: {
-            ...auction,
-            seller
-          },
-          dispute: disputeMap.get(e.id) || null
-        } as HydratedEscrowTransaction;
+          createdAt: toDate(e.createdAt),
+          updatedAt: toDate(e.updatedAt),
+          auction: sanitizedAuction,
+          dispute: sanitizedDispute
+        } as unknown as HydratedEscrowTransaction;
       }).filter((x): x is HydratedEscrowTransaction => x !== null);
 
       return successResponse(hydrated);

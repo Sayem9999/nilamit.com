@@ -155,6 +155,7 @@ export default function CreateAuctionPage() {
               </label>
               <input
                 type="text"
+                name="title"
                 value={form.title}
                 onChange={(e) => updateForm("title", e.target.value)}
                 placeholder={t("itemTitlePlaceholder")}
@@ -166,6 +167,7 @@ export default function CreateAuctionPage() {
                 {t("itemDesc")}
               </label>
               <textarea
+                name="description"
                 value={form.description}
                 onChange={(e) => updateForm("description", e.target.value)}
                 placeholder={t("itemDescPlaceholder")}
@@ -178,6 +180,7 @@ export default function CreateAuctionPage() {
                 {t("itemCat")}
               </label>
               <select
+                name="category"
                 value={form.category}
                 onChange={(e) => updateForm("category", e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
@@ -301,6 +304,7 @@ export default function CreateAuctionPage() {
               </label>
               <input
                 type="number"
+                name="startingPrice"
                 value={form.startingPrice}
                 onChange={(e) =>
                   updateForm("startingPrice", Number(e.target.value))
@@ -315,6 +319,7 @@ export default function CreateAuctionPage() {
               </label>
               <input
                 type="number"
+                name="minBidIncrement"
                 value={form.minBidIncrement}
                 onChange={(e) =>
                   updateForm("minBidIncrement", Number(e.target.value))
@@ -393,6 +398,7 @@ export default function CreateAuctionPage() {
               </label>
               <input
                 type="datetime-local"
+                name="startTime"
                 value={form.startTime}
                 onChange={(e) => updateForm("startTime", e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
@@ -404,6 +410,7 @@ export default function CreateAuctionPage() {
               </label>
               <input
                 type="datetime-local"
+                name="endTime"
                 value={form.endTime}
                 onChange={(e) => updateForm("endTime", e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"

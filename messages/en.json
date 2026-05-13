@@ -203,6 +203,7 @@
     "itemCat": "Category",
     "itemLoc": "Pickup Location",
     "itemImages": "Photos",
+    "itemCondition": "Item Condition",
     "startPrice": "Starting Price",
     "minIncrement": "Bid Increment",
     "reservePrice": "Reserve Price (Optional)",
@@ -587,6 +588,8 @@
     "noResultsDesc": "We couldn't find any auctions matching your criteria. Try adjusting your filters or search term.",
     "clearFilters": "Clear all filters",
     "allCategories": "All Categories",
+    "condition": "Condition",
+    "allConditions": "All Conditions",
     "searchPlaceholder": "Search auctions..."
   },
   "Categories": {

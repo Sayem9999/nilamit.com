@@ -99,6 +99,7 @@ function LoginContent() {
                 </div>
                 <Input
                   id="login-email"
+                  name="email"
                   type="email"
                   required
                   autoComplete="email"
@@ -128,6 +129,7 @@ function LoginContent() {
                 </div>
                 <Input
                   id="login-password"
+                  name="password"
                   type="password"
                   required
                   autoComplete="current-password"

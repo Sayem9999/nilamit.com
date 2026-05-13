@@ -93,16 +93,40 @@ export function snapDocs<T>(snap: FirebaseFirestore.QuerySnapshot): T[] {
   return snap.docs.map(d => normalizeDoc<T>(d.id, d.data()));
 }
 
+/** Helper to recursively normalize values (e.g. nested Firestore timestamps) */
+function normalizeValue(v: unknown): any {
+  if (v && typeof v === 'object') {
+    if ('toDate' in v && typeof (v as any).toDate === 'function') {
+      return (v as any).toDate();
+    }
+    if ('_seconds' in v && typeof (v as any)._seconds === 'number') {
+      return new Date((v as any)._seconds * 1000);
+    }
+    if (Array.isArray(v)) {
+      return v.map(normalizeValue);
+    }
+    if (v instanceof Date) {
+      return v;
+    }
+    // Only traverse plain objects
+    const proto = Object.getPrototypeOf(v);
+    if (proto === null || proto === Object.prototype) {
+      const copy: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(v)) {
+        copy[key] = normalizeValue(val);
+      }
+      return copy;
+    }
+  }
+  return v;
+}
+
 /** Convert Firestore Timestamps in document data to Dates and ensure stable defaults */
 function normalizeDoc<T>(id: string, data: FirebaseFirestore.DocumentData): T {
   const normalized: Record<string, unknown> = { id };
   
   for (const [k, v] of Object.entries(data)) {
-    if (v instanceof Timestamp) {
-      normalized[k] = v.toDate();
-    } else {
-      normalized[k] = v;
-    }
+    normalized[k] = normalizeValue(v);
   }
 
   // Ensure critical fields are never undefined for consistent UI rendering

@@ -16,10 +16,12 @@ import { log } from "@/lib/logger";
  *   - In non-production we keep the dev DX of "no Redis, no problem".
  */
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const isConfigured = Boolean(
+  isProduction &&
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN,
 );
-const isProduction = process.env.NODE_ENV === "production";
 
 if (!isConfigured) {
   if (isProduction) {
