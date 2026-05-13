@@ -23,9 +23,18 @@ import { getAuth, sendEmailVerification, signInWithCustomToken, type Auth, type 
 import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 import { log } from '@/lib/logger';
 
+const getAuthDomain = () => {
+  if (typeof window === 'undefined') return "nilamit-52073.firebaseapp.com";
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return "nilamit-52073.firebaseapp.com";
+  }
+  return hostname;
+};
+
 const firebaseConfig = {
   apiKey: "AIzaSyAOwypGtSAeCsZpHogZx7Jt_MPX2nh3GZM",
-  authDomain: "nilamit-52073.firebaseapp.com",
+  authDomain: getAuthDomain(),
   databaseURL: "https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "nilamit-52073",
   storageBucket: "nilamit-52073.firebasestorage.app",
