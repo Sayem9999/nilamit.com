@@ -288,6 +288,25 @@
     "heroTitle": "Buy & Sell in Real-time Auctions",
     "heroSubtitle": "Bangladesh's most trusted C2C marketplace."
   },
+  "ListingStats": {
+    "newListingBtn": "New Listing",
+    "netEarnings": "Net Earnings",
+    "afterCommission": "After ৳{amount} commission",
+    "grossSales": "Gross Sales",
+    "soldSuffix": "{count} items sold",
+    "liveNow": "Live Now",
+    "activeAuctions": "Active auctions",
+    "closedNoSale": "Closed (No Sale)",
+    "closedDetail": "{expired} expired, {cancelled} cancelled",
+    "filterAll": "All",
+    "filterActive": "Active",
+    "filterSold": "Sold",
+    "filterExpired": "Expired",
+    "filterCancelled": "Cancelled",
+    "noFiltered": "No {status} listings found.",
+    "createFirst": "Create First Listing",
+    "showAll": "Show All Listings"
+  },
   "Escrow": {
     "fundsReleased": "Payment released to seller",
     "paymentSecured": "Payment secured (Escrow)",
