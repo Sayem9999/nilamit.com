@@ -8,7 +8,7 @@ const { auth } = NextAuth(authConfig);
 export default auth((req) => {
   const pathname = req.nextUrl.pathname;
   
-  const host = req.headers.get('host') || 'localhost:3000';
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || 'localhost:3000';
   const protocol = req.headers.get('x-forwarded-proto') || 'http';
   const currentOrigin = `${protocol}://${host}`;
   
