@@ -52,9 +52,9 @@ export default async function AuctionsPage({ searchParams }: Props) {
   };
 
   const response = await getAuctions(filters);
-  const { auctions: initialAuctions, total } = (response.success && response.data)
+  const { auctions: initialAuctions, total, lastId } = (response.success && response.data)
     ? response.data
-    : { auctions: [] as AuctionWithSeller[], total: 0 };
+    : { auctions: [] as AuctionWithSeller[], total: 0, lastId: null as string | null };
 
   const hasActiveFilter = !!(params.category || params.location || params.search);
 
@@ -206,7 +206,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
                 ))}
               </div>
 
-              <LoadMore filters={filters} />
+              <LoadMore filters={filters} initialLastId={lastId} />
             </div>
           )}
         </section>

@@ -39,7 +39,9 @@ export default async function SearchPage({
   };
 
   const response = await getAuctions(filters);
-  const auctions = (response.success && response.data) ? response.data.auctions : [];
+  const { auctions, lastId } = (response.success && response.data)
+    ? response.data
+    : { auctions: [] as AuctionWithSeller[], lastId: null as string | null };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
@@ -215,6 +217,7 @@ export default async function SearchPage({
                     sortBy: sortBy === 'endTime' ? 'endTime' : 'currentPrice',
                     sortOrder: sortBy === 'price_asc' ? 'asc' : 'desc'
                   }}
+                  initialLastId={lastId}
                 />
               </div>
             ) : (

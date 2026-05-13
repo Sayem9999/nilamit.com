@@ -32,6 +32,7 @@ import VerificationBadge from "@/components/social/VerificationBadge";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "next-auth/react";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
   const { data: session, update, status } = useSession();
@@ -147,6 +148,7 @@ export default function ProfilePage() {
       await update();
       setEditing(false);
       setName("");
+      toast.success("Profile name updated successfully!");
     });
   };
 
@@ -155,10 +157,14 @@ export default function ProfilePage() {
     startTransition(async () => {
       const res = await linkMFSAccount(type, number);
       if (res.success) {
-        setMsg(type === 'bkash' ? t_prof("bkashSuccess") : t_prof("nagadSuccess"));
+        const successMsg = type === 'bkash' ? t_prof("bkashSuccess") : t_prof("nagadSuccess");
+        setMsg(successMsg);
+        toast.success(successMsg);
         await update();
       } else {
-        setMsg(res.error?.message || t_prof("errorGeneric"));
+        const errMsg = res.error?.message || t_prof("errorGeneric");
+        setMsg(errMsg);
+        toast.error(errMsg);
       }
     });
   };
@@ -176,7 +182,9 @@ export default function ProfilePage() {
         }
 
         if (!auth.currentUser) {
-          setMsg("Failed to authenticate with Firebase. Please try again.");
+          const fbErr = "Failed to authenticate with Firebase. Please try again.";
+          setMsg(fbErr);
+          toast.error(fbErr);
           return;
         }
 
@@ -208,7 +216,9 @@ export default function ProfilePage() {
         );
         setConfirmationResult(confirmResult);
         setPhoneStep("otp");
-        setMsg(t_prof("otpSent"));
+        const otpMsg = t_prof("otpSent");
+        setMsg(otpMsg);
+        toast.success(otpMsg);
       } catch (err) {
         let errMsg = t_prof("errorGeneric");
         const fErr = err as { code?: string; message?: string };
@@ -224,6 +234,7 @@ export default function ProfilePage() {
           errMsg = fErr.message;
         }
         setMsg(errMsg);
+        toast.error(errMsg);
       }
     });
   };
@@ -232,7 +243,9 @@ export default function ProfilePage() {
     setMsg("");
     startTransition(async () => {
       if (!confirmationResult) {
-        setMsg("Verification session has expired. Please try again.");
+        const expErr = "Verification session has expired. Please try again.";
+        setMsg(expErr);
+        toast.error(expErr);
         return;
       }
       try {
@@ -244,10 +257,14 @@ export default function ProfilePage() {
         if (res.success) {
           setPhoneStep("idle");
           setIsPhoneVerifiedLocal(true);
-          setMsg(t_prof("verificationSuccess"));
+          const successMsg = t_prof("verificationSuccess");
+          setMsg(successMsg);
+          toast.success(successMsg);
           await update();
         } else {
-          setMsg(res.error?.message || t_prof("errorGeneric"));
+          const errMsg = res.error?.message || t_prof("errorGeneric");
+          setMsg(errMsg);
+          toast.error(errMsg);
         }
       } catch (err) {
         let errMsg = t_prof("errorGeneric");
@@ -260,6 +277,7 @@ export default function ProfilePage() {
           errMsg = fErr.message;
         }
         setMsg(errMsg);
+        toast.error(errMsg);
       }
     });
   };
@@ -270,11 +288,14 @@ export default function ProfilePage() {
       try {
         const { sendNativeVerificationEmail } = await import("@/lib/firebase-client");
         await sendNativeVerificationEmail();
-        setMsg(t_prof("emailVerificationSent"));
+        const emailMsg = t_prof("emailVerificationSent");
+        setMsg(emailMsg);
+        toast.success(emailMsg);
       } catch (err: unknown) {
         console.error("sendNativeVerificationEmail failed:", err);
         const errMsg = err instanceof Error ? err.message : String(err);
         setMsg(errMsg || t_prof("errorGeneric"));
+        toast.error(errMsg || t_prof("errorGeneric"));
       }
     });
   };

@@ -8,14 +8,16 @@ import { Loader2 } from "lucide-react";
 
 interface LoadMoreProps {
   filters: AuctionFilters;
+  initialLastId: string | null;
 }
 
 export default function LoadMore({
   filters,
-}: Omit<LoadMoreProps, "locale" | "initialPage">) {
+  initialLastId,
+}: LoadMoreProps) {
   const [auctions, setAuctions] = useState<AuctionWithSeller[]>([]);
-  const [lastId, setLastId] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [lastId, setLastId] = useState<string | null>(initialLastId);
+  const [hasMore, setHasMore] = useState(initialLastId !== null);
   const [isLoading, setIsLoading] = useState(false);
   const observerTarget = useRef(null);
 
