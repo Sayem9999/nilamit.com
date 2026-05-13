@@ -1,4 +1,4 @@
-import { db, snapDocs, newId, toSellerPublic, toSellerPrivate, incrementGlobalStat } from '@/lib/db';
+import { db, snapDocs, docData, newId, toSellerPublic, toSellerPrivate, incrementGlobalStat } from '@/lib/db';
 import { Auction, AuctionFilters, AuctionWithSeller, SellerPublic, Bid, LatestActivity } from '@/types';
 import { sanitizeObject } from '@/lib/sanitizer';
 import { filterPII } from '@/lib/pii-filter';
@@ -19,7 +19,7 @@ export class AuctionService {
         return errorResponse(ErrorType.NOT_FOUND, 'Auction not found', 'AUCTION_NOT_FOUND');
       }
 
-      const auctionData = doc.data()!;
+      const auctionData = docData<Auction>(doc)!;
       
       const userRefs = [db.collection('users').doc(auctionData.sellerId)];
       if (auctionData.winnerId) {
@@ -50,7 +50,7 @@ export class AuctionService {
           name: winnerSnap.data()?.name || null, 
           image: winnerSnap.data()?.image || null 
         } : null,
-        endTime: auctionData.endTime?.toDate ? auctionData.endTime.toDate() : new Date(auctionData.endTime),
+        endTime: auctionData.endTime,
       } as AuctionWithSeller;
 
       return successResponse(data);
