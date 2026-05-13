@@ -197,7 +197,10 @@ export default async function DashboardPage({
           updatedAt: a.updatedAt?.toDate?.() || (a.updatedAt ? new Date(a.updatedAt) : undefined),
           seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, rating: seller.rating, ratingCount: seller.ratingCount },
           _count: { bids: bidCountMap.get(w.auctionId) ?? 0 },
-          watchlist: [w],
+          watchlist: [{
+            ...w,
+            createdAt: w.createdAt?.toDate?.() || (w.createdAt ? new Date(w.createdAt) : undefined),
+          }],
         };
       }).filter(Boolean) as unknown as AuctionWithSeller[];
     }
