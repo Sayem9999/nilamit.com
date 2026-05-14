@@ -14,6 +14,8 @@ import { processAuctionSale, sendSaleNotifications } from '@/lib/auction-logic';
 interface BidSideEffectParams {
   bidId: string;
   newEndTime: Date;
+  newCurrentPrice: number;
+  newCurrentBidderId: string | null;
   antiSnipeTriggered: boolean;
   prevBidderId: string | null;
   auctionTitle: string;
@@ -138,13 +140,32 @@ export class BiddingService {
         const bidRef = db.collection('bids').doc(bidId);
         tx.set(bidRef, { 
           id: bidId, 
-          amount, 
+          amount,
+          publicAmount: newCurrentPrice,
           auctionId, 
           bidderId: userId, 
           sellerId: auction.sellerId, // DENORMALIZATION for shill detection
           createdAt: now, 
           isProxy: true 
         });
+
+        // If the new current bidder is NOT the user who just placed a bid (i.e. their proxy outbid this user),
+        // we should create a secondary "auto-bid" record for the proxy winner to keep the bid history continuous.
+        if (newCurrentBidderId && newCurrentBidderId !== userId) {
+          const autoBidId = newId();
+          const autoBidRef = db.collection('bids').doc(autoBidId);
+          tx.set(autoBidRef, {
+            id: autoBidId,
+            amount: newProxyMaxBid,
+            publicAmount: newCurrentPrice,
+            auctionId,
+            bidderId: newCurrentBidderId,
+            sellerId: auction.sellerId,
+            createdAt: new Date(now.getTime() + 1), // 1ms later to sort correctly
+            isProxy: true,
+            isAuto: true
+          });
+        }
 
         // Anti-sniping
         const { newEndTime, triggered: antiSnipeTriggered } = computeAntiSnipeExtension({ endTime, now });
@@ -166,6 +187,8 @@ export class BiddingService {
         return {
           bidId,
           newEndTime,
+          newCurrentPrice,
+          newCurrentBidderId,
           antiSnipeTriggered,
           prevBidderId,
           auctionTitle:    auction.title,
@@ -238,6 +261,8 @@ export class BiddingService {
     let triggeredAlerts: Alert[] = [];
     let prevBidderEmail: string | null = null;
 
+    let newCurrentBidderName = userName;
+
     try {
       [triggeredAlerts, prevBidderEmail] = await Promise.all([
         this.processAlertsAfterBid(auctionId, userId, amount),
@@ -245,6 +270,12 @@ export class BiddingService {
           if (!txResult.prevBidderId || txResult.prevBidderId === userId) return null;
           const pbSnap = await db.collection('users').doc(txResult.prevBidderId).get();
           return pbSnap.data()?.email ?? null;
+        })(),
+        (async () => {
+          if (txResult.newCurrentBidderId && txResult.newCurrentBidderId !== userId) {
+            const cbSnap = await db.collection('users').doc(txResult.newCurrentBidderId).get();
+            newCurrentBidderName = cbSnap.data()?.name ?? 'Someone';
+          }
         })()
       ]);
     } catch (e) {
@@ -292,18 +323,18 @@ export class BiddingService {
         const now = new Date();
         await Promise.all([
           rtdbSet(RTDB_PATHS.auctionBid(auctionId), {
-            event: FIREBASE_EVENTS.NEW_BID, amount,
-            endTime: result.newEndTime.toISOString(), bidderName: userName ?? 'Someone',
-            bidderId: userId, createdAt: now.toISOString(),
+            event: FIREBASE_EVENTS.NEW_BID, amount: result.newCurrentPrice,
+            endTime: result.newEndTime.toISOString(), bidderName: newCurrentBidderName,
+            bidderId: result.newCurrentBidderId, createdAt: now.toISOString(),
           }),
           rtdbPush(RTDB_PATHS.auctionActivity(auctionId), {
-            event: FIREBASE_EVENTS.NEW_BID, amount, bidderName: userName ?? 'Someone',
-            bidderId: userId, createdAt: now.toISOString(),
+            event: FIREBASE_EVENTS.NEW_BID, amount: result.newCurrentPrice, bidderName: newCurrentBidderName,
+            bidderId: result.newCurrentBidderId, createdAt: now.toISOString(),
           }),
           rtdbPush(RTDB_PATHS.globalActivity(), {
-            event: FIREBASE_EVENTS.NEW_BID, amount, 
-            bidderName: userName ?? 'Someone', auctionTitle: result.auctionTitle,
-            auctionId, timestamp: now.getTime(), bidderId: userId,
+            event: FIREBASE_EVENTS.NEW_BID, amount: result.newCurrentPrice, 
+            bidderName: newCurrentBidderName, auctionTitle: result.auctionTitle,
+            auctionId, timestamp: now.getTime(), bidderId: result.newCurrentBidderId,
           })
         ]);
       })().catch(e => log.error('bidding: RTDB state updates failed', e, { auctionId })),
@@ -384,11 +415,11 @@ export class BiddingService {
     }
 
     return snap.docs.map((d) => {
-      const b = d.data() as { amount: number; auctionId: string; bidderId: string; createdAt: { toDate?: () => Date } | Date };
+      const b = d.data() as { amount: number; publicAmount?: number; auctionId: string; bidderId: string; createdAt: { toDate?: () => Date } | Date };
       const createdAt = b.createdAt instanceof Date ? b.createdAt : b.createdAt?.toDate?.() ?? new Date();
       return {
         id: d.id,
-        amount: b.amount,
+        amount: b.publicAmount ?? b.amount,
         auctionId: b.auctionId,
         bidderId: b.bidderId,
         createdAt,

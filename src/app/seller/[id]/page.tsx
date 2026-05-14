@@ -69,6 +69,10 @@ export default async function SellerProfilePage({ params }: Props) {
     const result: AuctionWithSeller = {
       ...a,
       id: d.id,
+      createdAt: (a.createdAt as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.createdAt as unknown as string | Date),
+      updatedAt: (a.updatedAt as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.updatedAt as unknown as string | Date),
+      startTime: (a.startTime as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.startTime as unknown as string | Date),
+      endTime: (a.endTime as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.endTime as unknown as string | Date),
       seller: {
         id: seller.id,
         name: seller.name,
