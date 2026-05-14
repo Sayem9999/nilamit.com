@@ -25,13 +25,17 @@ function FirestoreAdapter(): Adapter {
     async getUser(id: string) {
       const snap = await db.collection('users').doc(id).get();
       if (!snap.exists) return null;
-      return { ...snap.data(), id: snap.id } as AdapterUser;
+      const data = snap.data()!;
+      delete data.password;
+      return { ...data, id: snap.id } as AdapterUser;
     },
     async getUserByEmail(email: string) {
       const snap = await db.collection('users').where('email', '==', email).limit(1).get();
       if (snap.empty) return null;
       const d = snap.docs[0];
-      return { ...d.data(), id: d.id } as AdapterUser;
+      const data = d.data()!;
+      delete data.password;
+      return { ...data, id: d.id } as AdapterUser;
     },
     async getUserByAccount({ provider, providerAccountId }: { provider: string; providerAccountId: string }) {
       const snap = await db.collection('accounts')
@@ -42,13 +46,17 @@ function FirestoreAdapter(): Adapter {
       const { userId } = snap.docs[0].data() as { userId: string };
       const userSnap = await db.collection('users').doc(userId).get();
       if (!userSnap.exists) return null;
-      return { ...userSnap.data(), id: userSnap.id } as AdapterUser;
+      const data = userSnap.data()!;
+      delete data.password;
+      return { ...data, id: userSnap.id } as AdapterUser;
     },
     async updateUser(user: Partial<AdapterUser> & { id: string }) {
       const { id, ...rest } = user;
       await db.collection('users').doc(id).update({ ...rest, updatedAt: new Date() });
       const snap = await db.collection('users').doc(id).get();
-      return { ...snap.data(), id: snap.id } as AdapterUser;
+      const data = snap.data()!;
+      delete data.password;
+      return { ...data, id: snap.id } as AdapterUser;
     },
     async linkAccount(account: AdapterAccount) {
       const ref = db.collection('accounts').doc();
