@@ -64,12 +64,6 @@ export const authConfig: NextAuthConfig = {
         return Response.redirect(loginUrl);
       }
 
-      // Redirect authenticated users away from auth pages
-      const isAuthPage = ['/login', '/register', '/forgot-password'].includes(path);
-      if (isLoggedIn && isAuthPage) {
-        return Response.redirect(new URL('/dashboard', nextUrl));
-      }
-
       return true;
     },
   },
