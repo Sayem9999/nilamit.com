@@ -55,9 +55,8 @@ export async function createAuction(input: unknown): Promise<ServiceResponse<{ a
     const userSnap = await db.collection('users').doc(session.user.id).get();
     const userData = userSnap.data();
 
-    const isPhoneVerified = !!userData?.isPhoneVerified;
     const isEmailVerified = userData?.emailVerified != null;
-    if (!isPhoneVerified && !isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your phone or email.', ERROR_CODES.PHONE_NOT_VERIFIED);
+    if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
     if (userData?.isBanned) return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
     if (userData?.isMinor) return errorResponse(ErrorType.FORBIDDEN, 'Users under 18 are not eligible to list auctions.', 'MINOR');
 
@@ -239,9 +238,8 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
   try {
     const userSnap = await db.collection('users').doc(userId).get();
     const userData = userSnap.data();
-    const isPhoneVerified = !!userData?.isPhoneVerified;
     const isEmailVerified = userData?.emailVerified != null;
-    if (!isPhoneVerified && !isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your phone or email.', ERROR_CODES.PHONE_NOT_VERIFIED);
+    if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
     if (userData?.isBanned)         return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
 
     const origSnap = await db.collection('auctions').doc(auctionId).get();

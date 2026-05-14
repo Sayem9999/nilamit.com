@@ -92,9 +92,6 @@ export default function CreateAuctionPage() {
         router.push(`/auctions/${result.data.auctionId}`);
       } else {
         setError(result.error?.message || t("createAuctionFailed"));
-        if (result.error?.code === "PHONE_NOT_VERIFIED") {
-          setError(t("phoneVerifyRequiredDesc"));
-        }
       }
     });
   };

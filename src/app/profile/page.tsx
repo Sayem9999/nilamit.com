@@ -490,107 +490,6 @@ export default function ProfilePage() {
             
             {/* Essential Action: Phone & Email Verification */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {!isPhoneVerifiedLocal && (
-                <motion.div 
-                  variants={itemVariants}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8, height: 0 }}
-                  className="bg-amber-50 border border-amber-200 rounded-[2.5rem] p-6 shadow-sm relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl -mr-12 -mt-12" />
-                  <div className="relative z-10">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="p-2.5 bg-white rounded-xl shadow-sm text-amber-600">
-                        <Smartphone size={20} />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-black text-amber-900 uppercase tracking-tight">
-                          Phone Required
-                        </h3>
-                        <p className="text-[11px] text-amber-800/80 font-medium">
-                          {t_prof("identityDesc")}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Hidden Recaptcha Anchor for Firebase Phone Auth */}
-                    <div id="recaptcha-container"></div>
-
-                    <AnimatePresence mode="wait">
-                      {phoneStep === "idle" && (
-                        <motion.button
-                          key="idle"
-                          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                          onClick={() => setPhoneStep("input")}
-                          className="w-full bg-amber-600 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-700 transition-all shadow-md flex items-center justify-center gap-2"
-                        >
-                          {t_prof("startVerification")} <ChevronRight size={14} />
-                        </motion.button>
-                      )}
-
-                      {phoneStep === "input" && (
-                        <motion.div 
-                          key="input"
-                          initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                          className="space-y-3"
-                        >
-                          <label htmlFor="profile-phone" className="sr-only">{t_prof("phoneNumber")}</label>
-                          <input
-                            id="profile-phone"
-                            type="tel"
-                            autoComplete="tel"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="+8801XXXXXXXXX"
-                            className="w-full bg-white border border-amber-100 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-amber-500 transition-all"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleSendOTP}
-                            disabled={isPending || phone.length < 11}
-                            className="w-full bg-amber-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
-                          >
-                            {isPending ? "Sending..." : t_prof("sendOTP")}
-                          </button>
-                        </motion.div>
-                      )}
-
-                      {phoneStep === "otp" && (
-                        <motion.div
-                          key="otp"
-                          initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                          className="space-y-3"
-                        >
-                          <label htmlFor="profile-otp" className="sr-only">6-digit verification code</label>
-                          <input
-                            id="profile-otp"
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            autoComplete="one-time-code"
-                            maxLength={6}
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            placeholder="OTP"
-                            aria-label="6-digit verification code"
-                            className="w-full bg-white border border-amber-100 rounded-xl px-4 py-3 text-center text-lg font-black tracking-widest text-gray-900 outline-none focus:border-amber-500"
-                          />
-                          <button
-                            onClick={handleVerifyOTP}
-                            disabled={isPending || otp.length < 6}
-                            className="w-full bg-green-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
-                          >
-                            {isPending ? "Verifying..." : t_prof("verifyUnlock")}
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              )}
-
               {!isEmailVerifiedLocal && (
                 <motion.div 
                   variants={itemVariants}
@@ -700,18 +599,6 @@ export default function ProfilePage() {
                         <Phone size={16} className="text-primary-400" />
                         <span>{user.phone ? maskPhone(user.phone) : (t_prof("notVerified") || "Not Verified")}</span>
                       </div>
-                      {user.phone && (
-                        isPhoneVerifiedLocal ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-black rounded-full border border-green-200 shadow-sm">
-                            <BadgeCheck size={12} className="text-green-600 fill-green-600/10" />
-                            VERIFIED
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-black rounded-full border border-amber-200 shadow-sm">
-                            UNVERIFIED
-                          </span>
-                        )
-                      )}
                     </div>
                   </div>
                 </div>
