@@ -323,12 +323,12 @@ export class BiddingService {
         const now = new Date();
         await Promise.all([
           rtdbSet(RTDB_PATHS.auctionBid(auctionId), {
-            event: FIREBASE_EVENTS.NEW_BID, amount: result.newCurrentPrice,
+            event: FIREBASE_EVENTS.NEW_BID, id: result.bidId, amount: result.newCurrentPrice,
             endTime: result.newEndTime.toISOString(), bidderName: newCurrentBidderName,
             bidderId: result.newCurrentBidderId, createdAt: now.toISOString(),
           }),
           rtdbPush(RTDB_PATHS.auctionActivity(auctionId), {
-            event: FIREBASE_EVENTS.NEW_BID, amount: result.newCurrentPrice, bidderName: newCurrentBidderName,
+            event: FIREBASE_EVENTS.NEW_BID, id: result.bidId, amount: result.newCurrentPrice, bidderName: newCurrentBidderName,
             bidderId: result.newCurrentBidderId, createdAt: now.toISOString(),
           }),
           rtdbPush(RTDB_PATHS.globalActivity(), {

@@ -109,12 +109,12 @@ export function BidPanel({
   const [showEliteModal, setShowEliteModal] = useState(false);
   const [showBinConfirm, setShowBinConfirm] = useState(false);
 
-  // Track previous bid count via ref so we only fire the gavel on an actual
-  // increase. Depending on `playGavel` would re-fire whenever useSound returns
-  // a fresh function reference, double-playing on unrelated re-renders.
-  const prevBidCountRef = useRef(newBids.length);
+  // Track previous top bid ID via ref so we only fire the gavel on an actual
+  // new bid. Relying on length fails when the array is bounded at 10 items.
+  const prevTopBidRef = useRef(newBids[0]?.id);
   useEffect(() => {
-    if (newBids.length > prevBidCountRef.current) {
+    const currentTopBid = newBids[0]?.id;
+    if (currentTopBid && currentTopBid !== prevTopBidRef.current) {
       playGavel();
       // If a real bid came in that matches or exceeds our optimistic bid, clear it
       if (optimisticBid && newBids[0]?.amount >= optimisticBid) {
@@ -122,7 +122,7 @@ export function BidPanel({
         setOptimisticBid(null);
       }
     }
-    prevBidCountRef.current = newBids.length;
+    prevTopBidRef.current = currentTopBid;
   }, [newBids, playGavel, optimisticBid]);
 
 
