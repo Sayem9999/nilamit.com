@@ -30,9 +30,8 @@ const VerificationBadge = memo(({
   const t = useTranslations("Social");
 
   let level = 0;
-  if (isPhoneVerified) level = 1;
-  if (emailVerified) level = 2;
-  if (isVerifiedSeller && (isPhoneVerified || emailVerified)) level = 3;
+  if (emailVerified) level = 1;
+  if (isVerifiedSeller && emailVerified) level = 2;
 
   const getConfig = () => {
     switch (level) {
@@ -44,7 +43,7 @@ const VerificationBadge = memo(({
           bgColor: "bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800",
           icon: <Building2 className="w-full h-full" />,
           desc: t("verif_Business_Desc"),
-          details: [<Phone key="1"/>, <Mail key="2"/>, <Building2 key="3"/>],
+          details: [<Mail key="1"/>, <Building2 key="2"/>],
         };
       case 2:
         return {
@@ -54,17 +53,17 @@ const VerificationBadge = memo(({
           bgColor: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800",
           icon: <ShieldCheck className="w-full h-full" />,
           desc: t("verif_Email_Desc"),
-          details: [<Phone key="1"/>, <Mail key="2"/>],
+          details: [<Mail key="1"/>],
         };
       case 1:
         return {
-          label: t("verif_Phone"),
+          label: t("verif_Email"),
           color: "from-emerald-500 to-green-600",
           textColor: "text-emerald-700 dark:text-emerald-300",
           bgColor: "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800",
           icon: <CheckCircle2 className="w-full h-full" />,
-          desc: t("verif_Phone_Desc"),
-          details: [<Phone key="1"/>],
+          desc: t("verif_Email_Desc"),
+          details: [<Mail key="1"/>],
         };
       default:
         return {

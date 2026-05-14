@@ -18,9 +18,8 @@ async function requireBiddingPrivileges(userId: string): Promise<ServiceResponse
   if (!userSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'User not found', ERROR_CODES.NOT_FOUND);
   const user = userSnap.data()!;
 
-  const isPhoneVerified = !!user.isPhoneVerified;
   const isEmailVerified = user.emailVerified != null;
-  if (!isPhoneVerified && !isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your phone or email.', ERROR_CODES.PHONE_NOT_VERIFIED);
+  if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
   if (user.isBanned) return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
   if (user.isMinor) return errorResponse(ErrorType.FORBIDDEN, 'Users under 18 are not eligible to place binding bids or purchases.', 'MINOR');
 

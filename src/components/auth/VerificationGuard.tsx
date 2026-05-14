@@ -27,7 +27,6 @@ export function VerificationGuard({ children }: VerificationGuardProps) {
   // Check verification and restriction status
   const isBanned = session?.user?.isBanned;
   const isVerified = (
-    session?.user?.isPhoneVerified || 
     !!session?.user?.emailVerified || 
     session?.user?.isVerifiedSeller || 
     session?.user?.isAdmin
@@ -37,8 +36,8 @@ export function VerificationGuard({ children }: VerificationGuardProps) {
     if (session && !isVerified) {
       getCurrentUserVerification().then((res) => {
         if (res.success && res.data) {
-          const { isPhoneVerified, isEmailVerified, isBanned: dbBanned, isVerifiedSeller, isAdmin } = res.data;
-          if ((isPhoneVerified || isEmailVerified || isVerifiedSeller || isAdmin) && !dbBanned) {
+          const { isEmailVerified, isBanned: dbBanned, isVerifiedSeller, isAdmin } = res.data;
+          if ((isEmailVerified || isVerifiedSeller || isAdmin) && !dbBanned) {
             setIsVerifiedOverride(true);
             update().catch((err) => {
               console.error("[VerificationGuard] Failed to update session:", err);
@@ -100,16 +99,6 @@ export function VerificationGuard({ children }: VerificationGuardProps) {
               </p>
 
               <div className="space-y-4 mb-8 shadow-none">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-left shadow-none">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-none ${session?.user?.isPhoneVerified ? 'bg-green-100 text-green-600' : 'bg-primary-100 text-primary-600'}`}>
-                    {session?.user?.isPhoneVerified ? <CheckCircle className="w-6 h-6 shadow-none" /> : <Smartphone className="w-6 h-6 shadow-none" />}
-                  </div>
-                  <div className="flex-1 shadow-none">
-                    <p className="font-semibold text-gray-900 text-sm shadow-none">{t("phoneVerification")}</p>
-                    <p className="text-xs text-gray-500 shadow-none">{session?.user?.isPhoneVerified ? t("verified") : t("phoneRecommended")}</p>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-left shadow-none">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-none ${session?.user?.emailVerified ? 'bg-green-100 text-green-600' : 'bg-accent-100 text-accent-600'}`}>
                     {session?.user?.emailVerified ? <CheckCircle className="w-6 h-6 shadow-none" /> : <Mail className="w-6 h-6 shadow-none" />}

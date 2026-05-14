@@ -39,7 +39,6 @@ import { ErrorType, type ServiceResponse } from "@/lib/errors";
 import type { PlaceBidResult } from "@/types";
 import { VerificationGuard } from "../auth/VerificationGuard";
 import dynamic from "next/dynamic";
-const PhoneVerificationPrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.PhoneVerificationPrompt), { ssr: false });
 const MFSLinkagePrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.MFSLinkagePrompt), { ssr: false });
 const EliteBarrierPrompt = dynamic(() => import("./components/BidPrompts").then(mod => mod.EliteBarrierPrompt), { ssr: false });
 import { ViewerCount } from "./ViewerCount";
@@ -106,7 +105,6 @@ export function BidPanel({
 
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<ServiceResponse<PlaceBidResult | null> | null>(null);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showMFSModal, setShowMFSModal] = useState(false);
   const [showEliteModal, setShowEliteModal] = useState(false);
   const [showBinConfirm, setShowBinConfirm] = useState(false);
@@ -175,10 +173,6 @@ export function BidPanel({
         onBidPlaced?.();
       } else {
         setOptimisticBid(null);
-        
-        if (res.error?.code === ERROR_CODES.PHONE_NOT_VERIFIED) {
-          setShowPhoneModal(true);
-        }
         
         const newMin = (res.error?.details as { newMinimum?: number } | undefined)?.newMinimum;
         if (res.error?.code === ERROR_CODES.BID_TOO_LOW && newMin) {
@@ -381,7 +375,7 @@ export function BidPanel({
                 ? <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
                 : <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />}
               <div>
-                <p className="font-medium">{result.success ? t("success") : (result.error?.code === ERROR_CODES.PHONE_NOT_VERIFIED ? t("phoneNotVerified") : result.error?.message)}</p>
+                <p className="font-medium">{result.success ? t("success") : (result.error?.message)}</p>
                 {result.success && result.data?.antiSnipeTriggered && <p className="text-xs mt-1 text-green-600">{t("antiSnipe")}</p>}
               </div>
             </div>
@@ -400,7 +394,6 @@ export function BidPanel({
         </>
       )}
 
-      {showPhoneModal && <PhoneVerificationPrompt onClose={() => setShowPhoneModal(false)} />}
       {showMFSModal && <MFSLinkagePrompt onClose={() => setShowMFSModal(false)} />}
       {showEliteModal && (
         <EliteBarrierPrompt
