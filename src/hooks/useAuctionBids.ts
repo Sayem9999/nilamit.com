@@ -44,7 +44,8 @@ export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions
       const data = snapshot.val();
       if (!data) return;
 
-      if (data.event === FIREBASE_EVENTS.NEW_BID) {
+      const eventType = data.type || data.event;
+      if (eventType === FIREBASE_EVENTS.NEW_BID) {
         const bid: RealTimeBid = {
           id:         data.id || `rt_${Date.now()}`,
           amount:     data.amount,
@@ -60,12 +61,6 @@ export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions
           return next.slice(0, 10);
         });
         if (data.endTime) setCurrentEndTime(data.endTime);
-      } else if (
-        data.event === FIREBASE_EVENTS.AUCTION_SOLD ||
-        data.event === FIREBASE_EVENTS.AUCTION_CLOSED
-      ) {
-        if (data.endTime) setCurrentEndTime(data.endTime);
-        if (data.status) setStatus(data.status);
       }
     }, (error) => {
       if (mounted) {
@@ -74,10 +69,24 @@ export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions
       }
     });
 
+    const statusRef = ref(db, RTDB_PATHS.auctionStatus(auctionId));
+    const unsubStatus = onValue(statusRef, (snapshot) => {
+      if (!mounted) return;
+      const data = snapshot.val();
+      if (!data) return;
+
+      const eventType = data.type || data.event;
+      if (eventType === FIREBASE_EVENTS.AUCTION_SOLD || eventType === FIREBASE_EVENTS.AUCTION_CLOSED) {
+        if (data.endTime) setCurrentEndTime(data.endTime);
+        if (data.status) setStatus(data.status);
+      }
+    });
+
     return () => {
       mounted = false;
       unsubConn();
       unsubBid();
+      unsubStatus();
     };
   }, [auctionId]);
 

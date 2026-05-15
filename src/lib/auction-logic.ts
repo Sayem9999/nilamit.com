@@ -122,9 +122,8 @@ export function sendSaleNotifications(payload: SaleNotifyPayload) {
   );
 
   // Sync status to RTDB for real-time UI updates
-  rtdbSet(RTDB_PATHS.auctionBid(payload.auctionId), {
-    event: FIREBASE_EVENTS.AUCTION_SOLD,
-    auctionId: payload.auctionId,
+  rtdbSet(RTDB_PATHS.auctionStatus(payload.auctionId), {
+    type: FIREBASE_EVENTS.AUCTION_SOLD,
     amount: payload.finalPrice,
     status: 'SOLD',
     updatedAt: new Date().toISOString(),
@@ -198,8 +197,8 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
 
     if (notifyPayload) {
       if ('expired' in notifyPayload) {
-        rtdbSet(RTDB_PATHS.auctionBid(notifyPayload.auctionId), {
-          event: FIREBASE_EVENTS.AUCTION_CLOSED,
+        rtdbSet(RTDB_PATHS.auctionStatus(notifyPayload.auctionId), {
+          type: FIREBASE_EVENTS.AUCTION_CLOSED,
           auctionId: notifyPayload.auctionId,
           status: 'EXPIRED',
           updatedAt: new Date().toISOString(),

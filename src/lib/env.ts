@@ -132,12 +132,20 @@ export function validateEnv(): Env {
     }
 
     const problematicKeys = Object.keys(errors);
-    const rawValues = problematicKeys.reduce((acc, key) => {
-      acc[key] = process.env[key];
+    const maskedValues = problematicKeys.reduce((acc, key) => {
+      const val = process.env[key];
+      if (typeof val === 'string') {
+        // Mask: show first 4 and last 4, middle is stars
+        acc[key] = val.length > 8 
+          ? `${val.slice(0, 4)}...${val.slice(-4)}` 
+          : '****';
+      } else {
+        acc[key] = typeof val;
+      }
       return acc;
-    }, {} as Record<string, string | undefined>);
+    }, {} as Record<string, string>);
 
-    console.error(`\n[Env] ❌  Invalid environment configuration (Runtime Soft-fail):\n${errorMessages}\nRaw values: ${JSON.stringify(rawValues)}\n`);
+    console.error(`\n[Env] ❌  Invalid environment configuration (Runtime Soft-fail):\n${errorMessages}\nMasked values: ${JSON.stringify(maskedValues)}\n`);
     return process.env as unknown as Env;
   }
 

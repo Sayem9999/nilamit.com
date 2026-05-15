@@ -10,6 +10,8 @@
 import { NextResponse } from 'next/server';
 import { log } from '@/lib/logger';
 
+import { timingSafeEqual } from 'crypto';
+
 // ─── Auth ─────────────────────────────────────────────────────
 /**
  * Returns a 401 Response if the request doesn't carry the expected cron secret.
@@ -37,7 +39,19 @@ export function verifyCronSecret(req: Request): Response | null {
     const secretHeader   = req.headers.get('x-cron-secret');
     const expectedBearer = `Bearer ${cronSecret}`;
 
-    if (authHeader !== expectedBearer && secretHeader !== cronSecret) {
+    const safeCompare = (a: string | null, b: string): boolean => {
+      if (!a) return false;
+      try {
+        const bufA = Buffer.from(a);
+        const bufB = Buffer.from(b);
+        if (bufA.length !== bufB.length) return false;
+        return timingSafeEqual(bufA, bufB);
+      } catch {
+        return false;
+      }
+    };
+
+    if (!safeCompare(authHeader, expectedBearer) && !safeCompare(secretHeader, cronSecret)) {
       return new Response('Unauthorized', { status: 401 });
     }
   }

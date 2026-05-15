@@ -29,7 +29,8 @@ export function useAuctionPrice(auctionId: string, initialPrice: number, initial
       const data = snapshot.val();
       if (!data) return;
 
-      if (data.event === FIREBASE_EVENTS.NEW_BID) {
+      const eventType = data.type || data.event;
+      if (eventType === FIREBASE_EVENTS.NEW_BID) {
         if (data.amount !== undefined) {
           setCurrentPrice(data.amount);
           if (data.bidCount !== undefined) {
@@ -38,7 +39,17 @@ export function useAuctionPrice(auctionId: string, initialPrice: number, initial
             setBidCount(prev => prev + 1);
           }
         }
-      } else if (data.event === FIREBASE_EVENTS.AUCTION_SOLD || data.event === FIREBASE_EVENTS.AUCTION_CLOSED) {
+      }
+    });
+
+    const statusRef = ref(db, RTDB_PATHS.auctionStatus(auctionId));
+    const unsubStatus = onValue(statusRef, (snapshot) => {
+      if (!mounted) return;
+      const data = snapshot.val();
+      if (!data) return;
+
+      const eventType = data.type || data.event;
+      if (eventType === FIREBASE_EVENTS.AUCTION_SOLD || eventType === FIREBASE_EVENTS.AUCTION_CLOSED) {
         if (data.status) setStatus(data.status);
         if (data.amount !== undefined) setCurrentPrice(data.amount);
       }
@@ -47,6 +58,7 @@ export function useAuctionPrice(auctionId: string, initialPrice: number, initial
     return () => {
       mounted = false;
       unsubBid();
+      unsubStatus();
     };
   }, [auctionId]);
 

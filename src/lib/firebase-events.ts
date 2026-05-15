@@ -19,6 +19,9 @@ export const RTDB_PATHS = {
   /** Latest bid on an auction (overwrite on each bid) */
   auctionBid:       (auctionId: string) => `bids/auction/${auctionId}`,
 
+  /** Auction closure/status updates (SOLD/EXPIRED) */
+  auctionStatus:    (auctionId: string) => `status/auction/${auctionId}`,
+
   /** Append-only activity feed for a specific auction */
   auctionActivity:  (auctionId: string) => `activity/auction/${auctionId}`,
 
