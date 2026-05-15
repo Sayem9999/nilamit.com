@@ -39,12 +39,20 @@ export const AuctionCard = memo(({
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const cardBidCount = auction._count?.bids ?? auction.bidCount ?? 0;
-  const { currentPrice, bidCount } = useAuctionPrice(auction.id, auction.currentPrice, cardBidCount);
+  const { currentPrice, bidCount, status } = useAuctionPrice(auction.id, auction.currentPrice, cardBidCount, auction.status);
+
+  const now = new Date();
+  const endTime = new Date(auction.endTime);
+  const isTimeEnded = now >= endTime;
+
+  // Use real-time status, but if time is ended and status is still ACTIVE,
+  // we treat it as 'PROCESSING' for UI purposes.
+  const displayStatus = (status === "ACTIVE" && isTimeEnded) ? "PROCESSING" : status;
 
   const isOwner = !!session?.user?.id && session.user.id === auction.sellerId;
-  const canCancel = isOwner && auction.status === "ACTIVE" && bidCount === 0;
-  const canEdit   = isOwner && auction.status === "ACTIVE" && bidCount === 0;
-  const canRelist = isOwner && (auction.status === "EXPIRED" || auction.status === "CANCELLED");
+  const canCancel = isOwner && displayStatus === "ACTIVE" && bidCount === 0;
+  const canEdit   = isOwner && displayStatus === "ACTIVE" && bidCount === 0;
+  const canRelist = isOwner && (displayStatus === "EXPIRED" || displayStatus === "CANCELLED");
 
   const handleCancel = () => {
     setShowCancelConfirm(false);
@@ -188,11 +196,13 @@ export const AuctionCard = memo(({
           <div className="mt-4 pt-4 border-t border-gray-100/60 flex flex-col gap-0.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                {auction.status === "ACTIVE" && new Date(auction.endTime) > new Date()
+                {displayStatus === "ACTIVE"
                   ? t("currentPrice") 
-                  : auction.status === "SOLD" 
+                  : displayStatus === "SOLD" 
                     ? t("finalPrice") 
-                    : t("auctionEnded")}
+                    : displayStatus === "PROCESSING"
+                      ? t("auctionEnded") // Or "Processing..."
+                      : t("auctionEnded")}
               </span>
               <span className="flex items-center gap-1 text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md">
                 <Users className="w-3 h-3" aria-hidden="true" />
@@ -212,7 +222,7 @@ export const AuctionCard = memo(({
           </div>
 
           {/* Seller Protection View */}
-          {session?.user?.id === auction.sellerId && auction.status === "SOLD" && auction.commissionEarned && (
+          {session?.user?.id === auction.sellerId && displayStatus === "SOLD" && auction.commissionEarned && (
             <div className="mt-4 p-4 bg-primary-50/30 rounded-2xl border border-primary-100/50 space-y-2">
               <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 <span>{t("finalPrice")}</span>

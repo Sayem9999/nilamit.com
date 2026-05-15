@@ -26,6 +26,39 @@ env:
 
 jobs:
 
+  close-auctions:
+    if: github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/close-auctions
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/close-auctions" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 300
+
+  closing-soon:
+    if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/tasks/closing-soon
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/tasks/closing-soon" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 300
+
+  enforce-policies:
+    if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/tasks/enforce-policies
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/tasks/enforce-policies" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 300
+
   gc-uploads:
     if: github.event.schedule == '0 4 * * 0' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest

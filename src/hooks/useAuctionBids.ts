@@ -26,6 +26,7 @@ export interface UseAuctionBidsOptions {
 export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions = {}) {
   const [newBids,        setNewBids]        = useState<RealTimeBid[]>(options.initialBids ?? []);
   const [currentEndTime, setCurrentEndTime] = useState<Date | string | null>(null);
+  const [status,         setStatus]         = useState<string | null>(null);
   const [isConnected,    setIsConnected]    = useState(true);
 
   useEffect(() => {
@@ -64,6 +65,7 @@ export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions
         data.event === FIREBASE_EVENTS.AUCTION_CLOSED
       ) {
         if (data.endTime) setCurrentEndTime(data.endTime);
+        if (data.status) setStatus(data.status);
       }
     }, (error) => {
       if (mounted) {
@@ -79,5 +81,5 @@ export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions
     };
   }, [auctionId]);
 
-  return { newBids, currentEndTime, isConnected };
+  return { newBids, currentEndTime, isConnected, status };
 }

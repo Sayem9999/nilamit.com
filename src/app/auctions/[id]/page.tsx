@@ -55,6 +55,8 @@ import { ErrorType, errorResponse } from "@/lib/errors";
 import SecondChanceButton from "@/components/auction/SecondChanceButton";
 import { AuctionStatus } from "@/types";
 import { SecondChanceOfferButton } from "@/components/auction/SecondChanceOfferButton";
+import { AuctionStatusBadge } from "@/components/auction/AuctionStatusBadge";
+import { AuctionBidCount } from "@/components/auction/AuctionBidCount";
 
 interface Props {
   params: Promise<{ id: string; locale: string }>;
@@ -184,15 +186,13 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <MapPin className="w-3 h-3" aria-hidden="true" /> {auction.location}
                   </span>
                 )}
-                {auction.status === AuctionStatus.ACTIVE && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-md border border-green-100 text-xs font-semibold">
-                    <span className="relative flex w-2 h-2" aria-hidden="true">
-                      <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                    </span>
-                    {t("live")}
-                  </span>
-                )}
+                <AuctionStatusBadge 
+                  auctionId={id}
+                  initialStatus={auction.status}
+                  initialPrice={auction.currentPrice}
+                  initialBidCount={auction._count?.bids || 0}
+                  endTime={auction.endTime}
+                />
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <ShareButton
@@ -216,10 +216,12 @@ export default async function AuctionDetailPage({ params }: Props) {
                 <Clock className="w-4 h-4" aria-hidden="true" />
                 <CountdownTimer endTime={auction.endTime} serverTime={serverTime} />
               </div>
-              <div className="flex items-center gap-1.5">
-                <Users className="w-4 h-4" aria-hidden="true" />
-                <span>{auction._count?.bids || 0} {t("bids")}</span>
-              </div>
+                <AuctionBidCount 
+                  auctionId={id}
+                  initialBidCount={auction._count?.bids || 0}
+                  initialPrice={auction.currentPrice}
+                  initialStatus={auction.status}
+                />
               <div className="flex items-center gap-1.5">
                 <Eye className="w-4 h-4" aria-hidden="true" />
                 <span>{t("listed")} {formatRelativeTime(auction.createdAt, now)}</span>

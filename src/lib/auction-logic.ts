@@ -1,7 +1,7 @@
 import 'server-only';
 import { db, incrementGlobalStat } from '@/lib/db';
 import { sendAuctionWonEmail } from '@/lib/firebase-email';
-import { rtdbPush } from '@/lib/firebase-admin';
+import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import type { AuctionStatus } from '@/types';
 import { log } from '@/lib/logger';
@@ -121,6 +121,15 @@ export function sendSaleNotifications(payload: SaleNotifyPayload) {
     log.error('auction-logic: sale gamification failed', e, { auctionId: payload.auctionId }),
   );
 
+  // Sync status to RTDB for real-time UI updates
+  rtdbSet(RTDB_PATHS.auctionBid(payload.auctionId), {
+    event: FIREBASE_EVENTS.AUCTION_SOLD,
+    auctionId: payload.auctionId,
+    amount: payload.finalPrice,
+    status: 'SOLD',
+    updatedAt: new Date().toISOString(),
+  }).catch((e: unknown) => log.error('auction-logic: RTDB status sync failed', e, { auctionId: payload.auctionId }));
+
   // Schedule enforcement of 24h payment policy
   scheduleEnforcePaymentPolicy(payload.auctionId).catch((e) =>
     log.error('auction-logic: enforce payment task scheduling failed', e, { auctionId: payload.auctionId })
@@ -163,7 +172,10 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
 
       if (!winnerId || !finalPrice) {
         tx.update(aRef, { status: 'EXPIRED', updatedAt: now });
-        return null;
+        
+        // Notify RTDB of expiry (fire and forget after tx commit if possible, but here we are in tx)
+        // We'll do it after the transaction to be safe.
+        return { expired: true, auctionId };
       }
 
       const [winnerSnap, sellerSnap] = await Promise.all([
@@ -184,7 +196,18 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
       );
     });
 
-    if (notifyPayload) sendSaleNotifications(notifyPayload);
+    if (notifyPayload) {
+      if ('expired' in notifyPayload) {
+        rtdbSet(RTDB_PATHS.auctionBid(notifyPayload.auctionId), {
+          event: FIREBASE_EVENTS.AUCTION_CLOSED,
+          auctionId: notifyPayload.auctionId,
+          status: 'EXPIRED',
+          updatedAt: new Date().toISOString(),
+        }).catch((e: unknown) => log.error('auction-logic: RTDB expiry sync failed', e, { auctionId: notifyPayload.auctionId }));
+      } else {
+        sendSaleNotifications(notifyPayload);
+      }
+    }
   } catch (e) {
     log.error('[auction-logic] closeAuctionIfEnded failed', e, { auctionId });
   }

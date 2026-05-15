@@ -5,9 +5,10 @@ import { onValue, ref } from 'firebase/database';
 import { getClientDB } from '@/lib/firebase-client';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 
-export function useAuctionPrice(auctionId: string, initialPrice: number, initialBidCount: number) {
+export function useAuctionPrice(auctionId: string, initialPrice: number, initialBidCount: number, initialStatus: string = 'ACTIVE') {
   const [currentPrice, setCurrentPrice] = useState(initialPrice);
   const [bidCount, setBidCount] = useState(initialBidCount);
+  const [status, setStatus] = useState(initialStatus);
 
   // Sync state if auction changes (e.g. navigation)
   const [prevId, setPrevId] = useState(auctionId);
@@ -15,6 +16,7 @@ export function useAuctionPrice(auctionId: string, initialPrice: number, initial
     setPrevId(auctionId);
     setCurrentPrice(initialPrice);
     setBidCount(initialBidCount);
+    setStatus(initialStatus);
   }
 
   useEffect(() => {
@@ -36,6 +38,9 @@ export function useAuctionPrice(auctionId: string, initialPrice: number, initial
             setBidCount(prev => prev + 1);
           }
         }
+      } else if (data.event === FIREBASE_EVENTS.AUCTION_SOLD || data.event === FIREBASE_EVENTS.AUCTION_CLOSED) {
+        if (data.status) setStatus(data.status);
+        if (data.amount !== undefined) setCurrentPrice(data.amount);
       }
     });
 
@@ -45,5 +50,5 @@ export function useAuctionPrice(auctionId: string, initialPrice: number, initial
     };
   }, [auctionId]);
 
-  return { currentPrice, bidCount };
+  return { currentPrice, bidCount, status };
 }

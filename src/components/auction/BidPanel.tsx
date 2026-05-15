@@ -81,11 +81,21 @@ export function BidPanel({
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
   const { play: playGavel } = useSound("/sounds/gavel.mp3");
   const t = useTranslations("BidPanel");
-  const { newBids, currentEndTime, isConnected } = useAuctionBids(auctionId, { initialBids });
+  const { newBids, currentEndTime, isConnected, status: rtStatus } = useAuctionBids(auctionId, { initialBids });
+  
+  // Use real-time status if available, fallback to initial
+  const currentStatus = rtStatus || "ACTIVE"; 
   const [optimisticBid, setOptimisticBid] = useState<number | null>(null);
 
   const displayPrice = optimisticBid ?? (newBids.length > 0 ? newBids[0].amount : currentPrice);
   const displayEndTime = currentEndTime ? new Date(currentEndTime) : new Date(endTime);
+
+  const now = new Date();
+  const isTimeEnded = now >= displayEndTime;
+  
+  // If time ended but status still active, we are processing
+  const isProcessing = currentStatus === "ACTIVE" && isTimeEnded;
+  const isActuallyExpired = isTimeEnded || currentStatus === "SOLD" || currentStatus === "EXPIRED";
 
   const minBid = displayPrice + minBidIncrement;
 
@@ -257,9 +267,16 @@ export function BidPanel({
         </div>
       )}
 
-      {isExpired ? (
+      {isActuallyExpired ? (
         <div className="text-center py-6">
-          <p className="text-gray-500 font-medium">{t("auctionEnded")}</p>
+          <p className="text-gray-900 font-bold text-lg mb-1">
+            {currentStatus === "SOLD" ? t("auctionSold") || "AUCTION SOLD" : t("auctionEnded")}
+          </p>
+          {isProcessing && (
+            <p className="text-amber-600 text-xs font-semibold animate-pulse uppercase tracking-wider">
+              {t("processingResult") || "Processing Result..."}
+            </p>
+          )}
         </div>
       ) : isOwnAuction ? (
         <div className="text-center py-6 bg-gray-50 rounded-xl">
