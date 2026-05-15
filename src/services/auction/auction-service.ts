@@ -7,6 +7,7 @@ import { log } from '@/lib/logger';
 import type { CreateAuctionInputValidated } from '@/lib/schemas';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { scheduleAuctionClosure } from '@/lib/cloud-tasks';
 
 export class AuctionService {
   /**
@@ -194,6 +195,11 @@ export class AuctionService {
       // pushes bounded; busier sellers can move to a queue later.
       AuctionService.notifyFollowersOfNewListing(id, userId, sanitizedInput.title, sanitizedInput.images?.[0])
         .catch((e) => log.error('[AuctionService] follower fan-out failed', e, { auctionId: id }));
+
+      // Enqueue Cloud Task for precise closure
+      scheduleAuctionClosure(id, auction.endTime).catch((e) =>
+        log.error('[AuctionService] cloud task scheduling failed', e, { auctionId: id })
+      );
 
       log.info('Auction created successfully', { auctionId: id, sellerId: userId });
 

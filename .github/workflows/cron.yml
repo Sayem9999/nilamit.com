@@ -25,16 +25,6 @@ env:
   BASE_URL: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
 
 jobs:
-  close-auctions:
-    if: github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: POST /api/cron/close-auctions
-        run: |
-          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/close-auctions" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            -H "Content-Type: application/json" \
-            --data '{}' --max-time 60
 
   process-alerts:
     if: github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch'

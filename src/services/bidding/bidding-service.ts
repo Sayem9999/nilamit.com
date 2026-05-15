@@ -10,6 +10,7 @@ import { detectShillBidding } from '@/lib/moderation';
 import { log } from '@/lib/logger';
 import { validateBidPreconditions, computeAntiSnipeExtension } from './bid-rules';
 import { processAuctionSale, sendSaleNotifications } from '@/lib/auction-logic';
+import { scheduleAuctionClosure } from '@/lib/cloud-tasks';
 
 interface BidSideEffectParams {
   bidId: string;
@@ -346,6 +347,13 @@ export class BiddingService {
       detectShillBidding(auctionId, userId, result.sellerId, amount)
         .catch(e => log.error('bidding: shill detection failed', e, { auctionId, userId }))
     ];
+
+    if (result.antiSnipeTriggered) {
+      tasks.push(
+        scheduleAuctionClosure(auctionId, result.newEndTime)
+          .catch(e => log.error('bidding: task reschedule failed', e, { auctionId }))
+      );
+    }
 
     // Wait for all non-critical tasks to at least start/settle
     await Promise.allSettled(tasks);
