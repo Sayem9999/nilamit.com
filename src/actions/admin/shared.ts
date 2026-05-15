@@ -14,8 +14,8 @@ export interface AdminEscrowDoc {
 export type HydratedEscrowRow = {
   id: string; amount: number; status: string; createdAt: Date;
   verificationType: string; providerRef: string | null;
-  auction: { id: string; title: string; seller: { name: string | null; phone: string | null } };
-  buyer: { name: string | null; email: string | null; phone: string | null };
+  auction: { id: string; title: string; seller: { name: string | null; email: string | null } };
+  buyer: { name: string | null; email: string | null };
 };
 
 /**
@@ -71,9 +71,9 @@ export async function batchHydrateEscrowRows(txDocs: AdminEscrowDoc[]): Promise<
       auction: {
         id:     tx.auctionId,
         title:  (auction.title  as string | null) ?? 'Unknown Auction',
-        seller: { name: (seller.name  as string | null) ?? null, phone: (seller.phone as string | null) ?? null },
+        seller: { name: (seller.name  as string | null) ?? null, email: (seller.email as string | null) ?? null },
       },
-      buyer: { name: (buyer.name as string | null) ?? null, email: (buyer.email as string | null) ?? null, phone: (buyer.phone as string | null) ?? null },
+      buyer: { name: (buyer.name as string | null) ?? null, email: (buyer.email as string | null) ?? null },
     };
   });
 }

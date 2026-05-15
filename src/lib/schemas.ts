@@ -9,7 +9,6 @@
 
 import { z } from 'zod';
 import { CATEGORIES } from '@/types';
-import { normalizePhone } from './utils';
 
 // ─── Primitives ────────────────────────────────────────────────────────────
 
@@ -31,15 +30,6 @@ export const emailSchema = z
  */
 export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters').max(128, 'Password is too long');
 
-/** Bangladesh mobile: accepts local (01...) or international (+8801...) form. */
-export const bdPhoneSchema = z.preprocess(
-  (val) => typeof val === 'string' ? normalizePhone(val) : val,
-  z.string().trim().regex(/^\+8801\d{9}$/, 'Invalid Bangladesh phone number')
-);
-
-/** 6-digit numeric OTP. */
-export const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be 6 digits');
-
 /** Person name: 2–80 chars, no leading/trailing whitespace, no control chars. */
 const nameSchema = z
   .string()
@@ -59,27 +49,11 @@ export const registerSchema = z.object({
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
-export const phoneSignupSchema = z.object({
-  name:          nameSchema,
-  phone:         bdPhoneSchema,
-  firebaseToken: z.string().min(1, 'Firebase token is required'),
-  password:      passwordSchema,
-  email:         emailSchema.optional(),
-  isRetailer:    z.boolean().default(false),
-});
-export type PhoneSignupInput = z.infer<typeof phoneSignupSchema>;
-
 export const passwordResetSchema = z
   .object({
-    phone:         bdPhoneSchema.optional(),
-    email:         emailSchema.optional(),
-    otp:           otpSchema.optional(),
-    firebaseToken: z.string().optional(),
+    email:         emailSchema,
+    otp:           z.string().regex(/^\d{6}$/, 'OTP must be 6 digits'), // Inline OTP for email reset
     password:      passwordSchema,
-  })
-  .refine((d) => d.phone || d.email, {
-    message: 'Either phone or email is required',
-    path:    ['phone'],
   });
 export type PasswordResetInput = z.infer<typeof passwordResetSchema>;
 

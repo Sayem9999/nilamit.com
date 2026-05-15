@@ -40,7 +40,6 @@ export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
     image: (d.image as string) ?? null,
     rating: (d.rating as number) ?? 0,
     ratingCount: (d.ratingCount as number) ?? 0,
-    isPhoneVerified: !!d.isPhoneVerified,
     emailVerified: d.emailVerified instanceof Timestamp ? d.emailVerified.toDate() : (d.emailVerified ? new Date(d.emailVerified as string) : null),
     isVerifiedSeller: !!d.isVerifiedSeller,
     isRetailer: !!d.isRetailer,
@@ -53,15 +52,9 @@ export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
   };
 }
 
-/** Map a raw User document to the full Seller info (Including PII) */
-export function toSellerPrivate(id: string, data: unknown): (SellerPublic & { phone: string | null }) | null {
-  const publicData = toSellerPublic(id, data);
-  if (!publicData) return null;
-  const d = data as Record<string, unknown>;
-  return {
-    ...publicData,
-    phone: (d.phone as string) ?? null
-  };
+/** Map a raw User document to the full Seller info (PII Sanitized - Email only) */
+export function toSellerPrivate(id: string, data: unknown): SellerPublic | null {
+  return toSellerPublic(id, data);
 }
 
 /** Map a raw Message document to the Message interface */
@@ -94,13 +87,13 @@ export function snapDocs<T>(snap: FirebaseFirestore.QuerySnapshot): T[] {
 }
 
 /** Helper to recursively normalize values (e.g. nested Firestore timestamps) */
-function normalizeValue(v: unknown): any {
+function normalizeValue(v: unknown): unknown {
   if (v && typeof v === 'object') {
-    if ('toDate' in v && typeof (v as any).toDate === 'function') {
-      return (v as any).toDate();
+    if ('toDate' in v && typeof (v as { toDate: unknown }).toDate === 'function') {
+      return (v as { toDate: () => unknown }).toDate();
     }
-    if ('_seconds' in v && typeof (v as any)._seconds === 'number') {
-      return new Date((v as any)._seconds * 1000);
+    if ('_seconds' in v && typeof (v as { _seconds: unknown })._seconds === 'number') {
+      return new Date((v as { _seconds: number })._seconds * 1000);
     }
     if (Array.isArray(v)) {
       return v.map(normalizeValue);
@@ -112,7 +105,7 @@ function normalizeValue(v: unknown): any {
     const proto = Object.getPrototypeOf(v);
     if (proto === null || proto === Object.prototype) {
       const copy: Record<string, unknown> = {};
-      for (const [key, val] of Object.entries(v)) {
+      for (const [key, val] of Object.entries(v as Record<string, unknown>)) {
         copy[key] = normalizeValue(val);
       }
       return copy;
@@ -141,11 +134,52 @@ function normalizeDoc<T>(id: string, data: FirebaseFirestore.DocumentData): T {
 /** Increment a global platform statistic atomically (O(1) cost/latency vs count()) */
 export async function incrementGlobalStat(field: 'totalUsers' | 'totalBids' | 'totalAuctions' | 'totalVerifiedSellers' | 'totalRevenue', amount = 1) {
   try {
+    // ─── HIGH TRAFFIC SHARDING ──────────────────────────────────────────────
+    // For 'totalBids', we use a distributed counter pattern (10 shards) to
+    // bypass the Firestore limit of ~1 write/sec per document.
+    if (field === 'totalBids') {
+      const numShards = 10;
+      const shardId = Math.floor(Math.random() * numShards).toString();
+      const shardRef = db.collection('stats').doc('global').collection('shards').doc(shardId);
+      
+      await shardRef.set({
+        count: FieldValue.increment(amount),
+        updatedAt: Timestamp.now()
+      }, { merge: true });
+
+      // We still update the 'updatedAt' on the main doc periodically or on each write
+      // (The main doc write cost is fine if we only update the timestamp)
+      await db.collection('stats').doc('global').set({
+        updatedAt: Timestamp.now()
+      }, { merge: true });
+      return;
+    }
+
+    // ─── STANDARD INCREMENT ────────────────────────────────────────────────
     await db.collection('stats').doc('global').set({
       [field]: FieldValue.increment(amount),
       updatedAt: Timestamp.now()
     }, { merge: true });
   } catch (e) {
     console.error(`[db] Failed to increment global stat ${field}`, e);
+  }
+}
+
+/**
+ * Delete a large collection/query by batching operations (avoids the 500-limit error).
+ */
+export async function batchDelete(query: FirebaseFirestore.Query) {
+  const snapshot = await query.get();
+  if (snapshot.empty) return;
+
+  const chunks = [];
+  for (let i = 0; i < snapshot.docs.length; i += 500) {
+    chunks.push(snapshot.docs.slice(i, i + 500));
+  }
+
+  for (const chunk of chunks) {
+    const batch = db.batch();
+    chunk.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
   }
 }

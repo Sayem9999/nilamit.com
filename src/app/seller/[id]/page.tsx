@@ -33,7 +33,6 @@ export default async function SellerProfilePage({ params }: Props) {
     name: sellerData.name,
     image: sellerData.image,
     isVerifiedSeller: sellerData.isVerifiedSeller,
-    isPhoneVerified: sellerData.isPhoneVerified,
     reputationScore: sellerData.rating,
     createdAt: sellerData.createdAt,
     winningStreak: sellerData.winningStreak,
@@ -76,7 +75,6 @@ export default async function SellerProfilePage({ params }: Props) {
       seller: {
         id: seller.id,
         name: seller.name,
-        phone: sellerData.phone ?? null,
         image: seller.image,
         isVerifiedSeller: sellerData.isVerifiedSeller,
         isRetailer: !!sellerData.isRetailer,
@@ -85,7 +83,6 @@ export default async function SellerProfilePage({ params }: Props) {
         userLevel: sellerData.userLevel,
         rating: seller.reputationScore,
         ratingCount: seller.ratingCount,
-        isPhoneVerified: sellerData.isPhoneVerified,
         emailVerified: sellerData.emailVerified,
         isBanned: sellerData.isBanned,
         salesCount: seller.salesCount,

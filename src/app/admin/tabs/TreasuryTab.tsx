@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute, getVerificationQueue, approveEscrowPayment, refundWithDeduction } from '@/actions/admin';
-import { ShieldCheck, Download, ExternalLink, Smartphone, Clock, Scale, RotateCcw, Loader2, CheckCircle2, Trash2 } from 'lucide-react';
+import { ShieldCheck, Download, ExternalLink, Clock, Scale, RotateCcw, Loader2, CheckCircle2, Trash2 } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import { generateInvoice } from '@/lib/pdf-generator';
 import toast from 'react-hot-toast';
@@ -15,9 +15,9 @@ interface TreasuryLog {
   status: string;
   auction: { 
     title: string;
-    seller: { name: string | null; phone: string | null };
+    seller: { name: string | null; email: string | null };
   };
-  buyer: { name: string | null; email: string | null; phone: string | null };
+  buyer: { name: string | null; email: string | null };
 }
 
 interface ActiveEscrow {
@@ -133,9 +133,9 @@ export function TreasuryTab() {
         auctionTitle: log.auction.title,
         amount: log.amount,
         buyerName: log.buyer.name || "Valued Buyer",
-        buyerPhone: log.buyer.phone || "N/A",
+        buyerEmail: log.buyer.email || "N/A",
         sellerName: log.auction.seller?.name || "Verified Seller",
-        sellerPhone: log.auction.seller?.phone || "N/A"
+        sellerEmail: log.auction.seller?.email || "N/A"
       });
       doc.save(`invoice-${log.id.slice(-8)}.pdf`);
       toast.success("Invoice generated!");
@@ -266,7 +266,7 @@ export function TreasuryTab() {
       {/* Audit Intelligence Panel */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-emerald-600 rounded-[2rem] p-6 text-white shadow-xl shadow-emerald-500/20">
-             <Smartphone className="w-8 h-8 opacity-50 mb-4" />
+             <Scale className="w-8 h-8 opacity-50 mb-4" />
              <h4 className="text-sm font-bold opacity-80 uppercase tracking-widest mb-1 text-emerald-100">Treasury Velocity</h4>
              <p className="text-3xl font-black">{logs.length} <span className="text-xs font-bold uppercase opacity-50 tracking-tighter">Verified</span></p>
           </div>

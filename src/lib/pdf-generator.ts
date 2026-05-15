@@ -7,9 +7,9 @@ interface InvoiceData {
   auctionTitle: string;
   amount: number;
   buyerName: string;
-  buyerPhone: string;
+  buyerEmail: string;
   sellerName: string;
-  sellerPhone: string;
+  sellerEmail: string;
 }
 
 export function generateInvoice(data: InvoiceData) {
@@ -46,10 +46,10 @@ export function generateInvoice(data: InvoiceData) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.text(data.buyerName, margin, 78);
-  doc.text(data.buyerPhone, margin, 84);
+  doc.text(data.buyerEmail, margin, 84);
   
   doc.text(data.sellerName, 110, 78);
-  doc.text(data.sellerPhone, 110, 84);
+  doc.text(data.sellerEmail, 110, 84);
   
   // Item Table
   doc.setFillColor(245, 245, 245);

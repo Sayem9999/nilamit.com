@@ -73,19 +73,24 @@ export async function moderateImage(buffer: Buffer): Promise<ModerationResult> {
   }
 
   try {
-    const [response] = await client.safeSearchDetection({ image: { content: buffer } });
+    const [response] = await client.annotateImage({
+      image: { content: buffer },
+      features: [
+        { type: 'SAFE_SEARCH_DETECTION' },
+        { type: 'TEXT_DETECTION' }
+      ]
+    });
+
     const ss = response.safeSearchAnnotation;
-    if (!ss) return { allowed: true, reason: 'no-annotation' };
+    const fullText = response.fullTextAnnotation?.text;
 
     const scores = {
-      adult:    String(ss.adult ?? 'UNKNOWN'),
-      violence: String(ss.violence ?? 'UNKNOWN'),
-      racy:     String(ss.racy ?? 'UNKNOWN'),
-      medical:  String(ss.medical ?? 'UNKNOWN'),
-      spoof:    String(ss.spoof ?? 'UNKNOWN'),
+      adult:    String(ss?.adult ?? 'UNKNOWN'),
+      violence: String(ss?.violence ?? 'UNKNOWN'),
+      racy:     String(ss?.racy ?? 'UNKNOWN'),
     };
 
-    // Hard-block on adult/violence at LIKELY+. Racy/medical are advisory.
+    // 1. Safety Check (Hard-block on adult/violence)
     if (HARD_BLOCK.has(scores.adult)) {
       return { allowed: false, reason: 'adult', scores };
     }
@@ -93,9 +98,24 @@ export async function moderateImage(buffer: Buffer): Promise<ModerationResult> {
       return { allowed: false, reason: 'violence', scores };
     }
 
+    // 2. PII Check (Block if image contains contact details)
+    if (fullText) {
+      const { containsPII } = await import('@/lib/pii-filter');
+      if (containsPII(fullText)) {
+        log.warn('[image-moderation] PII detected in image text', { 
+          textPreview: fullText.slice(0, 50).replace(/\n/g, ' ') 
+        });
+        return { 
+          allowed: false, 
+          reason: 'pii_detected',
+          scores: { ...scores, hasText: 'true' }
+        };
+      }
+    }
+
     return { allowed: true, scores };
   } catch (e) {
-    log.error('[image-moderation] SafeSearch call failed (fail-open)', e, { area: 'upload', severity: 'warning' });
+    log.error('[image-moderation] Vision API call failed (fail-open)', e, { area: 'upload', severity: 'warning' });
     Sentry.captureException(e, {
       tags: { component: 'image-moderation', state: 'api-error' },
     });

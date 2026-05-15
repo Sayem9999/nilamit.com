@@ -22,41 +22,27 @@ export async function GET() {
   }
 
   try {
-    // Sync user email, displayName, and phoneNumber to Firebase Authentication user record (best-effort)
+    // Sync user email and displayName to Firebase Authentication user record (best-effort)
     try {
-      const phoneToSync = (session.user.phone && session.user.phone.startsWith('+')) ? session.user.phone : undefined;
       const updateData: Record<string, unknown> = {
         email: session.user.email ?? undefined,
         displayName: session.user.name ?? undefined,
       };
-      if (phoneToSync) {
-        updateData.phoneNumber = phoneToSync;
-      }
 
       await adminAuth.instance.updateUser(session.user.id, updateData);
     } catch (err) {
       if (err && typeof err === 'object' && 'code' in err && err.code === 'auth/user-not-found') {
         try {
-          const phoneToSync = (session.user.phone && session.user.phone.startsWith('+')) ? session.user.phone : undefined;
           await adminAuth.instance.createUser({
             uid: session.user.id,
             email: session.user.email ?? undefined,
             displayName: session.user.name ?? undefined,
-            phoneNumber: phoneToSync,
           });
         } catch (createErr) {
           log.warn('[Firebase Token] Failed to create user in Firebase Auth during sync', { error: createErr });
         }
       } else {
-        log.warn('[Firebase Token] Failed to update user in Firebase Auth during sync with phone, trying fallback update without phone', { error: err });
-        try {
-          await adminAuth.instance.updateUser(session.user.id, {
-            email: session.user.email ?? undefined,
-            displayName: session.user.name ?? undefined,
-          });
-        } catch (fallbackErr) {
-          log.warn('[Firebase Token] Fallback user update failed', { error: fallbackErr });
-        }
+        log.warn('[Firebase Token] Failed to update user in Firebase Auth during sync', { error: err });
       }
     }
 

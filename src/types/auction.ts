@@ -62,7 +62,7 @@ export interface Logistics {
 }
 
 export type AuctionWithSeller = Auction & {
-  seller: SellerPublic & { phone?: string | null };
+  seller: SellerPublic;
   winner?: { id: string; name: string | null; image: string | null } | null;
   watchlist?: { userId: string }[];
   isWatchlisted?: boolean;

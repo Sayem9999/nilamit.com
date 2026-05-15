@@ -175,7 +175,6 @@ export const AuctionCard = memo(({
                 {auction.seller.name || t("seller")}
               </span>
               <VerificationBadge
-                isPhoneVerified={!!auction.seller.isPhoneVerified}
                 emailVerified={auction.seller.emailVerified}
                 isVerifiedSeller={!!auction.seller.isVerifiedSeller}
                 size="sm"

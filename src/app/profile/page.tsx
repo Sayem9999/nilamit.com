@@ -6,18 +6,15 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { logoutAction } from "@/actions/auth";
-import { syncVerifiedPhoneNatively } from "@/actions/phone";
 import { calculateLevelProgress } from "@/lib/gamification-engine";
 import {
   User,
-  Phone,
   Edit3,
   Save,
   Star,
   MessageSquare,
   Wallet,
   Mail,
-  Smartphone,
   BadgeCheck,
   ChevronRight,
   ShieldCheck,
@@ -42,22 +39,13 @@ export default function ProfilePage() {
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
-  const [phoneStep, setPhoneStep] = useState<"idle" | "input" | "otp">("idle");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
   const [msg, setMsg] = useState("");
   
   // MFS State
   const [bkash, setBkash] = useState("");
   const [nagad, setNagad] = useState("");
   
-  // Instant Visibility State
-  const [isPhoneVerifiedLocal, setIsPhoneVerifiedLocal] = useState(false);
   const [isEmailVerifiedLocal, setIsEmailVerifiedLocal] = useState(false);
-  
-  // Firebase Native Phone verification states
-  const [confirmationResult, setConfirmationResult] = useState<{ confirm: (code: string) => Promise<unknown> } | null>(null);
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<unknown>(null);
 
   const maskPhone = (num: string) => {
     if (!num) return "";
@@ -69,12 +57,7 @@ export default function ProfilePage() {
       router.push("/login");
     }
     if (session?.user) {
-      // Mirror session-derived flags into local state so an OTP-verify action
-      // can optimistically flip them before the session refresh propagates
-      // (see line ~150 — setIsPhoneVerifiedLocal(true) on success).
-      const u = session.user as { isPhoneVerified?: boolean; emailVerified?: unknown };
-       
-      setIsPhoneVerifiedLocal(u.isPhoneVerified === true);
+      const u = session.user as { emailVerified?: unknown };
        
       const isVerified = u.emailVerified != null;
       if (isVerified) {
@@ -128,10 +111,9 @@ export default function ProfilePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const user = (session.user as any) as { 
     id: string; 
-    isPhoneVerified: boolean; 
+    isVerifiedSeller: boolean; 
     rating: number; 
     ratingCount: number;
-    phone?: string; 
     email?: string;
     emailVerified?: Date | string | null;
     bkashNumber?: string;
@@ -169,118 +151,6 @@ export default function ProfilePage() {
     });
   };
 
-  const handleSendOTP = () => {
-    setMsg("");
-    startTransition(async () => {
-      try {
-        const { getClientAuth, ensureFirebaseAuth } = await import("@/lib/firebase-client");
-        const { RecaptchaVerifier, linkWithPhoneNumber } = await import("firebase/auth");
-        
-        const auth = getClientAuth();
-        if (!auth.currentUser) {
-          await ensureFirebaseAuth();
-        }
-
-        if (!auth.currentUser) {
-          const fbErr = "Failed to authenticate with Firebase. Please try again.";
-          setMsg(fbErr);
-          toast.error(fbErr);
-          return;
-        }
-
-        // Initialize Recaptcha Verifier and ensure any previous instances are cleared cleanly
-        let verifier = recaptchaVerifier;
-        if (verifier) {
-          try {
-            (verifier as import("firebase/auth").RecaptchaVerifier).clear();
-          } catch (e) {
-            console.warn("Error clearing previous recaptcha verifier:", e);
-          }
-          setRecaptchaVerifier(null);
-          verifier = null;
-        }
-
-        verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-          size: "invisible",
-          callback: () => {}
-        });
-        setRecaptchaVerifier(verifier);
-
-        // Ensure normalized phone number for Bangladesh
-        const normalizedPhone = phone.startsWith("+") ? phone : `+88${phone}`;
-
-        const confirmResult = await linkWithPhoneNumber(
-          auth.currentUser, 
-          normalizedPhone, 
-          verifier as import("firebase/auth").ApplicationVerifier
-        );
-        setConfirmationResult(confirmResult);
-        setPhoneStep("otp");
-        const otpMsg = t_prof("otpSent");
-        setMsg(otpMsg);
-        toast.success(otpMsg);
-      } catch (err) {
-        let errMsg = t_prof("errorGeneric");
-        const fErr = err as { code?: string; message?: string };
-        if (fErr && fErr.code === "auth/invalid-phone-number") {
-          errMsg = "Invalid phone number format. Use international format (e.g. +8801XXXXXXXXX)";
-        } else if (fErr && fErr.code === "auth/too-many-requests") {
-          errMsg = "Too many OTP requests. Please try again later.";
-        } else if (fErr && fErr.code === "auth/internal-error") {
-          errMsg = "Firebase Auth Internal Error. Ensure 'nilamit.com' and 'www.nilamit.com' are added to the 'Authorized Domains' list under Firebase Console > Authentication > Settings.";
-        } else if (fErr && fErr.code === "auth/network-request-failed") {
-          errMsg = "Network request failed. This is typically caused by an ad-blocker (like uBlock Origin, AdBlock, or Brave Shields) blocking Firebase/reCAPTCHA requests, or firewall/VPN settings. Please disable ad-blockers and try again.";
-        } else if (fErr && fErr.message) {
-          errMsg = fErr.message;
-        }
-        setMsg(errMsg);
-        toast.error(errMsg);
-      }
-    });
-  };
-
-  const handleVerifyOTP = () => {
-    setMsg("");
-    startTransition(async () => {
-      if (!confirmationResult) {
-        const expErr = "Verification session has expired. Please try again.";
-        setMsg(expErr);
-        toast.error(expErr);
-        return;
-      }
-      try {
-        // Confirm OTP on the client
-        await confirmationResult.confirm(otp);
-        
-        // Sync verified state to server
-        const res = await syncVerifiedPhoneNatively(phone);
-        if (res.success) {
-          setPhoneStep("idle");
-          setIsPhoneVerifiedLocal(true);
-          const successMsg = t_prof("verificationSuccess");
-          setMsg(successMsg);
-          toast.success(successMsg);
-          await update();
-        } else {
-          const errMsg = res.error?.message || t_prof("errorGeneric");
-          setMsg(errMsg);
-          toast.error(errMsg);
-        }
-      } catch (err) {
-        let errMsg = t_prof("errorGeneric");
-        const fErr = err as { code?: string; message?: string };
-        if (fErr && fErr.code === "auth/invalid-verification-code") {
-          errMsg = "Invalid verification code. Please check the SMS and try again.";
-        } else if (fErr && fErr.code === "auth/network-request-failed") {
-          errMsg = "Network request failed. Please ensure your internet connection is stable, disable any ad-blockers, or turn off VPNs/proxies and try again.";
-        } else if (fErr && fErr.message) {
-          errMsg = fErr.message;
-        }
-        setMsg(errMsg);
-        toast.error(errMsg);
-      }
-    });
-  };
 
   const handleSendEmailVerification = () => {
     setMsg("");
@@ -355,7 +225,6 @@ export default function ProfilePage() {
               </div>
               <div className="absolute bottom-1 right-1 p-1.5 bg-white rounded-full shadow-lg border border-gray-100 z-30">
                 <VerificationBadge
-                  isPhoneVerified={isPhoneVerifiedLocal}
                   emailVerified={isEmailVerifiedLocal ? new Date() : null}
                   isVerifiedSeller={!!(user as { isVerifiedSeller?: boolean }).isVerifiedSeller}
                   size="lg"
@@ -389,13 +258,6 @@ export default function ProfilePage() {
                   <span>{session.user?.email}</span>
                   {isEmailVerifiedLocal && <BadgeCheck size={14} className="text-emerald-400 fill-emerald-950/20" />}
                 </div>
-                {user.phone && (
-                  <div className="flex items-center gap-1.5 text-primary-100 font-bold text-sm bg-black/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
-                    <Smartphone size={14} />
-                    <span>{maskPhone(user.phone)}</span>
-                    {isPhoneVerifiedLocal && <BadgeCheck size={14} className="text-emerald-400 fill-emerald-950/20" />}
-                  </div>
-                )}
               </motion.div>
             </div>
 
@@ -590,15 +452,6 @@ export default function ProfilePage() {
                           UNVERIFIED
                         </span>
                       )}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{t_prof("phoneNumber") || "Phone Number"}</label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-2 text-gray-700 font-bold">
-                        <Phone size={16} className="text-primary-400" />
-                        <span>{user.phone ? maskPhone(user.phone) : (t_prof("notVerified") || "Not Verified")}</span>
-                      </div>
                     </div>
                   </div>
                 </div>

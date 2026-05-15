@@ -17,7 +17,7 @@ function FirestoreAdapter(): Adapter {
       const ref = db.collection('users').doc();
       const now = new Date();
       const doc = { ...user, id: ref.id, createdAt: now, updatedAt: now,
-        isPhoneVerified: false, isVerifiedSeller: false,
+        isVerifiedSeller: false,
         reputationScore: 0, winningStreak: 0, xp: 0, userLevel: 1 };
       await ref.set(doc);
       return { ...doc } as AdapterUser;
@@ -92,7 +92,7 @@ function FirestoreAdapter(): Adapter {
 }
 
 /** Internal helper for reusable auth lookup logic */
-async function verifyUser(field: 'email' | 'phone', value: string, passwordRaw: string) {
+async function verifyUser(field: 'email', value: string, passwordRaw: string) {
   try {
     const snap = await db.collection('users').where(field, '==', value).limit(1).get();
     if (snap.empty) return null;
@@ -112,7 +112,6 @@ async function verifyUser(field: 'email' | 'phone', value: string, passwordRaw: 
       reputationScore: Number(user.reputationScore || 0),
       rating: Number(user.rating || user.reputationScore || 0),
       ratingCount: Number(user.ratingCount || 0),
-      isPhoneVerified: Boolean(user.isPhoneVerified), 
       emailVerified: user.emailVerified instanceof Timestamp ? user.emailVerified.toDate() : (user.emailVerified ? new Date(user.emailVerified as string) : null),
       userLevel: Number(user.userLevel || 1), 
       xp: Number(user.xp || 0), 
@@ -173,7 +172,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // First login — seed from freshly-authenticated user
       if (user) {
         token.id               = user.id!;
-        token.isPhoneVerified  = user.isPhoneVerified ?? false;
         token.isVerifiedSeller = user.isVerifiedSeller ?? false;
         token.reputationScore  = user.reputationScore ?? 0;
         token.rating           = user.rating ?? user.reputationScore ?? 0;
@@ -187,7 +185,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isTopRated       = user.isTopRated ?? false;
         token.salesCount       = user.salesCount ?? 0;
         token.defectCount      = user.defectCount ?? 0;
-        token.phone            = user.phone ?? null;
         token.emailVerified    = user.emailVerified ?? null;
         token.bkashNumber      = user.bkashNumber ?? null;
         token.nagadNumber      = user.nagadNumber ?? null;
@@ -202,7 +199,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const snap = await db.collection('users').doc(token.id as string).get();
           if (snap.exists) {
             const u = snap.data()!;
-            token.isPhoneVerified  = u.isPhoneVerified;
             token.isVerifiedSeller = u.isVerifiedSeller;
             token.reputationScore  = u.reputationScore;
             token.rating           = u.rating ?? u.reputationScore;
@@ -215,7 +211,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.isTopRated       = u.isTopRated;
             token.salesCount       = u.salesCount ?? 0;
             token.defectCount      = u.defectCount ?? 0;
-            token.phone            = u.phone ?? null;
             token.emailVerified    = u.emailVerified instanceof Timestamp ? u.emailVerified.toDate() : (u.emailVerified ? new Date(u.emailVerified as string) : null);
             token.bkashNumber      = u.bkashNumber ?? null;
             token.nagadNumber      = u.nagadNumber ?? null;
@@ -235,7 +230,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         /* eslint-disable @typescript-eslint/no-explicit-any */
         session.user.id              = token.id as any;
-        session.user.isPhoneVerified  = token.isPhoneVerified as any;
         session.user.isVerifiedSeller = token.isVerifiedSeller as any;
         session.user.reputationScore  = token.reputationScore as any;
         session.user.rating           = token.rating as any;
@@ -245,7 +239,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.userLevel        = token.userLevel as any;
         session.user.xp               = token.xp as any;
         session.user.winningStreak    = token.winningStreak as any;
-        session.user.phone            = token.phone as any;
         session.user.emailVerified    = token.emailVerified as any;
         session.user.isRetailer       = token.isRetailer as any;
         session.user.isTopRated       = token.isTopRated as any;

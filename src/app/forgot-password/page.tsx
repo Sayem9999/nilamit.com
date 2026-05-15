@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
-import { Gavel, Loader2, ArrowRight, Smartphone, Mail, ShieldCheck } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Gavel, Loader2, ArrowRight, Mail, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 type Step = "identifier" | "otp" | "reset";
-type Method = "phone" | "email";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("Auth");
   const [step, setStep] = useState<Step>("identifier");
-  const [method, setMethod] = useState<Method>("phone");
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,85 +20,21 @@ export default function ForgotPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
 
-  // Firebase Native Phone verification states
-  const [confirmationResult, setConfirmationResult] = useState<{ confirm: (code: string) => Promise<unknown> } | null>(null);
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<unknown>(null);
-  const [firebaseToken, setFirebaseToken] = useState("");
-
-  // Clean up verifier on unmount
-  useEffect(() => {
-    return () => {
-      if (recaptchaVerifier) {
-        try {
-          (recaptchaVerifier as import("firebase/auth").RecaptchaVerifier).clear();
-        } catch (e) {
-          console.warn("Error clearing verifier on unmount:", e);
-        }
-      }
-    };
-  }, [recaptchaVerifier]);
-
   const handleRequestOTP = () => {
-    if (!identifier) return;
+    if (!email) return;
     setError("");
     startTransition(async () => {
       try {
-        if (method === "phone") {
-          const { getClientAuth } = await import("@/lib/firebase-client");
-          const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
-
-          const auth = getClientAuth();
-
-          // Initialize Recaptcha Verifier and ensure any previous instances are cleared cleanly
-          let verifier = recaptchaVerifier;
-          if (verifier) {
-            try {
-              (verifier as import("firebase/auth").RecaptchaVerifier).clear();
-            } catch (e) {
-              console.warn("Error clearing previous recaptcha verifier:", e);
-            }
-            setRecaptchaVerifier(null);
-            verifier = null;
-          }
-
-          verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-            size: "invisible",
-            callback: () => {}
-          });
-          setRecaptchaVerifier(verifier);
-
-          // Ensure normalized phone number for Bangladesh
-          const normalizedPhone = identifier.startsWith("+") ? identifier : `+88${identifier}`;
-
-          const confirmResult = await signInWithPhoneNumber(
-            auth, 
-            normalizedPhone, 
-            verifier as import("firebase/auth").ApplicationVerifier
-          );
-          setConfirmationResult(confirmResult);
+        const { sendEmailOTP } = await import("@/actions/otp");
+        const result = await sendEmailOTP(email);
+        if (result.success) {
           setStep("otp");
           setResendTimer(60);
         } else {
-          const { sendEmailOTP } = await import("@/actions/phone");
-          const result = await sendEmailOTP(identifier);
-          if (result.success) {
-            setStep("otp");
-            setResendTimer(60);
-          } else {
-            setError(result.error?.message || t("errorGeneric"));
-          }
+          setError(result.error?.message || t("errorGeneric"));
         }
       } catch (err) {
-        let errMsg = t("errorGeneric");
-        const fErr = err as { code?: string; message?: string };
-        if (fErr && fErr.code === "auth/invalid-phone-number") {
-          errMsg = "Invalid phone number format. Use international format (e.g. +8801XXXXXXXXX)";
-        } else if (fErr && fErr.code === "auth/too-many-requests") {
-          errMsg = "Too many OTP requests. Please try again later.";
-        } else if (fErr && fErr.message) {
-          errMsg = fErr.message;
-        }
-        setError(errMsg);
+        setError(t("errorGeneric"));
       }
     });
   };
@@ -109,39 +43,8 @@ export default function ForgotPasswordPage() {
     if (otp.length < 6) return;
     setError("");
     startTransition(async () => {
-      if (method === "phone") {
-        if (!confirmationResult) {
-          setError("Verification session has expired. Please try again.");
-          return;
-        }
-        try {
-          const { getClientAuth } = await import("@/lib/firebase-client");
-          const auth = getClientAuth();
-
-          // Confirm OTP on the client
-          await confirmationResult.confirm(otp);
-          
-          // Get Firebase ID Token
-          const token = await auth.currentUser?.getIdToken();
-          if (!token) {
-            setError("Failed to get verification token from Google.");
-            return;
-          }
-          setFirebaseToken(token);
-          setStep("reset");
-        } catch (err) {
-          let errMsg = t("errorGeneric");
-          const fErr = err as { code?: string; message?: string };
-          if (fErr && fErr.code === "auth/invalid-verification-code") {
-            errMsg = "Invalid verification code. Please check the SMS and try again.";
-          } else if (fErr && fErr.message) {
-            errMsg = fErr.message;
-          }
-          setError(errMsg);
-        }
-      } else {
-        setStep("reset");
-      }
+      // For email, we just move to the reset step and verify the OTP during the final submission
+      setStep("reset");
     });
   };
 
@@ -155,10 +58,8 @@ export default function ForgotPasswordPage() {
     startTransition(async () => {
       const { resetPasswordWithOTP } = await import("@/actions/auth");
       const result = await resetPasswordWithOTP({
-        phone: method === "phone" ? identifier : undefined,
-        email: method === "email" ? identifier : undefined,
-        otp: method === "email" ? otp : undefined,
-        firebaseToken: method === "phone" ? firebaseToken : undefined,
+        email: email,
+        otp: otp,
         password,
       });
 
@@ -169,12 +70,6 @@ export default function ForgotPasswordPage() {
       }
     });
   };
-
-  useEffect(() => {
-    if (resendTimer <= 0) return;
-    const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [resendTimer]);
 
   if (success) {
     return (
@@ -200,7 +95,6 @@ export default function ForgotPasswordPage() {
     );
   }
 
-  // Inline error block (rendered on whichever step is active)
   const errorBlock = error ? (
     <p
       role="alert"
@@ -211,7 +105,6 @@ export default function ForgotPasswordPage() {
     </p>
   ) : null;
 
-  // Progress percentage for the bar's aria-valuenow
   const stepIdx = step === "identifier" ? 1 : step === "otp" ? 2 : 3;
 
   return (
@@ -252,63 +145,28 @@ export default function ForgotPasswordPage() {
           <div className="p-8">
             {step === "identifier" && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-300 motion-reduce:animate-none">
-                {/* Method tabs — buttons in a tablist for SR navigation */}
-                <div role="tablist" aria-label="Reset method" className="flex bg-gray-50/50 p-1 mb-6 rounded-2xl border border-gray-100">
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={method === "phone"}
-                    onClick={() => setMethod("phone")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
-                      method === "phone"
-                        ? "bg-white text-primary-600 shadow-sm border border-gray-100"
-                        : "text-gray-400 uppercase tracking-widest text-[10px]"
-                    }`}
-                  >
-                    <Smartphone className="w-3.5 h-3.5" aria-hidden="true" /> {t("phoneBtn")}
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={method === "email"}
-                    onClick={() => setMethod("email")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
-                      method === "email"
-                        ? "bg-white text-primary-600 shadow-sm border border-gray-100"
-                        : "text-gray-400 uppercase tracking-widest text-[10px]"
-                    }`}
-                  >
-                    <Mail className="w-3.5 h-3.5" aria-hidden="true" /> {t("emailBtn")}
-                  </button>
-                </div>
-
                 <div className="mb-6">
                   <h2 className="text-xl font-bold text-gray-900 mb-1">
-                    {method === "phone" ? t("enterPhoneTitle") : t("enterEmailTitle")}
+                    {t("enterEmailTitle")}
                   </h2>
                   <p className="text-sm text-gray-500 font-medium">
-                    {method === "phone" ? t("enterPhoneDesc") : t("enterEmailDesc")}
+                    {t("enterEmailDesc")}
                   </p>
                 </div>
 
-                <div id="recaptcha-container" className="hidden"></div>
                 <div className="space-y-4">
                   <div className="relative group">
-                    <label htmlFor="forgot-identifier" className="sr-only">
-                      {method === "phone" ? t("phoneLabel") : t("emailLabel")}
+                    <label htmlFor="forgot-email" className="sr-only">
+                      {t("emailLabel")}
                     </label>
-                    {method === "phone" ? (
-                      <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-primary-600 transition-colors" aria-hidden="true" />
-                    ) : (
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-primary-600 transition-colors" aria-hidden="true" />
-                    )}
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-primary-600 transition-colors" aria-hidden="true" />
                     <input
-                      id="forgot-identifier"
-                      type={method === "phone" ? "tel" : "email"}
-                      autoComplete={method === "phone" ? "tel" : "email"}
-                      placeholder={method === "phone" ? "+8801XXXXXXXXX" : "email@example.com"}
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
+                      id="forgot-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-4 py-5 font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
                     />
                   </div>
@@ -318,7 +176,7 @@ export default function ForgotPasswordPage() {
                   <button
                     type="button"
                     onClick={handleRequestOTP}
-                    disabled={isPending || !identifier}
+                    disabled={isPending || !email}
                     aria-label={isPending ? "Sending reset code" : t("sendResetBtn")}
                     className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                   >
@@ -342,7 +200,7 @@ export default function ForgotPasswordPage() {
                   </div>
                   <h2 className="text-xl font-bold text-gray-900 mb-1">{t("verifyCodeTitle")}</h2>
                   <p className="text-sm text-gray-500 font-medium">
-                    {t("sentTo")} <span className="font-bold text-gray-900">{identifier}</span>
+                    {t("sentTo")} <span className="font-bold text-gray-900">{email}</span>
                   </p>
                 </div>
                 <div className="space-y-6">
@@ -371,21 +229,6 @@ export default function ForgotPasswordPage() {
                   >
                     {t("verifyBtn")}
                   </button>
-                  <div className="text-center pt-2">
-                    {resendTimer > 0 ? (
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        {t("resendIn")} {resendTimer}s
-                      </p>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleRequestOTP}
-                        className="text-[10px] font-black text-primary-600 hover:text-primary-700 uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
-                      >
-                        {t("resendBtn")}
-                      </button>
-                    )}
-                  </div>
                 </div>
               </div>
             )}

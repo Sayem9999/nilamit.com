@@ -75,11 +75,10 @@ export async function exportTransactionsCSV() {
         .map((snap) => [snap.id, snap.data() as Record<string, unknown>])
     );
 
-    let csv = 'Auction ID,Title,Final Price,Winner Name,Winner Phone,Commission (à§³),Date\n';
+    let csv = 'Auction ID,Title,Final Price,Winner Name,Winner Email,Commission (৳),Date\n';
 
     for (const auction of auctions) {
       const winner = typeof auction.winnerId === 'string' ? users.get(auction.winnerId) : null;
-      const seller = typeof auction.sellerId === 'string' ? users.get(auction.sellerId) : null;
       const commission = Number(auction.commissionEarned ?? Number(auction.currentPrice ?? 0) * 0.1);
       const updatedAt = auction.updatedAt ?? new Date();
 
@@ -88,7 +87,7 @@ export async function exportTransactionsCSV() {
         csvEscape(auction.title),
         auction.currentPrice,
         csvEscape(winner?.name ?? 'Unknown'),
-        csvEscape(winner?.phone ?? seller?.phone ?? 'N/A'),
+        csvEscape(winner?.email ?? 'N/A'),
         commission.toFixed(2),
         updatedAt.toISOString().split('T')[0],
       ];

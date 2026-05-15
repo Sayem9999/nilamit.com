@@ -20,7 +20,7 @@ export class AdminService {
         db.collection('auctions').where('status', '==', AuctionStatus.ACTIVE).count().get(),
         db.collection('auctions').count().get(),
         db.collection('bids').count().get(),
-        db.collection('users').where('isPhoneVerified', '==', true).count().get(),
+        db.collection('users').where('emailVerified', '!=', null).count().get(),
       ]);
 
       const recentUsersSnap = await db.collection('users')
@@ -32,7 +32,7 @@ export class AdminService {
         id: user.id,
         name: user.name ?? null,
         email: user.email ?? null,
-        isPhoneVerified: Boolean(user.isPhoneVerified),
+        isEmailVerified: user.emailVerified != null,
         isVerifiedSeller: Boolean(user.isVerifiedSeller),
         rating: Number(user.rating ?? 0),
         ratingCount: Number(user.ratingCount ?? 0),

@@ -5,8 +5,6 @@ export interface User {
   emailVerified: Date | null;
   image: string | null;
   password?: string | null;
-  phone?: string | null;
-  isPhoneVerified: boolean;
   isVerifiedSeller: boolean;
   rating: number;
   ratingCount: number;
@@ -34,7 +32,6 @@ export interface SellerPublic {
   image: string | null;
   rating: number;
   ratingCount: number;
-  isPhoneVerified: boolean;
   emailVerified: Date | null;
   isVerifiedSeller: boolean;
   isRetailer: boolean;

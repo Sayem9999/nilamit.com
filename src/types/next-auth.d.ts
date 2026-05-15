@@ -4,7 +4,6 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
-      isPhoneVerified: boolean;
       isVerifiedSeller: boolean;
       reputationScore: number;
       rating: number;
@@ -14,7 +13,6 @@ declare module 'next-auth' {
       userLevel: number;
       xp: number;
       winningStreak: number;
-      phone: string | null;
       emailVerified: Date | null;
       isRetailer: boolean;
       isTopRated: boolean;
@@ -27,7 +25,6 @@ declare module 'next-auth' {
 
   interface User {
     id?: string;
-    isPhoneVerified?: boolean;
     isVerifiedSeller?: boolean;
     reputationScore?: number;
     rating?: number;
@@ -37,7 +34,6 @@ declare module 'next-auth' {
     userLevel?: number;
     xp?: number;
     winningStreak?: number;
-    phone?: string | null;
     emailVerified?: Date | null;
     isRetailer?: boolean;
 
@@ -52,7 +48,6 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
-    isPhoneVerified: boolean;
     isVerifiedSeller: boolean;
     reputationScore: number;
     rating: number;
@@ -62,7 +57,6 @@ declare module 'next-auth/jwt' {
     userLevel: number;
     xp: number;
     winningStreak: number;
-    phone: string | null;
     emailVerified: Date | null;
     isRetailer: boolean;
     isTopRated: boolean;

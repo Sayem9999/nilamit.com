@@ -29,6 +29,11 @@ const BYPASS_KEYWORDS = [
   /\bমোবাইল\b/g,
   /\bফোন\b/g,
   /\bনম্বর\b/g,
+  /\bযোগাযোগ\b/g,
+  /\bহোয়াটসঅ্যাপ\b/g,
+  /\@\w+/g,            // Handles like @name
+  /\b(ig|fb|insta)\b/gi,
+  /\b(fb\.com|t\.me)\b/gi,
 ];
 
 const REPLACEMENT_TEXT = "[নিরাপত্তার স্বার্থে লুকানো]";

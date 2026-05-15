@@ -23,7 +23,6 @@ export function UsersTab() {
     email: string | null;
     image: string | null;
     isVerifiedSeller: boolean;
-    isPhoneVerified: boolean;
     winningStreak: number;
     userLevel: number;
     isRetailer: boolean;
@@ -144,7 +143,7 @@ export function UsersTab() {
                   User
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">
-                  Phone
+                  Joined
                 </th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">
                   Rating
@@ -199,16 +198,8 @@ export function UsersTab() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
-                    {user.isPhoneVerified ? (
-                      <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium">
-                        <CheckCircle className="w-3 h-3" /> Verified
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 text-xs">
-                        Not verified
-                      </span>
-                    )}
+                  <td className="px-4 py-3 text-gray-400 text-xs">
+                    {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">

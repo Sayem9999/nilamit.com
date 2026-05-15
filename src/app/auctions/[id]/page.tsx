@@ -360,14 +360,6 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <GatedContactInfo 
                       status={auction.escrowTransaction?.status}
                       transactionId={auction.escrowTransaction?.id}
-                      label={t("sellerPhone")}
-                      value={auction.seller?.phone || "N/A"}
-                      type="phone"
-                      isVerified={auction.seller?.isVerifiedSeller}
-                    />
-                    <GatedContactInfo 
-                      status={auction.escrowTransaction?.status}
-                      transactionId={auction.escrowTransaction?.id}
                       label={t("pickupLocation")}
                       value={auction.location || "N/A"}
                       type="address"
@@ -403,11 +395,6 @@ export default async function AuctionDetailPage({ params }: Props) {
                     streak={auction.seller?.winningStreak || 0}
                     reputation={auction.seller?.rating || 0}
                   />
-                  {auction.seller?.isPhoneVerified && (
-                    <span className="flex items-center gap-1 text-green-600 text-[10px] font-bold uppercase tracking-tight">
-                      <CheckCircle className="w-3 h-3" /> {t("verifiedPhone")}
-                    </span>
-                  )}
                 </div>
               </div>
             </div>

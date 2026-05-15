@@ -6,12 +6,10 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { 
   registerSchema, 
-  phoneSignupSchema, 
   passwordResetSchema, 
   formatZodError 
 } from "@/lib/schemas";
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from "@/lib/errors";
-import { normalizePhone } from "@/lib/utils";
 import { log } from "@/lib/logger";
 
 import { headers } from "next/headers";
@@ -54,7 +52,6 @@ export async function registerUser(data: unknown): Promise<ServiceResponse<{ mes
       email,
       password: hashedPassword,
       isRetailer,
-      isPhoneVerified: false,
       isVerifiedSeller: false,
       reputationScore: 0,
       rating: 0,
@@ -89,55 +86,23 @@ export async function resetPasswordWithOTP(data: unknown): Promise<ServiceRespon
     return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
   }
 
-  const { phone, email, otp, firebaseToken, password } = parsed.data;
+  const { email, otp, password } = parsed.data;
 
   try {
-    let userSnap;
-    if (phone) {
-      const normalizedPhone = normalizePhone(phone);
-      if (firebaseToken) {
-        // Verify Firebase ID Token Natively
-        const { adminAuth } = await import('@/lib/firebase-admin');
-        let decodedToken;
-        try {
-          decodedToken = await adminAuth.instance.verifyIdToken(firebaseToken);
-        } catch (e) {
-          log.error("[Auth] resetPasswordWithOTP ID token verification failed", e, { area: 'auth', severity: 'warning' });
-          return errorResponse(ErrorType.UNAUTHORIZED, "Invalid or expired verification session.");
-        }
-
-        const verifiedPhone = decodedToken.phone_number;
-        if (!verifiedPhone) {
-          return errorResponse(ErrorType.VALIDATION, "No verified phone number found in the token.");
-        }
-
-        const normalizedVerified = normalizePhone(verifiedPhone);
-        if (normalizedVerified !== normalizedPhone) {
-          return errorResponse(ErrorType.VALIDATION, "Verified phone number does not match reset phone number.");
-        }
-      } else {
-        return errorResponse(ErrorType.VALIDATION, "Verification is required to reset password.");
-      }
-      
-      userSnap = await db.collection("users").where("phone", "==", normalizedPhone).limit(1).get();
-    } else if (email) {
-      if (!otp) {
-        return errorResponse(ErrorType.VALIDATION, "OTP is required for email reset.");
-      }
-      // Verify Email OTP
-      const normalizedEmail = email.trim().toLowerCase();
-      const crypto = await import("crypto");
-      const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
-      const tokenId = `${normalizedEmail}__${hashedOTP}`;
-      
-      const tokenDoc = await db.collection("verificationTokens").doc(tokenId).get();
-      if (!tokenDoc.exists || (tokenDoc.data()?.expires.toDate() < new Date())) {
-        return errorResponse(ErrorType.VALIDATION, "Invalid or expired OTP.");
-      }
-      
-      await tokenDoc.ref.delete();
-      userSnap = await db.collection("users").where("email", "==", normalizedEmail).limit(1).get();
+    const normalizedEmail = email.trim().toLowerCase();
+    
+    // Verify Email OTP
+    const crypto = await import("crypto");
+    const hashedOTP = crypto.createHash("sha256").update(otp).digest("hex");
+    const tokenId = `${normalizedEmail}__${hashedOTP}`;
+    
+    const tokenDoc = await db.collection("verificationTokens").doc(tokenId).get();
+    if (!tokenDoc.exists || (tokenDoc.data()?.expires.toDate() < new Date())) {
+      return errorResponse(ErrorType.VALIDATION, "Invalid or expired OTP.");
     }
+    
+    await tokenDoc.ref.delete();
+    const userSnap = await db.collection("users").where("email", "==", normalizedEmail).limit(1).get();
 
     if (!userSnap || userSnap.empty) {
       return errorResponse(ErrorType.NOT_FOUND, "User not found.");

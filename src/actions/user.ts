@@ -75,10 +75,11 @@ export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): P
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
-  const { bdPhoneSchema } = await import('@/lib/schemas');
-  const parsedPhone = bdPhoneSchema.safeParse(number);
-  if (!parsedPhone.success) return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladeshi mobile number. Format: +8801XXXXXXXXX');
-  const validatedNumber = parsedPhone.data;
+  const mfsRegex = /^\+8801[3-9]\d{8}$/;
+  if (!mfsRegex.test(number)) {
+    return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladeshi mobile number. Format: +8801XXXXXXXXX');
+  }
+  const validatedNumber = number;
 
   const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success } = await apiLimiter.limit(`mfs_link_${session.user.id}_${ip}`);
@@ -102,7 +103,7 @@ export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): P
   }
 }
 
-export async function getCurrentUserVerification(): Promise<ServiceResponse<{ isPhoneVerified: boolean; isEmailVerified: boolean; isBanned: boolean; isVerifiedSeller: boolean; isAdmin: boolean }>> {
+export async function getCurrentUserVerification(): Promise<ServiceResponse<{ isEmailVerified: boolean; isBanned: boolean; isVerifiedSeller: boolean; isAdmin: boolean }>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
@@ -112,7 +113,6 @@ export async function getCurrentUserVerification(): Promise<ServiceResponse<{ is
     const u = snap.data()!;
     const { isAdminEmail } = await import('@/lib/admin-guard');
     return successResponse({
-      isPhoneVerified: !!u.isPhoneVerified,
       isEmailVerified: u.emailVerified != null,
       isBanned: !!u.isBanned,
       isVerifiedSeller: !!u.isVerifiedSeller,

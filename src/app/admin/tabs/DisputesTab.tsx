@@ -11,8 +11,8 @@ interface DisputeTransaction {
   amount: number;
   status: string;
   createdAt: Date;
-  auction: { id: string, title: string, seller: { name: string | null; phone: string | null } };
-  buyer: { name: string | null; phone: string | null };
+  auction: { id: string, title: string, seller: { name: string | null; email: string | null } };
+  buyer: { name: string | null; email: string | null };
   dispute: { reason: string } | null;
 }
 
@@ -138,12 +138,12 @@ export function DisputesTab() {
                        <div className="p-3 bg-gray-50 rounded-xl">
                           <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Buyer (Claimant)</p>
                           <p className="font-semibold text-gray-900">{tx.buyer.name || "Unknown"}</p>
-                          <p className="text-xs text-gray-500">{tx.buyer.phone}</p>
+                          <p className="text-xs text-gray-500">{tx.buyer.email}</p>
                        </div>
                        <div className="p-3 bg-gray-50 rounded-xl">
                           <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Seller (Recipient)</p>
                           <p className="font-semibold text-gray-900">{tx.auction.seller.name || "Unknown"}</p>
-                          <p className="text-xs text-gray-500">{tx.auction.seller.phone}</p>
+                          <p className="text-xs text-gray-500">{tx.auction.seller.email}</p>
                        </div>
                     </div>
 

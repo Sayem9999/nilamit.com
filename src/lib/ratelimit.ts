@@ -123,9 +123,7 @@ export const authLimiter  = createLimiter("rl_auth",   10, "15m", "fail-closed")
 export const bidLimiter   = createLimiter("rl_bid",    60, "60s", "fail-closed");
 export const loginLimiter = createLimiter("rl_login",  20, "5m",  "fail-closed");
 
-// Per-phone / per-email OTP limiters — must fail closed (6-digit space is small).
-export const phoneOtpSendLimiter   = createLimiter("rl_phone_otp_send",   5, "1h",  "fail-closed");
-export const phoneOtpVerifyLimiter = createLimiter("rl_phone_otp_verify", 5, "15m", "fail-closed");
+// Per-email OTP limiters — must fail closed (6-digit space is small).
 export const emailOtpSendLimiter   = createLimiter("rl_email_otp_send",   5, "1h",  "fail-closed");
 export const emailOtpVerifyLimiter = createLimiter("rl_email_otp_verify", 5, "15m", "fail-closed");
 

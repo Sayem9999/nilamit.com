@@ -1,6 +1,6 @@
 'use server';
 
-import { db, snapDocs, FieldValue } from '@/lib/db';
+import { db, snapDocs, FieldValue, batchDelete } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 import { Auction, User, Report } from '@/types';
@@ -266,27 +266,17 @@ export async function adminDeleteAuction(auctionId: string, reason: string): Pro
     }
     const auctionData = aSnap.data();
 
-    // 1. Fetch related subcollections and documents to delete in a batch
+    // 1. Delete related entities in large batches (safe for >500 docs)
+    await Promise.all([
+      batchDelete(db.collection('bids').where('auctionId', '==', auctionId)),
+      batchDelete(db.collection('reports').where('auctionId', '==', auctionId)),
+      batchDelete(db.collection('watchlist').where('auctionId', '==', auctionId)),
+      batchDelete(db.collection('conversations').where('auctionId', '==', auctionId)),
+    ]);
+
+    // 2. Delete the auction itself and log in a final atomic batch
     const batch = db.batch();
-
-    // Delete the auction itself
     batch.delete(aRef);
-
-    // Delete bids with auctionId
-    const bidsSnap = await db.collection('bids').where('auctionId', '==', auctionId).get();
-    bidsSnap.docs.forEach((doc) => batch.delete(doc.ref));
-
-    // Delete reports with auctionId
-    const reportsSnap = await db.collection('reports').where('auctionId', '==', auctionId).get();
-    reportsSnap.docs.forEach((doc) => batch.delete(doc.ref));
-
-    // Delete watchlist with auctionId
-    const watchlistSnap = await db.collection('watchlist').where('auctionId', '==', auctionId).get();
-    watchlistSnap.docs.forEach((doc) => batch.delete(doc.ref));
-
-    // Delete conversations with auctionId
-    const conversationsSnap = await db.collection('conversations').where('auctionId', '==', auctionId).get();
-    conversationsSnap.docs.forEach((doc) => batch.delete(doc.ref));
 
     // Mandatory Audit Log
     const logRef = db.collection('admin_logs').doc();

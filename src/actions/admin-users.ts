@@ -119,7 +119,6 @@ export async function getAdminUsers(opts: {
         email: (data.email as string) ?? null,
         image: (data.image as string) ?? null,
         isVerifiedSeller: !!data.isVerifiedSeller,
-        isPhoneVerified: !!data.isPhoneVerified,
         rating: (data.rating as number) ?? 0,
         ratingCount: (data.ratingCount as number) ?? 0,
         isBanned: !!data.isBanned,
