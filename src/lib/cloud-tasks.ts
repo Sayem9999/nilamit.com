@@ -41,3 +41,44 @@ export async function scheduleAuctionClosure(auctionId: string, endTime: Date) {
     log.error('[CloudTasks] Failed to schedule task:', error);
   }
 }
+
+export async function scheduleClosingSoonAlert(auctionId: string, endTime: Date) {
+  if (!process.env.CRON_SECRET) return;
+  const parent = client.queuePath(PROJECT_ID, QUEUE_LOCATION, QUEUE_NAME);
+  const task = {
+    httpRequest: {
+      httpMethod: 'POST' as const,
+      url: `${BASE_URL}/api/tasks/closing-soon`,
+      headers: { 'Content-Type': 'application/json', 'x-cron-secret': process.env.CRON_SECRET },
+      body: Buffer.from(JSON.stringify({ auctionId })).toString('base64'),
+    },
+    scheduleTime: { seconds: Math.floor(endTime.getTime() / 1000) - 3600 },
+  };
+
+  try {
+    await client.createTask({ parent, task });
+  } catch (error) {
+    log.error('[CloudTasks] Failed to schedule closing-soon task:', error);
+  }
+}
+
+export async function scheduleEnforcePaymentPolicy(auctionId: string) {
+  if (!process.env.CRON_SECRET) return;
+  const parent = client.queuePath(PROJECT_ID, QUEUE_LOCATION, QUEUE_NAME);
+  // Schedule for 24 hours from now
+  const task = {
+    httpRequest: {
+      httpMethod: 'POST' as const,
+      url: `${BASE_URL}/api/tasks/enforce-policies`,
+      headers: { 'Content-Type': 'application/json', 'x-cron-secret': process.env.CRON_SECRET },
+      body: Buffer.from(JSON.stringify({ auctionId })).toString('base64'),
+    },
+    scheduleTime: { seconds: Math.floor(Date.now() / 1000) + (24 * 3600) },
+  };
+
+  try {
+    await client.createTask({ parent, task });
+  } catch (error) {
+    log.error('[CloudTasks] Failed to schedule enforce-policies task:', error);
+  }
+}

@@ -5,6 +5,7 @@ import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import type { AuctionStatus } from '@/types';
 import { log } from '@/lib/logger';
+import { scheduleEnforcePaymentPolicy } from '@/lib/cloud-tasks';
 
 // ─── Commission Tiers ────────────────────────────────────────────────────────
 export function calculateSuccessFee(finalPrice: number): { fee: number; rate: number } {
@@ -118,6 +119,11 @@ export function sendSaleNotifications(payload: SaleNotifyPayload) {
 
   processSaleGamification(payload.winnerId, payload.sellerId).catch((e) =>
     log.error('auction-logic: sale gamification failed', e, { auctionId: payload.auctionId }),
+  );
+
+  // Schedule enforcement of 24h payment policy
+  scheduleEnforcePaymentPolicy(payload.auctionId).catch((e) =>
+    log.error('auction-logic: enforce payment task scheduling failed', e, { auctionId: payload.auctionId })
   );
 }
 

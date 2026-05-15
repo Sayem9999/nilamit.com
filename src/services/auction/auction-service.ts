@@ -7,7 +7,7 @@ import { log } from '@/lib/logger';
 import type { CreateAuctionInputValidated } from '@/lib/schemas';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
-import { scheduleAuctionClosure } from '@/lib/cloud-tasks';
+import { scheduleAuctionClosure, scheduleClosingSoonAlert } from '@/lib/cloud-tasks';
 
 export class AuctionService {
   /**
@@ -200,6 +200,13 @@ export class AuctionService {
       scheduleAuctionClosure(id, auction.endTime).catch((e) =>
         log.error('[AuctionService] cloud task scheduling failed', e, { auctionId: id })
       );
+
+      // Enqueue Cloud Task for ending soon alert (if auction is longer than 1 hour)
+      if (auction.endTime.getTime() - auction.startTime.getTime() > 3600000) {
+        scheduleClosingSoonAlert(id, auction.endTime).catch((e) =>
+          log.error('[AuctionService] closing soon task scheduling failed', e, { auctionId: id })
+        );
+      }
 
       log.info('Auction created successfully', { auctionId: id, sellerId: userId });
 
