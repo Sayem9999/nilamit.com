@@ -38,7 +38,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns"],
   },
-  serverExternalPackages: ["@google-cloud/tasks"],
 
   async headers() {
     const csp = [
