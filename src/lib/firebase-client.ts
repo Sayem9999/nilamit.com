@@ -21,6 +21,7 @@ import { getDatabase, type Database } from 'firebase/database';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAuth, sendEmailVerification, signInWithCustomToken, type Auth, type User } from 'firebase/auth';
 import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { log } from '@/lib/logger';
 
 const firebaseConfig = {
@@ -36,7 +37,18 @@ const firebaseConfig = {
 
 function getClientApp(): FirebaseApp {
   if (getApps().length > 0) return getApps()[0]!;
-  return initializeApp(firebaseConfig);
+  
+  const app = initializeApp(firebaseConfig);
+  
+  // Initialize App Check (reCAPTCHA v3) if in browser
+  if (typeof window !== 'undefined') {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || 'dummy_site_key'),
+      isTokenAutoRefreshEnabled: true
+    });
+  }
+  
+  return app;
 }
 
 // Lazy singletons

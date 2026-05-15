@@ -1,4 +1,5 @@
 import { db, snapDocs } from '@/lib/db';
+import { getAuth } from 'firebase-admin/auth';
 import { AuctionStatus, type User } from '@/types';
 import { log } from '@/lib/logger';
 import { ErrorType, AppError } from '@/lib/errors';
@@ -84,6 +85,14 @@ export class AdminService {
     });
 
     await batch.commit();
+
+    // Sync custom claims to Identity Platform for instant authorization
+    try {
+      await getAuth().setCustomUserClaims(userId, { isVerifiedSeller: next });
+    } catch (e) {
+      log.warn('[AdminService] Failed to sync custom claims, but DB was updated', e, { userId });
+    }
+
     return { isVerifiedSeller: next };
   }
 }

@@ -64,6 +64,9 @@ export async function GET() {
     if ('isAdmin' in session.user && session.user.isAdmin) {
       customClaims.isAdmin = true;
     }
+    if ('isVerifiedSeller' in session.user && session.user.isVerifiedSeller) {
+      customClaims.isVerifiedSeller = true;
+    }
 
     const token = await adminAuth.createCustomToken(session.user.id, customClaims);
     return NextResponse.json({ token });
