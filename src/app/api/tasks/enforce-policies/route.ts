@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { AuctionService } from '@/services/auction/auction-service';
 import { calculateLevel } from '@/lib/gamification-engine';
 import { verifyCronSecret } from '@/lib/cron-utils';
 import { log } from '@/lib/logger';
-
-export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   const authError = verifyCronSecret(req);

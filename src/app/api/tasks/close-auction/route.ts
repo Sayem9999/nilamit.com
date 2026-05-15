@@ -4,6 +4,8 @@ import { log } from '@/lib/logger';
 import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   // 1. Auth gate (reusing the cron secret for Cloud Tasks)
   const authError = verifyCronSecret(req);

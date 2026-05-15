@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { db, toDate } from '@/lib/db';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
@@ -6,8 +8,6 @@ import { sendEndingSoonEmail } from '@/lib/firebase-email';
 import { verifyCronSecret } from '@/lib/cron-utils';
 import { log } from '@/lib/logger';
 import { Auction, User } from '@/types';
-
-export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   const authError = verifyCronSecret(req);

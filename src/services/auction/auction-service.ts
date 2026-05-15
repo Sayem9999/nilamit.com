@@ -197,7 +197,9 @@ export class AuctionService {
         .catch((e) => log.error('[AuctionService] follower fan-out failed', e, { auctionId: id }));
 
       // Enqueue Cloud Task for precise closure
-      scheduleAuctionClosure(id, auction.endTime).catch((e) =>
+      (async () => {
+        await scheduleAuctionClosure(id, auction.endTime);
+      })().catch((e) =>
         log.error('[AuctionService] cloud task scheduling failed', e, { auctionId: id })
       );
 

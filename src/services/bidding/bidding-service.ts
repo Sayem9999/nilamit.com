@@ -350,8 +350,9 @@ export class BiddingService {
 
     if (result.antiSnipeTriggered) {
       tasks.push(
-        scheduleAuctionClosure(auctionId, result.newEndTime)
-          .catch(e => log.error('bidding: task reschedule failed', e, { auctionId }))
+        (async () => {
+          await scheduleAuctionClosure(auctionId, result.newEndTime);
+        })().catch(e => log.error('bidding: task reschedule failed', e, { auctionId }))
       );
     }
 

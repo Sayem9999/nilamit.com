@@ -96,7 +96,7 @@ export function processAuctionSale(
   };
 }
 
-import { processSaleGamification } from '@/actions/gamification';
+import { GamificationService } from '@/services/gamification/gamification-service';
 
 // ─── sendSaleNotifications ───────────────────────────────────────────────────
 /** Caller invokes this AFTER the auction-sale transaction commits. */
@@ -117,7 +117,7 @@ export function sendSaleNotifications(payload: SaleNotifyPayload) {
     amount:    payload.finalPrice,
   }).catch((e) => log.error('auction-logic: winner RTDB notification failed', e, { auctionId: payload.auctionId }));
 
-  processSaleGamification(payload.winnerId, payload.sellerId).catch((e) =>
+  GamificationService.processSaleGamification(payload.winnerId, payload.sellerId).catch((e) =>
     log.error('auction-logic: sale gamification failed', e, { auctionId: payload.auctionId }),
   );
 

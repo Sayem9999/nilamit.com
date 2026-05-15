@@ -90,7 +90,7 @@ export class AdminService {
     try {
       await getAuth().setCustomUserClaims(userId, { isVerifiedSeller: next });
     } catch (e) {
-      log.warn('[AdminService] Failed to sync custom claims, but DB was updated', e, { userId });
+      log.warn('[AdminService] Failed to sync custom claims, but DB was updated', { error: e, userId });
     }
 
     return { isVerifiedSeller: next };

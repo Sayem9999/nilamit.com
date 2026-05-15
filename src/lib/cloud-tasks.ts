@@ -9,10 +9,10 @@ const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'nilamit-52073
 const QUEUE_LOCATION = 'asia-southeast1';
 const QUEUE_NAME = 'auction-closures';
 
-export async function scheduleAuctionClosure(auctionId: string, endTime: Date) {
+export async function scheduleAuctionClosure(auctionId: string, endTime: Date): Promise<string | undefined> {
   if (!process.env.CRON_SECRET) {
-    log.warn('[CloudTasks] CRON_SECRET is not set, skipping task schedule for', auctionId);
-    return;
+    log.warn('[CloudTasks] CRON_SECRET is not set, skipping task schedule', { auctionId });
+    return undefined;
   }
 
   const parent = client.queuePath(PROJECT_ID, QUEUE_LOCATION, QUEUE_NAME);
@@ -36,13 +36,14 @@ export async function scheduleAuctionClosure(auctionId: string, endTime: Date) {
     log.info(`[CloudTasks] Scheduling closure for ${auctionId} at ${endTime.toISOString()}`);
     const [response] = await client.createTask({ parent, task });
     log.info(`[CloudTasks] Task created: ${response.name}`);
-    return response.name;
+    return response.name ?? undefined;
   } catch (error) {
-    log.error('[CloudTasks] Failed to schedule task:', error);
+    log.error('[CloudTasks] Failed to schedule task', error instanceof Error ? error : new Error(String(error)), { auctionId });
+    return undefined;
   }
 }
 
-export async function scheduleClosingSoonAlert(auctionId: string, endTime: Date) {
+export async function scheduleClosingSoonAlert(auctionId: string, endTime: Date): Promise<void> {
   if (!process.env.CRON_SECRET) return;
   const parent = client.queuePath(PROJECT_ID, QUEUE_LOCATION, QUEUE_NAME);
   const task = {
@@ -58,11 +59,11 @@ export async function scheduleClosingSoonAlert(auctionId: string, endTime: Date)
   try {
     await client.createTask({ parent, task });
   } catch (error) {
-    log.error('[CloudTasks] Failed to schedule closing-soon task:', error);
+    log.error('[CloudTasks] Failed to schedule closing-soon task', error instanceof Error ? error : new Error(String(error)), { auctionId });
   }
 }
 
-export async function scheduleEnforcePaymentPolicy(auctionId: string) {
+export async function scheduleEnforcePaymentPolicy(auctionId: string): Promise<void> {
   if (!process.env.CRON_SECRET) return;
   const parent = client.queuePath(PROJECT_ID, QUEUE_LOCATION, QUEUE_NAME);
   // Schedule for 24 hours from now
@@ -79,6 +80,6 @@ export async function scheduleEnforcePaymentPolicy(auctionId: string) {
   try {
     await client.createTask({ parent, task });
   } catch (error) {
-    log.error('[CloudTasks] Failed to schedule enforce-policies task:', error);
+    log.error('[CloudTasks] Failed to schedule enforce-policies task', error instanceof Error ? error : new Error(String(error)), { auctionId });
   }
 }
