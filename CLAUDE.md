@@ -58,9 +58,11 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 13. **Logistics writes go through `src/lib/logistics.ts`, not Server Actions.** `createLogisticsOrder` takes pre-loaded addresses from a transaction; never re-export it as `'use server'`. Admin-only override is exposed via `src/actions/logistics.ts::updateLogisticsStatus()`.
 
-14. **Refunds go through `adminRefundEscrow()` in `src/actions/dispute.ts`.** Single source of truth — validates escrow status, increments `defectCount`, writes to `admin_logs`, kicks off seller-performance recompute. `refundEscrow()` in `src/actions/escrow.ts` is a thin compat shim.
-
-15. **Sentry-tag every error in a critical path.** `log.error()` accepts `area` + `severity` in its context; pass them whenever the failure should page someone. The alert rules in `docs/SENTRY_ALERTS.md` filter on these tags — a missing tag means the alert silently won't fire. Areas: `bid`, `escrow`, `auth`, `cron`, `upload`, `dispute`, `chat`, `logistics`, `admin`. Severities: `critical` (page), `warning` (slack), `info` (first-seen only).
+14. **Refunds go through `adminRefundEscrow()` in `src/actions/dispute.ts`.** Single source of truth — validates escrow status, increments `defectCount`, writes to `admin_logs`, kicks off seller-performance recompute. `refundEscrow()` in `src/actions/esc  15. **Sentry-tag every error in a critical path.** `log.error()` accepts `area` + `severity` in its context; pass them whenever the failure should page someone. The alert rules in `docs/SENTRY_ALERTS.md` filter on these tags — a missing tag means the alert silently won't fire. Areas: `bid`, `escrow`, `auth`, `cron`, `upload`, `dispute`, `chat`, `logistics`, `admin`. Severities: `critical` (page), `warning` (slack), `info` (first-seen only).
+  
+  16. **Global Security Headers** — `middleware.ts` enforces CSP, HSTS, and Frame protection. Always verify new scripts/domains against the CSP whitelist.
+  
+  17. **High-Scalability Services** — For large features (Auction, Bidding), use the **Modular Service Pattern**: split into `modules/reader`, `modules/writer`, and `modules/notifier`.
 
 ---
 
@@ -72,6 +74,7 @@ Browser (React 19)
   └── Server Actions      → Auth gate, Zod validation, rate limit, business logic
        src/actions/*.ts
         ├── Domain Services   src/services/   → BiddingService, AuctionService
+        │    └── Modules      src/services/*/modules/ → Split by Query/Command/Event
         └── Infrastructure    src/lib/
              ├── Firestore   (Admin SDK only — all writes)
              ├── RTDB        (real-time events after commits)
@@ -85,42 +88,20 @@ Browser (React 19)
 
 | File | Purpose |
 |---|---|
-| `src/lib/auth.ts` | NextAuth config, FirestoreAdapter, JWT/session callbacks |
+| `src/lib/auth.ts` | NextAuth config, FirestoreAdapter, JWT/session callbacks (Rate limited) |
 | `src/lib/auth.config.ts` | Edge-safe NextAuth config — `pages.error: '/login'`, protected paths |
-| `src/lib/admin-guard.ts` | `requireAdmin()` — single admin gate |
+| `src/lib/admin-guard.ts` | `requireAdmin()` — single admin gate with DB-deep check |
 | `src/lib/db.ts` | Firestore proxy singleton, `docData()`, `snapDocs()`, `newId()` |
-| `src/lib/firebase-admin.ts` | Admin SDK init (throws on missing creds), `rtdbPush()`, `rtdbSet()` |
-| `src/lib/ratelimit.ts` | All rate limiters — fail-closed in production |
-| `src/lib/schemas.ts` | All Zod schemas — add new ones here |
-| `src/lib/auction-logic.ts` | `processAuctionSale()` — reserve check, commission, escrow, RTDB notify |
+| `src/lib/firebase-admin.ts` | Admin SDK init, `rtdbPush()`, `rtdbSet()` |
+| `src/lib/ratelimit.ts` | Upstash rate limiters — fail-closed in production |
+| `src/lib/schemas.ts` | All Zod schemas — single source of truth |
 | `src/lib/errors.ts` | `ServiceResponse<T>`, `errorResponse()`, `successResponse()` |
-| `src/lib/env.ts` | Zod env validation — `UPSTASH_REDIS_*` optional |
-| `src/actions/bid.ts` | `placeBid()`, `executeBuyItNow()` |
-| `src/actions/auction.ts` | `createAuction()`, `getAuctions()`, `getSpecializedFeeds()` |
-| `src/actions/escrow.ts` | Escrow state transitions (all transactional) |
-| `src/actions/admin.ts` | Admin stats/disputes/treasury — batch-hydrated |
-| `src/actions/dispute.ts` | `raiseDispute()`, `resolveDispute()` — both transactional |
-| `src/actions/report.ts` | `reportAuction()` — composite doc ID, transactional |
-| `src/actions/chat.ts` | `sendMessage()` — validated, PII-filtered, stores buyerId/sellerId |
-| `src/actions/review.ts` | Reviews — batch-fetched, reputation capped at 100 reviews |
-| `src/actions/user.ts` | `updateProfile()` (validated), `getPublicProfile()` (count aggregations) |
-| `src/middleware.ts` | Auth check, ban redirect, legacy `/en/*` → `/*` redirect |
-| `src/app/admin/page.tsx` | Calls `requireAdmin()` + `redirect('/login')` before fetching |
-| `src/app/admin/disputes/page.tsx` | Server-side admin gate; client at `AdminDisputesClient.tsx` |
-| `src/app/api/cron/` | 5 cron routes — all POST, all `verifyCronSecret()` |
-| `src/lib/logistics.ts` | Internal `server-only` module — caller must pass pre-loaded addresses |
-| `src/lib/image-moderation.ts` | Cloud Vision SafeSearch wrapper — auto-skips when `IMAGE_MODERATION != "enabled"` |
-| `src/app/api/cron/gc-uploads/` | Weekly GC for orphaned Storage objects |
-| `.github/workflows/cron.yml` | The actual scheduler — all 5 cron jobs live here |
-| `firestore.rules` | `allow write: if false` everywhere; `isAdmin` claim from `/api/firebase/token` |
-| `firestore.indexes.json` | All composite indexes — update and `firebase deploy --only firestore:indexes` |
-| `apphosting.yaml` | Firebase App Hosting config + secret mappings + `IMAGE_MODERATION` flag |
-| `cloudbuild.yaml` | Build pipeline — uses `npm install` (not `npm ci`, see Known Issues) |
-| `messages/en.json` | English translations — every `useTranslations` key must be defined here |
-| `src/lib/logger.ts` | `log.info/warn/error/debug` — `error`/`warn` auto-capture to Sentry; pass `area` + `severity` in context to tag for alert rules |
-| `src/lib/sentry-tags.ts` | `tagSentryArea(area, severity)` + `captureWithArea(err, area, severity)` — single source of truth for Sentry alert tags |
-| `docs/SENTRY_ALERTS.md` | Canonical list of Sentry alert rules (must be created in the Sentry UI) |
-| `src/app/api/sentry-test/route.ts` | Admin-only `GET ?area=&severity=` endpoint to verify alert rules end-to-end |
+| `src/services/auction/` | Modular Auction logic (Reader, Writer, Notifier) |
+| `src/services/bidding/` | Modular Bidding logic (Processor, SideEffects) |
+| `src/actions/bid.ts` | Server actions for bidding — entry points |
+| `src/actions/auction.ts` | Server actions for auction management |
+| `src/middleware.ts` | Security headers (CSP, HSTS), Auth check, Ban redirect |
+| `src/lib/logger.ts` | `log.info/warn/error/debug` — auto-capture to Sentry with area tags |
 
 ---
 
@@ -129,17 +110,17 @@ Browser (React 19)
 ```
 placeBid(auctionId, amount)
   1. auth() + placeBidSchema.safeParse()
-  2. bidLimiter.limit() — fail-closed
-  3. requireBiddingPrivileges() — email verified, not banned, not minor
-  4. Elite deposit check (≥ ৳100,000)
-  5. BiddingService.placeBid() →
-       db.runTransaction()
+  2. bidLimiter.limit() — fail-closed (Upstash)
+  3. requireBiddingPrivileges() — cached verify
+  4. BiddingService.placeBid() →
+       BidProcessor.placeBid() (Transaction)
          tx.get(auctionRef) ← locks auction doc
          validateBidPreconditions()
-         computeAntiSnipeExtension() ← extends from endTime if < 2min left
+         computeAntiSnipeExtension()
+         Proxy Bidding Logic (Competitive)
          tx.set(bidRef)
          tx.update(auctionRef, { currentPrice, currentBidderId, endTime, bidCount })
-       COMMIT → processAlertsAfterBid(), handleBidSideEffects() (async)
+       COMMIT → BidSideEffects.handleBidSideEffects() (Async RTDB + Notifiers)
 ```
 
 ## Escrow State Machine

@@ -52,7 +52,6 @@ import { Metadata } from "next";
 import Script from "next/script";
 import { getTranslations } from "next-intl/server";
 import { ErrorType, errorResponse } from "@/lib/errors";
-import SecondChanceButton from "@/components/auction/SecondChanceButton";
 import { AuctionStatus } from "@/types";
 import { SecondChanceOfferButton } from "@/components/auction/SecondChanceOfferButton";
 import { AuctionStatusBadge } from "@/components/auction/AuctionStatusBadge";
@@ -442,7 +441,7 @@ export default async function AuctionDetailPage({ params }: Props) {
 
                   {/* Second Chance Offer Action */}
                   {session?.user?.id === auction.sellerId && auction.status === AuctionStatus.SOLD && (
-                    <SecondChanceButton auctionId={id} />
+                    <SecondChanceOfferButton auctionId={id} />
                   )}
                 </div>
 

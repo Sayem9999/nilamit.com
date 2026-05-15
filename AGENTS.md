@@ -16,7 +16,8 @@ Nilamit is a mobile-first, trust-focused C2C auction marketplace for Bangladesh.
 
 ## Project Structure
 - `src/actions/` — Server Actions (API entry points). Auth gated and input validated via Zod.
-- `src/services/` — Pure business logic. Decoupled from the HTTP layer.
+- `src/services/` — Business logic Layer.
+  - `modules/` — Specialized logic (Query vs Command vs Notifier).
 - `src/lib/` — Infrastructure (Auth, DB, Logging, Rate Limiting, Logistics, Image Moderation).
 - `src/types/` — Domain-driven modular type system.
 - `src/app/` — Next.js App Router (pages and API routes). **No `[locale]` folder** — flat routing.
@@ -27,8 +28,13 @@ Nilamit is a mobile-first, trust-focused C2C auction marketplace for Bangladesh.
 ## Code Style
 - **TypeScript**: Strict typing required. Avoid `any`. CI lint fails on `@typescript-eslint/no-explicit-any`.
 - **Server Actions**: Must return `ServiceResponse<T>`. Never throw to the client.
-- **Services**: Business logic belongs here, not in Actions or Components.
+- **Services**: Business logic belongs here, not in Actions or Components. 
+  - **Modular Service Pattern**: For scalability, split large services into specialized modules (e.g., `auction-reader.ts`, `auction-writer.ts`, `auction-notifier.ts`) and use the main service as a facade.
 - **Naming**: camelCase for functions/variables, PascalCase for components/classes.
+- **Security**: 
+  - **CSP**: All routes are protected by a strict Content Security Policy in `middleware.ts`.
+  - **Rate Limiting**: Critical actions (login, bidding) must be rate-limited via Upstash in `lib/ratelimit.ts`.
+  - **Sanitization**: All user input must be sanitized via `DOMPurify` (isomorphic) and PII filtered before storage.
 - **i18n**: All UI text must use `next-intl`. **English-only** — only `messages/en.json` ships. To add a locale, update `src/i18n/routing.ts`, `src/i18n.ts`, and add a new messages file.
 - **Comments**: Default to none. Add only when the WHY is non-obvious (hidden constraint, workaround for a specific bug).
 - **Brand Logo Consistency**: The authoritative, canonical brand logo of Nilamit is a **white Lucide Gavel icon inside a perfect circular container** (using the `rounded-full` utility). This circular badge must be used uniformly across all views (such as Navbar, Footer, Login, Register, Forgot Password, and Not Found screens) with either a solid brand-blue background (`bg-primary-600`) or gradient (`bg-gradient-to-br from-primary-500 to-primary-700`). Squircles or alternative icon types (e.g., `ShieldCheck` or letters like "N") are forbidden for primary brand representations.

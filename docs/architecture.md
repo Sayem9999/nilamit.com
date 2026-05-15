@@ -15,15 +15,16 @@ Browser (React 19)
   │
   └── Server Actions         → Auth gate, Zod validation, **Bifurcation**, revalidation
        │                        src/actions/*.ts
-       ├── Domain Services   → Business logic, Firestore transactions
-       │   src/services/     → BiddingService, AuctionService
-       │
-       └── Infrastructure    → src/lib/
-            ├── Firestore    → All persistent state (Admin SDK only)
-            ├── RTDB         → Real-time events (bids, notifications, presence)
-            ├── Firebase Storage → Images, chat attachments
-            ├── Upstash Redis   → Rate limiting (fail-closed in production)
-            └── Sentry          → Error tracking + performance
+        ├── Domain Services   → Business logic Layer
+        │   src/services/     → BiddingService, AuctionService
+        │    └── Modules      → Specialized Reader/Writer/Notifier sub-modules
+        │
+        └── Infrastructure    → src/lib/
+             ├── Firestore    → All persistent state (Admin SDK only)
+             ├── RTDB         → Real-time events (bids, notifications, presence)
+             ├── Firebase Storage → Images, chat attachments
+             ├── Upstash Redis   → High-throughput Rate limiting (sliding window)
+             └── Sentry          → Error tracking + performance (Area/Severity tagged)
 ```
 
 ---
@@ -50,11 +51,16 @@ Thin controllers acting as the API boundary. Each action:
 
 ### Layer 3 — Domain Services (`src/services/`)
 
-Pure business logic, decoupled from the HTTP/Action layer:
+Pure business logic, decoupled from the HTTP/Action layer. For high scalability, large services are decomposed into specialized sub-modules:
 
-- **`BiddingService`** — Handles atomic bid placement, anti-snipe extensions, and **Proxy Bidding** logic.
-- **`AdminService`** — Centralizes administrative logic: dashboard aggregations, manual escrow overrides, and user verification workflows.
-- **`AuctionService`** — Manages complex listing queries, filtering, and PII-aware hydration.
+- **`BiddingService`** — Facade for the bidding domain.
+  - `BidProcessor`: Atomic transactions, Proxy Bidding, Anti-sniping.
+  - `BidSideEffects`: RTDB syncing, outbid notifications, seller alerts.
+- **`AuctionService`** — Facade for the auction domain.
+  - `AuctionReader`: Hydrated queries, PII-shielded data fetching.
+  - `AuctionWriter`: Listing creation, cloud task scheduling, status updates.
+  - `AuctionNotifier`: Fan-out notifications to followers and watchers.
+- **`AdminService`** — Dashboard aggregations and manual escrow overrides.
 
 ---
 

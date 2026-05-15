@@ -2,7 +2,18 @@
 
 All notable changes to the Nilamit platform will be documented in this file.
 
-## [2.4.0] - 2026-05-06 (Current)
+## [2.5.0] - 2026-05-15 (Latest)
+### Added 🆕
+- **Modular Service Architecture**: Decomposed monolithic `AuctionService` and `BiddingService` into a scalable facade pattern with specialized `Reader`, `Writer`, `Processor`, and `Notifier` modules.
+- **Security Hardening**: Implemented a global strict **Content Security Policy (CSP)**, Upstash-backed **sliding-window rate limiting** for auth/bidding, and isomorphic **PII filtering** for user-generated content.
+- **High-Performance Cleanup**: Cleared ~1.5GB of build artifacts and temporary data (`.claude/worktrees`, `.next` cache) to optimize system footprint.
+
+### Fixed 🐛
+- **UI Redundancy**: Merged duplicate `SecondChance` button components into a single, polished `SecondChanceOfferButton` with a consistent confirmation workflow.
+- **Transactional Integrity**: Restored and isolated the complex Proxy Bidding logic within the new `BidProcessor` module, ensuring robust concurrency handling.
+- **Type Safety**: Fixed path alias resolution issues in the new service layer and achieved 100% type coverage for modular facades.
+
+## [2.4.0] - 2026-05-06
 ### Added 🆕
 - **Firestore Brute-Force Shield**: Enforced transactional state check limits of maximum 5 attempts for OTP code-space verification directly in Firestore.
 - **GCP Secrets Integration**: Added live Redis credentials in GCP Secret Manager to activate high-throughput sliding-window rate limiting.
