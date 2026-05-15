@@ -25,14 +25,14 @@ import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { log } from '@/lib/logger';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAOwypGtSAeCsZpHogZx7Jt_MPX2nh3GZM",
-  authDomain: "nilamit-52073.firebaseapp.com",
-  databaseURL: "https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "nilamit-52073",
-  storageBucket: "nilamit-52073.firebasestorage.app",
-  messagingSenderId: "884637735592",
-  appId: "1:884637735592:web:b817a744a54f15a663409d",
-  measurementId: "G-H9QW6DLWWJ"
+  apiKey:             process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAOwypGtSAeCsZpHogZx7Jt_MPX2nh3GZM",
+  authDomain:         process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "nilamit-52073.firebaseapp.com",
+  databaseURL:        process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || "https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "nilamit-52073",
+  storageBucket:      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "nilamit-52073.firebasestorage.app",
+  messagingSenderId:  process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "884637735592",
+  appId:              process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:884637735592:web:b817a744a54f15a663409d",
+  measurementId:      process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-H9QW6DLWWJ"
 };
 
 function getClientApp(): FirebaseApp {
@@ -40,12 +40,16 @@ function getClientApp(): FirebaseApp {
   
   const app = initializeApp(firebaseConfig);
   
-  // Initialize App Check (reCAPTCHA v3) if in browser
-  if (typeof window !== 'undefined') {
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || 'dummy_site_key'),
-      isTokenAutoRefreshEnabled: true
-    });
+  // Initialize App Check (reCAPTCHA v3) if in browser and key is provided
+  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+    try {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+        isTokenAutoRefreshEnabled: true
+      });
+    } catch (err) {
+      log.warn('[Firebase Client] App Check initialization failed', { error: err });
+    }
   }
   
   return app;

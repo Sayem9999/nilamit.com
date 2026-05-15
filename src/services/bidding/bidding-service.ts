@@ -23,6 +23,7 @@ interface BidSideEffectParams {
   auctionStartTime: Date;
   triggeredAlerts: Alert[];
   sellerId: string;
+  bidCount: number;
 }
 
 export class BiddingService {
@@ -195,6 +196,7 @@ export class BiddingService {
           auctionTitle:    auction.title,
           auctionStartTime: (auction.startTime as { toDate?: () => Date })?.toDate ? (auction.startTime as { toDate: () => Date }).toDate() : new Date(auction.startTime as string | number | Date),
           sellerId:        auction.sellerId,
+          bidCount:        (auction.bidCount ?? 0) + 1,
         };
       });
 
@@ -328,6 +330,7 @@ export class BiddingService {
             event: FIREBASE_EVENTS.NEW_BID, id: result.bidId, amount: result.newCurrentPrice,
             endTime: result.newEndTime.toISOString(), bidderName: newCurrentBidderName,
             bidderId: result.newCurrentBidderId, createdAt: now.toISOString(),
+            bidCount: result.bidCount,
           }),
           rtdbPush(RTDB_PATHS.auctionActivity(auctionId), {
             event: FIREBASE_EVENTS.NEW_BID, id: result.bidId, amount: result.newCurrentPrice, bidderName: newCurrentBidderName,

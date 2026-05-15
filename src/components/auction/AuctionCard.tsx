@@ -17,6 +17,7 @@ import VerificationBadge from "../social/VerificationBadge";
 import { useRouter } from "next/navigation";
 import { cancelAuction, relistAuction } from "@/actions/auction";
 import toast from "react-hot-toast";
+import { useAuctionPrice } from "@/hooks/useAuctionPrice";
 
 import React, { memo, useState, useTransition } from "react";
 
@@ -37,7 +38,9 @@ export const AuctionCard = memo(({
   const [isPending, startTransition] = useTransition();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const bidCount = auction._count?.bids ?? auction.bidCount ?? 0;
+  const cardBidCount = auction._count?.bids ?? auction.bidCount ?? 0;
+  const { currentPrice, bidCount } = useAuctionPrice(auction.id, auction.currentPrice, cardBidCount);
+
   const isOwner = !!session?.user?.id && session.user.id === auction.sellerId;
   const canCancel = isOwner && auction.status === "ACTIVE" && bidCount === 0;
   const canEdit   = isOwner && auction.status === "ACTIVE" && bidCount === 0;
@@ -74,7 +77,7 @@ export const AuctionCard = memo(({
     ) ?? false;
 
   const sellerName = auction.seller.name || t("seller");
-  const cardLabel = `${auction.title} — ${formatBDT(auction.currentPrice)}, by ${sellerName}, ${bidCount} bid${bidCount === 1 ? "" : "s"}`;
+  const cardLabel = `${auction.title} — ${formatBDT(currentPrice)}, by ${sellerName}, ${bidCount} bid${bidCount === 1 ? "" : "s"}`;
 
   return (
     <Link href={`/auctions/${auction.id}`} className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[2rem]" aria-label={cardLabel}>
@@ -198,7 +201,7 @@ export const AuctionCard = memo(({
             </div>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="price text-2xl text-gray-900 font-black tracking-tighter">
-                {formatBDT(auction.currentPrice)}
+                {formatBDT(currentPrice)}
               </span>
               {auction.currentPrice > auction.startingPrice && (
                 <span className="text-xs text-gray-400 line-through font-medium">

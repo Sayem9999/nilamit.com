@@ -99,6 +99,10 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
     while (attempts < MAX_ATTEMPTS) {
       try {
         const result = await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
+        revalidatePath(`/auctions/${auctionId}`);
+        revalidatePath('/auctions');
+        revalidatePath('/dashboard');
+        revalidatePath('/');
         return successResponse(result);
       } catch (error) {
         attempts++;
