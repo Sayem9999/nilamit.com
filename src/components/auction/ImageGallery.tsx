@@ -95,7 +95,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
               }`}
             >
               <Image
-                src={image}
+                src={image.includes('alt=media') ? image.replace(/(\.[\w\d_-]+)(\?alt=media.*)?$/i, '_400x400$1$2') : image}
                 alt={`${title} thumbnail ${index + 1}`}
                 fill
                 sizes="(max-width: 768px) 80px, 96px"
