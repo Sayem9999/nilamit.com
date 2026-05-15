@@ -130,7 +130,7 @@ Browser (React 19)
 placeBid(auctionId, amount)
   1. auth() + placeBidSchema.safeParse()
   2. bidLimiter.limit() — fail-closed
-  3. requireBiddingPrivileges() — phone verified, not banned, not minor
+  3. requireBiddingPrivileges() — email verified, not banned, not minor
   4. Elite deposit check (≥ ৳100,000)
   5. BiddingService.placeBid() →
        db.runTransaction()

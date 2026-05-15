@@ -32,8 +32,7 @@ All Server Actions return `ServiceResponse<T>` — `{ success: true, data: T }` 
 | Action | Auth | Description |
 |---|---|---|
 | `registerUser(data)` | None | Email/password registration. Rate-limited per IP (20/5min) |
-| `signupWithPhone(data)` | None | Phone + OTP + password signup. Verifies OTP, checks phone uniqueness |
-| `resetPasswordWithOTP(data)` | None | Reset password via phone OTP or email OTP |
+| `resetPasswordWithOTP(data)` | None | Reset password via email OTP |
 
 ### `src/actions/escrow.ts`
 
@@ -64,15 +63,6 @@ All Server Actions return `ServiceResponse<T>` — `{ success: true, data: T }` 
 | `getAdminCoordinationLog(auctionId)` | Admin | Buyer/seller chat history |
 | `getTreasuryAudit()` | Admin | HELD/RELEASED escrows — batched hydration |
 | `getAdminActiveEscrows()` | Admin | All HELD escrows — batched hydration |
-
-### `src/actions/phone.ts`
-
-| Action | Auth | Description |
-|---|---|---|
-| `sendPhoneOTP(phone)` | Session required | Send OTP to phone for verification. Rate-limited (5/hour per phone number) |
-| `verifyPhoneOTP(phone, otp)` | Session required | Verify OTP, mark user `isPhoneVerified: true` |
-| `requestStandaloneOTP(phone)` | None | Send OTP without session (for signup flow) |
-| `sendEmailOTP(email)` | None | Send OTP to email for password reset. Rate-limited (5/hour) |
 
 ### `src/actions/chat.ts`
 
@@ -249,7 +239,7 @@ Append-only feed for the homepage live ticker. Pruned to last 20 entries.
 | Code | Meaning |
 |---|---|
 | `NOT_AUTHENTICATED` | No valid session |
-| `PHONE_NOT_VERIFIED` | Action requires phone verification |
+
 | `AUCTION_NOT_ACTIVE` | Auction is not in ACTIVE state |
 | `AUCTION_ENDED` | Auction end time has passed |
 | `BID_TOO_LOW` | Bid below minimum — details.newMinimum has the required amount |

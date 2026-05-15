@@ -209,6 +209,7 @@ export class BiddingService {
         bid: { id: txResult.bidId, amount, auctionId, bidderId: userId, createdAt: new Date() },
         newEndTime: txResult.newEndTime,
         antiSnipeTriggered: txResult.antiSnipeTriggered,
+        newCurrentPrice: txResult.newCurrentPrice,
       };
     }, { auctionId, userId, amount });
   }

@@ -166,18 +166,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return verifyUser('email', (credentials.email as string).trim().toLowerCase(), credentials.password as string);
       },
     }),
-    Credentials({
-      id: 'phone',
-      name: 'Phone',
-      credentials: {
-        phone:    { label: 'Phone',    type: 'text' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (!credentials?.phone || !credentials?.password) return null;
-        return verifyUser('phone', credentials.phone as string, credentials.password as string);
-      },
-    }),
   ],
   callbacks: {
     ...authConfig.callbacks,

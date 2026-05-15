@@ -86,6 +86,7 @@ export interface PlaceBidResult {
   bid: Bid;
   newEndTime: Date;
   antiSnipeTriggered: boolean;
+  newCurrentPrice: number;
 }
 
 export interface CreateAuctionInput {

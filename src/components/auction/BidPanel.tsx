@@ -161,6 +161,7 @@ export function BidPanel({
       setResult(res);
 
       if (res.success) {
+        setOptimisticBid(res.data?.newCurrentPrice ?? null);
         fireConfetti({
           particleCount: 150,
           spread: 70,
@@ -169,7 +170,7 @@ export function BidPanel({
         });
 
         userTouchedRef.current = false;
-        setBidAmount(bidAmount + minBidIncrement);
+        setBidAmount((res.data?.newCurrentPrice ?? bidAmount) + minBidIncrement);
         onBidPlaced?.();
       } else {
         setOptimisticBid(null);

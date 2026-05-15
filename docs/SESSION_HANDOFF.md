@@ -1,3 +1,17 @@
+# Session Handoff & Architecture Memory
+
+## Current Session (2026-05-15)
+### What we did
+* **Removed Phone Authentication**: Transitioned the authentication flow to be email and OAuth exclusive. Completely ripped out Firebase phone authentication, phone numbers from the registration UI (`src/app/register/page.tsx`), and phone credential logic from NextAuth (`src/lib/auth.ts`) and server actions.
+* **Fixed Bid Panel UI Desync**: Addressed an issue where placing a "proxy bid" caused the UI's optimistic price to stick at the max proxy limit until page reload. Modified `PlaceBidResult` and the bidding transaction to return the *actual* new public price (`newCurrentPrice`), allowing `BidPanel.tsx` to instantly sync with the true current price, resolving the discrepancy smoothly when RTDB updates land.
+* **Documentation Scrub**: Cleaned up legacy references to phone verification across `README.md`, `CLAUDE.md`, `llms.txt`, and multiple `docs/` Markdown files.
+
+### Next Steps / Blockers
+* **Blocker**: None currently.
+* **Next**: Address any UI layout gaps left by removing phone fields, or proceed with general testing of the new email-only auth flows.
+
+---
+
 # Session Handoff — Audit + Hardening Pass (May 2026)
 
 This document captures the work completed in the May 2026 audit-and-fix session and the open items the next agent should pick up. It is written so a fresh model can resume without re-reading the full chat transcript.

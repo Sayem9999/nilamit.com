@@ -1,6 +1,6 @@
 # Nilamit
 
-> Bangladesh's Trusted C2C Auction & Bidding Marketplace. nilamit.app is a mobile-first, trust-focused C2C marketplace where users buy and sell through transparent, real-time bidding secured by phone verification and escrow.
+> Bangladesh's Trusted C2C Auction & Bidding Marketplace. nilamit.app is a mobile-first, trust-focused C2C marketplace where users buy and sell through transparent, real-time bidding secured by email verification and escrow.
 
 The platform is built on Next.js 16 with a Service-Layer Architecture, ensuring strict separation between API controllers (Server Actions) and business logic (Services). It leverages Firebase Firestore for persistence and Realtime Database for high-frequency bidding events and notifications.
 

@@ -1,19 +1,15 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
-import { Gavel, Loader2, ArrowRight, Smartphone, CheckCircle, Mail, User } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Gavel, Loader2, ArrowRight, CheckCircle, User } from "lucide-react";
 import Link from "next/link";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { signIn } from "next-auth/react";
-
 
 export default function RegisterPage() {
   const t = useTranslations("Auth");
-  const [step, setStep] = useState<"account-type" | "phone" | "otp" | "details">("account-type");
+  const [step, setStep] = useState<"account-type" | "email-form">("account-type");
   const [accountType, setAccountType] = useState<"personal" | "business">("personal");
-  const [signupMethod, setSignupMethod] = useState<"phone" | "email">("phone");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,120 +19,6 @@ export default function RegisterPage() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
-
-  // Firebase Native Phone verification states
-  const [confirmationResult, setConfirmationResult] = useState<{ confirm: (code: string) => Promise<unknown> } | null>(null);
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<unknown>(null);
-  const [firebaseToken, setFirebaseToken] = useState("");
-
-  // Clean up verifier on unmount
-  useEffect(() => {
-    return () => {
-      if (recaptchaVerifier) {
-        try {
-          (recaptchaVerifier as import("firebase/auth").RecaptchaVerifier).clear();
-        } catch (e) {
-          console.warn("Error clearing verifier on unmount:", e);
-        }
-      }
-    };
-  }, [recaptchaVerifier]);
-
-  // Actions
-  const handleRequestOTP = () => {
-    if (!phone) return;
-    setError("");
-    startTransition(async () => {
-      try {
-        const { getClientAuth, ensureFirebaseAuth } = await import("@/lib/firebase-client");
-        const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
-
-        const auth = getClientAuth();
-        
-        // Initialize Recaptcha Verifier and ensure any previous instances are cleared cleanly
-        let verifier = recaptchaVerifier;
-        if (verifier) {
-          try {
-            (verifier as import("firebase/auth").RecaptchaVerifier).clear();
-          } catch (e) {
-            console.warn("Error clearing previous recaptcha verifier:", e);
-          }
-          setRecaptchaVerifier(null);
-          verifier = null;
-        }
-
-        verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-          size: "invisible",
-          callback: () => {}
-        });
-        setRecaptchaVerifier(verifier);
-
-        // Ensure normalized phone number for Bangladesh
-        const normalizedPhone = phone.startsWith("+") ? phone : `+88${phone}`;
-
-        const confirmResult = await signInWithPhoneNumber(
-          auth, 
-          normalizedPhone, 
-          verifier as import("firebase/auth").ApplicationVerifier
-        );
-        setConfirmationResult(confirmResult);
-        setStep("otp");
-        setResendTimer(60);
-      } catch (err) {
-        let errMsg = t("errorGeneric");
-        const fErr = err as { code?: string; message?: string };
-        if (fErr && fErr.code === "auth/invalid-phone-number") {
-          errMsg = "Invalid phone number format. Use international format (e.g. +8801XXXXXXXXX)";
-        } else if (fErr && fErr.code === "auth/too-many-requests") {
-          errMsg = "Too many OTP requests. Please try again later.";
-        } else if (fErr && fErr.code === "auth/network-request-failed") {
-          errMsg = "Network request failed. This is typically caused by an ad-blocker (like uBlock Origin, AdBlock, or Brave Shields) blocking Firebase/reCAPTCHA requests, or firewall/VPN settings. Please disable ad-blockers and try again.";
-        } else if (fErr && fErr.message) {
-          errMsg = fErr.message;
-        }
-        setError(errMsg);
-      }
-    });
-  };
-
-  const handleVerifyOTP = () => {
-    if (otp.length < 6) return;
-    setError("");
-    startTransition(async () => {
-      if (!confirmationResult) {
-        setError("Verification session has expired. Please try again.");
-        return;
-      }
-      try {
-        const { getClientAuth } = await import("@/lib/firebase-client");
-        const auth = getClientAuth();
-
-        // Confirm OTP on the client
-        await confirmationResult.confirm(otp);
-        
-        // Get Firebase ID Token
-        const token = await auth.currentUser?.getIdToken();
-        if (!token) {
-          setError("Failed to get verification token from Google.");
-          return;
-        }
-        setFirebaseToken(token);
-        setStep("details");
-      } catch (err) {
-        let errMsg = t("errorGeneric");
-        const fErr = err as { code?: string; message?: string };
-        if (fErr && fErr.code === "auth/invalid-verification-code") {
-          errMsg = "Invalid verification code. Please check the SMS and try again.";
-        } else if (fErr && fErr.code === "auth/network-request-failed") {
-          errMsg = "Network request failed. Please ensure your internet connection is stable, disable any ad-blockers, or turn off VPNs/proxies and try again.";
-        } else if (fErr && fErr.message) {
-          errMsg = fErr.message;
-        }
-        setError(errMsg);
-      }
-    });
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,46 +30,21 @@ export default function RegisterPage() {
     }
 
     startTransition(async () => {
-      if (signupMethod === "phone") {
-        const { signupWithPhone } = await import("@/actions/auth");
-        const result = await signupWithPhone({
-          name: formData.name,
-          phone,
-          firebaseToken,
-          password: formData.password,
-          email: formData.email,
-          isRetailer: accountType === "business"
-        });
+      const { registerUser } = await import("@/actions/auth");
+      const result = await registerUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        isRetailer: accountType === "business"
+      });
 
-        if (result.success) {
-          setSuccess(true);
-        } else {
-          setError(result.error?.message || t("errorGeneric"));
-        }
+      if (result.success) {
+        setSuccess(true);
       } else {
-        const { registerUser } = await import("@/actions/auth");
-        const result = await registerUser({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          isRetailer: accountType === "business"
-        });
-
-        if (result.success) {
-          setSuccess(true);
-        } else {
-          setError(result.error?.message || t("errorGeneric"));
-        }
+        setError(result.error?.message || t("errorGeneric"));
       }
     });
   };
-
-  // Timer logic
-  useEffect(() => {
-    if (resendTimer <= 0) return;
-    const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [resendTimer]);
 
   if (success) {
     return (
@@ -235,7 +92,7 @@ export default function RegisterPage() {
           {/* Progress Bar */}
           <div className="h-1.5 w-full bg-gray-50 flex">
             <div className={`h-full bg-primary-600 transition-all duration-500 ${
-              step === 'account-type' ? 'w-1/4' : (signupMethod === 'email' ? 'w-full' : (step === 'phone' ? 'w-1/2' : step === 'otp' ? 'w-3/4' : 'w-full'))
+              step === 'account-type' ? 'w-1/2' : 'w-full'
             }`} />
           </div>
 
@@ -251,13 +108,13 @@ export default function RegisterPage() {
                   <button
                     onClick={() => {
                       setAccountType("personal");
-                      setStep("phone");
+                      setStep("email-form");
                     }}
                     className="w-full p-6 bg-white border-2 border-gray-100 rounded-[2rem] text-left hover:border-primary-500 hover:bg-primary-50/30 transition-all group relative"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-primary-100 transition-colors">
-                        <Smartphone className="w-6 h-6 text-gray-400 group-hover:text-primary-600" />
+                        <User className="w-6 h-6 text-gray-400 group-hover:text-primary-600" />
                       </div>
                       <div>
                         <h4 className="font-bold text-gray-900">Personal Account</h4>
@@ -270,7 +127,7 @@ export default function RegisterPage() {
                   <button
                     onClick={() => {
                       setAccountType("business");
-                      setStep("phone");
+                      setStep("email-form");
                     }}
                     className="w-full p-6 bg-white border-2 border-gray-100 rounded-[2rem] text-left hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group relative"
                   >
@@ -301,7 +158,6 @@ export default function RegisterPage() {
                     onClick={() => {
                       signIn("google", { callbackUrl: "/dashboard" });
                     }}
-
                     className="w-full h-14 bg-white border-2 border-gray-100 hover:border-primary-500 hover:bg-primary-50/30 text-gray-700 rounded-2xl transition-all font-bold text-lg flex items-center justify-center gap-3"
                   >
                     <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -328,44 +184,16 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {/* Signup Method Tabs */}
-            {step === "phone" && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+            {step === "email-form" && (
+              <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <button 
+                  type="button"
                   onClick={() => setStep("account-type")} 
                   className="mb-4 text-[10px] font-black text-gray-400 hover:text-primary-600 uppercase tracking-widest flex items-center gap-1 transition-colors"
                 >
                   <ArrowRight className="w-3 h-3 rotate-180" /> Back to Account Selection
                 </button>
-                <div className="flex bg-gray-50/50 p-1 mb-8 rounded-2xl border border-gray-100">
-                  <button
-                    onClick={() => setSignupMethod("phone")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all ${
-                      signupMethod === "phone"
-                        ? "bg-white text-primary-600 shadow-sm border border-gray-100"
-                        : "text-gray-400 hover:text-gray-900 uppercase tracking-widest text-[10px]"
-                    }`}
-                  >
-                    <Smartphone className="w-4 h-4" />
-                    {t("phoneBtn")}
-                  </button>
-                  <button
-                    onClick={() => setSignupMethod("email")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold rounded-xl transition-all ${
-                      signupMethod === "email"
-                        ? "bg-white text-primary-600 shadow-sm border border-gray-100"
-                        : "text-gray-400 hover:text-gray-900 uppercase tracking-widest text-[10px]"
-                    }`}
-                  >
-                    <Mail className="w-4 h-4" />
-                    {t("emailBtn")}
-                  </button>
-                </div>
-              </div>
-            )}
 
-            {signupMethod === "email" && step === "phone" ? (
-               <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="mb-4">
                   <h3 className="text-xl font-bold text-gray-900 mb-1">
                     {accountType === "business" ? "Business Email Signup" : t("emailSignupTitle")}
@@ -447,190 +275,6 @@ export default function RegisterPage() {
                   className={`w-full ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-200 text-white font-bold py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2`}
                 >
                   {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : t("signUpBtn")}
-                </button>
-              </form>
-            ) : (
-              <>
-                {step === "phone" && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">
-                    {accountType === "business" ? "Business Phone Signup" : t("enterPhoneTitle")}
-                  </h3>
-                  <p className="text-sm text-gray-500 font-medium">{t("enterPhoneDesc")}</p>
-                </div>
-                <div id="recaptcha-container" className="hidden"></div>
-                <div className="space-y-4">
-                  <div className="relative group">
-                    <label htmlFor="phone-signup-name" className="sr-only">{accountType === "business" ? "Shop name" : t("nameLabel")}</label>
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center" aria-hidden="true">
-                      <User className="w-5 h-5 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
-                    </div>
-                    <input
-                      id="phone-signup-name"
-                      type="text"
-                      autoComplete={accountType === "business" ? "organization" : "name"}
-                      placeholder={accountType === "business" ? "Shop Name" : t("nameLabel")}
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-4 py-5 text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
-                    />
-                  </div>
-                  <div className="relative group">
-                    <label htmlFor="phone-signup-phone" className="sr-only">{t("phoneLabel")}</label>
-                    <Smartphone aria-hidden="true" className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
-                    <input
-                      id="phone-signup-phone"
-                      type="tel"
-                      autoComplete="tel"
-                      placeholder="+8801XXXXXXXXX"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-4 py-5 text-xl font-bold focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
-                    />
-                  </div>
-                  {error && (
-                    <p className="text-xs font-bold text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 text-center">
-                      {error}
-                    </p>
-                  )}
-                  <button
-                    onClick={handleRequestOTP}
-                    disabled={isPending || phone.length < 11 || formData.name.length < 2}
-                    className={`w-full h-14 ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2`}
-                  >
-                    {isPending ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        {t("sendCodeBtn")}
-                        <ArrowRight className="w-5 h-5" />
-                      </div>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {step === "otp" && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="mb-6">
-                  <button onClick={() => setStep("phone")} className="text-[10px] font-bold text-primary-600 mb-4 hover:underline flex items-center gap-1 uppercase tracking-widest">
-                    {"← " + t("changePhone")}
-                  </button>
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{t("verifyCodeTitle")}</h3>
-                  <p className="text-sm text-gray-500 font-medium">
-                    {t("sentTo")} <span className="font-bold text-gray-900">{phone}</span>
-                  </p>
-                </div>
-                <div className="space-y-6">
-                  <label htmlFor="phone-otp-input" className="sr-only">6-digit verification code</label>
-                  <input
-                    id="phone-otp-input"
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    autoComplete="one-time-code"
-                    maxLength={6}
-                    placeholder="000000"
-                    aria-label="6-digit verification code"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-3xl px-4 py-6 text-5xl font-black tracking-[0.5em] text-center focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
-                  />
-                  {error && (
-                    <p className="text-xs font-bold text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 text-center">
-                      {error}
-                    </p>
-                  )}
-                  <button
-                    onClick={handleVerifyOTP}
-                    disabled={otp.length !== 6}
-                    className={`w-full h-14 ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all`}
-                  >
-                    {t("verifyContinue")}
-                  </button>
-                  <div className="text-center pt-2">
-                    {resendTimer > 0 ? (
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        {t("resendIn")} {resendTimer}s
-                      </p>
-                    ) : (
-                      <button onClick={handleRequestOTP} className="text-[10px] font-black text-primary-600 hover:text-primary-700 uppercase tracking-widest">
-                        {t("resendBtn")}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-            </>
-            )}
-
-            {step === "details" && (
-              <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">{t("completeProfileTitle")}</h3>
-                  <p className="text-sm text-gray-500 font-medium">{t("completeProfileDesc")}</p>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="details-email" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("emailLabel")} ({t("maybeLater")})</label>
-                    <input
-                      id="details-email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="email@example.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="details-password" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("passwordLabel")}</label>
-                    <input
-                      id="details-password"
-                      required
-                      type="password"
-                      autoComplete="new-password"
-                      minLength={8}
-                      placeholder="••••••••"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="details-confirm" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("confirmPasswordLabel")}</label>
-                    <input
-                      id="details-confirm"
-                      required
-                      type="password"
-                      autoComplete="new-password"
-                      minLength={8}
-                      placeholder="••••••••"
-                      value={formData.confirmPassword}
-                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                {error && (
-                  <p className="text-xs font-bold text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 text-center">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className={`w-full h-14 ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-200 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest`}
-                >
-                  {isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : t("signUpBtn")}
                 </button>
               </form>
             )}

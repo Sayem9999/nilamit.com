@@ -2,7 +2,7 @@
 
 > Bangladesh's Trusted C2C Auction & Bidding Marketplace
 
-নিলাম (*Nilam*) means "auction" in Bengali. nilamit.app is a mobile-first, trust-focused C2C marketplace where Bangladeshi users buy and sell through transparent, real-time bidding secured by phone verification and escrow.
+নিলাম (*Nilam*) means "auction" in Bengali. nilamit.app is a mobile-first, trust-focused C2C marketplace where Bangladeshi users buy and sell through transparent, real-time bidding secured by email verification and escrow.
 
 ---
 

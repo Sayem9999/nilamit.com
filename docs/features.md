@@ -35,7 +35,7 @@ Nilamit is a high-performance, real-time C2C auction marketplace designed for tr
 ## 5. Escrow Coordination Hub
 - **Transaction-Gated Chat**: Secure, real-time coordination channels unlocked only after an escrow advance is `HELD`.
 - **Integrated Controls**: Quick-action sidebars for `Confirm Receipt` and `Raise Dispute` within the chat context.
-- **PII Shielding**: Automatic real-time filtering of phone numbers and sensitive contact details to prevent leakages.
+- **PII Shielding**: Automatic real-time filtering of sensitive contact details to prevent leakages.
 - **Media Verification**: Support for image documentation for logistics proof.
 
 ## 6. Financial & Escrow Layer

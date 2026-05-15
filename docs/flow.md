@@ -18,7 +18,7 @@ sequenceDiagram
     participant DB as NoSQL (Firestore)
     
     User->>FE: Enter Identity (Phone/Email)
-    FE->>SA: requestOTP(phone/email)
+    FE->>SA: requestOTP(email)
     SA->>User: SMS/Email OTP Dispatch
     User->>FE: Enter OTP
     FE->>SA: verifyOTP(code)
