@@ -54,15 +54,15 @@ export function Navbar() {
           </Link>
 
           {/* Search Bar (Desktop) */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
+          <div className="hidden lg:flex items-center flex-1 max-w-xs mx-6">
             <form
-              action="/search"
+              action="/auctions"
               className="w-full relative group"
             >
               <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-primary-500 transition-colors" />
               <input
                 type="search"
-                name="q"
+                name="search"
                 placeholder={t("searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 bg-gray-50/50 border border-gray-200/60 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm font-medium"
               />

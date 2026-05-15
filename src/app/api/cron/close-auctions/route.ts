@@ -13,6 +13,7 @@
 import { closeAllEndedAuctions } from '@/lib/auction-logic';
 import { verifyCronSecret, withRetry, cronSuccess, cronError } from '@/lib/cron-utils';
 import { log } from '@/lib/logger';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,7 @@ export async function POST(req: Request) {
   const result = await withRetry(
     async () => {
       await closeAllEndedAuctions();
+      revalidatePath('/auctions');
       return { closedAt: new Date().toISOString() };
     },
     { maxAttempts: 3, initialDelayMs: 1000 }

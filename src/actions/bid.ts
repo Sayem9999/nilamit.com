@@ -161,6 +161,7 @@ export async function executeBuyItNow(auctionId: string): Promise<ServiceRespons
     );
 
     revalidatePath(`/auctions/${auctionId}`);
+    revalidatePath('/auctions');
     revalidatePath('/dashboard');
     return successResponse(null);
   } catch (error) {

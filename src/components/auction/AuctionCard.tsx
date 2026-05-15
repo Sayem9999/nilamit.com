@@ -185,7 +185,11 @@ export const AuctionCard = memo(({
           <div className="mt-4 pt-4 border-t border-gray-100/60 flex flex-col gap-0.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                {t("currentPrice")}
+                {auction.status === "ACTIVE" && new Date(auction.endTime) > new Date()
+                  ? t("currentPrice") 
+                  : auction.status === "SOLD" 
+                    ? t("finalPrice") 
+                    : t("auctionEnded")}
               </span>
               <span className="flex items-center gap-1 text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md">
                 <Users className="w-3 h-3" aria-hidden="true" />
