@@ -162,6 +162,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+
+        // --- RATE LIMITING ---
+        // Prevent brute-force attacks on the authorize callback
+        const { headers } = await import('next/headers');
+        const { authLimiter } = await import('@/lib/ratelimit');
+        const h = await headers();
+        const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
+        
+        const { success: rateLimitOk } = await authLimiter.limit(`login_attempt_${ip}`);
+        if (!rateLimitOk) {
+          log.warn(`[Auth] Brute-force detected from IP: ${ip}`);
+          throw new Error('TOO_MANY_ATTEMPTS');
+        }
+
         return verifyUser('email', (credentials.email as string).trim().toLowerCase(), credentials.password as string);
       },
     }),

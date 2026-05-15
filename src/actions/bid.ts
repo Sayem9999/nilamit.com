@@ -6,7 +6,7 @@ import { headers } from 'next/headers';
 import { bidLimiter } from '@/lib/ratelimit';
 import { ERROR_CODES } from '@/lib/constants';
 import { BiddingService } from '@/services/bidding/bidding-service';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { log } from '@/lib/logger';
 
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
@@ -14,10 +14,20 @@ import { placeBidSchema, formatZodError } from '@/lib/schemas';
 import { BidWithBidder, PlaceBidResult } from '@/types';
 
 async function requireBiddingPrivileges(userId: string): Promise<ServiceResponse<Record<string, unknown>>> {
-  const userSnap = await db.collection('users').doc(userId).get();
-  if (!userSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'User not found', ERROR_CODES.NOT_FOUND);
-  const user = userSnap.data()!;
+  const fetchPrivileges = unstable_cache(
+    async (uid: string) => {
+      const userSnap = await db.collection('users').doc(uid).get();
+      if (!userSnap.exists) return { error: ERROR_CODES.NOT_FOUND };
+      return { data: userSnap.data() };
+    },
+    [`user-privileges-${userId}`],
+    { revalidate: 30, tags: [`user-${userId}`] }
+  );
 
+  const result = await fetchPrivileges(userId);
+  if (result.error) return errorResponse(ErrorType.NOT_FOUND, 'User not found', result.error);
+  
+  const user = result.data!;
   const isEmailVerified = user.emailVerified != null;
   if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
   if (user.isBanned) return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
@@ -99,10 +109,15 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
     while (attempts < MAX_ATTEMPTS) {
       try {
         const result = await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
+        
+        revalidateTag('auctions');
+        revalidateTag('bids');
+        revalidateTag('stats');
         revalidatePath(`/auctions/${auctionId}`);
         revalidatePath('/auctions');
         revalidatePath('/dashboard');
         revalidatePath('/');
+        
         return successResponse(result);
       } catch (error) {
         attempts++;
@@ -164,6 +179,9 @@ export async function executeBuyItNow(auctionId: string): Promise<ServiceRespons
       typeof user.email === 'string' ? user.email : null
     );
 
+    revalidateTag('auctions');
+    revalidateTag('bids');
+    revalidateTag('stats');
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/auctions');
     revalidatePath('/dashboard');
@@ -175,13 +193,19 @@ export async function executeBuyItNow(auctionId: string): Promise<ServiceRespons
   }
 }
 
-
 /**
  * Server Action: Fetch bid history for an auction
  */
 export async function getAuctionBids(auctionId: string): Promise<ServiceResponse<BidWithBidder[]>> {
   try {
-    const bids = await BiddingService.getAuctionBids(auctionId);
+    const fetchBids = unstable_cache(
+      async (aid: string) => {
+        return BiddingService.getAuctionBids(aid);
+      },
+      [`auction-bids-${auctionId}`],
+      { revalidate: 10, tags: ['bids', `auction-bids-${auctionId}`] }
+    );
+    const bids = await fetchBids(auctionId);
     return successResponse(bids);
   } catch (error) {
     log.error('[bid] getAuctionBids failed', error, { area: 'bid', severity: 'warning' });

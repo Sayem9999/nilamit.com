@@ -21,8 +21,9 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { logoutAction } from "@/actions/auth";
+import { memo } from "react";
 
-export function Navbar() {
+export const Navbar = memo(function Navbar() {
   const { data: session } = useSession();
   const t = useTranslations("Navigation");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -308,4 +309,6 @@ export function Navbar() {
         ) : null}
     </nav>
   );
-}
+});
+
+Navbar.displayName = "Navbar";

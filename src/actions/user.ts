@@ -75,11 +75,12 @@ export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): P
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
+  const normalizedNumber = number.startsWith('+88') ? number : `+88${number}`;
   const mfsRegex = /^\+8801[3-9]\d{8}$/;
-  if (!mfsRegex.test(number)) {
-    return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladeshi mobile number. Format: +8801XXXXXXXXX');
+  if (!mfsRegex.test(normalizedNumber)) {
+    return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladeshi mobile number. Format: 01XXXXXXXXX or +8801XXXXXXXXX');
   }
-  const validatedNumber = number;
+  const validatedNumber = normalizedNumber;
 
   const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
   const { success } = await apiLimiter.limit(`mfs_link_${session.user.id}_${ip}`);
@@ -103,21 +104,35 @@ export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): P
   }
 }
 
+import { unstable_cache } from 'next/cache';
+
 export async function getCurrentUserVerification(): Promise<ServiceResponse<{ isEmailVerified: boolean; isBanned: boolean; isVerifiedSeller: boolean; isAdmin: boolean }>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
   try {
-    const snap = await db.collection('users').doc(session.user.id).get();
-    if (!snap.exists) return errorResponse(ErrorType.NOT_FOUND, 'User not found');
-    const u = snap.data()!;
-    const { isAdminEmail } = await import('@/lib/admin-guard');
-    return successResponse({
-      isEmailVerified: u.emailVerified != null,
-      isBanned: !!u.isBanned,
-      isVerifiedSeller: !!u.isVerifiedSeller,
-      isAdmin: !!u.isAdmin || isAdminEmail(u.email || ''),
-    });
+    // Cache the verification status for 30 seconds to avoid hammering DB on every guard mount
+    const fetchVerification = unstable_cache(
+      async (userId: string) => {
+        const snap = await db.collection('users').doc(userId).get();
+        if (!snap.exists) return null;
+        const u = snap.data()!;
+        const { isAdminEmail } = await import('@/lib/admin-guard');
+        return {
+          isEmailVerified: u.emailVerified != null,
+          isBanned: !!u.isBanned,
+          isVerifiedSeller: !!u.isVerifiedSeller,
+          isAdmin: !!u.isAdmin || isAdminEmail(u.email || ''),
+        };
+      },
+      [`user-verification-${session.user.id}`],
+      { revalidate: 30, tags: [`user-${session.user.id}`] }
+    );
+
+    const data = await fetchVerification(session.user.id);
+    if (!data) return errorResponse(ErrorType.NOT_FOUND, 'User not found');
+    
+    return successResponse(data);
   } catch (e) {
     log.error('[user] getCurrentUserVerification failed', e, { area: 'auth', severity: 'warning' });
     return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred.');

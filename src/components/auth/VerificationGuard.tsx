@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { ShieldAlert, X, CheckCircle, Mail } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -17,7 +17,7 @@ interface VerificationGuardProps {
  * VerificationGuard wraps actions that require a verified account.
  * It checks if the user's email is verified.
  */
-export function VerificationGuard({ children }: VerificationGuardProps) {
+function VerificationGuardComponent({ children }: VerificationGuardProps) {
   const { data: session, update } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [isVerifiedOverride, setIsVerifiedOverride] = useState(false);
@@ -25,29 +25,33 @@ export function VerificationGuard({ children }: VerificationGuardProps) {
 
   // Check verification and restriction status
   const isBanned = session?.user?.isBanned;
-  const isVerified = (
-    !!session?.user?.emailVerified || 
-    session?.user?.isVerifiedSeller || 
-    session?.user?.isAdmin
-  ) && !isBanned;
+  const isVerified = useMemo(() => {
+    return (
+      !!session?.user?.emailVerified || 
+      session?.user?.isVerifiedSeller || 
+      session?.user?.isAdmin
+    ) && !isBanned;
+  }, [session?.user, isBanned]);
 
   useEffect(() => {
-    if (session && !isVerified) {
+    // Only trigger sync if we have a session but it doesn't show as verified yet
+    if (session && !isVerified && !isVerifiedOverride) {
+      const controller = new AbortController();
+      
       getCurrentUserVerification().then((res) => {
+        if (controller.signal.aborted) return;
         if (res.success && res.data) {
           const { isEmailVerified, isBanned: dbBanned, isVerifiedSeller, isAdmin } = res.data;
           if ((isEmailVerified || isVerifiedSeller || isAdmin) && !dbBanned) {
             setIsVerifiedOverride(true);
-            update().catch((err) => {
-              console.error("[VerificationGuard] Failed to update session:", err);
-            });
+            update().catch(() => {});
           }
         }
-      }).catch((err) => {
-        console.error("[VerificationGuard] Sync check failed:", err);
-      });
+      }).catch(() => {});
+
+      return () => controller.abort();
     }
-  }, [session, isVerified, update]);
+  }, [session?.user?.id, isVerified, isVerifiedOverride, update]);
 
   const handleClick = (e: React.MouseEvent) => {
     if (!session) {
@@ -131,3 +135,5 @@ export function VerificationGuard({ children }: VerificationGuardProps) {
     </>
   );
 }
+
+export const VerificationGuard = memo(VerificationGuardComponent);

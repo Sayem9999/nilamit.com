@@ -2,12 +2,12 @@
 
 import { Users } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { onValue, onDisconnect, ref, set, remove } from "firebase/database";
 import { getClientDB, getClientAuth, ensureFirebaseAuth } from "@/lib/firebase-client";
 import { RTDB_PATHS } from "@/lib/firebase-events";
 
-export function ViewerCount({ auctionId }: { auctionId: string }) {
+function ViewerCountComponent({ auctionId }: { auctionId: string }) {
   const t = useTranslations("BidPanel");
   const [viewers, setViewers] = useState(0);
 
@@ -65,3 +65,5 @@ export function ViewerCount({ auctionId }: { auctionId: string }) {
     </div>
   );
 }
+
+export const ViewerCount = memo(ViewerCountComponent);

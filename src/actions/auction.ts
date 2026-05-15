@@ -12,21 +12,33 @@ import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { cache } from 'react';
 
+import { unstable_cache } from 'next/cache';
+
 /**
  * Server Action: Fetch auctions with optional filtering
  */
 export const getAuctions = cache(async (filters: AuctionFilters = {}): Promise<ServiceResponse<AuctionListResponse>> => {
   const session = await auth();
-  const response = await AuctionService.list({ 
-    ...filters, 
-    viewerId: session?.user?.id 
-  });
   
-  if (!response.success) {
-    log.error('[auction] getAuctions failed', undefined, { error: response.error?.message });
-    return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to fetch auctions');
+  // Use unstable_cache to avoid heavy Firestore queries on every page load
+  const fetchAuctions = unstable_cache(
+    async (f: AuctionFilters, uid?: string) => {
+      const response = await AuctionService.list({ 
+        ...f, 
+        viewerId: uid 
+      });
+      return response.success ? response.data : null;
+    },
+    [`auctions-list-${JSON.stringify(filters)}-${session?.user?.id}`],
+    { revalidate: 60, tags: ['auctions'] }
+  );
+
+  const data = await fetchAuctions(filters, session?.user?.id);
+  
+  if (!data) {
+    return errorResponse(ErrorType.INTERNAL, 'Failed to fetch auctions');
   }
-  return successResponse(response.data!);
+  return successResponse(data);
 });
 
 /**
@@ -83,7 +95,15 @@ export const getSpecializedFeeds = cache(async (): Promise<ServiceResponse<{
   endingSoon: AuctionWithSeller[], 
   latestBids: LatestActivity[] 
 }>> => {
-  return AuctionService.getSpecializedFeeds();
+  const fetchFeeds = unstable_cache(
+    async () => {
+      return AuctionService.getSpecializedFeeds();
+    },
+    ['specialized-feeds'],
+    { revalidate: 60, tags: ['auctions', 'bids'] }
+  );
+
+  return fetchFeeds();
 });
 /**
  * Server Action: Manually trigger a Second Chance Offer

@@ -49,6 +49,10 @@ export default function ProfilePage() {
 
   const maskPhone = (num: string) => {
     if (!num) return "";
+    // Handle +88 international prefix correctly (+88017****1234)
+    if (num.startsWith('+88')) {
+      return num.slice(0, 6) + "****" + num.slice(-4);
+    }
     return num.slice(0, 3) + "****" + num.slice(-4);
   };
 
@@ -108,8 +112,7 @@ export default function ProfilePage() {
 
   if (!session) return null;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const user = (session.user as any) as { 
+  const user = (session.user as unknown) as { 
     id: string; 
     isVerifiedSeller: boolean; 
     rating: number; 
@@ -350,7 +353,7 @@ export default function ProfilePage() {
           {/* Left Column: Account & Verification */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Essential Action: Phone & Email Verification */}
+            {/* Essential Action: Email Verification & Trusted Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {!isEmailVerifiedLocal && (
                 <motion.div 

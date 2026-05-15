@@ -7,6 +7,7 @@ import {
   Phone,
   Clock,
   Shield,
+  ShieldCheck,
   TrendingUp,
   ArrowRight,
 } from "lucide-react";
@@ -23,7 +24,7 @@ export function TrustFeatures() {
   ];
 
   const features = [
-    { icon: Phone,       title: t("trust1Title"), desc: t("trust1Desc") },
+    { icon: ShieldCheck, title: t("trust1Title"), desc: t("trust1Desc") },
     { icon: Clock,       title: t("trust2Title"), desc: t("trust2Desc") },
     { icon: Shield,      title: t("trust3Title"), desc: t("trust3Desc") },
     { icon: TrendingUp,  title: t("trust4Title"), desc: t("trust4Desc") },

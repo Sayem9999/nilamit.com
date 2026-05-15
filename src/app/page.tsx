@@ -2,6 +2,7 @@ import { HomeContent } from "@/components/home/HomeContent";
 import ForYouFeed from "@/components/home/components/ForYouFeed";
 export const dynamic = "force-dynamic";
 import { getAuctions, getSpecializedFeeds } from "@/actions/auction";
+import { unstable_cache } from "next/cache";
 import { db, docData } from "@/lib/db";
 import { SystemConfig } from "@/types/common";
 import type { AuctionWithSeller, LatestActivity } from "@/types";
@@ -42,69 +43,84 @@ interface ResolvedHomeData {
   systemConfig: SystemConfig;
 }
 
+async function getCachedGlobalStats() {
+  return unstable_cache(
+    async () => {
+      try {
+        const globalStatsSnap = await db.collection("stats").doc("global").get();
+        let statsData = docData<GlobalStats>(globalStatsSnap);
+
+        let cacheDate: Date | null = null;
+        if (statsData?.updatedAt) {
+          const rawVal = statsData.updatedAt as unknown;
+          if (rawVal && typeof rawVal === "object" && "toDate" in rawVal) {
+            cacheDate = (rawVal as { toDate: () => Date }).toDate();
+          } else {
+            cacheDate = new Date(statsData.updatedAt);
+          }
+        }
+
+        const isStale = cacheDate ? (Date.now() - cacheDate.getTime() > 300 * 1000) : true;
+
+        if (!statsData || !statsData.isReal || isStale) {
+          const [userCountSnap, bidCountSnap, auctionCountSnap, sellerCountSnap] = await Promise.all([
+            db.collection("users").count().get(),
+            db.collection("bids").count().get(),
+            db.collection("auctions").count().get(),
+            db.collection("users").where("isVerifiedSeller", "==", true).count().get(),
+          ]);
+
+          statsData = {
+            totalUsers: userCountSnap.data().count,
+            totalBids: bidCountSnap.data().count,
+            totalAuctions: auctionCountSnap.data().count,
+            totalVerifiedSellers: sellerCountSnap.data().count,
+            isReal: true,
+            updatedAt: new Date(),
+          };
+          await db.collection("stats").doc("global").set(statsData);
+        }
+        return statsData;
+      } catch (err) {
+        log.warn("[home] Falling back to seed stats", { error: String(err) });
+        return FALLBACK_STATS;
+      }
+    },
+    ['global-stats'],
+    { revalidate: 300, tags: ['stats'] }
+  )();
+}
+
+async function getCachedSystemConfig() {
+  return unstable_cache(
+    async () => {
+      const snap = await db.collection("systemConfig").doc("default").get();
+      let config = docData<SystemConfig>(snap);
+      if (!config) {
+        config = FALLBACK_SYSTEM_CONFIG;
+        await db.collection("systemConfig").doc("default").set(config);
+      }
+      return config;
+    },
+    ['system-config'],
+    { revalidate: 3600, tags: ['config'] }
+  )();
+}
+
 async function loadHomeData(): Promise<ResolvedHomeData> {
   const [
     trendingRes,
     specializedRes,
     featuredRes,
-    globalStatsSnap,
-    systemConfigSnap,
+    statsData,
+    systemConfig,
   ] = await Promise.all([
     getAuctions({ sortBy: "bids", sortOrder: "desc", limit: 8 }),
     getSpecializedFeeds(),
     getAuctions({ limit: 4 }),
-    db.collection("stats").doc("global").get(),
-    db.collection("systemConfig").doc("default").get(),
+    getCachedGlobalStats(),
+    getCachedSystemConfig(),
   ]);
-
-  let statsData = docData<GlobalStats>(globalStatsSnap);
-
-  let cacheDate: Date | null = null;
-  if (statsData?.updatedAt) {
-    const rawVal = statsData.updatedAt as unknown;
-    if (rawVal && typeof rawVal === "object" && "toDate" in rawVal && typeof (rawVal as { toDate: () => unknown }).toDate === "function") {
-      cacheDate = (rawVal as { toDate: () => Date }).toDate();
-    } else {
-      cacheDate = new Date(statsData.updatedAt);
-    }
-  }
-
-  const isStale = cacheDate
-    ? (Date.now() - cacheDate.getTime() > 30 * 1000) // 30s cache TTL
-    : true;
-
-  if (!statsData || !statsData.isReal || isStale) {
-    try {
-      const [userCountSnap, bidCountSnap, auctionCountSnap, sellerCountSnap] = await Promise.all([
-        db.collection("users").count().get(),
-        db.collection("bids").count().get(),
-        db.collection("auctions").count().get(),
-        db.collection("users").where("isVerifiedSeller", "==", true).count().get(),
-      ]);
-
-      statsData = {
-        totalUsers: userCountSnap.data().count,
-        totalBids: bidCountSnap.data().count,
-        totalAuctions: auctionCountSnap.data().count,
-        totalVerifiedSellers: sellerCountSnap.data().count,
-        isReal: true,
-        updatedAt: new Date(),
-      };
-      await db.collection("stats").doc("global").set(statsData);
-    } catch (err) {
-      log.warn("[home] Falling back to seed stats — count() queries failed", { error: err instanceof Error ? err.message : String(err) });
-      if (!statsData) {
-        statsData = { ...FALLBACK_STATS };
-        await db.collection("stats").doc("global").set(statsData);
-      }
-    }
-  }
-
-  let systemConfig = docData<SystemConfig>(systemConfigSnap);
-  if (!systemConfig) {
-    systemConfig = FALLBACK_SYSTEM_CONFIG;
-    await db.collection("systemConfig").doc("default").set(systemConfig);
-  }
 
   return {
     trendingAuctions: trendingRes.success ? trendingRes.data!.auctions : [],

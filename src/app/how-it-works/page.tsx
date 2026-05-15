@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import {
   Shield,
   CheckCircle,
-  Smartphone,
+  Mail,
   Zap,
   MessageSquare,
   BadgeCheck,
@@ -17,7 +17,7 @@ export default async function HowItWorksPage() {
     {
       title: t("step1Title"),
       desc: t("step1Desc"),
-      icon: Smartphone,
+      icon: Mail,
       color: "bg-blue-600",
       shadow: "shadow-blue-200",
     },

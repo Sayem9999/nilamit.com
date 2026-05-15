@@ -122,8 +122,12 @@ export async function getAdminUsers(opts: {
         rating: (data.rating as number) ?? 0,
         ratingCount: (data.ratingCount as number) ?? 0,
         isBanned: !!data.isBanned,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        createdAt: toDate(data.createdAt as any),
+        isTopRated: !!data.isTopRated,
+        salesCount: (data.salesCount as number) ?? 0,
+        isRetailer: !!data.isRetailer,
+        userLevel: (data.userLevel as number) ?? 1,
+        winningStreak: (data.winningStreak as number) ?? 0,
+        createdAt: toDate(data.createdAt as FirebaseFirestore.Timestamp | Date | string | null | undefined),
         _count: {
           bids: (data.bidCount as number) ?? 0,
           auctionsAsSeller: (data.auctionCount as number) ?? 0,
