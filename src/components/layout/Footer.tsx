@@ -1,75 +1,90 @@
 import Link from 'next/link';
-import { Gavel, Phone, Mail, MapPin } from 'lucide-react';
-import { useTranslations, useLocale } from 'next-intl';
+import { Gavel, Phone, Mail, MapPin, ShieldCheck } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function Footer() {
   const t = useTranslations("Footer");
-  const locale = useLocale();
 
   return (
-    <footer className="bg-primary-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <footer className="bg-primary-900 text-white relative overflow-hidden">
+      {/* Abstract Background Element */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-800 rounded-full blur-[100px] -mr-48 -mt-48 opacity-20" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center">
-                <Gavel className="w-4 h-4 text-primary-300" />
+          <div className="space-y-6">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center border border-white/5 shadow-inner">
+                <Gavel className="w-5 h-5 text-primary-300" />
               </div>
-              <span className="font-heading font-bold text-lg">
-                nilam<span className="text-primary-300">it</span>
+              <span className="font-heading font-black text-2xl tracking-tight">
+                nilam<span className="text-primary-400">it</span>
               </span>
             </div>
-            <p className="text-sm text-primary-200 leading-relaxed">
+            <p className="text-sm text-primary-200/80 leading-relaxed font-medium">
               {t("brandDesc")}
             </p>
+            {/* App Check / reCAPTCHA Branding */}
+            <div className="pt-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/20 border border-white/5 text-[10px] text-primary-300 font-bold uppercase tracking-widest">
+                <ShieldCheck className="w-3 h-3 text-blue-400" /> {t("secureMarketplace")}
+              </div>
+              <p className="text-[9px] text-primary-400/60 mt-2 leading-tight">
+                Protected by reCAPTCHA Enterprise.<br />
+                <a href="https://policies.google.com/privacy" className="hover:text-white transition-colors">Privacy</a> & <a href="https://policies.google.com/terms" className="hover:text-white transition-colors">Terms</a> apply.
+              </p>
+            </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-heading font-semibold text-sm mb-4">{t("marketplace")}</h4>
-            <ul className="space-y-2">
-              <li><Link href="/auctions" className="text-sm text-primary-300 hover:text-white transition-colors">{t("browse")}</Link></li>
-              <li><Link href="/auctions/create" className="text-sm text-primary-300 hover:text-white transition-colors">{t("sell")}</Link></li>
-              <li><Link href="/leaderboard" className="text-sm text-primary-300 hover:text-white transition-colors">{t("leaderboard")}</Link></li>
+            <h4 className="font-heading font-bold text-xs uppercase tracking-[0.2em] text-primary-400 mb-6">{t("marketplace")}</h4>
+            <ul className="space-y-3">
+              <li><Link href="/auctions" className="text-sm text-primary-200 hover:text-white transition-all hover:translate-x-1 inline-block">{t("browse")}</Link></li>
+              <li><Link href="/auctions/create" className="text-sm text-primary-200 hover:text-white transition-all hover:translate-x-1 inline-block">{t("sell")}</Link></li>
+              <li><Link href="/leaderboard" className="text-sm text-primary-200 hover:text-white transition-all hover:translate-x-1 inline-block">{t("leaderboard")}</Link></li>
             </ul>
           </div>
 
           {/* Support */}
           <div>
-            <h4 className="font-heading font-semibold text-sm mb-4">{t("support")}</h4>
-            <ul className="space-y-2">
-              <li><Link href="/how-it-works" className="text-sm text-primary-300 hover:text-white transition-colors">{t("howItWorks")}</Link></li>
-              <li><Link href="/safety" className="text-sm text-primary-300 hover:text-white transition-colors">{t("safety")}</Link></li>
-              <li><Link href="/faq" className="text-sm text-primary-300 hover:text-white transition-colors">{t("faq")}</Link></li>
-              <li><Link href="/contact" className="text-sm text-primary-300 hover:text-white transition-colors">{t("contact")}</Link></li>
+            <h4 className="font-heading font-bold text-xs uppercase tracking-[0.2em] text-primary-400 mb-6">{t("support")}</h4>
+            <ul className="space-y-3">
+              <li><Link href="/how-it-works" className="text-sm text-primary-200 hover:text-white transition-all hover:translate-x-1 inline-block">{t("howItWorks")}</Link></li>
+              <li><Link href="/safety" className="text-sm text-primary-200 hover:text-white transition-all hover:translate-x-1 inline-block">{t("safety")}</Link></li>
+              <li><Link href="/faq" className="text-sm text-primary-200 hover:text-white transition-all hover:translate-x-1 inline-block">{t("faq")}</Link></li>
+              <li><Link href="/contact" className="text-sm text-primary-200 hover:text-white transition-all hover:translate-x-1 inline-block">{t("contact")}</Link></li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="font-heading font-semibold text-sm mb-4">{t("contactTitle")}</h4>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm text-primary-300">
-                <MapPin className="w-4 h-4 flex-shrink-0" /> Dhaka, Bangladesh
+            <h4 className="font-heading font-bold text-xs uppercase tracking-[0.2em] text-primary-400 mb-6">{t("contactTitle")}</h4>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3 text-sm text-primary-200">
+                <MapPin className="w-4 h-4 text-primary-400 shrink-0 mt-0.5" /> 
+                <span>Dhaka, Bangladesh</span>
               </li>
-              <li className="flex items-center gap-2 text-sm text-primary-300">
-                <Phone className="w-4 h-4 flex-shrink-0" /> +880 1XX-XXXX-XXX
+              <li className="flex items-center gap-3 text-sm text-primary-200">
+                <Phone className="w-4 h-4 text-primary-400 shrink-0" /> 
+                <span>+880 1XX-XXXX-XXX</span>
               </li>
-              <li className="flex items-center gap-2 text-sm text-primary-300">
-                <Mail className="w-4 h-4 flex-shrink-0" /> support@nilamit.com
+              <li className="flex items-center gap-3 text-sm text-primary-200">
+                <Mail className="w-4 h-4 text-primary-400 shrink-0" /> 
+                <span>support@nilamit.com</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-primary-400">
+        <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-[10px] font-bold text-primary-400/60 uppercase tracking-widest">
             © {new Date().getFullYear()} nilamit.com — {t("allRights")}
           </p>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="text-xs text-primary-400 hover:text-white transition-colors">{t("privacy")}</Link>
-            <Link href="/terms" className="text-xs text-primary-400 hover:text-white transition-colors">{t("terms")}</Link>
+          <div className="flex gap-8">
+            <Link href="/privacy" className="text-[10px] font-bold text-primary-400/60 uppercase tracking-widest hover:text-white transition-colors">{t("privacy")}</Link>
+            <Link href="/terms" className="text-[10px] font-bold text-primary-400/60 uppercase tracking-widest hover:text-white transition-colors">{t("terms")}</Link>
           </div>
         </div>
       </div>

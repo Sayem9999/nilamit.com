@@ -197,11 +197,11 @@ export const AuctionCard = memo(({
               </span>
             </div>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="price text-2xl text-gray-900 font-bold">
+              <span className="price text-2xl text-gray-900 font-black tracking-tighter">
                 {formatBDT(auction.currentPrice)}
               </span>
               {auction.currentPrice > auction.startingPrice && (
-                <span className="text-xs text-gray-400 line-through">
+                <span className="text-xs text-gray-400 line-through font-medium">
                   {formatBDT(auction.startingPrice)}
                 </span>
               )}
