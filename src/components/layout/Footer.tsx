@@ -79,9 +79,14 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-[10px] font-bold text-primary-400/60 uppercase tracking-widest">
-            © {new Date().getFullYear()} nilamit.com — {t("allRights")}
-          </p>
+          <div className="flex flex-col gap-2 md:items-start items-center">
+            <p className="text-[10px] font-bold text-primary-400/60 uppercase tracking-widest">
+              © {new Date().getFullYear()} nilamit.com — {t("allRights")}
+            </p>
+            <p className="text-[10px] font-bold text-primary-400/60 uppercase tracking-widest">
+              Discover our other product: <a href="https://bdbusinessmarket.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-primary-300 transition-colors">bdbusinessmarket.com</a>
+            </p>
+          </div>
           <div className="flex gap-8">
             <Link href="/privacy" className="text-[10px] font-bold text-primary-400/60 uppercase tracking-widest hover:text-white transition-colors">{t("privacy")}</Link>
             <Link href="/terms" className="text-[10px] font-bold text-primary-400/60 uppercase tracking-widest hover:text-white transition-colors">{t("terms")}</Link>
