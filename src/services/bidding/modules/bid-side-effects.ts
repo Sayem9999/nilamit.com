@@ -12,7 +12,7 @@ export class BidSideEffects {
     const tasks: Promise<unknown>[] = [];
 
     // 1. RTDB Update for current auction view
-    tasks.push(rtdbPush(RTDB_PATHS.auctionBids(auction.id), {
+    tasks.push(rtdbPush(RTDB_PATHS.auctionBid(auction.id), {
       lastBidAmount: bid.amount,
       lastBidderId: bid.bidderId,
       bidCount: (auction.bidCount || 0) + 1,
@@ -33,7 +33,7 @@ export class BidSideEffects {
   private static async notifyOutbid(userId: string, auction: Auction, newAmount: number): Promise<void> {
     try {
       await rtdbPush(RTDB_PATHS.userNotifications(userId), {
-        event: FIREBASE_EVENTS.OUTBID,
+        type: FIREBASE_EVENTS.OUTBID_ALERT,
         auctionId: auction.id,
         auctionTitle: auction.title,
         newAmount,

@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { getAdminDisputes, resolveAdminDispute, getAdminCoordinationLog } from "@/actions/admin";
-import { ShieldCheck, AlertTriangle, Scale, RefreshCw, CheckCircle, ExternalLink } from "lucide-react";
-import Link from "next/link";
+import { ShieldCheck, AlertTriangle, Scale, RefreshCw, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface DisputeTransaction {
@@ -237,6 +236,7 @@ export function DisputesTab() {
                           <span className="text-[10px] font-bold text-gray-400 uppercase">{msg.senderId === 'system' ? 'System' : msg.senderId.substring(0,6)}</span>
                         </div>
                         {msg.imageUrl && (
+  // eslint-disable-next-line @next/next/no-img-element
                           <img src={msg.imageUrl} alt="Attachment" className="max-w-full h-auto rounded-lg mb-2" />
                         )}
                         <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.content}</p>

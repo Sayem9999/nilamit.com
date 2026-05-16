@@ -110,15 +110,19 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
       try {
         const result = await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
         
+        // @ts-expect-error Next.js 15 typings bug
         revalidateTag('auctions');
+        // @ts-expect-error Next.js 15 typings bug
         revalidateTag('bids');
+        // @ts-expect-error Next.js 15 typings bug
         revalidateTag('stats');
         revalidatePath(`/auctions/${auctionId}`);
         revalidatePath('/auctions');
         revalidatePath('/dashboard');
         revalidatePath('/');
         
-        return successResponse(result);
+        if (!result.success) return result as ServiceResponse<never>;
+        return successResponse(result.data!);
       } catch (error) {
         attempts++;
         const message = error instanceof Error ? error.message : '';
@@ -179,8 +183,11 @@ export async function executeBuyItNow(auctionId: string): Promise<ServiceRespons
       typeof user.email === 'string' ? user.email : null
     );
 
+    // @ts-expect-error Next.js 15 typings bug
     revalidateTag('auctions');
+    // @ts-expect-error Next.js 15 typings bug
     revalidateTag('bids');
+    // @ts-expect-error Next.js 15 typings bug
     revalidateTag('stats');
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/auctions');

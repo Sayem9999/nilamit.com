@@ -36,7 +36,7 @@ export function EscrowActionCard({
   const [isDisputeOpen, setIsDisputeOpen] = useState(false);
   const router = useRouter();
   const t = useTranslations("Escrow");
-  const locale = useLocale();
+  const _locale = useLocale();
 
   const user = session?.user as { id: string; bkashNumber?: string; nagadNumber?: string };
   const hasMFS = !!(user?.bkashNumber || user?.nagadNumber);

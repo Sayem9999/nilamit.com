@@ -62,7 +62,7 @@ function LoginContent() {
         router.push(callbackUrl);
         router.refresh();
       }
-    } catch (error) {
+    } catch (_error) {
        toast.error(t("errorGeneric"));
     } finally {
       setLoading(false);

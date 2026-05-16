@@ -8,11 +8,7 @@ import {
   banUser,
   unbanUser,
 } from "@/actions/admin-users";
-import { 
-  Package, Gavel, History, TrendingUp, Star, Award, ShieldCheck, 
-  Settings, LayoutDashboard, Store, Wallet, AlertCircle, ArrowRight,
-  MessageSquare, ExternalLink, Share2, MapPin, Search, PlusCircle, CheckCircle,
-  Heart, RefreshCw, LogOut, Shield, ShieldOff, Users, Ban
+import { Search, Shield, ShieldOff, Users, Ban
 } from "lucide-react";
 import Image from "next/image";
 

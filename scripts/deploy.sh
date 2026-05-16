@@ -61,7 +61,7 @@ GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET:-}"  # read from env var, not hardc
 # Sentry DSN (EU region — safe to commit, used in the browser bundle)
 SENTRY_DSN="https://a46a5f04797546f696a1df32e119a54b@o4510857201319936.ingest.de.sentry.io/4510857203482704"
 
-GREENWEB_TOKEN=""                                 # For SMS OTPs — get from greenweb.com.bd
+
 RESEND_API_KEY=""                                 # For email notifications — get from resend.com
 
 # ────────────────────────────────────────────────────────────────────────
@@ -369,7 +369,6 @@ create_or_update_secret "FIREBASE_APP_ID"           "$FIREBASE_APP_ID"
 [[ -n "$GOOGLE_CLIENT_SECRET" ]] && create_or_update_secret "GOOGLE_CLIENT_SECRET" "$GOOGLE_CLIENT_SECRET"
 [[ -n "$SENTRY_DSN" ]]           && create_or_update_secret "SENTRY_DSN"           "$SENTRY_DSN"
 [[ -n "$RESEND_API_KEY" ]]       && create_or_update_secret "RESEND_API_KEY"       "$RESEND_API_KEY"
-[[ -n "$GREENWEB_TOKEN" ]]       && create_or_update_secret "GREENWEB_TOKEN"       "$GREENWEB_TOKEN"
 
 ok "All secrets stored in Secret Manager"
 
@@ -424,19 +423,7 @@ if [[ -n "$SENTRY_DSN" ]]; then
   sed -i.bak 's/^  #   secret: SENTRY_DSN/    secret: SENTRY_DSN/' "$YAML_FILE" 2>/dev/null || true
 fi
 
-if [[ -n "$GREENWEB_TOKEN" ]]; then
-  # Add SMS provider config if not present
-  if ! grep -q "SMS_PROVIDER" "$YAML_FILE"; then
-    cat >> "$YAML_FILE" << 'EOF'
 
-  - variable: SMS_PROVIDER
-    value: greenweb
-
-  - variable: GREENWEB_TOKEN
-    secret: GREENWEB_TOKEN
-EOF
-  fi
-fi
 
 rm -f "${YAML_FILE}.bak"
 ok "apphosting.yaml updated"
@@ -620,9 +607,7 @@ echo -e "     Google Console: https://console.cloud.google.com/apis/credentials?
 echo -e "     New AUTH_SECRET: ${CYAN}openssl rand -base64 32${NC}"
 echo -e "     Update: ${CYAN}echo -n '<value>' | gcloud secrets versions add AUTH_SECRET --data-file=- --project=${PROJECT_ID}${NC}"
 echo ""
-echo -e "  2. ${YELLOW}SMS (OTPs)${NC} — currently logging to stdout, not sending real SMS."
-echo -e "     Get token from greenweb.com.bd and add GREENWEB_TOKEN to the CONFIGURE section, re-run."
-echo ""
+
 echo -e "  3. ${YELLOW}Sentry${NC} — add SENTRY_DSN to the CONFIGURE section and re-run for error tracking."
 echo ""
 if [[ -n "$CUSTOM_DOMAIN" ]]; then

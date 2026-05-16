@@ -11,6 +11,8 @@ export interface Auction {
   location?: string | null;
   startingPrice: number;
   currentPrice: number;
+  secondHighestBidderId?: string;
+  secondHighestBidAmount?: number;
   currentBidderId?: string | null;
   proxyMaxBid?: number | null;
   proxyBidderId?: string | null;
@@ -45,6 +47,8 @@ export interface Auction {
 export interface Bid {
   id: string;
   amount: number;
+  publicAmount?: number;
+  status?: string;
   auctionId: string;
   bidderId: string;
   createdAt: Date;

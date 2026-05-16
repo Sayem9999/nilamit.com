@@ -137,7 +137,7 @@ if (!googleEnabled && process.env.NODE_ENV === 'production') {
 
 // 5 minutes: short enough that ban/verification changes propagate quickly,
 // long enough to avoid hammering Firestore on every request.
-const TOKEN_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const _TOKEN_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,

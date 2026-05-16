@@ -1,6 +1,6 @@
 'use client';
 
-import { ShieldCheck, Truck, Scale, AlertOctagon, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Truck, AlertOctagon, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PolicyPage() {

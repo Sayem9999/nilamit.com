@@ -1,4 +1,4 @@
-import { db } from './lib/db';
+import { db } from '../src/lib/db';
 
 async function seed() {
   console.log('Seeding global stats and system config...');

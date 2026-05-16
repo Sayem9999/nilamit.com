@@ -8,14 +8,14 @@ import Link from "next/link";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 import { getTranslations } from "next-intl/server";
 import { getSystemConfig } from "@/actions/admin-content";
-import { type Conversation, type Auction, type User, type EscrowTransaction, type Message, type Dispute } from "@/types";
+import { type Conversation, type EscrowTransaction, type Dispute } from "@/types";
 
 export default async function CoordinationPage({
   params,
 }: {
   params: Promise<{ id: string; locale: string }>;
 }) {
-  const { id, locale } = await params;
+  const { id } = await params;
   const session = await auth();
   const t = await getTranslations("Escrow");
 

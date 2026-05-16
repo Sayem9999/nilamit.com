@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RetailerDashboardPage() {
   const session = await auth();
-  const t = await getTranslations("Dashboard");
+  const _t = await getTranslations("Dashboard");
 
   if (!session?.user) {
     redirect("/login?callbackUrl=/retailer/dashboard");
@@ -137,7 +137,7 @@ export default async function RetailerDashboardPage() {
             {/* Simple SVG Chart Representation */}
             <div className="h-64 w-full relative mt-12">
                <div className="absolute inset-0 flex items-end justify-between px-4 pb-8">
-                 {stats.dailyRevenue.map((day, i) => (
+                 {stats.dailyRevenue.map((day, _i) => (
                    <div key={day.date} className="group relative flex flex-col items-center flex-1">
                      <div 
                        className="w-12 bg-gradient-to-t from-indigo-600 to-indigo-400 rounded-t-lg transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/20"

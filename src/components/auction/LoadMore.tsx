@@ -62,6 +62,7 @@ export default function LoadMore({
 
     return () => {
       if (observerTarget.current) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
         observer.unobserve(observerTarget.current);
       }
     };

@@ -163,7 +163,6 @@ DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (ad
 | `SENTRY_DSN` | ✓ Real | EU region: `ingest.de.sentry.io` |
 | `UPSTASH_REDIS_REST_URL` | ✓ Real | `https://safe-stallion-50421.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | ✓ Real | Real Upstash token |
-| `GREENWEB_TOKEN` | 🚫 Deprecated | Migrated entirely to native Google Firebase Phone Auth service |
 | `IMAGE_MODERATION` | env var | Set to `enabled` (May 2026); disable here to bypass Cloud Vision SafeSearch |
 
 ---
@@ -258,10 +257,6 @@ Permanent fix: `docker run --rm -v $(pwd):/app -w /app node:20 npm install`
 ### `cloudbuild.yaml` uses `npm install` not `npm ci`
 
 Firebase App Hosting's buildpack internally runs `npm ci`. Our `cloudbuild.yaml` runs `npm install` for the initial setup step. The buildpack's own `npm ci` is what actually installs for production — that's why the lockfile patch above matters.
-
-### `GREENWEB_TOKEN` is a placeholder
-
-SMS OTPs log to stdout. Get real token from greenweb.com.bd, update the secret, and add `SMS_PROVIDER=greenweb` to `apphosting.yaml`.
 
 ### Auth.js v5 beta
 

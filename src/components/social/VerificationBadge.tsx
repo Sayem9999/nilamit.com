@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo } from "react";
-import { CheckCircle2, ShieldCheck, Building2, Mail, Info } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Mail, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   Tooltip,

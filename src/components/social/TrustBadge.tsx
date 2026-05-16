@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo } from "react";
-import { Star, ShieldCheck, Award, Zap, Info } from "lucide-react";
+import { Star, ShieldCheck, Award, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   Tooltip,
@@ -25,7 +25,7 @@ const TrustBadge = memo(({
   size = "md",
   className = "",
 }: TrustBadgeProps) => {
-  const t = useTranslations("Social");
+  const _t = useTranslations("Social");
 
   // Tier Mapping based on Stars
   const getTier = (r: number) => {

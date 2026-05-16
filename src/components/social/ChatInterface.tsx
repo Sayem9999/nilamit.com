@@ -4,8 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { onChildAdded, ref } from 'firebase/database';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getClientDB, getClientStorage, ensureFirebaseAuth } from '@/lib/firebase-client';
+import { getClientDB, ensureFirebaseAuth } from '@/lib/firebase-client';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { sendMessage, markAsRead } from '@/actions/chat';
 import { Send, Check, CheckCheck, User, Camera, Loader2 } from 'lucide-react';
@@ -35,7 +34,6 @@ interface ChatInterfaceProps {
 }
 
 export default function ChatInterface({
-  auctionId,
   initialMessages,
   conversationId,
   recipientName,

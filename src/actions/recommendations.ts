@@ -2,6 +2,7 @@
 
 import { db, snapDocs, toSellerPublic } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { Auction } from '@/types';
 
 export async function trackCategoryView(category: string) {
   const session = await auth();
@@ -54,7 +55,7 @@ export async function getRecommendations(limit = 8) {
 
   const seen = new Set<string>();
   const auctions = snaps.flatMap(s =>
-    snapDocs<any>(s).filter(a => {
+    snapDocs<Auction>(s).filter(a => {
       if (seen.has(a.id)) return false;
       seen.add(a.id);
       return true;
@@ -82,12 +83,12 @@ async function getGenericRecommendationsRaw(limit: number, excludeIds: string[] 
     .limit(limit + excludeIds.length)
     .get();
 
-  return snapDocs<any>(snap)
+  return snapDocs<Auction>(snap)
     .filter(d => !excludeIds.includes(d.id))
     .slice(0, limit);
 }
 
-async function hydrateAuctions(auctions: any[]): Promise<any[]> {
+async function hydrateAuctions(auctions: Auction[]): Promise<Auction[]> {
   if (auctions.length === 0) return [];
 
   const sellerIds = [...new Set(auctions.map(a => a.sellerId))];
@@ -95,8 +96,8 @@ async function hydrateAuctions(auctions: any[]): Promise<any[]> {
   const sellerMap = new Map(sellerSnaps.map(s => [s.id, toSellerPublic(s.id, s.data())]));
 
   return auctions.map(a => {
-    const rawEnd = a.endTime as any;
-    const endTime = rawEnd?.toDate ? rawEnd.toDate() : new Date(rawEnd);
+    const rawEnd = a.endTime as unknown as { toDate?: () => Date };
+    const endTime = rawEnd?.toDate ? rawEnd.toDate() : new Date(rawEnd as unknown as string);
     return {
       ...a,
       seller: sellerMap.get(a.sellerId) || { id: a.sellerId, name: 'Unknown Seller', reputationScore: 0, dealsCompleted: 0 },

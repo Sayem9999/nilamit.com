@@ -141,7 +141,7 @@ export function AdminLayout({
   );
 }
 
-function Placeholder({ tab }: { tab: string }) {
+function _Placeholder({ tab }: { tab: string }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-400">
       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">

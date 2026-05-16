@@ -1,8 +1,8 @@
 'use server';
 
-import { db, snapDocs } from '@/lib/db';
+import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
-import { AuctionStatus, Auction, User, Bid } from '@/types';
+import { AuctionStatus } from '@/types';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
 export interface KeyMetrics {
@@ -160,7 +160,7 @@ export async function getKeyMetrics(): Promise<ServiceResponse<KeyMetrics>> {
     };
 
     return successResponse(metrics);
-  } catch (e) {
+  } catch (_e) {
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch metrics');
   }
 }

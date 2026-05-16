@@ -81,7 +81,7 @@ export function TreasuryTab() {
       } else {
         toast.error(res.error?.message || 'Failed to process refund');
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('An unexpected error occurred');
     } finally {
       setResolving(null);
@@ -118,7 +118,7 @@ export function TreasuryTab() {
       } else {
         toast.error(res.error?.message || 'Verification failed');
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('An error occurred');
     } finally {
       setApproving(null);

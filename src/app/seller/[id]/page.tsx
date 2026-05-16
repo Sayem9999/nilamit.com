@@ -2,10 +2,9 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import AuctionCard from "@/components/auction/AuctionCard";
-import { Star, ShieldCheck, MapPin, Calendar, Gavel, History, Award, MessageSquare, ExternalLink, Share2, AlertCircle, Shield, Package, CheckCircle, TrendingUp } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, Calendar, Award, Shield, Package, CheckCircle } from 'lucide-react';
 import Image from "next/image";
 import { type User, type Auction, type Review, type AuctionWithSeller } from "@/types";
-import { formatBDT } from "@/lib/format";
 import { FollowSellerButton } from "@/components/social/FollowSellerButton";
 import { isFollowingSeller, getFollowerCount } from "@/actions/seller-follow";
 

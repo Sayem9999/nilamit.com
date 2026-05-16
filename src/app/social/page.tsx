@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { User, Trophy, ShieldCheck } from "lucide-react";
 
 export default async function SocialDashboardPage() {
-  const session = await auth();
+  const _session = await auth();
   const [reputation, conversations] = await Promise.all([
     getUserReputation(),
     getUserConversations()

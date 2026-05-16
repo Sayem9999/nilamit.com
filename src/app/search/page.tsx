@@ -16,7 +16,7 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string; category?: string; sort?: string; location?: string; circleId?: string; condition?: string }>;
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  await params;
   const { q, category, sort, location, condition } = await searchParams;
   const t = await getTranslations("Search");
   const tCat = await getTranslations("Categories");

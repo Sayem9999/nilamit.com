@@ -25,7 +25,7 @@ type Step = "details" | "pricing" | "schedule" | "review";
 export default function CreateAuctionPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const locale = useLocale();
+  const _locale = useLocale();
   const t = useTranslations("Auction");
   const tCat = useTranslations("Categories");
   const tLoc = useTranslations("Locations");

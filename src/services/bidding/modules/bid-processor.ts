@@ -3,13 +3,7 @@ import { Auction, Bid, AuctionStatus } from '@/types';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
 import { BidSideEffects } from './bid-side-effects';
-
-export interface PlaceBidResult {
-  bidId: string;
-  isAutoBid: boolean;
-  isLeading: boolean;
-  wasOutbid?: boolean;
-}
+import { PlaceBidResult } from '@/types';
 
 export class BidProcessor {
   /**
@@ -79,8 +73,10 @@ export class BidProcessor {
         // 3. Anti-Sniping
         const timeRemaining = auction.endTime.getTime() - now.getTime();
         let newEndTime = auction.endTime;
+        let antiSnipeTriggered = false;
         if (timeRemaining < 120000) {
           newEndTime = new Date(now.getTime() + 120000);
+          antiSnipeTriggered = true;
         }
 
         // 4. Update State
@@ -115,9 +111,10 @@ export class BidProcessor {
         incrementGlobalStat('totalBids').catch(() => {});
 
         return successResponse({
-          bidId,
-          isAutoBid: false,
-          isLeading: newCurrentBidderId === userId
+          bid,
+          newEndTime,
+          antiSnipeTriggered,
+          newCurrentPrice,
         });
       });
     } catch (err) {

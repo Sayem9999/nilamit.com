@@ -2,7 +2,6 @@
 
 import { db, toDate } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
-import { User } from '@/types';
 import { revalidatePath } from 'next/cache';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
@@ -20,7 +19,7 @@ export async function grantVerifiedSeller(userId: string): Promise<ServiceRespon
 
     revalidatePath('/admin');
     return successResponse(null);
-  } catch (e) {
+  } catch (_e) {
     return errorResponse(ErrorType.INTERNAL, 'Failed to grant verified status');
   }
 }
@@ -38,7 +37,7 @@ export async function revokeVerifiedSeller(userId: string): Promise<ServiceRespo
 
     revalidatePath('/admin');
     return successResponse(null);
-  } catch (e) {
+  } catch (_e) {
     return errorResponse(ErrorType.INTERNAL, 'Failed to revoke verified status');
   }
 }
@@ -56,7 +55,7 @@ export async function banUser(userId: string): Promise<ServiceResponse<null>> {
 
     revalidatePath('/admin');
     return successResponse(null);
-  } catch (e) {
+  } catch (_e) {
     return errorResponse(ErrorType.INTERNAL, 'Failed to ban user');
   }
 }
@@ -74,7 +73,7 @@ export async function unbanUser(userId: string): Promise<ServiceResponse<null>> 
 
     revalidatePath('/admin');
     return successResponse(null);
-  } catch (e) {
+  } catch (_e) {
     return errorResponse(ErrorType.INTERNAL, 'Failed to unban user');
   }
 }
@@ -136,7 +135,7 @@ export async function getAdminUsers(opts: {
     }));
 
     return successResponse({ users: pagedUsers, nextCursor, hasMore });
-  } catch (e) {
+  } catch (_e) {
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch users');
   }
 }

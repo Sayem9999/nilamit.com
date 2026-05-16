@@ -13,7 +13,6 @@
     "@emnapi/core": "1.10.0",
     "@emnapi/runtime": "1.10.0",
     "@firebase/app-check": "^0.11.3",
-    "google-auth-library": "^9.15.0",
     "@google-cloud/vision": "^5.3.6",
     "@sentry/nextjs": "^10.49.0",
     "@swc/helpers": "^0.5.21",
@@ -37,6 +36,7 @@
     "firebase": "^11.9.0",
     "firebase-admin": "^13.4.0",
     "framer-motion": "^12.34.0",
+    "google-auth-library": "^9.15.0",
     "isomorphic-dompurify": "^3.10.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.564.0",
@@ -68,6 +68,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "vitest": "^4.1.5"

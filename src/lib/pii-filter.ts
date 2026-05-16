@@ -7,7 +7,7 @@
 // Includes English (0-9) and Bangla (০-৯) digits, handling common 01... prefix
 // Two forms: the `g` flag version for replace() calls, and a flag-free version
 // for .test() so the stateful lastIndex never causes alternating false-negatives.
-const BANGLADESH_PHONE_REGEX_TEST   = /(?:\+?88)?(?:0|০)(?:1|১)[3-9৩-৯](?:[\s-]?[0-9০-৯]){8}/;
+const _BANGLADESH_PHONE_REGEX_TEST   = /(?:\+?88)?(?:0|০)(?:1|১)[3-9৩-৯](?:[\s-]?[0-9০-৯]){8}/;
 const EMAIL_REGEX                   = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const EMAIL_REGEX_TEST              = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
 

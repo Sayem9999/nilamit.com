@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth';
 import { BulkAuctionService } from '@/services/auction/bulk-auction-service';
-import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { ErrorType, errorResponse, ServiceResponse } from '@/lib/errors';
 import { ERROR_CODES } from '@/lib/constants';
 import { revalidatePath } from 'next/cache';
 

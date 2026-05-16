@@ -8,8 +8,8 @@ import { placeBid, executeBuyItNow } from "@/actions/bid";
 import { formatBDT } from "@/lib/format";
 import { ErrorType, ServiceResponse } from "@/lib/errors";
 import { ERROR_CODES } from "@/lib/constants";
-import { PlaceBidResult, Bid } from "@/types";
-import { useAuctionBids } from "@/hooks/useAuctionBids";
+import { PlaceBidResult } from "@/types";
+import { useAuctionBids, RealTimeBid } from "@/hooks/useAuctionBids";
 import { useSound } from "@/hooks/useSound";
 import { useSettings } from "@/context/SettingsContext";
 import { VerificationGuard } from "@/components/auth/VerificationGuard";
@@ -44,7 +44,7 @@ interface BidPanelProps {
   buyItNowPrice?: number | null;
   proxyMaxBid?: number | null;
   proxyBidderId?: string | null;
-  initialBids?: Bid[];
+  initialBids?: RealTimeBid[];
   onBidPlaced?: () => void;
   startingPrice?: number;
 }

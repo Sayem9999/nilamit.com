@@ -71,7 +71,7 @@ export class RetailerService {
         shillReports: shillSnap.size,
         dailyRevenue,
       });
-    } catch (error) {
+    } catch (_error) {
       return errorResponse(ErrorType.INTERNAL, 'Failed to fetch retailer stats');
     }
   }

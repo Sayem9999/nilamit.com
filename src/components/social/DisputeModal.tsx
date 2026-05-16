@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Button } from '@/components/ui/button';
-import { X, AlertTriangle, Upload, Loader2 } from 'lucide-react';
+import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { raiseDispute } from '@/actions/dispute';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';

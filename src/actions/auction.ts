@@ -1,11 +1,11 @@
 'use server';
 
 import { auth } from '@/lib/auth';
-import { db, snapDocs, toSellerPublic } from '@/lib/db';
+import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { AuctionService } from '@/services/auction/auction-service';
 import { ERROR_CODES } from '@/lib/constants';
-import type { Auction, AuctionFilters, AuctionWithSeller, AuctionListResponse, LatestActivity } from '@/types';
+import type { AuctionFilters, AuctionWithSeller, AuctionListResponse, LatestActivity } from '@/types';
 import { AuctionStatus } from '@/types';
 import { createAuctionSchema, editAuctionSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';

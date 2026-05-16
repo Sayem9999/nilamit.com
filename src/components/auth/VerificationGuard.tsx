@@ -51,6 +51,8 @@ function VerificationGuardComponent({ children }: VerificationGuardProps) {
 
       return () => controller.abort();
     }
+    return undefined;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id, isVerified, isVerifiedOverride, update]);
 
   const handleClick = (e: React.MouseEvent) => {

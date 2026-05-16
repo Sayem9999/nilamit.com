@@ -2,8 +2,11 @@ import { db } from '@/lib/db';
 import { Bid, Auction } from '@/types';
 import { ServiceResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
-import { BidProcessor, PlaceBidResult } from './modules/bid-processor';
+import { BidProcessor } from './modules/bid-processor';
 import { BidSideEffects } from './modules/bid-side-effects';
+import { processAuctionSale, sendSaleNotifications } from '@/lib/auction-logic';
+import { ERROR_CODES } from '@/lib/constants';
+import { BidWithBidder, PlaceBidResult } from '@/types';
 
 /**
  * BiddingService — Facade for Bidding operations.
@@ -25,9 +28,54 @@ export class BiddingService {
   }
 
   /**
+   * Atomic BIN purchase: closes auction and initiates escrow.
+   */
+  static async executeBuyItNow(auctionId: string, userId: string, userName: string, userEmail: string | null): Promise<void> {
+    const notifyPayload = await db.runTransaction(async (tx) => {
+      const aRef = db.collection('auctions').doc(auctionId);
+      const aSnap = await tx.get(aRef);
+      if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
+
+      const auction = aSnap.data()!;
+      if (auction.status !== 'ACTIVE') throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
+
+      const now = new Date();
+      const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
+      
+      if (now < new Date(auction.startTime || 0)) throw new Error('AUCTION_NOT_STARTED');
+      if (now >= endTime) throw new Error(ERROR_CODES.AUCTION_ENDED);
+      if (auction.sellerId === userId) throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
+      if (!auction.buyItNowPrice) throw new Error('BUY_IT_NOW_NOT_AVAILABLE');
+
+      const sellerSnap = await tx.get(db.collection('users').doc(auction.sellerId));
+      const sellerData = sellerSnap.data() || {};
+
+      return processAuctionSale(
+        tx,
+        {
+          id: auctionId,
+          title: auction.title,
+          sellerId: auction.sellerId,
+          deliveryCharge: auction.deliveryCharge,
+          reservePrice: auction.reservePrice,
+        },
+        { id: auction.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
+        {
+          id:    userId,
+          email: userEmail,
+          name:  userName,
+        },
+        auction.buyItNowPrice,
+      );
+    });
+
+    if (notifyPayload) sendSaleNotifications(notifyPayload);
+  }
+
+  /**
    * Retrieves the bidding history for a specific auction.
    */
-  static async getAuctionBids(auctionId: string): Promise<Bid[]> {
+  static async getAuctionBids(auctionId: string): Promise<BidWithBidder[]> {
     try {
       const snap = await db.collection('bids')
         .where('auctionId', '==', auctionId)
@@ -58,7 +106,7 @@ export class BiddingService {
           bidderId: b.bidderId as string,
           createdAt,
           bidder: biddersMap.get(b.bidderId as string) ?? { id: b.bidderId as string, name: null, image: null },
-        } as Bid;
+        } as BidWithBidder;
       });
     } catch (err) {
       log.error('[BiddingService] getAuctionBids failed', err, { auctionId });

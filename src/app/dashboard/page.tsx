@@ -3,9 +3,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { 
-  Package, Gavel, History, TrendingUp, Star, Award, ShieldCheck, 
-  Settings, LayoutDashboard, Store, Wallet, AlertCircle, ArrowRight,
-  MessageSquare, ExternalLink, Share2, MapPin, Search, PlusCircle, CheckCircle,
+  Package, Star, Store, ArrowRight,
+  MessageSquare, CheckCircle,
   Heart, RefreshCw, LogOut
 } from "lucide-react";
 import Link from "next/link";

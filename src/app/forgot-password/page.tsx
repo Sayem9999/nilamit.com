@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
+  const [_resendTimer, setResendTimer] = useState(0);
 
   const handleRequestOTP = () => {
     if (!email) return;
@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
         } else {
           setError(result.error?.message || t("errorGeneric"));
         }
-      } catch (err) {
+      } catch (_err) {
         setError(t("errorGeneric"));
       }
     });

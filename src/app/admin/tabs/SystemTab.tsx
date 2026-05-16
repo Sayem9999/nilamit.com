@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Settings, Percent } from 'lucide-react';
+import { Trash2, AlertTriangle, AlertCircle, Download, FileText } from 'lucide-react';
 import { adminWipeTestData, exportTransactionsCSV } from '@/actions/admin-system';
 import { getSystemConfig, updateSystemConfig } from '@/actions/admin-content';
 import { useEffect } from 'react';
@@ -13,7 +13,7 @@ export function SystemTab() {
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const [_isSavingConfig, setIsSavingConfig] = useState(false);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -24,7 +24,7 @@ export function SystemTab() {
     fetchConfig();
   }, []);
 
-  const handleUpdateConfig = async () => {
+  const _handleUpdateConfig = async () => {
     setIsSavingConfig(true);
     try {
       const res = await updateSystemConfig({});
