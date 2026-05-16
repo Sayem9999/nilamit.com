@@ -82,7 +82,7 @@ export default function LoadMore({
             <span>Loading more...</span>
           </div>
         )}
-        {!hasMore && auctions.length > 0 && (
+        {!hasMore && (
           <p className="text-gray-400 text-sm italic">You&apos;ve reached the end of the line.</p>
         )}
       </div>
