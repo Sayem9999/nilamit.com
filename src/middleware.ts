@@ -41,17 +41,18 @@ export default auth((req) => {
   
   // Content Security Policy
   const cspHeader = `
-    default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://accounts.google.com https://apis.google.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://lh3.googleusercontent.com https://firebasestorage.googleapis.com https://utfs.io;
-    font-src 'self' https://fonts.gstatic.com;
+    default-src 'self' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://*.firebaseapp.com https://*.web.app;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://*.firebasedatabase.app https://www.gstatic.com https://*.googleapis.com https://www.google.com https://*.recaptcha.net;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.nilamit.com https://nilamit.com https://*.hosted.app;
+    img-src 'self' data: blob: https://*.googleusercontent.com https://utfs.io https://*.uploadthing.com https://firebasestorage.googleapis.com https://storage.googleapis.com https://avatars.githubusercontent.com https://i.pravatar.cc https://images.unsplash.com https://*.ingest.sentry.io https://*.nilamit.com https://nilamit.com https://*.hosted.app;
+    font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com;
+    connect-src 'self' https://*.googleapis.com https://storage.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.cloudfunctions.net https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://*.sentry.io https://utfs.io https://*.uploadthing.com https://*.nilamit.com https://nilamit.com https://*.hosted.app https://*.firebaseapp.com https://www.google.com https://*.recaptcha.net;
+    frame-src 'self' https://*.firebaseapp.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.nilamit.com https://nilamit.com https://*.hosted.app https://www.google.com https://*.recaptcha.net;
+    media-src 'self' https://*.nilamit.com https://nilamit.com https://*.hosted.app;
     object-src 'none';
     base-uri 'self';
-    form-action 'self';
+    form-action 'self' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://*.firebaseapp.com;
     frame-ancestors 'none';
-    frame-src 'self' https://accounts.google.com https://nilamit-52073.firebaseapp.com;
-    connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://vitals.vercel-insights.com;
     upgrade-insecure-requests;
   `.replace(/\s{2,}/g, ' ').trim();
 

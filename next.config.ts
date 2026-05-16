@@ -37,10 +37,11 @@ const nextConfig: NextConfig = {
 
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns"],
-    // @ts-expect-error - outputFileTracingIncludes is valid at runtime but may be missing from types
-    outputFileTracingIncludes: {
-      '/api/tasks/*': ['./node_modules/@google-cloud/tasks/build/protos/*.json'],
-    },
+  },
+
+  // @ts-expect-error - outputFileTracingIncludes is valid at runtime but may be missing from types
+  outputFileTracingIncludes: {
+    '/api/tasks/*': ['./node_modules/@google-cloud/tasks/build/protos/*.json'],
   },
 
   async headers() {

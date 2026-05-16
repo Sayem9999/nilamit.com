@@ -41,6 +41,7 @@ export default function LoadMore({
       }
     } catch (error) {
       console.error("Failed to load more auctions:", error);
+      setHasMore(false);
     } finally {
       setIsLoading(false);
     }
@@ -61,12 +62,9 @@ export default function LoadMore({
     }
 
     return () => {
-      if (observerTarget.current) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-        observer.unobserve(observerTarget.current);
-      }
+      observer.disconnect();
     };
-  }, [lastId, hasMore, isLoading, loadNextPage]);
+  }, [hasMore, isLoading, loadNextPage]);
 
   return (
     <div className="space-y-8">
