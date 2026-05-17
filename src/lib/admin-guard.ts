@@ -10,10 +10,14 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import type { Session } from 'next-auth';
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
-  .split(',')
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
+import { env } from '@/lib/env';
+
+const ADMIN_EMAILS: string[] = Array.isArray(env.ADMIN_EMAILS)
+  ? env.ADMIN_EMAILS
+  : (process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
 
 /**
  * Session that's guaranteed to have a logged-in user with id + email.

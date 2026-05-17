@@ -163,5 +163,8 @@ export function containsPII(text: string): boolean {
   const WORD_DIGIT_REGEX_TEST = new RegExp(`\\b(${DIGIT_WORDS.join("|")})\\b`, "i");
   if (WORD_DIGIT_REGEX_TEST.test(text)) return true;
 
-  return BYPASS_KEYWORDS.some((regex) => regex.test(text));
+  return BYPASS_KEYWORDS.some((regex) => {
+    regex.lastIndex = 0; // Reset stateful global regex before each test() call
+    return regex.test(text);
+  });
 }

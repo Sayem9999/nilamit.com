@@ -1,3 +1,5 @@
+'use server';
+
 /**
  * admin.ts — Barrel file for administrative server actions.
  * 

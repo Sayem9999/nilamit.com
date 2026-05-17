@@ -111,8 +111,8 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
         const result = await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
         
         revalidateTag('auctions', { expire: 0 });
-        revalidateTag('bids', { expire: 0 });
-        revalidateTag('stats', { expire: 0 });
+        revalidateTag('bids',     { expire: 0 });
+        revalidateTag('stats',    { expire: 0 });
         revalidatePath(`/auctions/${auctionId}`);
         revalidatePath('/auctions');
         revalidatePath('/dashboard');
@@ -181,8 +181,8 @@ export async function executeBuyItNow(auctionId: string): Promise<ServiceRespons
     );
 
     revalidateTag('auctions', { expire: 0 });
-    revalidateTag('bids', { expire: 0 });
-    revalidateTag('stats', { expire: 0 });
+    revalidateTag('bids',     { expire: 0 });
+    revalidateTag('stats',    { expire: 0 });
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/auctions');
     revalidatePath('/dashboard');

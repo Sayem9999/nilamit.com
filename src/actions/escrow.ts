@@ -124,7 +124,16 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
     return successResponse(null);
   } catch (e) {
     log.error('[escrow] payEscrowAdvance failed', e, { area: 'escrow', severity: 'critical' });
-    const msg = e instanceof Error ? e.message : 'Internal error';
+    const code = e instanceof Error ? e.message : '';
+    const USER_MESSAGES: Record<string, string> = {
+      'MFS_LINKAGE_REQUIRED':  'Please link a bKash or Nagad account in your profile before paying.',
+      'ADDRESS_REQUIRED':      'Please add your delivery address in your profile settings.',
+      'SELLER_ADDRESS_MISSING':'The seller has not added a shipping address yet. Contact support.',
+      'Transaction not found': 'Transaction not found.',
+      'Unauthorized':          'You are not authorized to perform this action.',
+      'Advance already paid or verification pending': 'Payment has already been submitted for this transaction.',
+    };
+    const msg = USER_MESSAGES[code] ?? 'Payment processing failed. Please try again.';
     return errorResponse(ErrorType.INTERNAL, msg);
   }
 }

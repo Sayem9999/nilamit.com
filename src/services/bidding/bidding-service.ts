@@ -33,11 +33,11 @@ export class BiddingService {
     try {
       const snap = await db.collection('bids')
         .where('auctionId', '==', auctionId)
+        .orderBy('amount', 'desc')
+        .limit(50)
         .get();
       
-      const sortedDocs = [...snap.docs]
-        .sort((a, b) => (b.data().amount || 0) - (a.data().amount || 0))
-        .slice(0, 50);
+      const sortedDocs = snap.docs;
       
       const bidderIds = [...new Set(sortedDocs.map(d => d.data().bidderId as string))];
       let biddersMap = new Map<string, { id: string; name: string | null; image: string | null }>();
