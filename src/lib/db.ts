@@ -8,6 +8,7 @@ export const db = new Proxy({} as unknown as FirebaseFirestore.Firestore, {
   get(target, prop) {
     if (!_db) {
       _db = getFirestore(getAdminApp());
+      _db.settings({ ignoreUndefinedProperties: true });
     }
     return Reflect.get(_db, prop);
   }

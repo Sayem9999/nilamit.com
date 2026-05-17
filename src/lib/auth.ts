@@ -16,11 +16,25 @@ function FirestoreAdapter(): Adapter {
     async createUser(user: Omit<AdapterUser, 'id'>) {
       const ref = db.collection('users').doc();
       const now = new Date();
-      const doc = { ...user, id: ref.id, createdAt: now, updatedAt: now,
+      // Clean up undefined fields because Firestore does not accept undefined values
+      const cleanedUser = Object.fromEntries(
+        Object.entries(user).filter(([_, v]) => v !== undefined)
+      );
+      
+      const doc = { 
+        ...cleanedUser, 
+        id: ref.id, 
+        createdAt: now, 
+        updatedAt: now,
         isVerifiedSeller: false,
-        reputationScore: 0, winningStreak: 0, xp: 0, userLevel: 1 };
+        reputationScore: 0, 
+        winningStreak: 0, 
+        xp: 0, 
+        userLevel: 1,
+        ...(cleanedUser.name ? { nameLowercase: (cleanedUser.name as string).toLowerCase() } : {})
+      };
       await ref.set(doc);
-      return { ...doc } as AdapterUser;
+      return { ...doc } as unknown as AdapterUser;
     },
     async getUser(id: string) {
       const snap = await db.collection('users').doc(id).get();
@@ -52,7 +66,13 @@ function FirestoreAdapter(): Adapter {
     },
     async updateUser(user: Partial<AdapterUser> & { id: string }) {
       const { id, ...rest } = user;
-      await db.collection('users').doc(id).update({ ...rest, updatedAt: new Date() });
+      const cleanedUpdate = Object.fromEntries(
+        Object.entries(rest).filter(([_, v]) => v !== undefined)
+      );
+      if (cleanedUpdate.name) {
+        cleanedUpdate.nameLowercase = (cleanedUpdate.name as string).toLowerCase();
+      }
+      await db.collection('users').doc(id).update({ ...cleanedUpdate, updatedAt: new Date() });
       const snap = await db.collection('users').doc(id).get();
       const data = snap.data()!;
       delete data.password;
@@ -60,7 +80,10 @@ function FirestoreAdapter(): Adapter {
     },
     async linkAccount(account: AdapterAccount) {
       const ref = db.collection('accounts').doc();
-      await ref.set({ ...account, id: ref.id });
+      const cleanedAccount = Object.fromEntries(
+        Object.entries(account).filter(([_, v]) => v !== undefined)
+      );
+      await ref.set({ ...cleanedAccount, id: ref.id });
       return account;
     },
     async unlinkAccount({ provider, providerAccountId }: { provider: string; providerAccountId: string }) {

@@ -129,7 +129,10 @@ export const adminAuth = {
 
 export const adminFirestore = {
   get instance(): Firestore {
-    if (!_firestore) _firestore = getFirestore(getAdminApp());
+    if (!_firestore) {
+      _firestore = getFirestore(getAdminApp());
+      _firestore.settings({ ignoreUndefinedProperties: true });
+    }
     return _firestore;
   },
   collection(name: string) { return this.instance.collection(name); },
