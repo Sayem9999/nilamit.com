@@ -1,7 +1,8 @@
-import { rtdbPush } from '@/lib/firebase-admin';
+import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { Auction, Bid } from '@/types';
 import { log } from '@/lib/logger';
+import { db } from '@/lib/db';
 import { scheduleAuctionClosure } from '@/lib/cloud-tasks';
 
 export class BidSideEffects {
@@ -12,21 +13,37 @@ export class BidSideEffects {
   static async handleBidSideEffects(auction: Auction, bid: Bid, prevBidderId: string | null, newEndTime?: Date): Promise<void> {
     const tasks: Promise<unknown>[] = [];
 
-    // 1. RTDB Update for current auction view
-    tasks.push(rtdbPush(RTDB_PATHS.auctionBid(auction.id), {
-      lastBidAmount: bid.amount,
-      lastBidderId: bid.bidderId,
+    // Fetch bidder name for real-time feed
+    let bidderName = 'Someone';
+    try {
+      const bidderSnap = await db.collection('users').doc(bid.bidderId).get();
+      if (bidderSnap.exists) {
+        bidderName = bidderSnap.data()?.name ?? 'Someone';
+      }
+    } catch (e) {
+      log.error('[BidSideEffects] Failed to fetch bidder name', e);
+    }
+
+    const bidAmount = bid.publicAmount ?? bid.amount;
+
+    // 1. RTDB Update for current auction view (overwrite with single flat node)
+    tasks.push(rtdbSet(RTDB_PATHS.auctionBid(auction.id), {
+      event: FIREBASE_EVENTS.NEW_BID,
+      amount: bidAmount,
+      bidderId: bid.bidderId,
+      bidderName,
       bidCount: (auction.bidCount || 0) + 1,
-      updatedAt: Date.now()
+      endTime: newEndTime ? newEndTime.toISOString() : auction.endTime.toISOString(),
+      createdAt: new Date().toISOString(),
     }).catch(e => log.error('[BidSideEffects] RTDB update failed', e)));
 
     // 2. Outbid Notification
     if (prevBidderId && prevBidderId !== bid.bidderId) {
-      tasks.push(this.notifyOutbid(prevBidderId, auction, bid.amount));
+      tasks.push(this.notifyOutbid(prevBidderId, auction, bidAmount));
     }
 
     // 3. Seller Notification
-    tasks.push(this.notifySeller(auction.sellerId, auction, bid.amount));
+    tasks.push(this.notifySeller(auction.sellerId, auction, bidAmount));
 
     // 4. Cloud Task Rescheduling (Event-driven closure)
     // If the end time has been extended (e.g. anti-sniping), we must schedule a new task.
