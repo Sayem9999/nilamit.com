@@ -222,7 +222,9 @@
     "optionalUpgrades": "Optional Upgrades",
     "reservePricePlaceholder": "Hidden minimum price...",
     "buyNowPricePlaceholder": "Instant purchase price...",
-    "uploaded": "uploaded"
+    "uploaded": "uploaded",
+    "sold": "Sold",
+    "ended": "Ended"
   },
   "BidPanel": {
     "placeBid": "Place Your Bid",
