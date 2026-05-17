@@ -24,6 +24,7 @@ import {
   LogOut,
   Camera,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
@@ -45,6 +46,7 @@ export default function ProfilePage() {
   
   // Profile Photo Upload State
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isRemovingPhoto, setIsRemovingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +72,7 @@ export default function ProfilePage() {
       if (res.success) {
         // Force NextAuth session refresh to sync the avatar instantly
         await update();
-        toast.success("Profile photo updated successfully!");
+        toast.success("Profile photo updated!");
       } else {
         toast.error(res.error?.message || "Failed to update profile photo");
       }
@@ -82,6 +84,25 @@ export default function ProfilePage() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!session?.user?.image) return;
+    try {
+      setIsRemovingPhoto(true);
+      const res = await updateProfile({ image: null });
+      if (res.success) {
+        await update();
+        toast.success("Profile photo removed.");
+      } else {
+        toast.error(res.error?.message || "Failed to remove photo");
+      }
+    } catch (error) {
+      console.error("[Profile Photo] Remove failed:", error);
+      toast.error("Failed to remove profile photo.");
+    } finally {
+      setIsRemovingPhoto(false);
     }
   };
   
@@ -250,57 +271,80 @@ export default function ProfilePage() {
         
         <div className="max-w-5xl mx-auto px-4 h-full relative flex items-end pb-16 md:pb-24">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6 w-full translate-y-2 md:translate-y-4">
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="relative p-1.5 bg-white rounded-full shadow-2xl z-20 group cursor-pointer"
-              onClick={() => fileInputRef.current?.click()}
-              title="Click to update profile photo"
-            >
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handlePhotoUpload}
-                accept="image/*"
-                className="hidden"
-                disabled={isUploadingPhoto}
-              />
-              <div className="relative w-32 h-32 md:w-40 md:h-40 overflow-hidden rounded-full bg-gray-100 ring-4 ring-white shadow-inner">
-                {session.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt="Profile"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-primary-600">
-                    <User size={64} strokeWidth={1} />
-                  </div>
-                )}
-
-                {/* Change photo hover overlay */}
-                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Camera size={22} className="text-white" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Change Photo</span>
-                </div>
-
-                {/* Uploading loading overlay */}
-                {isUploadingPhoto && (
-                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 text-white z-40">
-                    <Loader2 size={22} className="animate-spin text-primary-400" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-primary-200">Uploading...</span>
-                  </div>
-                )}
-              </div>
-              <div className="absolute bottom-1 right-1 p-1.5 bg-white rounded-full shadow-lg border border-gray-100 z-30">
-                <VerificationBadge
-                  emailVerified={isEmailVerifiedLocal ? new Date() : null}
-                  isVerifiedSeller={!!(user as { isVerifiedSeller?: boolean }).isVerifiedSeller}
-                  size="lg"
+            <div className="flex flex-col items-center gap-2">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="relative p-1.5 bg-white rounded-full shadow-2xl z-20 group cursor-pointer"
+                onClick={() => !isUploadingPhoto && !isRemovingPhoto && fileInputRef.current?.click()}
+                title="Click to change profile photo"
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handlePhotoUpload}
+                  accept="image/*"
+                  className="hidden"
+                  disabled={isUploadingPhoto || isRemovingPhoto}
                 />
-              </div>
-            </motion.div>
+                <div className="relative w-32 h-32 md:w-40 md:h-40 overflow-hidden rounded-full bg-gray-100 ring-4 ring-white shadow-inner">
+                  {session.user?.image ? (
+                    <img
+                      src={session.user.image}
+                      alt="Profile"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-primary-600">
+                      <User size={64} strokeWidth={1} />
+                    </div>
+                  )}
+
+                  {/* Change photo hover overlay */}
+                  {!isUploadingPhoto && !isRemovingPhoto && (
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Camera size={22} className="text-white" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Change Photo</span>
+                    </div>
+                  )}
+
+                  {/* Uploading loading overlay */}
+                  {(isUploadingPhoto || isRemovingPhoto) && (
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 text-white z-40">
+                      <Loader2 size={22} className="animate-spin text-primary-400" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-primary-200">
+                        {isRemovingPhoto ? "Removing..." : "Uploading..."}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="absolute bottom-1 right-1 p-1.5 bg-white rounded-full shadow-lg border border-gray-100 z-30">
+                  <VerificationBadge
+                    emailVerified={isEmailVerifiedLocal ? new Date() : null}
+                    isVerifiedSeller={!!(user as { isVerifiedSeller?: boolean }).isVerifiedSeller}
+                    size="lg"
+                  />
+                </div>
+              </motion.div>
+
+              {/* Remove Photo button — only shown when a photo is set */}
+              {session.user?.image && (
+                <motion.button
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  disabled={isRemovingPhoto || isUploadingPhoto}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-red-500/80 backdrop-blur-md border border-white/20 hover:border-transparent text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Remove profile photo"
+                >
+                  <Trash2 size={11} />
+                  Remove Photo
+                </motion.button>
+              )}
+            </div>
 
             <div className="flex-1 pb-4 text-center md:text-left z-10">
               <motion.div 

@@ -24,7 +24,8 @@ export async function updateProfile(data: unknown): Promise<ServiceResponse<{ us
   const sanitized = sanitizeObject(parsed.data);
   const update: Record<string, unknown> = { updatedAt: new Date() };
   if (sanitized.name  !== undefined) update.name  = sanitized.name;
-  if (sanitized.image !== undefined) update.image = sanitized.image;
+  // Handle image separately: null means "remove photo" (sanitizeObject may strip nulls)
+  if (parsed.data.image !== undefined) update.image = parsed.data.image ?? null;
 
   await db.collection('users').doc(session.user.id).update(update);
   
