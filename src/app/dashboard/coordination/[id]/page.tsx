@@ -68,11 +68,11 @@ export default async function CoordinationPage({
     redirect(`/dashboard`);
   }
 
-  // Ensure escrow is HELD or DISPUTED (Post-advance coordination)
+  // Ensure escrow is active (not refunded)
   const escrowStatus = conversation.auction.escrowTransaction?.status;
-  if (!escrowStatus || (escrowStatus !== 'HELD' && escrowStatus !== 'DISPUTED' && escrowStatus !== 'RELEASED')) {
-     // If not yet advanced, redirect back to dashboard escrow tab
-     redirect(`/dashboard?tab=escrow`);
+  if (!escrowStatus || escrowStatus === 'REFUNDED') {
+     // If refunded, redirect back to dashboard
+     redirect(`/dashboard`);
   }
 
   const isBuyer = conversation.buyerId === userId;

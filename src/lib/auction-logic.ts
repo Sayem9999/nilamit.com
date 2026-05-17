@@ -85,6 +85,19 @@ export function processAuctionSale(
     updatedAt:        now,
   });
 
+  const convRef = db.collection('conversations').doc(auction.id);
+  transaction.set(convRef, {
+    id:                  auction.id,
+    auctionId:           auction.id,
+    buyerId:             winner.id,
+    sellerId:            auction.sellerId,
+    lastMessageAt:       now,
+    lastMessageContent:  'Auction won. Tap here to start coordination!',
+    lastMessageSenderId: 'system',
+    createdAt:           now,
+    updatedAt:           now,
+  });
+
   return {
     winnerId:    winner.id,
     sellerId:    auction.sellerId,

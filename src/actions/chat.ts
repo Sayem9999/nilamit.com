@@ -25,11 +25,11 @@ export async function sendMessage(conversationId: string, content: string, image
     return errorResponse(ErrorType.FORBIDDEN, 'Forbidden');
   }
 
-  // Escrow must be HELD or RELEASED for chat to be active
+  // Escrow must not be REFUNDED for chat to be active
   const escrowSnap = await db.collection('escrowTransactions').doc(conv.auctionId).get();
   if (!escrowSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Escrow not found');
-  if (!['HELD', 'RELEASED'].includes(escrowSnap.data()!.status)) {
-    return errorResponse(ErrorType.FORBIDDEN, 'Chat only available after advance payment.');
+  if (escrowSnap.data()!.status === 'REFUNDED') {
+    return errorResponse(ErrorType.FORBIDDEN, 'Chat is closed because escrow was refunded.');
   }
 
   const filtered = filterPII(parsed.data.content);
@@ -165,4 +165,41 @@ export async function getAuctionChat(auctionId: string): Promise<ServiceResponse
         : null,
     },
   });
+}
+
+export async function createAuctionChat(auctionId: string): Promise<ServiceResponse<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
+
+  const auctionSnap = await db.collection('auctions').doc(auctionId).get();
+  if (!auctionSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
+  const auction = auctionSnap.data()!;
+
+  if (auction.status !== 'SOLD') {
+    return errorResponse(ErrorType.VALIDATION, 'Auction is not sold.');
+  }
+
+  if (auction.winnerId !== session.user.id && auction.sellerId !== session.user.id) {
+    return errorResponse(ErrorType.FORBIDDEN, 'Forbidden');
+  }
+
+  const convRef = db.collection('conversations').doc(auctionId);
+  const convSnap = await convRef.get();
+
+  if (!convSnap.exists) {
+    const now = new Date();
+    await convRef.set({
+      id:                  auctionId,
+      auctionId:           auctionId,
+      buyerId:             auction.winnerId,
+      sellerId:            auction.sellerId,
+      lastMessageAt:       now,
+      lastMessageContent:  'Coordination chat started.',
+      lastMessageSenderId: 'system',
+      createdAt:           now,
+      updatedAt:           now,
+    });
+  }
+
+  return successResponse({ id: auctionId });
 }

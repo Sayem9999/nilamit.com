@@ -49,8 +49,8 @@ export class CoordinationService {
         
         if (!auction || !escrow) return null;
         
-        // Coordination only shows for active/held/disputed states
-        if (!['HELD', 'DISPUTED'].includes(escrow.status)) return null;
+        // Coordination shows for all active escrow states except refunded
+        if (escrow.status === 'REFUNDED') return null;
 
         // Use denormalized data for the summary message
         const lastMessage: Message | null = conv.lastMessageContent ? {

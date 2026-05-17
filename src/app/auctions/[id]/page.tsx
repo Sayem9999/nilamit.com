@@ -47,6 +47,7 @@ import UserBadge from "@/components/social/UserBadge";
 import { GatedContactInfo } from "@/components/ui/GatedContactInfo";
 import { getAuctionChat } from "@/actions/chat";
 import { Metadata } from "next";
+import Link from "next/link";
 import Script from "next/script";
 import { getTranslations } from "next-intl/server";
 import { ErrorType, errorResponse } from "@/lib/errors";
@@ -54,6 +55,7 @@ import { AuctionStatus } from "@/types";
 import { SecondChanceOfferButton } from "@/components/auction/SecondChanceOfferButton";
 import { AuctionStatusBadge } from "@/components/auction/AuctionStatusBadge";
 import { AuctionBidCount } from "@/components/auction/AuctionBidCount";
+import { StartChatButton } from "@/components/social/StartChatButton";
 
 interface Props {
   params: Promise<{ id: string; locale: string }>;
@@ -369,8 +371,8 @@ export default async function AuctionDetailPage({ params }: Props) {
                     />
 
                     {/* Coordination Chat */}
-                    {chat && (
-                      <div className="mt-6">
+                    {chat ? (
+                      <div className="mt-6 space-y-4">
                         <ChatInterface 
                           auctionId={id}
                           conversationId={chat.id}
@@ -386,6 +388,16 @@ export default async function AuctionDetailPage({ params }: Props) {
                               : chat.auction.winner?.image
                           }
                         />
+                        <Link
+                          href={`/dashboard/coordination/${id}`}
+                          className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition text-xs text-center shadow-md shadow-blue-500/10"
+                        >
+                          Open Full Coordination Page
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="mt-6">
+                        <StartChatButton auctionId={id} />
                       </div>
                     )}
                   </div>
