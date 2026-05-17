@@ -25,7 +25,8 @@ Nilamit is a high-performance, real-time C2C auction marketplace designed for tr
 ## 3. Trust & Coordination Layer
 - **Coordination Hub (COD Optimized)**: Purpose-built for the Bangladesh **Cash on Delivery (COD)** market. Nilamit handles the escrow 'hold' and reputation, while users handle their own logistics.
 - **Success Fee Engine**: Automated, tiered platform fees (1% - 2.5%) for successful sales.
-- **Multimodal Onboarding**: Unauthenticated browsing with signup options via **Email, Google, or Phone (OTP)**.
+- **Seamless OAuth & Email Onboarding**: Unauthenticated browsing with secure authentication options via **Email or Google OAuth**, featuring automatic profile avatar synchronization on Google login.
+- **Premium Profile Avatar Management**: Sleek, client-side profile picture upload widget with client-side WebP image optimization (500x500 at 85% quality), real-time NextAuth session updates, and Cloud Vision SafeSearch secure backend moderation.
 - **Category Feeds**: "For You" and "Ending Soon" feeds tailored to user interests.
 
 ## 4. Discovery & Personalization

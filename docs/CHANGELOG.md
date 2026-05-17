@@ -2,7 +2,18 @@
 
 All notable changes to the Nilamit platform will be documented in this file.
 
-## [2.5.0] - 2026-05-15 (Latest)
+## [2.6.0] - 2026-05-17 (Latest)
+### Added 🆕
+- **Dynamic Profile Photo Uploads**: Built an interactive client uploader component with instant hover overlay, responsive upload spinner, client-side WebP image compression (500x500 at 85% quality), and `/api/upload` API secure integration.
+- **NextAuth Session Synchronization**: Synchronized avatar updates in real-time across the navbar and header utilizing NextAuth's `update()` API.
+- **Google OAuth Avatar Synchronization**: Configured Auth.js JWT and Session callbacks to fetch, map, and persist Google account pictures to Firestore and token sessions automatically on login.
+- **Featured Auction Toggle & Badging**: Added `DetailFeatureButton.tsx` to display Featured indicators on the auction details page alongside the Watchlist toggle, with active toggle capability for administrators.
+
+### Fixed 🐛
+- **Auction Card Button Collision**: Resolved overlap issues between "Watchlist" and "Featured" buttons on `AuctionCard` image overlays by wrapping absolute actions in a unified CSS Flexbox row with `gap-2`.
+- **System Verification**: Updated the test runner config to execute all **68 / 68 unit tests** with 100% success and 0 compiler warnings.
+
+## [2.5.0] - 2026-05-15
 ### Added 🆕
 - **Modular Service Architecture**: Decomposed monolithic `AuctionService` and `BiddingService` into a scalable facade pattern with specialized `Reader`, `Writer`, `Processor`, and `Notifier` modules.
 - **Security Hardening**: Implemented a global strict **Content Security Policy (CSP)**, Upstash-backed **sliding-window rate limiting** for auth/bidding, and isomorphic **PII filtering** for user-generated content.

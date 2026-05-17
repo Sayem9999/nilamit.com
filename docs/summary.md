@@ -13,7 +13,7 @@ To bridge the "Trust Gap" in online trading by creating a marketplace where soci
 
 ### 1. Real-time Auction Engine
 - **One-Time Soft-Close**: Automatically extends auction time *once* by 2 minutes if a bid is placed in the final window, ensuring fair play without indefinite loops.
-- **Multimodal Onboarding**: Unauthenticated browsing with signup options via **Email, Google, or Phone (OTP)**.
+- **Seamless Auth & Avatar Sync**: Unauthenticated browsing with signup/login via **Email or Google OAuth**, featuring automatic profile avatar sync and premium client uploader.
 
 ### 2. Trust & Coordination Hub
 - **Activity Gate**: Strict identity verification required before high-value interactions.
