@@ -131,7 +131,11 @@ export const adminFirestore = {
   get instance(): Firestore {
     if (!_firestore) {
       _firestore = getFirestore(getAdminApp());
-      _firestore.settings({ ignoreUndefinedProperties: true });
+      try {
+        _firestore.settings({ ignoreUndefinedProperties: true });
+      } catch (err) {
+        console.warn('[Admin Firestore Init] settings() ignoreUndefinedProperties could not be applied: ', err);
+      }
     }
     return _firestore;
   },
