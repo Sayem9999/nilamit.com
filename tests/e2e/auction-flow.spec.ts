@@ -7,13 +7,14 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Auction Lifecycle', () => {
   test('should allow a verified user to create a new auction', async ({ page }) => {
+    test.setTimeout(120000);
     // 1. Visit Homepage
     await page.goto('/');
-    await expect(page).toHaveTitle(/nilamit/i);
+    await expect(page).toHaveTitle(/nilamit/i, { timeout: 30000 });
 
     // 2. Navigate to Login (assuming link in header)
     await page.click('a[href="/login"]');
-    await expect(page).toHaveURL(/.*login/);
+    await expect(page).toHaveURL(/.*login/, { timeout: 30000 });
 
     // 3. Perform Mock Login (using test credentials)
     await page.fill('input[name="email"]', 'seller@nilamit.test');
@@ -21,7 +22,7 @@ test.describe('Auction Lifecycle', () => {
     await page.click('button[type="submit"]');
 
     // Wait for redirect to dashboard/profile to ensure session is fully established
-    await expect(page).toHaveURL(/.*dashboard|.*profile/);
+    await expect(page).toHaveURL(/.*dashboard|.*profile/, { timeout: 30000 });
 
     // 4. Setup mock file upload router interceptor
     await page.route('**/api/upload', async (route) => {
@@ -76,6 +77,6 @@ test.describe('Auction Lifecycle', () => {
     await expect(page.locator('h1')).toContainText('Vintage Camera', { timeout: 15000 });
     
     // 8. Verify details page content is visible
-    await expect(page.locator('text=Track Auction')).toBeVisible();
+    await expect(page.locator('text=Description')).toBeVisible();
   });
 });

@@ -1,4 +1,4 @@
-import { db, incrementGlobalStat, newId } from '@/lib/db';
+import { db, docData, incrementGlobalStat, newId } from '@/lib/db';
 import { Auction, Bid, AuctionStatus, PlaceBidResult } from '@/types';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
@@ -14,8 +14,8 @@ export class BidProcessor {
         const auctionRef = db.collection('auctions').doc(auctionId);
         const auctionSnap = await tx.get(auctionRef);
         
-        if (!auctionSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
-        const auction = auctionSnap.data() as Auction;
+        const auction = docData<Auction>(auctionSnap);
+        if (!auction) return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
 
         // 1. Validation
         if (auction.status !== AuctionStatus.ACTIVE) return errorResponse(ErrorType.VALIDATION, 'Auction is not active');

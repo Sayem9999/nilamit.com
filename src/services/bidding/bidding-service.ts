@@ -33,11 +33,13 @@ export class BiddingService {
     try {
       const snap = await db.collection('bids')
         .where('auctionId', '==', auctionId)
-        .orderBy('amount', 'desc')
-        .limit(50)
         .get();
       
-      const bidderIds = [...new Set(snap.docs.map(d => d.data().bidderId as string))];
+      const sortedDocs = [...snap.docs]
+        .sort((a, b) => (b.data().amount || 0) - (a.data().amount || 0))
+        .slice(0, 50);
+      
+      const bidderIds = [...new Set(sortedDocs.map(d => d.data().bidderId as string))];
       let biddersMap = new Map<string, { id: string; name: string | null; image: string | null }>();
       
       if (bidderIds.length > 0) {
@@ -49,8 +51,8 @@ export class BiddingService {
           image: s.data()?.image ?? null 
         }]));
       }
-
-      return snap.docs.map((d) => {
+ 
+      return sortedDocs.map((d) => {
         const b = d.data() as Record<string, unknown>;
         const createdAt = (b.createdAt as { toDate?: () => Date })?.toDate?.() ?? new Date(b.createdAt as string | number | Date);
         return {

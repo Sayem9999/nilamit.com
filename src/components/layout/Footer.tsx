@@ -15,8 +15,8 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-6">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center border border-white/5 shadow-inner">
-                <Gavel className="w-5 h-5 text-primary-300" />
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center border border-white/5 shadow-inner shrink-0">
+                <Gavel className="w-5 h-5 text-white" />
               </div>
               <span className="font-heading font-black text-2xl tracking-tight">
                 nilam<span className="text-primary-400">it</span>

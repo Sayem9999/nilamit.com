@@ -68,6 +68,22 @@ export class EscrowService {
         return new Date(val as string | number);
       };
 
+      const sanitizeLogistics = (l: Record<string, unknown> | undefined) => {
+        if (!l) return undefined;
+        const history = Array.isArray(l.history) ? l.history.map((h: unknown) => {
+          const item = h as Record<string, unknown>;
+          return {
+            ...item,
+            timestamp: toDate(item.timestamp)
+          };
+        }) : [];
+        return {
+          ...l,
+          updatedAt: toDate(l.updatedAt),
+          history
+        };
+      };
+
       const hydrated = escrowDocs.map(e => {
         const auction = auctionMap.get(e.auctionId);
         if (!auction) return null;
@@ -80,6 +96,7 @@ export class EscrowService {
           endTime: toDate(auction.endTime),
           createdAt: toDate(auction.createdAt),
           updatedAt: toDate(auction.updatedAt),
+          logistics: sanitizeLogistics(auction.logistics),
           seller
         };
 

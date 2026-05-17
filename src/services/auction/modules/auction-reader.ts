@@ -29,6 +29,33 @@ export class AuctionReader {
       const isWinner = viewerId === auctionData.winnerId;
       const isProxyOwner = viewerId === auctionData.proxyBidderId;
       
+      const toDate = (val: unknown): Date | null => {
+        if (!val) return null;
+        if (typeof val === 'object' && val !== null && 'toDate' in val) {
+          const obj = val as Record<string, unknown>;
+          if (typeof obj.toDate === 'function') {
+            return (obj.toDate as () => Date)();
+          }
+        }
+        return new Date(val as string | number);
+      };
+
+      const sanitizeLogistics = (l: Record<string, unknown> | undefined) => {
+        if (!l) return undefined;
+        const history = Array.isArray(l.history) ? l.history.map((h: unknown) => {
+          const item = h as Record<string, unknown>;
+          return {
+            ...item,
+            timestamp: toDate(item.timestamp)
+          };
+        }) : [];
+        return {
+          ...l,
+          updatedAt: toDate(l.updatedAt),
+          history
+        };
+      };
+
       const data = {
         ...auctionData,
         id: doc.id,
@@ -43,8 +70,12 @@ export class AuctionReader {
           name: (winnerSnap.data()?.name as string | undefined) || null, 
           image: (winnerSnap.data()?.image as string | undefined) || null 
         } : null,
-        endTime: auctionData.endTime,
-      } as AuctionWithSeller;
+        startTime: toDate(auctionData.startTime),
+        endTime: toDate(auctionData.endTime),
+        createdAt: toDate(auctionData.createdAt),
+        updatedAt: toDate(auctionData.updatedAt),
+        logistics: sanitizeLogistics(auctionData.logistics),
+      } as unknown as AuctionWithSeller;
 
       return successResponse(data);
     } catch (err) {

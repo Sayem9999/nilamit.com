@@ -347,6 +347,7 @@
     "orderSuccessNote": "Transaction completed successfully. Seller has received the payment.",
     "refundSuccessNote": "Dispute resolved in your favor. Payment refunded.",
     "status_PENDING": "Pending Payment",
+    "status_VERIFICATION_PENDING": "Verification Pending",
     "status_HELD": "Payment Secured",
     "status_RELEASED": "Funds Released",
     "status_DISPUTED": "Under Dispute",

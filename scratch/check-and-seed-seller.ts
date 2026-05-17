@@ -59,6 +59,7 @@ async function main() {
       isRetailer: false,
       isPhoneVerified: true,
       isVerifiedSeller: true,
+      emailVerified: now,
       reputationScore: 100,
       rating: 5,
       ratingCount: 1,
@@ -75,11 +76,12 @@ async function main() {
     console.log(`User details:`, { id: user.id, isVerifiedSeller: user.isVerifiedSeller, isPhoneVerified: user.isPhoneVerified });
 
     // Ensure they are a verified seller so they can list auctions
-    if (!user.isVerifiedSeller || !user.isPhoneVerified) {
+    if (!user.isVerifiedSeller || !user.isPhoneVerified || !user.emailVerified) {
       console.log(`Updating user to be a verified seller...`);
       await snap.docs[0].ref.update({
         isVerifiedSeller: true,
-        isPhoneVerified: true
+        isPhoneVerified: true,
+        emailVerified: new Date()
       });
       console.log(`User updated.`);
     }

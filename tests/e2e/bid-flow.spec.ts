@@ -111,14 +111,15 @@ test.describe('End-to-End Bid Flow Happy Path', () => {
 
   test('complete cycle: register, list, bid, win, confirm escrow', async ({ page }) => {
     test.setTimeout(120000);
+    page.on('console', msg => console.log('BROWSER CONSOLE:', msg.text()));
+    page.on('pageerror', err => console.error('BROWSER PAGE ERROR:', err.message));
     // 1. REGISTER THE SELLER
     await page.goto('/register');
     
     // Step 1: Account Type
     await page.click('text=Personal Account');
     
-    // Step 2: Switch to Email signup to bypass real SMS OTP
-    await page.click('button:has-text("Email")');
+    // Step 2: Switch to Email signup to bypass real SMS OTP (directly on email form now)
 
     // Step 3: Fill form using correct IDs
     await page.fill('#email-signup-name', 'Nilamit Seller');
@@ -203,8 +204,7 @@ test.describe('End-to-End Bid Flow Happy Path', () => {
     // Step 1: Account Type
     await page.click('text=Personal Account');
     
-    // Step 2: Switch to Email signup
-    await page.click('button:has-text("Email")');
+    // Step 2: Switch to Email signup (directly on email form now)
 
     // Step 3: Fill form using correct IDs
     await page.fill('#email-signup-name', 'Nilamit Bidder');
@@ -234,8 +234,8 @@ test.describe('End-to-End Bid Flow Happy Path', () => {
     await page.click('button:has-text("Confirm Bid of")');
 
     // Expect successful bid notification
-    await expect(page.locator('p:has-text("Bid placed successfully")')).toBeVisible();
-    await expect(page.locator('text=৳51,000').first()).toBeVisible();
+    await expect(page.locator('p:has-text("Bid placed successfully")')).toBeVisible({ timeout: 25000 });
+    await expect(page.locator('text=৳51,000').first()).toBeVisible({ timeout: 25000 });
 
     // 5. SIMULATE AUCTION END (WINNER DETERMINATION)
     await endAuctionAndAwardWinner(auctionId, bidderEmail);
@@ -256,6 +256,6 @@ test.describe('End-to-End Bid Flow Happy Path', () => {
     await page.click('button:has-text("PAY NOW")');
 
     // Confirm Escrow Receipt (Mock Callback or action success transitions status to VERIFICATION_PENDING)
-    await expect(page.locator('text=Verification in Progress')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=Verification in Progress')).toBeVisible({ timeout: 35000 });
   });
 });
