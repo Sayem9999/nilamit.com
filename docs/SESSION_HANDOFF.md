@@ -1,14 +1,16 @@
 # Session Handoff & Architecture Memory
 
-## Current Session (2026-05-15)
+## Current Session (2026-05-17)
 ### What we did
-* **Removed Phone Authentication**: Transitioned the authentication flow to be email and OAuth exclusive. Completely ripped out Firebase phone authentication, phone numbers from the registration UI (`src/app/register/page.tsx`), and phone credential logic from NextAuth (`src/lib/auth.ts`) and server actions.
-* **Fixed Bid Panel UI Desync**: Addressed an issue where placing a "proxy bid" caused the UI's optimistic price to stick at the max proxy limit until page reload. Modified `PlaceBidResult` and the bidding transaction to return the *actual* new public price (`newCurrentPrice`), allowing `BidPanel.tsx` to instantly sync with the true current price, resolving the discrepancy smoothly when RTDB updates land.
-* **Documentation Scrub**: Cleaned up legacy references to phone verification across `README.md`, `CLAUDE.md`, `llms.txt`, and multiple `docs/` Markdown files.
+* **Dynamic Profile Photo Uploads**: Engineered an ultra-premium, interactive client-side profile image uploader inside `src/app/profile/page.tsx`. Added visual states (a sleek, fading hover overlay with a camera icon and a semi-transparent loading shield with a spinner during upload). Integrated client-side image compression using `compressImage` to downsize images to 500x500 at 85% quality, and uploaded securely via `/api/upload` endpoint. Synced status instantly using `updateProfile` and NextAuth `update()` session refreshing.
+* **Google Account Photo Sync**: Upgraded NextAuth `jwt` and `session` callbacks inside `src/lib/auth.ts` to automatically fetch and persist user pictures from Google OAuth logins and keep them in sync with Firestore databases and client tokens.
+* **Auction Card Spacing Fix**: Resolved button collision inside `AuctionCard.tsx` image overlay by grouping absolute action buttons within a modern CSS Flexbox container with `gap-2` (`8px`) separation.
+* **Featured UI beside Watchlist**: Built `DetailFeatureButton.tsx` and integrated it next to the Watchlist button on the auction details page (`src/app/auctions/[id]/page.tsx`). For admins, it functions as a live toggle; for general users, it serves as a non-clickable Curator's Choice indicator.
+* **Typesafety & Test Pass**: Fully validated with `npx tsc --noEmit` and passing all **68 / 68 unit tests** cleanly.
 
 ### Next Steps / Blockers
-* **Blocker**: None currently.
-* **Next**: Address any UI layout gaps left by removing phone fields, or proceed with general testing of the new email-only auth flows.
+* **Blocker**: None.
+* **Next**: Observe user interactions on profile edits and test OAuth synchronization during organic user registrations.
 
 ---
 
