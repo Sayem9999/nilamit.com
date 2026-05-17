@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useCallback, useState } from "react";
 import {
@@ -137,12 +136,11 @@ export const Navbar = memo(function Navbar() {
                     <button className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-100/50 transition-all group">
                       <div className="relative">
                         {session.user?.image ? (
-                          <Image
-                            width={36}
-                            height={36}
+                          <img
                             src={session.user.image}
                             alt=""
-                            className="rounded-full ring-2 ring-white shadow-sm"
+                            referrerPolicy="no-referrer"
+                            className="w-9 h-9 rounded-full ring-2 ring-white shadow-sm object-cover"
                           />
                         ) : (
                           <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">

@@ -267,11 +267,10 @@ export default function ProfilePage() {
               />
               <div className="relative w-32 h-32 md:w-40 md:h-40 overflow-hidden rounded-full bg-gray-100 ring-4 ring-white shadow-inner">
                 {session.user?.image ? (
-                  <Image
+                  <img
                     src={session.user.image}
                     alt="Profile"
-                    width={160}
-                    height={160}
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (

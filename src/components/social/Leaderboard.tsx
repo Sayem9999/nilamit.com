@@ -24,7 +24,7 @@ export default async function Leaderboard() {
                     {idx + 1}
                   </span>
                   <Avatar className="w-10 h-10 border border-slate-200 dark:border-slate-800">
-                    <AvatarImage src={user.image || ""} />
+                    <AvatarImage src={user.image || ""} referrerPolicy="no-referrer" />
                     <AvatarFallback>
                       {user.name?.charAt(0) || "U"}
                     </AvatarFallback>
@@ -69,7 +69,7 @@ export default async function Leaderboard() {
                     {idx + 1}
                   </span>
                   <Avatar className="w-10 h-10 border border-slate-200 dark:border-slate-800">
-                    <AvatarImage src={user.image || ""} />
+                    <AvatarImage src={user.image || ""} referrerPolicy="no-referrer" />
                     <AvatarFallback>
                       {user.name?.charAt(0) || "U"}
                     </AvatarFallback>

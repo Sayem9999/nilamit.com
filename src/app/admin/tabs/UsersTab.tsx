@@ -10,7 +10,6 @@ import {
 } from "@/actions/admin-users";
 import { Search, Shield, ShieldOff, Users, Ban
 } from "lucide-react";
-import Image from "next/image";
 
 export function UsersTab() {
   interface AdminUser {
@@ -168,12 +167,11 @@ export function UsersTab() {
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
                         {user.image ? (
-                          <Image
+                          <img
                             src={user.image}
                             alt=""
-                            width={32}
-                            height={32}
-                            className="object-cover"
+                            referrerPolicy="no-referrer"
+                            className="w-8 h-8 rounded-full object-cover"
                           />
                         ) : (
                           <Users className="w-4 h-4 text-primary-500" />
