@@ -87,27 +87,46 @@ export function HomeContent({
         />
       )}
 
-      {/* Featured Auctions */}
+      {/* Featured Auctions — Premium Curator's Choice */}
       {featuredAuctions.length > 0 && (
-        <section className="py-16 bg-amber-50" aria-labelledby="featured-heading">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center" aria-hidden="true">
-                <Star className="w-6 h-6 text-amber-600 fill-amber-600" />
-              </div>
-              <div>
-                <h2 id="featured-heading" className="font-heading font-black text-3xl text-gray-900">
+        <section className="py-24 relative overflow-hidden bg-slate-950" aria-labelledby="featured-heading">
+          {/* Animated Background Elements */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+            <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-1/2 -right-24 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl" />
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs font-bold uppercase tracking-widest">
+                  <Star className="w-3 h-3 fill-primary-400" />
+                  Curator&apos;s Choice
+                </div>
+                <h2 id="featured-heading" className="font-heading font-black text-4xl md:text-5xl text-white tracking-tight">
                   {t("featuredTitle")}
                 </h2>
-                <p className="text-gray-500 text-sm font-medium">
+                <p className="text-slate-400 text-lg max-w-2xl font-medium leading-relaxed">
                   {t("featuredSubtitle")}
                 </p>
               </div>
+              
+              <div className="hidden md:block">
+                <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm text-white/60 text-sm">
+                  Showing <span className="text-primary-400 font-bold">{featuredAuctions.length}</span> handpicked items
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {featuredAuctions.map((auction, idx) => (
-                <AuctionCard key={auction.id} auction={auction} priority={idx < 4} />
+                <div key={auction.id} className="group transition-all duration-500 hover:-translate-y-2">
+                  <AuctionCard 
+                    auction={auction} 
+                    priority={idx < 4} 
+                    className="featured h-full border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all"
+                  />
+                </div>
               ))}
             </div>
           </div>

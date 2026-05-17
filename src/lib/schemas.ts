@@ -30,6 +30,46 @@ export const emailSchema = z
  */
 export const passwordSchema = z.string().min(8, 'Password must be at least 8 characters').max(128, 'Password is too long');
 
+/**
+ * Normalizes a Bangladeshi phone number to +880XXXXXXXXXX format.
+ * Handles: 01XXXXXXXXX, 880XXXXXXXXXX, +880XXXXXXXXXX
+ */
+export function normalizePhone(raw: string): string {
+  if (!raw) return '';
+  const cleaned = raw.trim().replace(/\D/g, '');
+  
+  if (cleaned.startsWith('01') && cleaned.length === 11) {
+    return '+88' + cleaned;
+  }
+  
+  if (cleaned.startsWith('8801') && cleaned.length === 13) {
+    return '+' + cleaned;
+  }
+  
+  if (cleaned.length === 10 && cleaned.startsWith('1')) {
+    return '+880' + cleaned;
+  }
+
+  if (cleaned.startsWith('8801') && cleaned.length === 13) {
+      return '+' + cleaned;
+  }
+
+  if (cleaned.length === 10 && cleaned.startsWith('1')) {
+    return '+880' + cleaned;
+  }
+
+  return raw.trim();
+}
+
+/** Bangladesh mobile: accepts local (01...) or international (+8801...) form. */
+export const bdPhoneSchema = z.preprocess(
+  (val) => typeof val === 'string' ? normalizePhone(val) : val,
+  z.string().trim().regex(/^\+8801\d{9}$/, 'Invalid Bangladesh phone number')
+);
+
+/** 6-digit numeric OTP. */
+export const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be 6 digits');
+
 /** Person name: 2–80 chars, no leading/trailing whitespace, no control chars. */
 const nameSchema = z
   .string()

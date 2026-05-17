@@ -15,6 +15,7 @@ export default defineConfig({
       '**/.next/**',
       '**/.claude/**',
       '**/tests/e2e/**',
+      '**/scratch/**',
     ],
     alias: {
       '@': path.resolve(__dirname, './src'),

@@ -95,4 +95,29 @@ export class AdminService {
 
     return { isVerifiedSeller: next };
   }
+
+  /**
+   * Toggles the "Featured" flag on an auction.
+   */
+  static async toggleFeaturedAuction(auctionId: string, isFeatured: boolean) {
+    try {
+      const auctionRef = db.collection('auctions').doc(auctionId);
+      const auctionSnap = await auctionRef.get();
+      if (!auctionSnap.exists) {
+        throw new AppError(ErrorType.NOT_FOUND, 'Auction not found');
+      }
+
+      await auctionRef.update({
+        isFeatured,
+        updatedAt: new Date(),
+      });
+
+      log.info(`Auction ${auctionId} featured status updated to ${isFeatured}`);
+      return { isFeatured };
+    } catch (e) {
+      if (e instanceof AppError) throw e;
+      log.error('[AdminService] toggleFeaturedAuction failed', e);
+      throw new AppError(ErrorType.INTERNAL, 'Failed to update featured status');
+    }
+  }
 }

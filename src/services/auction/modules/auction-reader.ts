@@ -67,6 +67,7 @@ export class AuctionReader {
       let query: FirebaseFirestore.Query = db.collection('auctions');
       
       if (status) query = query.where('status', '==', status);
+      if (filters.isFeatured) query = query.where('isFeatured', '==', true);
       if (category && category !== 'all') query = query.where('category', '==', category);
       if (filters.location && filters.location !== 'all') query = query.where('location', '==', filters.location);
 

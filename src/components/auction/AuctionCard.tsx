@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import Image from "next/image";
-import { Clock, Users, Zap, MapPin, Package, Shield, X, RotateCcw, Pencil } from "lucide-react";
+import { Clock, Users, Zap, MapPin, Package, Shield, X, RotateCcw, Pencil, Star } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -16,6 +16,7 @@ import TrustBadge from "../social/TrustBadge";
 import VerificationBadge from "../social/VerificationBadge";
 import { useRouter } from "next/navigation";
 import { cancelAuction, relistAuction } from "@/actions/auction";
+import { toggleFeaturedAuction } from "@/actions/admin-content";
 import toast from "react-hot-toast";
 import { useAuctionPrice } from "@/hooks/useAuctionPrice";
 
@@ -24,9 +25,11 @@ import React, { memo, useState, useTransition } from "react";
 export const AuctionCard = memo(({
   auction,
   priority = false,
+  className = "",
 }: {
   auction: AuctionWithSeller;
   priority?: boolean;
+  className?: string;
 }) => {
   const { data: session } = useSession();
   const { lightweightMode } = useSettings();
@@ -50,9 +53,12 @@ export const AuctionCard = memo(({
   const displayStatus = (status === "ACTIVE" && isTimeEnded) ? "PROCESSING" : status;
 
   const isOwner = !!session?.user?.id && session.user.id === auction.sellerId;
+  const isAdmin = !!(session?.user as { isAdmin?: boolean })?.isAdmin;
   const canCancel = isOwner && displayStatus === "ACTIVE" && bidCount === 0;
   const canEdit   = isOwner && displayStatus === "ACTIVE" && bidCount === 0;
   const canRelist = isOwner && (displayStatus === "EXPIRED" || displayStatus === "CANCELLED");
+
+  const [isFeatured, setIsFeatured] = useState(!!auction.isFeatured);
 
   const handleCancel = () => {
     setShowCancelConfirm(false);
@@ -79,6 +85,22 @@ export const AuctionCard = memo(({
     });
   };
 
+  const handleToggleFeatured = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const newState = !isFeatured;
+    setIsFeatured(newState);
+    startTransition(async () => {
+      const res = await toggleFeaturedAuction(auction.id, newState);
+      if (res.success) {
+        toast.success(newState ? "Auction featured" : "Auction unfeatured");
+      } else {
+        setIsFeatured(!newState);
+        toast.error("Failed to update featured status");
+      }
+    });
+  };
+
   const isWatchlisted =
     auction.watchlist?.some(
       (w: { userId: string }) => w.userId === session?.user?.id,
@@ -88,8 +110,8 @@ export const AuctionCard = memo(({
   const cardLabel = `${auction.title} — ${formatBDT(currentPrice)}, by ${sellerName}, ${bidCount} bid${bidCount === 1 ? "" : "s"}`;
 
   return (
-    <Link href={`/auctions/${auction.id}`} className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[2rem]" aria-label={cardLabel}>
-      <div className="bg-white rounded-[2rem] border border-gray-100/60 shadow- premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden group-hover:-translate-y-2 flex flex-col h-full">
+    <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[2rem] ${className}`} aria-label={cardLabel}>
+      <div className="bg-white rounded-[2rem] border border-gray-100/60 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden group-hover:-translate-y-2 flex flex-col h-full group-[.featured]:bg-white/5 group-[.featured]:border-white/10 group-[.featured]:shadow-none group-[.featured]:hover:bg-white/10 group-[.featured]:hover:border-white/20">
         {/* Image Area */}
         <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
           {lightweightMode ? (
@@ -129,12 +151,36 @@ export const AuctionCard = memo(({
                 <span aria-hidden="true">✨</span> {auction.condition}
               </span>
             )}
+            {auction.isFeatured && (
+              <span className="bg-gradient-to-r from-primary-600 to-primary-400 text-white px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-lg backdrop-blur-md flex items-center gap-1.5 border border-white/20">
+                <Star className="w-3 h-3 fill-white" aria-hidden="true" /> Featured
+              </span>
+            )}
             {auction.reservePrice && (auction.isReserveMet === false || auction.currentPrice < (auction.reservePrice || 0)) && (
               <span className="bg-amber-500/90 text-white px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md backdrop-blur-md flex items-center gap-1.5 border border-amber-400/50">
                 <Shield className="w-3 h-3" aria-hidden="true" /> Reserve not met
               </span>
             )}
           </div>
+
+          {/* Admin Feature Button */}
+          {isAdmin && (
+            <div className="absolute top-4 right-14 z-10">
+              <button
+                type="button"
+                onClick={handleToggleFeatured}
+                disabled={isPending}
+                className={`w-10 h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all border ${
+                  isFeatured 
+                    ? "bg-amber-500 text-white border-amber-400 shadow-lg scale-110" 
+                    : "bg-white/10 text-white/60 border-white/20 hover:bg-white/20"
+                }`}
+                aria-label={isFeatured ? "Unfeature auction" : "Feature auction"}
+              >
+                <Star className={`w-5 h-5 ${isFeatured ? "fill-white" : ""}`} />
+              </button>
+            </div>
+          )}
 
           {/* Watchlist Button */}
           <div className="absolute top-4 right-4 z-10">
@@ -158,7 +204,7 @@ export const AuctionCard = memo(({
 
         {/* Content */}
         <div className="p-5 flex flex-col flex-1">
-          <h3 className="font-heading font-bold text-gray-900 text-base sm:text-lg line-clamp-1 group-hover:text-primary-600 transition-colors duration-300">
+          <h3 className="font-heading font-bold text-gray-900 text-base sm:text-lg line-clamp-1 group-hover:text-primary-600 transition-colors duration-300 group-[.featured]:text-white group-[.featured]:group-hover:text-primary-400">
             {auction.title}
           </h3>
 
@@ -171,7 +217,7 @@ export const AuctionCard = memo(({
               aria-label={`View ${auction.seller.name || t("seller")}'s profile`}
               className="flex items-center gap-1.5 min-w-0 hover:text-primary-600 transition-colors relative z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded"
             >
-              <span className="text-xs font-semibold text-gray-600 truncate">
+              <span className="text-xs font-semibold text-gray-600 truncate group-[.featured]:text-slate-400 group-[.featured]:group-hover:text-primary-400">
                 {auction.seller.name || t("seller")}
               </span>
               <VerificationBadge
@@ -209,7 +255,7 @@ export const AuctionCard = memo(({
               </span>
             </div>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="price text-2xl text-gray-900 font-black tracking-tighter">
+              <span className="price text-2xl text-gray-900 font-black tracking-tighter group-[.featured]:text-white">
                 {formatBDT(currentPrice)}
               </span>
               {auction.currentPrice > auction.startingPrice && (

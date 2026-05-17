@@ -1,9 +1,8 @@
 import { db, incrementGlobalStat, newId } from '@/lib/db';
-import { Auction, Bid, AuctionStatus } from '@/types';
+import { Auction, Bid, AuctionStatus, PlaceBidResult } from '@/types';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
 import { BidSideEffects } from './bid-side-effects';
-import { PlaceBidResult } from '@/types';
 
 export class BidProcessor {
   /**
@@ -104,7 +103,7 @@ export class BidProcessor {
         });
 
         // 5. Side Effects
-        BidSideEffects.handleBidSideEffects(auction, bid, existingProxyBidder).catch(e => 
+        BidSideEffects.handleBidSideEffects(auction, bid, existingProxyBidder, newEndTime).catch(e => 
           log.error('BidProcessor: side effects failed', e, { auctionId, bidId })
         );
 

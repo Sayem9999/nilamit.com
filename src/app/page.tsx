@@ -117,7 +117,7 @@ async function loadHomeData(): Promise<ResolvedHomeData> {
   ] = await Promise.all([
     getAuctions({ sortBy: "bids", sortOrder: "desc", limit: 8 }),
     getSpecializedFeeds(),
-    getAuctions({ limit: 4 }),
+    getAuctions({ isFeatured: true, limit: 4 }),
     getCachedGlobalStats(),
     getCachedSystemConfig(),
   ]);

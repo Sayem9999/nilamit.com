@@ -11,8 +11,6 @@ export interface Auction {
   location?: string | null;
   startingPrice: number;
   currentPrice: number;
-  secondHighestBidderId?: string;
-  secondHighestBidAmount?: number;
   currentBidderId?: string | null;
   proxyMaxBid?: number | null;
   proxyBidderId?: string | null;
@@ -37,6 +35,8 @@ export interface Auction {
   originalWinnerId?: string | null;
   bidCount?: number;
   piiDetected?: boolean;
+  secondHighestBidderId?: string | null;
+  secondHighestBidAmount?: number;
   createdAt: Date;
   updatedAt: Date;
   _count?: {
@@ -48,10 +48,19 @@ export interface Bid {
   id: string;
   amount: number;
   publicAmount?: number;
-  status?: string;
   auctionId: string;
   bidderId: string;
+  status?: 'ACTIVE' | 'CANCELLED';
   createdAt: Date;
+}
+
+export interface RealTimeBid {
+  id:         string;
+  amount:     number;
+  endTime:    Date | string;
+  bidderName: string;
+  bidderId:   string;
+  createdAt:  string;
 }
 
 export interface Logistics {
@@ -118,6 +127,7 @@ export interface AuctionFilters {
   page?: number;
   limit?: number;
   lastId?: string;
+  isFeatured?: boolean;
   viewerId?: string | null;
 }
 

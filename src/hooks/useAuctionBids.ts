@@ -4,15 +4,8 @@ import { useEffect, useState } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { getClientDB } from '@/lib/firebase-client';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { RealTimeBid } from '@/types';
 
-export type RealTimeBid = {
-  id:         string;
-  amount:     number;
-  endTime:    Date | string;
-  bidderName: string;
-  bidderId:   string;
-  createdAt:  string;
-};
 
 export interface UseAuctionBidsOptions {
   /**

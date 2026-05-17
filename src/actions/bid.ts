@@ -110,12 +110,9 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
       try {
         const result = await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
         
-        // @ts-expect-error Next.js 15 typings bug
-        revalidateTag('auctions');
-        // @ts-expect-error Next.js 15 typings bug
-        revalidateTag('bids');
-        // @ts-expect-error Next.js 15 typings bug
-        revalidateTag('stats');
+        revalidateTag('auctions', { expire: 0 });
+        revalidateTag('bids', { expire: 0 });
+        revalidateTag('stats', { expire: 0 });
         revalidatePath(`/auctions/${auctionId}`);
         revalidatePath('/auctions');
         revalidatePath('/dashboard');
@@ -183,12 +180,9 @@ export async function executeBuyItNow(auctionId: string): Promise<ServiceRespons
       typeof user.email === 'string' ? user.email : null
     );
 
-    // @ts-expect-error Next.js 15 typings bug
-    revalidateTag('auctions');
-    // @ts-expect-error Next.js 15 typings bug
-    revalidateTag('bids');
-    // @ts-expect-error Next.js 15 typings bug
-    revalidateTag('stats');
+    revalidateTag('auctions', { expire: 0 });
+    revalidateTag('bids', { expire: 0 });
+    revalidateTag('stats', { expire: 0 });
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/auctions');
     revalidatePath('/dashboard');

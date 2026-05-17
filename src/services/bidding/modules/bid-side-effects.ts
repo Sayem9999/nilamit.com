@@ -2,13 +2,14 @@ import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { Auction, Bid } from '@/types';
 import { log } from '@/lib/logger';
+import { scheduleAuctionClosure } from '@/lib/cloud-tasks';
 
 export class BidSideEffects {
   /**
    * Orchestrates post-bid notifications and real-time updates.
    * Designed to be resilient: failures in non-critical tasks won't block the bid.
    */
-  static async handleBidSideEffects(auction: Auction, bid: Bid, prevBidderId: string | null): Promise<void> {
+  static async handleBidSideEffects(auction: Auction, bid: Bid, prevBidderId: string | null, newEndTime?: Date): Promise<void> {
     const tasks: Promise<unknown>[] = [];
 
     // 1. RTDB Update for current auction view
@@ -27,13 +28,21 @@ export class BidSideEffects {
     // 3. Seller Notification
     tasks.push(this.notifySeller(auction.sellerId, auction, bid.amount));
 
+    // 4. Cloud Task Rescheduling (Event-driven closure)
+    // If the end time has been extended (e.g. anti-sniping), we must schedule a new task.
+    if (newEndTime && newEndTime.getTime() !== auction.endTime.getTime()) {
+      tasks.push(scheduleAuctionClosure(auction.id, newEndTime).catch(e => 
+        log.error('[BidSideEffects] Failed to reschedule closure task', e, { auctionId: auction.id })
+      ));
+    }
+
     await Promise.allSettled(tasks);
   }
 
   private static async notifyOutbid(userId: string, auction: Auction, newAmount: number): Promise<void> {
     try {
       await rtdbPush(RTDB_PATHS.userNotifications(userId), {
-        type: FIREBASE_EVENTS.OUTBID_ALERT,
+        event: FIREBASE_EVENTS.OUTBID_ALERT,
         auctionId: auction.id,
         auctionTitle: auction.title,
         newAmount,

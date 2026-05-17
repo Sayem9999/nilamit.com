@@ -78,7 +78,7 @@ describe('Image Moderation (Fail-Open Architecture)', () => {
     const networkError = new Error('Connection timeout to Vision API');
     vi.doMock('@google-cloud/vision', () => ({
       ImageAnnotatorClient: class {
-        safeSearchDetection = vi.fn().mockRejectedValue(networkError);
+        annotateImage = vi.fn().mockRejectedValue(networkError);
       }
     }));
 
@@ -88,7 +88,7 @@ describe('Image Moderation (Fail-Open Architecture)', () => {
     expect(result.allowed).toBe(true);
     expect(result.reason).toBe('api-error');
     expect(captureException).toHaveBeenCalledWith(networkError, expect.any(Object));
-    expect(mockError).toHaveBeenCalledWith(expect.stringContaining('SafeSearch call failed'), networkError, expect.any(Object));
+    expect(mockError).toHaveBeenCalledWith(expect.stringContaining('Vision API call failed'), networkError, expect.any(Object));
   });
 
   it('blocks when adult content is LIKELY', async () => {
@@ -107,7 +107,7 @@ describe('Image Moderation (Fail-Open Architecture)', () => {
 
     vi.doMock('@google-cloud/vision', () => ({
       ImageAnnotatorClient: class {
-        safeSearchDetection = vi.fn().mockResolvedValue([{
+        annotateImage = vi.fn().mockResolvedValue([{
           safeSearchAnnotation: { adult: 'LIKELY', violence: 'POSSIBLE', racy: 'UNKNOWN', medical: 'UNKNOWN', spoof: 'UNKNOWN' }
         }]);
       }
@@ -137,7 +137,7 @@ describe('Image Moderation (Fail-Open Architecture)', () => {
 
     vi.doMock('@google-cloud/vision', () => ({
       ImageAnnotatorClient: class {
-        safeSearchDetection = vi.fn().mockResolvedValue([{
+        annotateImage = vi.fn().mockResolvedValue([{
           safeSearchAnnotation: { adult: 'POSSIBLE', violence: 'UNLIKELY', racy: 'POSSIBLE', medical: 'VERY_UNLIKELY', spoof: 'UNKNOWN' }
         }]);
       }

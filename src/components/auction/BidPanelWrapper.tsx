@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { RealTimeBid } from "@/hooks/useAuctionBids";
+import type { RealTimeBid } from "@/types";
 /**
  * Client-side wrapper for BidPanel to handle dynamic loading and SSR exclusion.
  */

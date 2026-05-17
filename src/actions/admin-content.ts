@@ -3,6 +3,7 @@
 import { db, snapDocs, docData } from '@/lib/db';
 import { Auction, SystemConfig } from '@/types';
 import { requireAdmin } from '@/lib/admin-guard';
+import { AdminService } from '@/services/admin/admin-service';
 import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
@@ -59,10 +60,10 @@ export async function updateSystemConfig(data: {
 export async function toggleFeaturedAuction(auctionId: string, featured: boolean): Promise<ServiceResponse<null>> {
   try {
     await requireAdmin();
-    await db.collection('auctions').doc(auctionId).update({
-      isFeatured: featured, updatedAt: new Date(),
-    });
+    await AdminService.toggleFeaturedAuction(auctionId, featured);
     revalidatePath('/');
+    revalidatePath('/auctions');
+    revalidatePath(`/auctions/${auctionId}`);
     return successResponse(null);
   } catch (e) {
     log.error('[admin-content] toggleFeaturedAuction failed', e);

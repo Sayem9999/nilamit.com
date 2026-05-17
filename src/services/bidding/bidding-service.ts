@@ -1,12 +1,11 @@
 import { db } from '@/lib/db';
-import { Bid, Auction } from '@/types';
+import { Bid, Auction, PlaceBidResult, BidWithBidder } from '@/types';
 import { ServiceResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
 import { BidProcessor } from './modules/bid-processor';
 import { BidSideEffects } from './modules/bid-side-effects';
-import { processAuctionSale, sendSaleNotifications } from '@/lib/auction-logic';
 import { ERROR_CODES } from '@/lib/constants';
-import { BidWithBidder, PlaceBidResult } from '@/types';
+import { processAuctionSale, sendSaleNotifications } from '@/lib/auction-logic';
 
 /**
  * BiddingService — Facade for Bidding operations.
@@ -25,51 +24,6 @@ export class BiddingService {
   ): Promise<ServiceResponse<PlaceBidResult>> {
     void _userName; void _userEmail;
     return BidProcessor.placeBid(auctionId, amount, userId);
-  }
-
-  /**
-   * Atomic BIN purchase: closes auction and initiates escrow.
-   */
-  static async executeBuyItNow(auctionId: string, userId: string, userName: string, userEmail: string | null): Promise<void> {
-    const notifyPayload = await db.runTransaction(async (tx) => {
-      const aRef = db.collection('auctions').doc(auctionId);
-      const aSnap = await tx.get(aRef);
-      if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
-
-      const auction = aSnap.data()!;
-      if (auction.status !== 'ACTIVE') throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
-
-      const now = new Date();
-      const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
-      
-      if (now < new Date(auction.startTime || 0)) throw new Error('AUCTION_NOT_STARTED');
-      if (now >= endTime) throw new Error(ERROR_CODES.AUCTION_ENDED);
-      if (auction.sellerId === userId) throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
-      if (!auction.buyItNowPrice) throw new Error('BUY_IT_NOW_NOT_AVAILABLE');
-
-      const sellerSnap = await tx.get(db.collection('users').doc(auction.sellerId));
-      const sellerData = sellerSnap.data() || {};
-
-      return processAuctionSale(
-        tx,
-        {
-          id: auctionId,
-          title: auction.title,
-          sellerId: auction.sellerId,
-          deliveryCharge: auction.deliveryCharge,
-          reservePrice: auction.reservePrice,
-        },
-        { id: auction.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
-        {
-          id:    userId,
-          email: userEmail,
-          name:  userName,
-        },
-        auction.buyItNowPrice,
-      );
-    });
-
-    if (notifyPayload) sendSaleNotifications(notifyPayload);
   }
 
   /**
@@ -112,6 +66,59 @@ export class BiddingService {
       log.error('[BiddingService] getAuctionBids failed', err, { auctionId });
       return [];
     }
+  }
+
+  /**
+   * Atomic BIN purchase: closes auction and initiates escrow.
+   */
+  static async executeBuyItNow(
+    auctionId: string, 
+    userId: string, 
+    userName: string, 
+    userEmail: string | null
+  ): Promise<void> {
+    const notifyPayload = await db.runTransaction(async (tx) => {
+      const aRef = db.collection('auctions').doc(auctionId);
+      const aSnap = await tx.get(aRef);
+      if (!aSnap.exists) throw new Error(ERROR_CODES.NOT_FOUND);
+
+      const auction = aSnap.data()!;
+      if (auction.status !== 'ACTIVE') throw new Error(ERROR_CODES.AUCTION_NOT_ACTIVE);
+
+      const now = new Date();
+      const endTime = auction.endTime?.toDate ? auction.endTime.toDate() : new Date(auction.endTime);
+      if (!(endTime instanceof Date) || isNaN(endTime.getTime())) {
+        throw new Error(ERROR_CODES.AUCTION_ENDED);
+      }
+
+      if (now < new Date(auction.startTime || 0)) throw new Error('AUCTION_NOT_STARTED');
+      if (now >= endTime) throw new Error(ERROR_CODES.AUCTION_ENDED);
+      if (auction.sellerId === userId) throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
+      if (!auction.buyItNowPrice) throw new Error('BUY_IT_NOW_NOT_AVAILABLE');
+
+      const sellerSnap = await tx.get(db.collection('users').doc(auction.sellerId));
+      const sellerData = sellerSnap.data() || {};
+
+      return processAuctionSale(
+        tx,
+        {
+          id: auctionId,
+          title: auction.title,
+          sellerId: auction.sellerId,
+          deliveryCharge: auction.deliveryCharge,
+          reservePrice: auction.reservePrice,
+        },
+        { id: auction.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
+        {
+          id:    userId,
+          email: userEmail,
+          name:  userName,
+        },
+        auction.buyItNowPrice,
+      );
+    });
+
+    if (notifyPayload) sendSaleNotifications(notifyPayload);
   }
 
   /**
