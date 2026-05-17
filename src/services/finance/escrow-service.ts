@@ -68,7 +68,12 @@ export class EscrowService {
         return new Date(val as string | number);
       };
 
-      const sanitizeLogistics = (l: Record<string, unknown> | undefined) => {
+      const sanitizeLogistics = (l: {
+        status?: string;
+        trackingId?: string;
+        updatedAt?: unknown;
+        history?: unknown[];
+      } | undefined) => {
         if (!l) return undefined;
         const history = Array.isArray(l.history) ? l.history.map((h: unknown) => {
           const item = h as Record<string, unknown>;
