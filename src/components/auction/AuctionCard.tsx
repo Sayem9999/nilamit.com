@@ -163,27 +163,24 @@ export const AuctionCard = memo(({
             )}
           </div>
 
-          {/* Admin Feature Button */}
-          {isAdmin && (
-            <div className="absolute top-4 right-14 z-10">
+          {/* Action Buttons (Watchlist & Admin Feature) */}
+          <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+            {isAdmin && (
               <button
                 type="button"
                 onClick={handleToggleFeatured}
                 disabled={isPending}
                 className={`w-10 h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all border ${
                   isFeatured 
-                    ? "bg-amber-500 text-white border-amber-400 shadow-lg scale-110" 
-                    : "bg-white/10 text-white/60 border-white/20 hover:bg-white/20"
+                    ? "bg-amber-500 text-white border-amber-400 shadow-lg scale-110 animate-in zoom-in duration-300" 
+                    : "bg-white/10 text-white/60 border-white/20 hover:bg-white/20 hover:scale-105"
                 }`}
                 aria-label={isFeatured ? "Unfeature auction" : "Feature auction"}
               >
-                <Star className={`w-5 h-5 ${isFeatured ? "fill-white" : ""}`} />
+                <Star className={`w-4 h-4 ${isFeatured ? "fill-white" : ""}`} />
               </button>
-            </div>
-          )}
+            )}
 
-          {/* Watchlist Button */}
-          <div className="absolute top-4 right-4 z-10">
             <WatchlistButton
               auctionId={auction.id}
               initialIsWatchlisted={isWatchlisted}

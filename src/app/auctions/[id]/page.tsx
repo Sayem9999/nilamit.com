@@ -40,6 +40,7 @@ import { AdminAuctionControls } from "@/components/auction/AdminAuctionControls"
 import { AuctionWithBids, Bid } from "@/types";
 import { auth } from "@/lib/auth";
 import { WatchlistButton } from "@/components/auction/WatchlistButton";
+import { DetailFeatureButton } from "@/components/auction/DetailFeatureButton";
 import { isWatched } from "@/actions/watchlist";
 import { ShareButton } from "@/components/auction/ShareButton";
 import UserBadge from "@/components/social/UserBadge";
@@ -195,6 +196,11 @@ export default async function AuctionDetailPage({ params }: Props) {
                   title={auction.title}
                   auctionId={id}
                   price={auction.currentPrice}
+                />
+                <DetailFeatureButton
+                  auctionId={id}
+                  initialIsFeatured={!!auction.isFeatured}
+                  isAdmin={isAdmin}
                 />
                 <WatchlistButton
                   auctionId={id}
