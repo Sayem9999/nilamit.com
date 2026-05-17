@@ -14,12 +14,13 @@ export interface UseAuctionBidsOptions {
    * empty "live" panel until the next bid lands.
    */
   initialBids?: RealTimeBid[];
+  initialStatus?: string;
 }
 
 export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions = {}) {
   const [newBids,        setNewBids]        = useState<RealTimeBid[]>(options.initialBids ?? []);
   const [currentEndTime, setCurrentEndTime] = useState<Date | string | null>(null);
-  const [status,         setStatus]         = useState<string | null>(null);
+  const [status,         setStatus]         = useState<string | null>(options.initialStatus ?? null);
   const [isConnected,    setIsConnected]    = useState(true);
 
   useEffect(() => {

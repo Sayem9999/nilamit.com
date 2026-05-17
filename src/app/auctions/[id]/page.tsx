@@ -309,6 +309,7 @@ export default async function AuctionDetailPage({ params }: Props) {
             buyItNowPrice={auction.buyItNowPrice}
             proxyMaxBid={auction.proxyMaxBid}
             proxyBidderId={auction.proxyBidderId}
+            initialStatus={auction.status}
             initialBids={bids.slice(0, 10).map((b) => ({
               id:         b.id,
               amount:     b.amount,

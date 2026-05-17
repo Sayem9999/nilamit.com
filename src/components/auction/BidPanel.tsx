@@ -47,6 +47,7 @@ interface BidPanelProps {
   initialBids?: RealTimeBid[];
   onBidPlaced?: () => void;
   startingPrice?: number;
+  initialStatus?: string;
 }
 
 export function BidPanel({
@@ -63,14 +64,15 @@ export function BidPanel({
   initialBids,
   onBidPlaced,
   startingPrice,
+  initialStatus,
 }: BidPanelProps) {
   const { data: session } = useSession();
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
   const { play: playGavel } = useSound("/sounds/gavel.mp3");
   const t = useTranslations("BidPanel");
-  const { newBids, currentEndTime, isConnected, status: rtStatus } = useAuctionBids(auctionId, { initialBids });
+  const { newBids, currentEndTime, isConnected, status: rtStatus } = useAuctionBids(auctionId, { initialBids, initialStatus });
   
-  const currentStatus = rtStatus || "ACTIVE"; 
+  const currentStatus = rtStatus || initialStatus || "ACTIVE"; 
   const [optimisticBid, setOptimisticBid] = useState<number | null>(null);
 
   const displayPrice = useMemo(() => 
