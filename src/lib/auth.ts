@@ -182,7 +182,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, account, profile, trigger }) {
       // First login — seed from freshly-authenticated user
       if (user) {
         token.id               = user.id!;
@@ -202,7 +202,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.emailVerified    = user.emailVerified ?? null;
         token.bkashNumber      = user.bkashNumber ?? null;
         token.nagadNumber      = user.nagadNumber ?? null;
-        token.image            = user.image ?? null;
+
+        let finalImage = user.image ?? null;
+        // Sync Google photo on Google sign-in
+        if (account?.provider === 'google' && profile) {
+          const googleImage = profile.picture || (profile as Record<string, unknown>).image as string | undefined;
+          if (googleImage) {
+            finalImage = googleImage;
+            // Asynchronously sync to database if user document has no image set
+            try {
+              const userRef = db.collection('users').doc(user.id!);
+              const snap = await userRef.get();
+              if (snap.exists) {
+                const currentData = snap.data()!;
+                if (!currentData.image) {
+                  await userRef.update({ image: googleImage, updatedAt: new Date() });
+                  log.info(`[Auth] Synced Google avatar to Firestore for user: ${user.id}`);
+                }
+              }
+            } catch (err) {
+              log.error('[Auth] Failed to sync Google avatar to database', err);
+            }
+          }
+        }
+
+        token.image            = finalImage;
         token.lastDbRefresh    = Date.now();
       }
 

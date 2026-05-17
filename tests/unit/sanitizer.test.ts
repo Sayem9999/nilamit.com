@@ -44,6 +44,20 @@ describe('Security Sanitizer', () => {
     expect(output.nested.list[0]).toBeInstanceOf(Date);
     expect(output.nested.list[0].getTime()).toBe(originalDate.getTime());
   });
+
+  it('should preserve absolute HTTP/HTTPS URLs with query strings verbatim without HTML entity corruption', () => {
+    const testUrl = 'https://firebasestorage.googleapis.com/v0/b/nilamit-52073.firebasestorage.app/o/auctions%2Ftest.webp?alt=media&token=123-abc';
+    expect(sanitize(testUrl)).toBe(testUrl);
+
+    const input = {
+      image: testUrl,
+      images: [testUrl, 'http://example.com/foo?bar=baz&a=1'],
+    };
+    const output = sanitizeObject(input);
+    expect(output.image).toBe(testUrl);
+    expect(output.images[0]).toBe(testUrl);
+    expect(output.images[1]).toBe('http://example.com/foo?bar=baz&a=1');
+  });
 });
 
 describe('PII Filter — filterPII', () => {

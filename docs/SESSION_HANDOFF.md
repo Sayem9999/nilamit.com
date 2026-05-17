@@ -2,15 +2,13 @@
 
 ## Current Session (2026-05-17)
 ### What we did
-* **Dynamic Profile Photo Uploads**: Engineered an ultra-premium, interactive client-side profile image uploader inside `src/app/profile/page.tsx`. Added visual states (a sleek, fading hover overlay with a camera icon and a semi-transparent loading shield with a spinner during upload). Integrated client-side image compression using `compressImage` to downsize images to 500x500 at 85% quality, and uploaded securely via `/api/upload` endpoint. Synced status instantly using `updateProfile` and NextAuth `update()` session refreshing.
-* **Google Account Photo Sync**: Upgraded NextAuth `jwt` and `session` callbacks inside `src/lib/auth.ts` to automatically fetch and persist user pictures from Google OAuth logins and keep them in sync with Firestore databases and client tokens.
-* **Auction Card Spacing Fix**: Resolved button collision inside `AuctionCard.tsx` image overlay by grouping absolute action buttons within a modern CSS Flexbox container with `gap-2` (`8px`) separation.
-* **Featured UI beside Watchlist**: Built `DetailFeatureButton.tsx` and integrated it next to the Watchlist button on the auction details page (`src/app/auctions/[id]/page.tsx`). For admins, it functions as a live toggle; for general users, it serves as a non-clickable Curator's Choice indicator.
-* **Typesafety & Test Pass**: Fully validated with `npx tsc --noEmit` and passing all **68 / 68 unit tests** cleanly.
+* **Absolute URL Sanitizer Bypass**: Resolved query string corruption where DOMPurify entity-encoded the `&` characters in absolute image/avatar URLs into `&amp;` (e.g. `&alt=media` -> `&amp;alt=media`). Patched the core `sanitize` utility to preserve absolute HTTP and HTTPS URLs exactly as-is, fully fixing both profile photo uploads and auction image loads system-wide.
+* **Google OAuth Profile Synchronization**: Fully integrated NextAuth's `account` and `profile` parameters inside the `jwt` callback to capture high-resolution Google avatars during OAuth logins/sign-ups, and asynchronously updated them into the Firestore `users` collection if the user does not have a custom profile picture set.
+* **Unit Tests and Lint-Clean Validation**: Expanded the test suite inside `tests/unit/sanitizer.test.ts` to verify absolute URL query parameter preservation. Successfully compiled (`npx tsc --noEmit`) and passed all **69 / 69 unit tests** with a clean **ESLint (exit code 0)** production build.
 
 ### Next Steps / Blockers
 * **Blocker**: None.
-* **Next**: Observe user interactions on profile edits and test OAuth synchronization during organic user registrations.
+* **Next**: Complete the commit, push, and deployment rollouts using the CLI commands.
 
 ---
 

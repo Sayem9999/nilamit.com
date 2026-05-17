@@ -6,6 +6,10 @@ import DOMPurify from 'isomorphic-dompurify';
  */
 export function sanitize(text: string): string {
   if (!text) return '';
+  // Bypass DOMPurify for absolute HTTP/HTTPS URLs to prevent query parameter corruption (e.g., &alt=media -> &amp;alt=media)
+  if (text.startsWith('http://') || text.startsWith('https://')) {
+    return text;
+  }
   return DOMPurify.sanitize(text, {
     ALLOWED_TAGS: [], // Strip all tags
     ALLOWED_ATTR: [], // Strip all attributes
