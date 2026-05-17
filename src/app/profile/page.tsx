@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -22,6 +22,8 @@ import {
   Trophy,
   Activity,
   LogOut,
+  Camera,
+  Loader2,
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
@@ -40,6 +42,48 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
   const [msg, setMsg] = useState("");
+  
+  // Profile Photo Upload State
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const rawFile = files[0];
+      setIsUploadingPhoto(true);
+
+      // Dynamically load image optimization and upload utilities
+      const { compressImage } = await import("@/lib/image-optimization");
+      const { uploadFile } = await import("@/lib/uploadthing");
+
+      // Compress client-side for maximum bandwidth efficiency
+      const file = await compressImage(rawFile, { maxWidth: 500, maxHeight: 500, quality: 0.85 });
+      
+      // Upload using secure server-side upload endpoint
+      const publicUrl = await uploadFile(file, 'auction');
+
+      // Update database profile
+      const res = await updateProfile({ image: publicUrl });
+      if (res.success) {
+        // Force NextAuth session refresh to sync the avatar instantly
+        await update();
+        toast.success("Profile photo updated successfully!");
+      } else {
+        toast.error(res.error?.message || "Failed to update profile photo");
+      }
+    } catch (error) {
+      console.error("[Profile Photo] Upload failed:", error);
+      toast.error("Failed to upload profile photo. Please try again.");
+    } finally {
+      setIsUploadingPhoto(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
   
   // MFS State
   const [bkash, setBkash] = useState("");
@@ -209,20 +253,44 @@ export default function ProfilePage() {
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="relative p-1.5 bg-white rounded-full shadow-2xl z-20"
+              className="relative p-1.5 bg-white rounded-full shadow-2xl z-20 group cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+              title="Click to update profile photo"
             >
-              <div className="relative overflow-hidden rounded-full bg-gray-100 ring-4 ring-white shadow-inner">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handlePhotoUpload}
+                accept="image/*"
+                className="hidden"
+                disabled={isUploadingPhoto}
+              />
+              <div className="relative w-32 h-32 md:w-40 md:h-40 overflow-hidden rounded-full bg-gray-100 ring-4 ring-white shadow-inner">
                 {session.user?.image ? (
                   <Image
                     src={session.user.image}
                     alt="Profile"
                     width={160}
                     height={160}
-                    className="w-32 h-32 md:w-40 md:h-40 object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
-                  <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center text-primary-600">
+                  <div className="w-full h-full flex items-center justify-center text-primary-600">
                     <User size={64} strokeWidth={1} />
+                  </div>
+                )}
+
+                {/* Change photo hover overlay */}
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <Camera size={22} className="text-white" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Change Photo</span>
+                </div>
+
+                {/* Uploading loading overlay */}
+                {isUploadingPhoto && (
+                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 text-white z-40">
+                    <Loader2 size={22} className="animate-spin text-primary-400" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-primary-200">Uploading...</span>
                   </div>
                 )}
               </div>

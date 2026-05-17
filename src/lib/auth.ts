@@ -202,6 +202,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.emailVerified    = user.emailVerified ?? null;
         token.bkashNumber      = user.bkashNumber ?? null;
         token.nagadNumber      = user.nagadNumber ?? null;
+        token.image            = user.image ?? null;
         token.lastDbRefresh    = Date.now();
       }
 
@@ -228,6 +229,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.emailVerified    = u.emailVerified instanceof Timestamp ? u.emailVerified.toDate() : (u.emailVerified ? new Date(u.emailVerified as string) : null);
             token.bkashNumber      = u.bkashNumber ?? null;
             token.nagadNumber      = u.nagadNumber ?? null;
+            token.image            = u.image ?? null;
             token.lastDbRefresh    = Date.now();
           }
         } catch (e) {
@@ -260,6 +262,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.defectCount      = token.defectCount as any;
         session.user.bkashNumber     = token.bkashNumber as any;
         session.user.nagadNumber     = token.nagadNumber as any;
+        session.user.image           = (token.image || token.picture) as any;
         /* eslint-enable @typescript-eslint/no-explicit-any */
       }
       return session;
