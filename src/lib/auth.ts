@@ -253,8 +253,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.lastDbRefresh    = Date.now();
       }
 
-      // Refresh from Firestore only on explicit update triggers
-      const needsRefresh = trigger === 'update';
+      // Refresh from Firestore on explicit update triggers or if the 5-minute interval has expired
+      const timeSinceLastRefresh = Date.now() - Number(token.lastDbRefresh || 0);
+      const needsRefresh = trigger === 'update' || timeSinceLastRefresh > _TOKEN_REFRESH_INTERVAL_MS;
 
       if (token.id && needsRefresh) {
         try {

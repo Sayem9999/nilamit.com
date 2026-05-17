@@ -384,6 +384,8 @@
     "verif_Business_Desc": "Highest tier. NID and Business documents verified by Nilamit team.",
     "verif_Email": "Email Verified",
     "verif_Email_Desc": "User has verified their email address to ensure account authenticity.",
+    "verif_Seller": "Identity Verified",
+    "verif_Seller_Desc": "User has verified their email and phone identity to ensure account authenticity.",
     "verif_Unverified": "Unverified",
     "verif_Unverified_Desc": "This user has not verified their contact details yet.",
     "uploadFailed": "Upload failed",

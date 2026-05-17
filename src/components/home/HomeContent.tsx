@@ -89,7 +89,7 @@ export function HomeContent({
 
       {/* Featured Auctions — Premium Curator's Choice */}
       {featuredAuctions.length > 0 && (
-        <section className="py-24 relative overflow-hidden bg-slate-950" aria-labelledby="featured-heading">
+        <section className="py-24 relative overflow-hidden bg-slate-950" style={{ backgroundColor: '#020617' }} aria-labelledby="featured-heading">
           {/* Animated Background Elements */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl animate-pulse" />
