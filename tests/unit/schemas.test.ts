@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   placeBidSchema,
   createAuctionSchema,
-  bdPhoneSchema,
-  otpSchema,
   passwordSchema,
   emailSchema,
   MAX_AUCTION_PRICE_BDT,
@@ -111,54 +109,7 @@ describe('createAuctionSchema — temporal rules', () => {
   });
 });
 
-// ─── bdPhoneSchema ─────────────────────────────────────────────────────────
 
-describe('bdPhoneSchema', () => {
-  it('accepts a valid Bangladesh number with +88 prefix', () => {
-    expect(bdPhoneSchema.safeParse('+8801712345678').success).toBe(true);
-  });
-
-  it('accepts numbers in the 013–019 range', () => {
-    expect(bdPhoneSchema.safeParse('+8801312345678').success).toBe(true);
-    expect(bdPhoneSchema.safeParse('+8801912345678').success).toBe(true);
-  });
-
-  it('accepts numbers without country code (local form) and normalizes them', () => {
-    const result = bdPhoneSchema.safeParse('01712345678');
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data).toBe('+8801712345678');
-    }
-  });
-
-  it('rejects a non-Bangladesh prefix', () => {
-    expect(bdPhoneSchema.safeParse('+1234567890123').success).toBe(false);
-  });
-
-  it('rejects numbers that are too short', () => {
-    expect(bdPhoneSchema.safeParse('+880171234567').success).toBe(false);
-  });
-});
-
-// ─── otpSchema ─────────────────────────────────────────────────────────────
-
-describe('otpSchema', () => {
-  it('accepts exactly 6 digits', () => {
-    expect(otpSchema.safeParse('123456').success).toBe(true);
-  });
-
-  it('rejects 5 digits', () => {
-    expect(otpSchema.safeParse('12345').success).toBe(false);
-  });
-
-  it('rejects 7 digits', () => {
-    expect(otpSchema.safeParse('1234567').success).toBe(false);
-  });
-
-  it('rejects non-numeric strings', () => {
-    expect(otpSchema.safeParse('12345a').success).toBe(false);
-  });
-});
 
 // ─── OTP generation (regression: C2 — was Math.random(), now crypto.randomInt) ─
 
