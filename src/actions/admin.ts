@@ -1,5 +1,3 @@
-'use server';
-
 /**
  * admin.ts — Barrel file for administrative server actions.
  * 
@@ -7,8 +5,8 @@
  * to maintain scalability as the platform grows.
  */
 
-export * from './admin/stats';
-export * from './admin/disputes';
-export * from './admin/treasury';
-export * from './admin/moderation';
-export * from './admin-users'; // Existing file
+export { getAdminStats } from './admin/stats';
+export { getAdminDisputes, resolveAdminDispute, getAdminCoordinationLog } from './admin/disputes';
+export { getTreasuryAudit, getAdminActiveEscrows, getVerificationQueue, approveEscrowPayment, refundWithDeduction } from './admin/treasury';
+export { adminToggleVerification } from './admin/moderation';
+export { grantVerifiedSeller, revokeVerifiedSeller, banUser, unbanUser, getAdminUsers } from './admin-users';
