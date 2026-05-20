@@ -1,14 +1,16 @@
 # Session Handoff & Architecture Memory
 
-## Current Session (2026-05-17)
+## Current Session (2026-05-20)
 ### What we did
-* **Absolute URL Sanitizer Bypass**: Resolved query string corruption where DOMPurify entity-encoded the `&` characters in absolute image/avatar URLs into `&amp;` (e.g. `&alt=media` -> `&amp;alt=media`). Patched the core `sanitize` utility to preserve absolute HTTP and HTTPS URLs exactly as-is, fully fixing both profile photo uploads and auction image loads system-wide.
-* **Google OAuth Profile Synchronization**: Fully integrated NextAuth's `account` and `profile` parameters inside the `jwt` callback to capture high-resolution Google avatars during OAuth logins/sign-ups, and asynchronously updated them into the Firestore `users` collection if the user does not have a custom profile picture set.
-* **Unit Tests and Lint-Clean Validation**: Expanded the test suite inside `tests/unit/sanitizer.test.ts` to verify absolute URL query parameter preservation. Successfully compiled (`npx tsc --noEmit`) and passed all **69 / 69 unit tests** with a clean **ESLint (exit code 0)** production build.
+* **Next.js Production Build Barrel Export Fix**: Refactored the administrative actions barrel file `src/actions/admin.ts` to use explicit named re-exports and removed the `'use server'` directive from the top. Next.js SWC does not support wildcard re-exports inside a `'use server'` file when compiled for dynamic routes. Removing the directive and using explicit named re-exports fully resolved the production compilation failure.
+* **TypeScript Compiler Pass**: Safely removed the redundant `@ts-expect-error` directive inside `next.config.ts` because `outputFileTracingIncludes` is now natively supported by Next.js type declarations.
+* **Legacy OTP Schema Purge**: Cleared out stale unit tests in `tests/unit/schemas.test.ts` that were attempting to load retired phone auth schemas (`bdPhoneSchema`, `otpSchema`), bringing the schema verification suite back to 100% health.
+* **Image Moderation Mock Correction**: Restructured unit tests in `tests/unit/image-moderation.test.ts` to mock the correct `annotateImage` Vision API call and aligned error assertion expectations with the structured Sentry logger payload.
+* **Manual App Hosting Rollout**: Triggered and validated a manual rollout `firebase apphosting:rollouts:create nilamit -b main` to compile and deploy the latest zero-debt code to Firebase App Hosting.
 
 ### Next Steps / Blockers
 * **Blocker**: None.
-* **Next**: Complete the commit, push, and deployment rollouts using the CLI commands.
+* **Next**: The platform is 100% compiled, tested, and actively deploying. Next steps include rotating credentials/secrets in Google Cloud Console and adding Sentry cron alerts.
 
 ---
 
