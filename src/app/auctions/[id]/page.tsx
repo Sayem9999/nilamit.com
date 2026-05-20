@@ -216,10 +216,7 @@ export default async function AuctionDetailPage({ params }: Props) {
             </h1>
 
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-500">
-              <div className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" aria-hidden="true" />
-                <CountdownTimer endTime={auction.endTime} serverTime={serverTime} />
-              </div>
+              <CountdownTimer endTime={auction.endTime} serverTime={serverTime} variant="badge" />
                 <AuctionBidCount 
                   auctionId={id}
                   initialBidCount={auction._count?.bids || 0}

@@ -64,9 +64,8 @@ export function StickyBidBar({ currentPrice, endTime, serverTime, targetId }: St
                   {formatBDT(currentPrice)}
                 </div>
                 <div className="h-4 w-[1px] bg-gray-200" aria-hidden="true" />
-                <div className="flex items-center gap-1 text-xs text-gray-500 font-medium">
-                  <Clock className="w-3 h-3" aria-hidden="true" />
-                  <CountdownTimer endTime={endTime} serverTime={serverTime} className="!text-[11px] tabular-nums" />
+                <div className="flex items-center text-xs text-gray-500 font-medium">
+                  <CountdownTimer endTime={endTime} serverTime={serverTime} className="text-[11px] tabular-nums" />
                 </div>
               </div>
             </div>

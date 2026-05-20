@@ -111,7 +111,7 @@ export const AuctionCard = memo(({
 
   return (
     <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[2rem] ${className}`} aria-label={cardLabel}>
-      <div className="bg-white rounded-[2rem] border border-gray-100/60 shadow-premium hover:shadow-premium-hover transition-all duration-500 overflow-hidden group-hover:-translate-y-2 flex flex-col h-full group-[.featured]:bg-white/5 group-[.featured]:border-white/10 group-[.featured]:shadow-none group-[.featured]:hover:bg-white/10 group-[.featured]:hover:border-white/20">
+      <div className="bg-white rounded-[2rem] border border-gray-100/60 group-hover:border-primary-500/30 shadow-premium hover:shadow-[0_20px_45px_rgba(13,110,253,0.08)] transition-all duration-500 overflow-hidden group-hover:-translate-y-1.5 flex flex-col h-full group-[.featured]:bg-white/5 group-[.featured]:border-white/10 group-[.featured]:shadow-none group-[.featured]:hover:bg-white/10 group-[.featured]:hover:border-white/20">
         {/* Image Area */}
         <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
           {lightweightMode ? (
@@ -283,13 +283,10 @@ export const AuctionCard = memo(({
 
           {/* Footer Timer */}
           <div className="mt-auto pt-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-gray-500 bg-gray-50 py-1.5 px-3 rounded-xl border border-gray-100/50 w-full justify-center group-hover:bg-primary-50 group-hover:border-primary-100/50 transition-colors duration-300">
-              <Clock className="w-4 h-4 text-gray-400 group-hover:text-primary-500" />
-              <CountdownTimer
-                endTime={auction.endTime}
-                className="text-xs font-bold font-mono tracking-tight"
-              />
-            </div>
+            <CountdownTimer
+              endTime={auction.endTime}
+              variant="card-footer"
+            />
           </div>
 
           {/* Owner controls — only visible to the seller on their own listings.
