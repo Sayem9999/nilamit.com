@@ -91,3 +91,6 @@ env:
   - variable: IMAGE_MODERATION
     value: enabled
 
+  - variable: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+    value: "6Leg4fUsAAAAAIITIGqtUG5pzOqB5WX7F3tbD5be"
+
