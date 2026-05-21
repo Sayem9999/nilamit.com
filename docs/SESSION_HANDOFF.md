@@ -2,14 +2,21 @@
 
 ## Current Session (2026-05-21)
 ### What we did
-* **Next.js Production Build Validation**: Verified that Next.js Turbopack production builds compile successfully (`npm run build`) and pass the full unit test suite (60/60 passed).
+* **Next.js Production Build Validation**: Verified that Next.js Turbopack production builds compile successfully (`npm run build`) and pass the full unit test suite (68/68 passed).
 * **Server Action Barrel Exports Fix**: Resolved build-breaking compilation errors where the Next.js action compiler couldn't statically trace re-exports. Barrel file `src/actions/admin.ts` was updated to omit `'use server'` and use explicit named exports rather than wildcard `export *` statements.
 * **OpenGraph Font & Character Optimization**: Re-architected `/api/og` to attempt loading the Noto Sans Bengali font locally via `import.meta.url` with a robust CDN fallback chain to prevent Edge Runtime execution crashes. Corrected Unicode encoding corruption for critical UI symbols like the BDT currency marker (`৳`) and location pin (`📍`).
 * **Linting & Avatar Optimization**: Resolved Next.js static asset build-time warnings by adding targeted `/* eslint-disable-next-line @next/next/no-img-element */` annotations to user avatar tags in `Navbar.tsx`, `profile/page.tsx`, and `UsersTab.tsx`. Standard HTML `<img>` elements are preferred here to prevent runtime resizing overhead for dynamic, third-party user avatars.
+* **Proxy Bidding Price Corruption**: Fixed `src/services/bidding/modules/bid-processor.ts` to fall back to `currentPrice` if `proxyMaxBid` is falsy, preventing old documents/listings without explicit `proxyMaxBid` fields from corrupting the bid calculations and regressing bids to 10 BDT.
+* **Atomic Auction Relisting Concurrency**: Refactored `relistAuction` in `src/actions/auction.ts` to retrieve and update the auction's `relisted` status within a single atomic transaction, preventing duplicate listings from being spawned by parallel triggers.
+* **MFS Account Linkage Uniqueness**: Updated `linkMFSAccount` in `src/actions/user.ts` to perform the uniqueness validation query and user profile update inside a single Firestore transaction, preventing multiple users from linking the same MFS number concurrently.
+* **Dispute Lookups in Escrow Service**: Replaced N+1 `Promise.all` query loops in `src/services/finance/escrow-service.ts` with a single batch `db.getAll()` call to retrieve all related disputes in one round-trip.
+* **Admin Moderation Related Entities**: Replaced N+1 individual `DocumentReference` reads in `src/actions/admin-moderation.ts` (specifically inside `getAdminReports` and `getUserMap`) with native batch `db.getAll()` fetches.
+* **Expanded Security Unit Test Suite**: Created `tests/unit/security-audit.test.ts` to verify proxy bidding fallbacks, atomic uniqueness checks for MFS accounts, and concurrency safeguards for auction relisting.
+* **Firebase Deployments**: Committed and pushed changes to the `main` repository branch, triggering Husky auto-deployment of Firestore rules & indexes to `nilamit-52073` and Next.js auto-rollout via App Hosting.
 
 ### Next Steps / Blockers
 * **Blocker**: None.
-* **Next**: Deploy changes to production by pushing to the `main` branch.
+* **Next**: Monitor the Firebase App Hosting rollout build and smoke-test live endpoints.
 
 ## Historical Session (2026-05-17)
 ### What we did
