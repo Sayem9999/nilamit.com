@@ -9,6 +9,7 @@
   --font-heading: "Plus Jakarta Sans", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+  --font-bengali: var(--font-bengali), sans-serif;
 
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;

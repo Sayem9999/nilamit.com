@@ -50,7 +50,10 @@ export function LiveTicker({ initialActivity }: LiveTickerProps) {
       <div className="flex animate-marquee motion-reduce:animate-none whitespace-nowrap">
         {[...activities, ...activities].map((activity, i) => (
           <div key={i} className="flex items-center gap-2 mx-8 text-[11px] font-bold text-gray-400">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+            <span className="relative flex w-2 h-2" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
             <span className="text-white">{activity.bidder.name}</span>
             <span>bid ৳{activity.amount.toLocaleString()} on</span>
             <Link href={`/auctions/${activity.auction.id}`} className="text-primary-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 rounded">

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter, JetBrains_Mono, Noto_Sans_Bengali } from "next/font/google";
 import { Providers } from "@/components/providers/Providers";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
@@ -33,6 +33,13 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
   weight: ["500", "600"],
+  display: "swap",
+});
+
+const notoBengali = Noto_Sans_Bengali({
+  variable: "--font-bengali",
+  subsets: ["bengali"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -153,7 +160,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} data-scroll-behavior="smooth">
       <body
-        className={`${plusJakarta.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased bg-white text-gray-900 font-body`}
+        className={`${plusJakarta.variable} ${inter.variable} ${jetbrainsMono.variable} ${notoBengali.variable} antialiased bg-white text-gray-900 font-body`}
       >
         <NextIntlClientProvider messages={messages} locale={locale}>
           <script

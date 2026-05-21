@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, useRef, useMemo, useCallback } from
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { CheckCircle, AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
 import { placeBid, executeBuyItNow } from "@/actions/bid";
 import { formatBDT } from "@/lib/format";
 import { ErrorType, ServiceResponse } from "@/lib/errors";
@@ -251,18 +252,21 @@ export function BidPanel({
           {buyItNowPrice && (
             <div className="mt-4 mb-4">
               <VerificationGuard>
-                <button
+                <motion.button
                   type="button"
                   onClick={openBuyItNow}
                   disabled={isPending}
-                  className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center relative overflow-hidden"
+                  whileHover={isPending ? {} : { scale: 1.02 }}
+                  whileTap={isPending ? {} : { scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center relative overflow-hidden cursor-pointer"
                 >
                   <div className="flex items-center gap-2 relative z-10 text-sm">
                     <span>BUY IT NOW</span>
                     <span className="w-1.5 h-1.5 bg-accent-400 rounded-full animate-ping" />
                   </div>
                   <div className="price text-lg relative z-10">{formatBDT(buyItNowPrice)}</div>
-                </button>
+                </motion.button>
               </VerificationGuard>
             </div>
           )}
@@ -297,14 +301,17 @@ export function BidPanel({
           </div>
 
           <VerificationGuard>
-            <button
+            <motion.button
               type="button"
               onClick={handleBid}
               disabled={isPending || bidAmount < minBid}
-              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"
+              whileHover={isPending || bidAmount < minBid ? {} : { scale: 1.02 }}
+              whileTap={isPending || bidAmount < minBid ? {} : { scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {isPending ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" /> : <>{t("bidBtnPrefix")} {formatBDT(bidAmount)}</>}
-            </button>
+            </motion.button>
           </VerificationGuard>
 
           <div role="status" aria-live="polite" className="sr-only">

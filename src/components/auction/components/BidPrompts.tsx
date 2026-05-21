@@ -48,7 +48,21 @@ export function MFSLinkagePrompt({ onClose }: PromptProps) {
         <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">
           {t("mfsLinkRequired")}
         </h3>
-        <p className="text-sm text-gray-500 mb-4">{t("mfsLinkDesc")}</p>
+        <p className="text-sm text-gray-500 mb-2">{t("mfsLinkDesc")}</p>
+        
+        {/* MFS Brand Micro-Badges */}
+        <div className="flex items-center justify-center gap-3 my-4 bg-gray-50/50 p-3 rounded-xl border border-gray-100/60">
+          <span className="px-3 py-1 bg-pink-50 border border-pink-100 text-pink-600 rounded-lg text-[10px] font-black tracking-wide uppercase shadow-sm">
+            bKash
+          </span>
+          <span className="px-3 py-1 bg-orange-50 border border-orange-100 text-orange-600 rounded-lg text-[10px] font-black tracking-wide uppercase shadow-sm">
+            Nagad
+          </span>
+          <span className="px-3 py-1 bg-purple-50 border border-purple-100 text-purple-600 rounded-lg text-[10px] font-black tracking-wide uppercase shadow-sm">
+            Rocket
+          </span>
+        </div>
+
         <div className="flex gap-3">
           <button
             onClick={onClose}
@@ -101,7 +115,21 @@ export function EliteBarrierPrompt({ onClose, auctionId, amount }: EliteProps) {
         <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">
           {t("eliteBarrier")}
         </h3>
-        <p className="text-sm text-gray-500 mb-4">{t("eliteDepositDesc")}</p>
+        <p className="text-sm text-gray-500 mb-2">{t("eliteDepositDesc")}</p>
+
+        {/* MFS Brand Micro-Badges */}
+        <div className="flex items-center justify-center gap-3 my-4 bg-gray-50/50 p-3 rounded-xl border border-gray-100/60">
+          <span className="px-3 py-1 bg-pink-50 border border-pink-100 text-pink-600 rounded-lg text-[10px] font-black tracking-wide uppercase shadow-sm">
+            bKash
+          </span>
+          <span className="px-3 py-1 bg-orange-50 border border-orange-100 text-orange-600 rounded-lg text-[10px] font-black tracking-wide uppercase shadow-sm">
+            Nagad
+          </span>
+          <span className="px-3 py-1 bg-purple-50 border border-purple-100 text-purple-600 rounded-lg text-[10px] font-black tracking-wide uppercase shadow-sm">
+            Rocket
+          </span>
+        </div>
+
         <div className="flex gap-3">
           <button
             onClick={onClose}
