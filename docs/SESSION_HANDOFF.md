@@ -13,6 +13,7 @@
 * **Admin Moderation Related Entities**: Replaced N+1 individual `DocumentReference` reads in `src/actions/admin-moderation.ts` (specifically inside `getAdminReports` and `getUserMap`) with native batch `db.getAll()` fetches.
 * **Expanded Security Unit Test Suite**: Created `tests/unit/security-audit.test.ts` to verify proxy bidding fallbacks, atomic uniqueness checks for MFS accounts, and concurrency safeguards for auction relisting.
 * **Firebase Deployments**: Committed and pushed changes to the `main` repository branch, triggering Husky auto-deployment of Firestore rules & indexes to `nilamit-52073` and Next.js auto-rollout via App Hosting.
+* **E2E Smoke Testing & Firestore Index Fix**: Ran Playwright E2E smoke tests locally. Identified a missing Firestore composite index on the `bids` collection (`auctionId` ASCENDING, `amount` DESCENDING) which was causing page query crashes during bidding history fetches. Added the index to `firestore.indexes.json` and deployed it live via the Firebase CLI (`firebase deploy --only firestore:indexes`). Re-ran the tests and validated that all E2E critical paths (signup, login, listing, bidding, sales, escrow payment, logistics) pass successfully on Chromium (`2 passed`).
 
 ### Next Steps / Blockers
 * **Blocker**: None.
