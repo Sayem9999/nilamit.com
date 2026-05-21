@@ -11,17 +11,17 @@ import { batchHydrateEscrowRows, type AdminEscrowDoc } from './shared';
  * Filters to states where money has actually moved (HELD / RELEASED).
  */
 export async function getTreasuryAudit(): Promise<ServiceResponse<unknown[]>> {
-  await requireAdmin();
-
-  const txSnap = await db.collection('escrowTransactions')
-    .where('status', 'in', ['HELD', 'RELEASED', 'VERIFICATION_PENDING'])
-    .orderBy('createdAt', 'desc')
-    .limit(50)
-    .get();
-
-  const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
-
   try {
+    await requireAdmin();
+
+    const txSnap = await db.collection('escrowTransactions')
+      .where('status', 'in', ['HELD', 'RELEASED', 'VERIFICATION_PENDING'])
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
+
+    const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
+
     const data = await batchHydrateEscrowRows(txDocs);
     return successResponse(data);
   } catch (e) {
@@ -34,17 +34,17 @@ export async function getTreasuryAudit(): Promise<ServiceResponse<unknown[]>> {
  * Currently HELD escrows — surfaced in TreasuryTab for admin manual override.
  */
 export async function getAdminActiveEscrows(): Promise<ServiceResponse<unknown[]>> {
-  await requireAdmin();
-
-  const txSnap = await db.collection('escrowTransactions')
-    .where('status', '==', 'HELD')
-    .orderBy('createdAt', 'desc')
-    .limit(100)
-    .get();
-
-  const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
-
   try {
+    await requireAdmin();
+
+    const txSnap = await db.collection('escrowTransactions')
+      .where('status', '==', 'HELD')
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .get();
+
+    const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
+
     const data = await batchHydrateEscrowRows(txDocs);
     return successResponse(data);
   } catch (e) {
@@ -57,16 +57,16 @@ export async function getAdminActiveEscrows(): Promise<ServiceResponse<unknown[]
  * Transactions awaiting manual verification of MFS payments.
  */
 export async function getVerificationQueue(): Promise<ServiceResponse<unknown[]>> {
-  await requireAdmin();
-
-  const txSnap = await db.collection('escrowTransactions')
-    .where('status', '==', 'VERIFICATION_PENDING')
-    .orderBy('createdAt', 'desc')
-    .get();
-
-  const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
-
   try {
+    await requireAdmin();
+
+    const txSnap = await db.collection('escrowTransactions')
+      .where('status', '==', 'VERIFICATION_PENDING')
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
+
     const data = await batchHydrateEscrowRows(txDocs);
     return successResponse(data);
   } catch (e) {
@@ -79,9 +79,9 @@ export async function getVerificationQueue(): Promise<ServiceResponse<unknown[]>
  * Approve a pending MFS payment after manual verification.
  */
 export async function approveEscrowPayment(transactionId: string): Promise<ServiceResponse<null>> {
-  const admin = await requireAdmin();
-
   try {
+    const admin = await requireAdmin();
+
     await db.runTransaction(async (tx) => {
       const ref = db.collection('escrowTransactions').doc(transactionId);
       const snap = await tx.get(ref);
@@ -107,9 +107,9 @@ export async function approveEscrowPayment(transactionId: string): Promise<Servi
  * Force a refund to the buyer but deduct a standard logistics fee (120 BDT) for the seller.
  */
 export async function refundWithDeduction(transactionId: string): Promise<ServiceResponse<null>> {
-  const admin = await requireAdmin();
-
   try {
+    const admin = await requireAdmin();
+
     const { CommitmentService } = await import('@/services/finance/commitment-service');
     return await CommitmentService.refundWithLogisticsDeduction(transactionId, admin.user.id);
   } catch (e) {

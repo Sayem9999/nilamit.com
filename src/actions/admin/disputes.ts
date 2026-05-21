@@ -13,26 +13,26 @@ import { batchHydrateEscrowRows, type AdminEscrowDoc } from './shared';
  * UI: src/app/[locale]/admin/tabs/DisputesTab.tsx
  */
 export async function getAdminDisputes(): Promise<ServiceResponse<unknown[]>> {
-  await requireAdmin();
-
-  const txSnap = await db.collection('escrowTransactions')
-    .where('status', '==', 'DISPUTED')
-    .orderBy('createdAt', 'desc')
-    .limit(100)
-    .get();
-
-  const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
-
-  const [hydratedRows, disputeSnaps] = await Promise.all([
-    batchHydrateEscrowRows(txDocs),
-    txDocs.length > 0 
-      ? db.getAll(...txDocs.map(tx => db.collection('disputes').doc(tx.id)))
-      : Promise.resolve([])
-  ]);
-
-  const disputeMap = new Map(disputeSnaps.filter(s => s.exists).map(s => [s.id, s.data()]));
-
   try {
+    await requireAdmin();
+
+    const txSnap = await db.collection('escrowTransactions')
+      .where('status', '==', 'DISPUTED')
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .get();
+
+    const txDocs = txSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AdminEscrowDoc));
+
+    const [hydratedRows, disputeSnaps] = await Promise.all([
+      batchHydrateEscrowRows(txDocs),
+      txDocs.length > 0 
+        ? db.getAll(...txDocs.map(tx => db.collection('disputes').doc(tx.id)))
+        : Promise.resolve([])
+    ]);
+
+    const disputeMap = new Map(disputeSnaps.filter(s => s.exists).map(s => [s.id, s.data()]));
+
     const data = hydratedRows.map((row) => {
       const d = disputeMap.get(row.id);
       return {
@@ -51,9 +51,9 @@ export async function getAdminDisputes(): Promise<ServiceResponse<unknown[]>> {
  * Force-resolve a held/disputed escrow.
  */
 export async function resolveAdminDispute(transactionId: string, resolution: 'RELEASE' | 'REFUND' | 'HOLD'): Promise<ServiceResponse<null>> {
-  await requireAdmin();
-
   try {
+    await requireAdmin();
+
     const result = await db.runTransaction(async (tx) => {
       const txRef = db.collection('escrowTransactions').doc(transactionId);
       const txSnap = await tx.get(txRef);
@@ -118,15 +118,15 @@ export async function resolveAdminDispute(transactionId: string, resolution: 'RE
  * Read the buyer/seller coordination chat for an auction (admin view).
  */
 export async function getAdminCoordinationLog(auctionId: string): Promise<ServiceResponse<unknown[]>> {
-  await requireAdmin();
-
-  const messagesSnap = await db.collection('messages')
-    .where('conversationId', '==', auctionId)
-    .orderBy('createdAt', 'asc')
-    .limit(200)
-    .get();
-
   try {
+    await requireAdmin();
+
+    const messagesSnap = await db.collection('messages')
+      .where('conversationId', '==', auctionId)
+      .orderBy('createdAt', 'asc')
+      .limit(200)
+      .get();
+
     const data = messagesSnap.docs.map((d) => {
       const data = d.data();
       const createdAtRaw = data.createdAt as { toDate?: () => Date } | Date;

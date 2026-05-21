@@ -11,7 +11,10 @@ export const BulkAuctionSchema = z.object({
   reservePrice: z.coerce.number().positive().optional(),
   buyNowPrice: z.coerce.number().positive().optional(),
   location: z.string().optional().default("Dhaka"),
-  images: z.string().optional().transform(val => val ? val.split(',').map(s => s.trim()) : []),
+  images: z.union([
+    z.array(z.string()),
+    z.string().transform((val) => (val ? val.split(',').map((s) => s.trim()) : [])),
+  ]).optional().default([]),
 });
 
 export type BulkAuctionInput = z.infer<typeof BulkAuctionSchema>;

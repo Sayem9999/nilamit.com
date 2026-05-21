@@ -2,7 +2,19 @@
 
 ## Current Session (2026-05-21)
 ### What we did
-* **Next.js Production Build Validation**: Verified that Next.js Turbopack production builds compile successfully (`npm run build`) and pass the full unit test suite (68/68 passed).
+* **Server Action Exception Hardening**: Wrapped `requireAdmin()` check in try-catch blocks across all administrative server actions to guarantee unauthorized or database errors return structured `ServiceResponse` objects (e.g. `INTERNAL_ERROR`) instead of throwing raw 500 server errors to the client:
+  - `adminToggleVerification` in [moderation.ts](file:///c:/nilamit.com/src/actions/admin/moderation.ts)
+  - `resolveDispute` and `adminRefundEscrow` in [dispute.ts](file:///c:/nilamit.com/src/actions/dispute.ts)
+  - `updateLogisticsStatus` in [logistics.ts](file:///c:/nilamit.com/src/actions/logistics.ts)
+  - `getAdminDisputes`, `resolveAdminDispute`, and `getAdminCoordinationLog` in [disputes.ts](file:///c:/nilamit.com/src/actions/admin/disputes.ts)
+  - `getTreasuryAudit`, `getAdminActiveEscrows`, `getVerificationQueue`, `approveEscrowPayment`, and `refundWithDeduction` in [treasury.ts](file:///c:/nilamit.com/src/actions/admin/treasury.ts)
+  - `getAdminStats` in [stats.ts](file:///c:/nilamit.com/src/actions/admin/stats.ts)
+* **Bulk Upload Schema Validation**: Secured bulk upload handling in [bulk-upload.ts](file:///c:/nilamit.com/src/actions/bulk-upload.ts) by validating each parsed row against `BulkAuctionSchema` on the server before database inserts are batch-executed, preventing corrupted records from reaching Firestore.
+* **Schema Array/String Union Support**: Updated `BulkAuctionSchema` in [inventory-parser.ts](file:///c:/nilamit.com/src/lib/inventory-parser.ts) to support both raw CSV parsed strings and pre-parsed string array configurations for `images`.
+* **Category Filter State Reset**: Fixed the stale state page-scroll bug on the main browse auctions page ([page.tsx](file:///c:/nilamit.com/src/app/auctions/page.tsx)) by keying the `<LoadMore>` client pagination component instance on stringified filter configurations (`JSON.stringify(filters)`), ensuring pagination resets correctly when filtering parameters change.
+* **Expanded Security & Exception Tests**: Added 4 automated unit tests in [security-audit.test.ts](file:///c:/nilamit.com/tests/unit/security-audit.test.ts) verifying that the newly wrapped administrative Actions safely catch requireAdmin failure cases and return error `ServiceResponse` shapes.
+* **Linter Warnings Clean-up**: Discovered and removed unused `Clock` imports from `lucide-react` across three frontend/page components, leaving the lint suite 100% warning/error free.
+* **Next.js Production Build Validation**: Verified that Next.js Turbopack production builds compile successfully (`npm run build`) and pass the full unit test suite (72/72 passed).
 * **Server Action Barrel Exports Fix**: Resolved build-breaking compilation errors where the Next.js action compiler couldn't statically trace re-exports. Barrel file `src/actions/admin.ts` was updated to omit `'use server'` and use explicit named exports rather than wildcard `export *` statements.
 * **OpenGraph Font & Character Optimization**: Re-architected `/api/og` to attempt loading the Noto Sans Bengali font locally via `import.meta.url` with a robust CDN fallback chain to prevent Edge Runtime execution crashes. Corrected Unicode encoding corruption for critical UI symbols like the BDT currency marker (`৳`) and location pin (`📍`).
 * **Linting & Avatar Optimization**: Resolved Next.js static asset build-time warnings by adding targeted `/* eslint-disable-next-line @next/next/no-img-element */` annotations to user avatar tags in `Navbar.tsx`, `profile/page.tsx`, and `UsersTab.tsx`. Standard HTML `<img>` elements are preferred here to prevent runtime resizing overhead for dynamic, third-party user avatars.

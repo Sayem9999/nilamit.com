@@ -11,7 +11,6 @@ import { StickyBidBar } from "@/components/auction/StickyBidBar";
 import { ImageGallery } from "@/components/auction/ImageGallery";
 import Image from "next/image";
 import {
-  Clock,
   Eye,
   Shield,
   User,

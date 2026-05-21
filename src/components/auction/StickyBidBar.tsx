@@ -5,7 +5,7 @@ import { formatBDT } from '@/lib/format';
 import { TrendingUp, Gavel } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CountdownTimer } from './CountdownTimer';
-import { Clock } from 'lucide-react';
+
 
 interface StickyBidBarProps {
   currentPrice: number;

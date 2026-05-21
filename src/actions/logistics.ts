@@ -29,9 +29,8 @@ export async function updateLogisticsStatus(
   status: LogisticsStatus,
   note?: string,
 ): Promise<ServiceResponse<null>> {
-  const adminSession = await requireAdmin();
-
   try {
+    const adminSession = await requireAdmin();
     await _updateLogisticsStatus(auctionId, status, note);
 
     log.info('[Admin] Logistics status updated', {

@@ -10,9 +10,8 @@ import { AdminService } from '@/services/admin/admin-service';
  * Entrance point; delegates update and logging to AdminService.
  */
 export async function adminToggleVerification(userId: string, reason: string) {
-  const session = await requireAdmin();
-  
   try {
+    const session = await requireAdmin();
     const result = await AdminService.toggleUserVerification(session.user.id, userId, reason);
     revalidatePath('/admin');
     return successResponse(result);

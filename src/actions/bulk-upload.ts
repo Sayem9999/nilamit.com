@@ -9,7 +9,7 @@ import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/li
 const MAX_BULK_ROWS    = 1000;
 const BATCH_SIZE       = 499; // Firestore max is 500 ops per batch
 
-import { type BulkAuctionInput } from '@/lib/inventory-parser';
+import { BulkAuctionSchema, type BulkAuctionInput } from '@/lib/inventory-parser';
 
 export async function processBulkUpload(fileName: string, rows: BulkAuctionInput[]): Promise<ServiceResponse<{ processed: number, errors: string[] }>> {
   const session = await auth();
@@ -42,21 +42,27 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
 
   for (const [i, row] of rows.entries()) {
     try {
+      const parsed = BulkAuctionSchema.safeParse(row);
+      if (!parsed.success) {
+        throw new Error(parsed.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', '));
+      }
+      const validatedRow = parsed.data;
+
       const auctionId = newId();
       const rowNow    = new Date();
       const auctionRef = db.collection('auctions').doc(auctionId);
 
       batch.set(auctionRef, {
         id: auctionId,
-        title:            filterPII(row.title),
-        description:      filterPII(row.description),
-        category:         row.category,
-        startingPrice:    row.startingPrice,
-        currentPrice:     row.startingPrice,
-        minBidIncrement:  row.minIncrement || 100,
-        images:           row.images || [],
+        title:            filterPII(validatedRow.title),
+        description:      filterPII(validatedRow.description),
+        category:         validatedRow.category,
+        startingPrice:    validatedRow.startingPrice,
+        currentPrice:     validatedRow.startingPrice,
+        minBidIncrement:  validatedRow.minIncrement || 100,
+        images:           validatedRow.images || [],
         startTime:        rowNow,
-        endTime:          new Date(rowNow.getTime() + (row.durationHours || 24) * 3_600_000),
+        endTime:          new Date(rowNow.getTime() + (validatedRow.durationHours || 24) * 3_600_000),
         status:           'ACTIVE',
         sellerId:         session.user.id,
         sellerName:       userData.name || 'Verified Seller',
@@ -68,9 +74,9 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
         deliveryStatus:   'PENDING',
         trackingNumber:   null,
         bidCount:         0,
-        reservePrice:     row.reservePrice || null,
-        buyItNowPrice:    row.buyNowPrice || null,
-        location:         row.location || 'Dhaka',
+        reservePrice:     validatedRow.reservePrice || null,
+        buyItNowPrice:    validatedRow.buyNowPrice || null,
+        location:         validatedRow.location || 'Dhaka',
         createdAt:        rowNow,
         updatedAt:        rowNow,
       });

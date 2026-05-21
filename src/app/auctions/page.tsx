@@ -206,7 +206,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
                 ))}
               </div>
 
-              <LoadMore filters={filters} initialLastId={lastId} />
+              <LoadMore key={JSON.stringify(filters)} filters={filters} initialLastId={lastId} />
             </div>
           )}
         </section>

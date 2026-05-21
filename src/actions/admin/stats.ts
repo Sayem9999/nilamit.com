@@ -9,9 +9,8 @@ import { AdminService } from '@/services/admin/admin-service';
  * Entrance point via Server Action; logic delegated to AdminService.
  */
 export async function getAdminStats(): Promise<ServiceResponse<unknown>> {
-  await requireAdmin();
-
   try {
+    await requireAdmin();
     const stats = await AdminService.getDashboardStats();
     return successResponse(stats);
   } catch (e: unknown) {

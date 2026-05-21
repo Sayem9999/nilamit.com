@@ -53,13 +53,12 @@ export async function raiseDispute(transactionId: string, reason: string): Promi
 }
 
 export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYER', resolution: string): Promise<ServiceResponse<null>> {
-  const adminSession = await requireAdmin();
-
   const trimmedResolution = resolution?.trim();
   if (!trimmedResolution) return errorResponse(ErrorType.VALIDATION, 'Resolution notes are required.');
   if (trimmedResolution.length > 2000) return errorResponse(ErrorType.VALIDATION, 'Resolution notes too long.');
 
   try {
+    const adminSession = await requireAdmin();
     const { sellerId, buyerId } = await db.runTransaction(async (tx) => {
       const disputeRef = db.collection('disputes').doc(disputeId);
       const disputeSnap = await tx.get(disputeRef);
@@ -132,15 +131,14 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
  * seller defectCount, audit-logs with reason, and updates seller performance.
  */
 export async function adminRefundEscrow(transactionId: string, reason: string): Promise<ServiceResponse<null>> {
-  const adminSession = await requireAdmin();
-
   const trimmedReason = reason?.trim();
   if (!trimmedReason) return errorResponse(ErrorType.VALIDATION, 'A reason is required for admin refunds.');
   if (trimmedReason.length > 2000) return errorResponse(ErrorType.VALIDATION, 'Reason too long.');
 
-  let sellerId: string | null = null;
-
   try {
+    const adminSession = await requireAdmin();
+    let sellerId: string | null = null;
+
     sellerId = await db.runTransaction(async (tx) => {
       const escrowRef  = db.collection('escrowTransactions').doc(transactionId);
       const escrowSnap = await tx.get(escrowRef);

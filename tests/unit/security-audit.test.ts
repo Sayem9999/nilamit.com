@@ -24,6 +24,15 @@ vi.mock('@/lib/auth', () => ({
   auth: vi.fn(),
 }));
 
+vi.mock('@/lib/admin-guard', () => ({
+  requireAdmin: vi.fn(),
+}));
+
+import { requireAdmin } from '@/lib/admin-guard';
+import { adminToggleVerification } from '@/actions/admin/moderation';
+import { resolveDispute, adminRefundEscrow } from '@/actions/dispute';
+import { updateLogisticsStatus } from '@/actions/logistics';
+
 vi.mock('@/lib/ratelimit', () => ({
   apiLimiter: {
     limit: () => Promise.resolve({ success: true }),
@@ -242,3 +251,42 @@ describe('relistAuction Security', () => {
     expect(mockUpdate).toHaveBeenCalled();
   });
 });
+
+describe('Admin Exception Hardening', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('adminToggleVerification returns error response when requireAdmin throws', async () => {
+    vi.mocked(requireAdmin).mockRejectedValue(new Error('Unauthorized: Admin access required.'));
+    const res = await adminToggleVerification('user-1', 'Reason');
+    expect(res.success).toBe(false);
+    expect(res.error?.type).toBe('INTERNAL_ERROR');
+    expect(res.error?.message).toBe('Unauthorized: Admin access required.');
+  });
+
+  it('resolveDispute returns error response when requireAdmin throws', async () => {
+    vi.mocked(requireAdmin).mockRejectedValue(new Error('Unauthorized: Admin access required.'));
+    const res = await resolveDispute('dispute-1', 'SELLER', 'Resolution notes');
+    expect(res.success).toBe(false);
+    expect(res.error?.type).toBe('INTERNAL_ERROR');
+    expect(res.error?.message).toBe('Unauthorized: Admin access required.');
+  });
+
+  it('adminRefundEscrow returns error response when requireAdmin throws', async () => {
+    vi.mocked(requireAdmin).mockRejectedValue(new Error('Unauthorized: Admin access required.'));
+    const res = await adminRefundEscrow('transaction-1', 'Refund reason');
+    expect(res.success).toBe(false);
+    expect(res.error?.type).toBe('INTERNAL_ERROR');
+    expect(res.error?.message).toBe('Unauthorized: Admin access required.');
+  });
+
+  it('updateLogisticsStatus returns error response when requireAdmin throws', async () => {
+    vi.mocked(requireAdmin).mockRejectedValue(new Error('Unauthorized: Admin access required.'));
+    const res = await updateLogisticsStatus('auction-1', 'DELIVERED', 'Delivered to recipient');
+    expect(res.success).toBe(false);
+    expect(res.error?.type).toBe('INTERNAL_ERROR');
+    expect(res.error?.message).toBe('Unauthorized: Admin access required.');
+  });
+});
+
