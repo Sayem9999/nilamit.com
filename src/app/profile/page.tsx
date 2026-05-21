@@ -289,6 +289,7 @@ export default function ProfilePage() {
                 />
                 <div className="relative w-32 h-32 md:w-40 md:h-40 overflow-hidden rounded-full bg-gray-100 ring-4 ring-white shadow-inner">
                   {session.user?.image ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={session.user.image}
                       alt="Profile"

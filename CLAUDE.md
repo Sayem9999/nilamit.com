@@ -309,6 +309,6 @@ The local workspace has active, pre-authenticated, and fully authorized CLI tool
 ## Running Tests
 
 ```bash
-npx vitest run       # 68 unit tests
+npx vitest run       # 60 unit tests
 npx tsc --noEmit     # 0 type errors
 ```

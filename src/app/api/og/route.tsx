@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
-const fontURL = 'https://github.com/google/fonts/raw/main/ofl/notosansbengali/NotoSansBengali-Bold.ttf';
+const fontURL = 'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-bengali/files/noto-sans-bengali-bengali-700-normal.woff';
 const ALLOWED_IMAGE_HOSTS = [
   'utfs.io',
   'lh3.googleusercontent.com',
@@ -30,7 +30,20 @@ function isAllowedImageUrl(value: string): boolean {
 
 export async function GET(req: NextRequest) {
   try {
-    const fontData = await fetch(new URL(fontURL)).then((res) => res.arrayBuffer());
+    let fontData: ArrayBuffer;
+    try {
+      const localFontUrl = new URL('../../../../public/fonts/NotoSansBengali-Bold.woff', import.meta.url);
+      const fontRes = await fetch(localFontUrl);
+      if (!fontRes.ok) throw new Error('Local font load failed');
+      fontData = await fontRes.arrayBuffer();
+    } catch (e) {
+      console.warn('[OG] Local font load failed, falling back to CDN:', e);
+      const fontRes = await fetch(new URL(fontURL));
+      if (!fontRes.ok) {
+        throw new Error(`Failed to fetch font from CDN: ${fontRes.statusText}`);
+      }
+      fontData = await fontRes.arrayBuffer();
+    }
     
     const { searchParams } = new URL(req.url);
 
@@ -145,7 +158,7 @@ export async function GET(req: NextRequest) {
                     color: '#6366f1',
                   }}
                 >
-                  à§³ {Number(price).toLocaleString()}
+                  ৳ {Number(price).toLocaleString()}
                 </div>
                 <div
                   style={{
@@ -158,7 +171,7 @@ export async function GET(req: NextRequest) {
                     fontWeight: 500,
                   }}
                 >
-                  ðŸ“ {location}
+                  📍 {location}
                 </div>
               </div>
               
@@ -204,6 +217,7 @@ export async function GET(req: NextRequest) {
             name: 'Noto Sans Bengali',
             data: fontData,
             style: 'normal',
+            weight: 700,
           },
         ],
       }

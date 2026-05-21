@@ -1,6 +1,23 @@
 # Session Handoff & Architecture Memory
 
-## Current Session (2026-05-20)
+## Current Session (2026-05-21)
+### What we did
+* **Next.js Production Build Validation**: Verified that Next.js Turbopack production builds compile successfully (`npm run build`) and pass the full unit test suite (60/60 passed).
+* **Server Action Barrel Exports Fix**: Resolved build-breaking compilation errors where the Next.js action compiler couldn't statically trace re-exports. Barrel file `src/actions/admin.ts` was updated to omit `'use server'` and use explicit named exports rather than wildcard `export *` statements.
+* **OpenGraph Font & Character Optimization**: Re-architected `/api/og` to attempt loading the Noto Sans Bengali font locally via `import.meta.url` with a robust CDN fallback chain to prevent Edge Runtime execution crashes. Corrected Unicode encoding corruption for critical UI symbols like the BDT currency marker (`৳`) and location pin (`📍`).
+* **Linting & Avatar Optimization**: Resolved Next.js static asset build-time warnings by adding targeted `/* eslint-disable-next-line @next/next/no-img-element */` annotations to user avatar tags in `Navbar.tsx`, `profile/page.tsx`, and `UsersTab.tsx`. Standard HTML `<img>` elements are preferred here to prevent runtime resizing overhead for dynamic, third-party user avatars.
+
+### Next Steps / Blockers
+* **Blocker**: None.
+* **Next**: Deploy changes to production by pushing to the `main` branch.
+
+## Historical Session (2026-05-17)
+### What we did
+* **Absolute URL Sanitizer Bypass**: Resolved query string corruption where DOMPurify entity-encoded the `&` characters in absolute image/avatar URLs into `&amp;` (e.g. `&alt=media` -> `&amp;alt=media`). Patched the core `sanitize` utility to preserve absolute HTTP and HTTPS URLs exactly as-is, fully fixing both profile photo uploads and auction image loads system-wide.
+* **Google OAuth Profile Synchronization**: Fully integrated NextAuth's `account` and `profile` parameters inside the `jwt` callback to capture high-resolution Google avatars during OAuth logins/sign-ups, and asynchronously updated them into the Firestore `users` collection if the user does not have a custom profile picture set.
+* **Unit Tests and Lint-Clean Validation**: Expanded the test suite inside `tests/unit/sanitizer.test.ts` to verify absolute URL query parameter preservation. Successfully compiled (`npx tsc --noEmit`) and passed all **69 / 69 unit tests** with a clean **ESLint (exit code 0)** production build.
+
+## Historical Session (2026-05-20)
 ### What we did
 * **Next.js Production Build Barrel Export Fix**: Refactored the administrative actions barrel file `src/actions/admin.ts` to use explicit named re-exports and removed the `'use server'` directive from the top. Next.js SWC does not support wildcard re-exports inside a `'use server'` file when compiled for dynamic routes. Removing the directive and using explicit named re-exports fully resolved the production compilation failure.
 * **TypeScript Compiler Pass**: Safely removed the redundant `@ts-expect-error` directive inside `next.config.ts` because `outputFileTracingIncludes` is now natively supported by Next.js type declarations.

@@ -136,6 +136,7 @@ export const Navbar = memo(function Navbar() {
                     <button className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-100/50 transition-all group">
                       <div className="relative">
                         {session.user?.image ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
                           <img
                             src={session.user.image}
                             alt=""
