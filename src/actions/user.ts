@@ -9,6 +9,7 @@ import { headers } from 'next/headers';
 import { log } from '@/lib/logger';
 import { updateProfileSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { verifyAndLinkMFSAccount } from '@/actions/otp';
 
 export async function updateProfile(data: unknown): Promise<ServiceResponse<{ user: Pick<User, 'id' | 'name' | 'email' | 'image'> }>> {
   const session = await auth();
@@ -71,47 +72,12 @@ export async function getPublicProfile(userId: string): Promise<ServiceResponse<
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch profile');
   }
 }
-export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): Promise<ServiceResponse<null>> {
-  const session = await auth();
-  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
-
-  const normalizedNumber = number.startsWith('+88') ? number : `+88${number}`;
-  const mfsRegex = /^\+8801[3-9]\d{8}$/;
-  if (!mfsRegex.test(normalizedNumber)) {
-    return errorResponse(ErrorType.VALIDATION, 'Invalid Bangladeshi mobile number. Format: 01XXXXXXXXX or +8801XXXXXXXXX');
-  }
-  const validatedNumber = normalizedNumber;
-
-  const ip = (await headers()).get('x-forwarded-for') ?? '127.0.0.1';
-  const { success } = await apiLimiter.limit(`mfs_link_${session.user.id}_${ip}`);
-  if (!success) return errorResponse(ErrorType.RATE_LIMIT, 'Too many requests. Please wait.');
-
-  try {
-    const field = type === 'bkash' ? 'bkashNumber' : 'nagadNumber';
-    const userRef = db.collection('users').doc(session.user.id);
-
-    const result = await db.runTransaction(async (tx) => {
-      const query = db.collection('users').where(field, '==', validatedNumber).limit(1);
-      const existing = await tx.get(query);
-      if (!existing.empty && existing.docs[0].id !== session.user.id) {
-        return { error: 'CONFLICT' };
-      }
-      tx.update(userRef, {
-        [field]: validatedNumber,
-        updatedAt: new Date(),
-      });
-      return { success: true };
-    });
-
-    if (result.error === 'CONFLICT') {
-      return errorResponse(ErrorType.CONFLICT, 'This number is already linked to another account.');
-    }
-
-    return successResponse(null);
-  } catch (e) {
-    log.error(`[user] linkMFSAccount ${type}`, e);
-    return errorResponse(ErrorType.INTERNAL, `Failed to link ${type}.`);
-  }
+export async function linkMFSAccount(
+  type: 'bkash' | 'nagad',
+  number: string,
+  otp: string,
+): Promise<ServiceResponse<null>> {
+  return verifyAndLinkMFSAccount(type, number, otp);
 }
 
 import { unstable_cache } from 'next/cache';

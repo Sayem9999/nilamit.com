@@ -37,6 +37,15 @@ vi.mock('@/lib/ratelimit', () => ({
   apiLimiter: {
     limit: () => Promise.resolve({ success: true }),
   },
+  mfsOtpSendLimiter: {
+    limit: () => Promise.resolve({ success: true }),
+  },
+  mfsOtpVerifyLimiter: {
+    limit: () => Promise.resolve({ success: true }),
+  },
+  emailOtpSendLimiter: {
+    limit: () => Promise.resolve({ success: true }),
+  },
 }));
 
 vi.mock('@/services/auction/auction-service', () => ({
@@ -49,6 +58,20 @@ vi.mock('@/lib/db', () => {
   const makeDocRef = (collectionName: string, id: string) => ({
     path: `${collectionName}/${id}`,
     id,
+    get: vi.fn().mockImplementation(async () => {
+      if (collectionName === 'verificationTokens') {
+        return {
+          exists: true,
+          data: () => ({
+            token: '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', // hash of '123456'
+            expires: { toDate: () => new Date(Date.now() + 5 * 60 * 1000) },
+            phone: '+8801712345678',
+          }),
+        };
+      }
+      return { exists: false };
+    }),
+    delete: vi.fn().mockResolvedValue(undefined),
   });
 
   const mockCollection = (collectionName: string) => {
@@ -80,14 +103,14 @@ describe('linkMFSAccount Security', () => {
 
   it('rejects unauthenticated requests', async () => {
     vi.mocked(auth).mockResolvedValue(null);
-    const res = await linkMFSAccount('bkash', '01712345678');
+    const res = await linkMFSAccount('bkash', '01712345678', '123456');
     expect(res.success).toBe(false);
     expect(res.error?.message).toMatch(/Not authenticated/);
   });
 
   it('rejects invalid mobile numbers', async () => {
     vi.mocked(auth).mockResolvedValue({ user: { id: 'user-1' } } as any);
-    const res = await linkMFSAccount('bkash', '12345');
+    const res = await linkMFSAccount('bkash', '12345', '123456');
     expect(res.success).toBe(false);
     expect(res.error?.message).toMatch(/Invalid Bangladeshi mobile number/);
   });
@@ -107,15 +130,16 @@ describe('linkMFSAccount Security', () => {
       return callback(mockTx);
     });
 
-    const res = await linkMFSAccount('bkash', '01712345678');
+    const res = await linkMFSAccount('bkash', '01712345678', '123456');
     expect(res.success).toBe(false);
-    expect(res.error?.message).toMatch(/This number is already linked to another account/);
+    expect(res.error?.message).toMatch(/This phone number is already linked to another account/);
   });
 
   it('succeeds and updates profile when the MFS number is unique', async () => {
     vi.mocked(auth).mockResolvedValue({ user: { id: 'user-1' } } as any);
 
     const mockUpdate = vi.fn();
+    const mockDelete = vi.fn();
     vi.mocked(db.runTransaction).mockImplementation(async (callback) => {
       const mockTx = {
         get: vi.fn().mockResolvedValue({
@@ -123,11 +147,12 @@ describe('linkMFSAccount Security', () => {
           docs: [],
         }),
         update: mockUpdate,
+        delete: mockDelete,
       } as any;
       return callback(mockTx);
     });
 
-    const res = await linkMFSAccount('bkash', '01712345678');
+    const res = await linkMFSAccount('bkash', '01712345678', '123456');
     expect(res.success).toBe(true);
     expect(mockUpdate).toHaveBeenCalled();
   });

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
 import { logoutAction } from "@/actions/auth";
+import { sendMFSVerificationOTP } from "@/actions/otp";
 import { calculateLevelProgress } from "@/lib/gamification-engine";
 import {
   User,
@@ -109,6 +110,12 @@ export default function ProfilePage() {
   // MFS State
   const [bkash, setBkash] = useState("");
   const [nagad, setNagad] = useState("");
+  const [bkashOtp, setBkashOtp] = useState("");
+  const [nagadOtp, setNagadOtp] = useState("");
+  const [showBkashOtp, setShowBkashOtp] = useState(false);
+  const [showNagadOtp, setShowNagadOtp] = useState(false);
+  const [bkashFallbackEmail, setBkashFallbackEmail] = useState(false);
+  const [nagadFallbackEmail, setNagadFallbackEmail] = useState(false);
   
   const [isEmailVerifiedLocal, setIsEmailVerifiedLocal] = useState(false);
 
@@ -202,19 +209,62 @@ export default function ProfilePage() {
     });
   };
 
-  const handleLinkMFS = (type: 'bkash' | 'nagad', number: string) => {
+  const handleSendMFSOTP = (type: 'bkash' | 'nagad', number: string) => {
     setMsg("");
     startTransition(async () => {
-      const res = await linkMFSAccount(type, number);
-      if (res.success) {
-        const successMsg = type === 'bkash' ? t_prof("bkashSuccess") : t_prof("nagadSuccess");
-        setMsg(successMsg);
-        toast.success(successMsg);
-        await update();
-      } else {
-        const errMsg = res.error?.message || t_prof("errorGeneric");
-        setMsg(errMsg);
-        toast.error(errMsg);
+      try {
+        const res = await sendMFSVerificationOTP(type, number);
+        if (res.success) {
+          const isFallback = !!res.data?.fallbackEmail;
+          if (type === 'bkash') {
+            setShowBkashOtp(true);
+            setBkashFallbackEmail(isFallback);
+          } else {
+            setShowNagadOtp(true);
+            setNagadFallbackEmail(isFallback);
+          }
+          const infoMsg = isFallback
+            ? "We sent a secure code to your verified email address as an SMS fallback."
+            : "Verification code sent to your phone number.";
+          setMsg(infoMsg);
+          toast.success(infoMsg);
+        } else {
+          const errMsg = res.error?.message || "Failed to send verification code.";
+          setMsg(errMsg);
+          toast.error(errMsg);
+        }
+      } catch (err) {
+        console.error(`[MFS OTP] Send failed for ${type}:`, err);
+        toast.error("Failed to send verification code.");
+      }
+    });
+  };
+
+  const handleVerifyMFSOTP = (type: 'bkash' | 'nagad', number: string, otp: string) => {
+    setMsg("");
+    startTransition(async () => {
+      try {
+        const res = await linkMFSAccount(type, number, otp);
+        if (res.success) {
+          const successMsg = type === 'bkash' ? t_prof("bkashSuccess") : t_prof("nagadSuccess");
+          setMsg(successMsg);
+          toast.success(successMsg);
+          if (type === 'bkash') {
+            setShowBkashOtp(false);
+            setBkashOtp("");
+          } else {
+            setShowNagadOtp(false);
+            setNagadOtp("");
+          }
+          await update();
+        } else {
+          const errMsg = res.error?.message || t_prof("errorGeneric");
+          setMsg(errMsg);
+          toast.error(errMsg);
+        }
+      } catch (err) {
+        console.error(`[MFS Verify] Link failed for ${type}:`, err);
+        toast.error("Failed to link account.");
       }
     });
   };
@@ -613,27 +663,75 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <label htmlFor="profile-bkash" className="sr-only">bKash account number</label>
-                        <input
-                          id="profile-bkash"
-                          type="tel"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          maxLength={14}
-                          autoComplete="off"
-                          placeholder="01XXXXXXXXX"
-                          value={bkash}
-                          onChange={(e) => setBkash(e.target.value)}
-                          className="w-full bg-white border border-[#E2125D]/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#E2125D]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleLinkMFS('bkash', bkash)}
-                          disabled={isPending || bkash.length < 11}
-                          className="w-full bg-[#E2125D] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
-                        >
-                          {t_prof("linkAccount") || "Link Account"}
-                        </button>
+                        {!showBkashOtp ? (
+                          <>
+                            <label htmlFor="profile-bkash" className="sr-only">bKash account number</label>
+                            <input
+                              id="profile-bkash"
+                              type="tel"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={14}
+                              autoComplete="off"
+                              placeholder="01XXXXXXXXX"
+                              value={bkash}
+                              onChange={(e) => setBkash(e.target.value)}
+                              className="w-full bg-white border border-[#E2125D]/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#E2125D]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleSendMFSOTP('bkash', bkash)}
+                              disabled={isPending || bkash.length < 11}
+                              className="w-full bg-[#E2125D] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
+                            >
+                              Send Verification Code
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <div className="p-3 bg-pink-50/50 rounded-xl border border-pink-100 text-xs text-pink-750 font-medium">
+                              {bkashFallbackEmail ? (
+                                <p>We sent a secure verification code to your verified email address as an SMS fallback.</p>
+                              ) : (
+                                <p>We sent a secure code to <strong>{bkash}</strong> via SMS.</p>
+                              )}
+                            </div>
+                            <label htmlFor="profile-bkash-otp" className="sr-only">Verification Code</label>
+                            <input
+                              id="profile-bkash-otp"
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={6}
+                              autoComplete="one-time-code"
+                              placeholder="6-digit OTP"
+                              value={bkashOtp}
+                              onChange={(e) => setBkashOtp(e.target.value.replace(/\D/g, ''))}
+                              className="w-full bg-white border border-[#E2125D]/20 rounded-xl px-4 py-3 text-sm font-bold font-mono tracking-widest text-center outline-none focus:ring-2 focus:ring-[#E2125D]"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleVerifyMFSOTP('bkash', bkash, bkashOtp)}
+                                disabled={isPending || bkashOtp.length !== 6}
+                                className="flex-1 bg-[#E2125D] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
+                              >
+                                Verify & Link
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowBkashOtp(false);
+                                  setBkashOtp("");
+                                }}
+                                disabled={isPending}
+                                className="px-4 bg-gray-100 text-gray-700 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all disabled:opacity-30"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -671,27 +769,75 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <label htmlFor="profile-nagad" className="sr-only">Nagad account number</label>
-                        <input
-                          id="profile-nagad"
-                          type="tel"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          maxLength={14}
-                          autoComplete="off"
-                          placeholder="01XXXXXXXXX"
-                          value={nagad}
-                          onChange={(e) => setNagad(e.target.value)}
-                          className="w-full bg-white border border-[#F69320]/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#F69320]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleLinkMFS('nagad', nagad)}
-                          disabled={isPending || nagad.length < 11}
-                          className="w-full bg-[#F69320] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
-                        >
-                          {t_prof("linkAccount") || "Link Account"}
-                        </button>
+                        {!showNagadOtp ? (
+                          <>
+                            <label htmlFor="profile-nagad" className="sr-only">Nagad account number</label>
+                            <input
+                              id="profile-nagad"
+                              type="tel"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={14}
+                              autoComplete="off"
+                              placeholder="01XXXXXXXXX"
+                              value={nagad}
+                              onChange={(e) => setNagad(e.target.value)}
+                              className="w-full bg-white border border-[#F69320]/20 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-[#F69320]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleSendMFSOTP('nagad', nagad)}
+                              disabled={isPending || nagad.length < 11}
+                              className="w-full bg-[#F69320] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
+                            >
+                              Send Verification Code
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <div className="p-3 bg-orange-50/50 rounded-xl border border-orange-100 text-xs text-orange-705 font-medium">
+                              {nagadFallbackEmail ? (
+                                <p>We sent a secure verification code to your verified email address as an SMS fallback.</p>
+                              ) : (
+                                <p>We sent a secure code to <strong>{nagad}</strong> via SMS.</p>
+                              )}
+                            </div>
+                            <label htmlFor="profile-nagad-otp" className="sr-only">Verification Code</label>
+                            <input
+                              id="profile-nagad-otp"
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={6}
+                              autoComplete="one-time-code"
+                              placeholder="6-digit OTP"
+                              value={nagadOtp}
+                              onChange={(e) => setNagadOtp(e.target.value.replace(/\D/g, ''))}
+                              className="w-full bg-white border border-[#F69320]/20 rounded-xl px-4 py-3 text-sm font-bold font-mono tracking-widest text-center outline-none focus:ring-2 focus:ring-[#F69320]"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleVerifyMFSOTP('nagad', nagad, nagadOtp)}
+                                disabled={isPending || nagadOtp.length !== 6}
+                                className="flex-1 bg-[#F69320] text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all disabled:opacity-30"
+                              >
+                                Verify & Link
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowNagadOtp(false);
+                                  setNagadOtp("");
+                                }}
+                                disabled={isPending}
+                                className="px-4 bg-gray-100 text-gray-700 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all disabled:opacity-30"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

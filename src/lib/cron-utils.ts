@@ -37,7 +37,12 @@ export function verifyCronSecret(req: Request): Response | null {
   if (cronSecret) {
     const authHeader     = req.headers.get('authorization');
     const secretHeader   = req.headers.get('x-cron-secret');
-    const expectedBearer = `Bearer ${cronSecret}`;
+    const secrets        = cronSecret.split(',').map(s => s.trim()).filter(Boolean);
+
+    if (secrets.length === 0) {
+      log.error('[Cron] CRON_SECRET env var is set but resulted in no valid secrets');
+      return new Response('Service misconfigured', { status: 500 });
+    }
 
     const safeCompare = (a: string | null, b: string): boolean => {
       if (!a) return false;
@@ -51,7 +56,16 @@ export function verifyCronSecret(req: Request): Response | null {
       }
     };
 
-    if (!safeCompare(authHeader, expectedBearer) && !safeCompare(secretHeader, cronSecret)) {
+    let isAuthorized = false;
+    for (const secret of secrets) {
+      const expectedBearer = `Bearer ${secret}`;
+      if (safeCompare(authHeader, expectedBearer) || safeCompare(secretHeader, secret)) {
+        isAuthorized = true;
+        break;
+      }
+    }
+
+    if (!isAuthorized) {
       return new Response('Unauthorized', { status: 401 });
     }
   }
