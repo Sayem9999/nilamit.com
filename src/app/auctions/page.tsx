@@ -200,7 +200,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
             </div>
           ) : (
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
                 {initialAuctions.map((auction) => (
                   <AuctionCard key={auction.id} auction={auction} />
                 ))}

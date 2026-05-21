@@ -118,7 +118,7 @@ export function HomeContent({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {featuredAuctions.map((auction, idx) => (
                 <div key={auction.id} className="group transition-all duration-500 hover:-translate-y-2">
                   <AuctionCard 

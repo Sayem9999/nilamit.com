@@ -145,57 +145,58 @@ export const AuctionCard = memo(({
           )}
 
           {/* Badges */}
-          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-            <span className="glass px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-primary-700 border border-primary-100/50 shadow-sm flex items-center gap-1.5 backdrop-blur-md">
+          <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col gap-1 md:gap-2 z-10">
+            <span className="glass px-1.5 py-0.5 md:px-2.5 md:py-1 rounded md:rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-wider text-primary-700 border border-primary-100/50 shadow-sm flex items-center gap-1 md:gap-1.5 backdrop-blur-md">
               {tCat(auction.category || 'other')}
             </span>
             {auction.condition && (
-              <span className="glass px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-gray-700 border border-gray-200/50 shadow-sm flex items-center gap-1.5 backdrop-blur-md">
+              <span className="glass px-1.5 py-0.5 md:px-2.5 md:py-1 rounded md:rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-wider text-gray-700 border border-gray-200/50 shadow-sm flex items-center gap-1 md:gap-1.5 backdrop-blur-md">
                 <span aria-hidden="true">✨</span> {auction.condition}
               </span>
             )}
             {auction.isFeatured && (
-              <span className="bg-gradient-to-r from-primary-600 to-primary-400 text-white px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-lg backdrop-blur-md flex items-center gap-1.5 border border-white/20">
-                <Star className="w-3 h-3 fill-white" aria-hidden="true" /> Featured
+              <span className="bg-gradient-to-r from-primary-600 to-primary-400 text-white px-1.5 py-0.5 md:px-2.5 md:py-1 rounded md:rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-wider shadow-lg backdrop-blur-md flex items-center gap-1 md:gap-1.5 border border-white/20">
+                <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-white" aria-hidden="true" /> Featured
               </span>
             )}
             {auction.reservePrice && (auction.isReserveMet === false || auction.currentPrice < (auction.reservePrice || 0)) && (
-              <span className="bg-amber-500/90 text-white px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-md backdrop-blur-md flex items-center gap-1.5 border border-amber-400/50">
-                <Shield className="w-3 h-3" aria-hidden="true" /> Reserve not met
+              <span className="bg-amber-500/90 text-white px-1.5 py-0.5 md:px-2.5 md:py-1 rounded md:rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-wider shadow-md backdrop-blur-md flex items-center gap-1 md:gap-1.5 border border-amber-400/50">
+                <Shield className="w-2.5 h-2.5 md:w-3 md:h-3" aria-hidden="true" /> Reserve not met
               </span>
             )}
           </div>
 
           {/* Action Buttons (Watchlist & Admin Feature) */}
-          <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 flex items-center gap-1 md:gap-2">
             {isAdmin && (
               <button
                 type="button"
                 onClick={handleToggleFeatured}
                 disabled={isPending}
-                className={`w-10 h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all border ${
+                className={`w-8 h-8 md:w-10 md:h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all border ${
                   isFeatured 
                     ? "bg-amber-500 text-white border-amber-400 shadow-lg scale-110 animate-in zoom-in duration-300" 
                     : "bg-white/10 text-white/60 border-white/20 hover:bg-white/20 hover:scale-105"
                 }`}
                 aria-label={isFeatured ? "Unfeature auction" : "Feature auction"}
               >
-                <Star className={`w-4 h-4 ${isFeatured ? "fill-white" : ""}`} />
+                <Star className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isFeatured ? "fill-white" : ""}`} />
               </button>
             )}
 
             <WatchlistButton
               auctionId={auction.id}
               initialIsWatchlisted={isWatchlisted}
+              className="w-8 h-8 md:w-11 md:h-11 font-bold"
               hoverOnly
             />
           </div>
 
           {/* Location & Quick Meta */}
-          <div className="absolute bottom-4 inset-x-4 flex items-center justify-between gap-2 z-10">
-            <div className="glass px-2.5 py-1.5 rounded-xl text-[11px] flex items-center gap-2 backdrop-blur-md border border-white/20 shadow-lg">
-              <div className="flex items-center gap-1.5 text-gray-500 font-bold">
-                <MapPin className="w-3 h-3 text-primary-500" aria-hidden="true" />
+          <div className="absolute bottom-2 inset-x-2 md:bottom-4 md:inset-x-4 flex items-center justify-between gap-1.5 md:gap-2 z-10">
+            <div className="glass px-1.5 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl text-[9px] md:text-[11px] flex items-center gap-1 md:gap-2 backdrop-blur-md border border-white/20 shadow-lg">
+              <div className="flex items-center gap-1 md:gap-1.5 text-gray-500 font-bold">
+                <MapPin className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary-500" aria-hidden="true" />
                 {auction.location ? tLoc(auction.location) : tLoc("mirpur")}
               </div>
             </div>
@@ -203,21 +204,21 @@ export const AuctionCard = memo(({
         </div>
 
         {/* Content */}
-        <div className="p-4 flex flex-col flex-1">
-          <h3 className="font-heading font-bold text-gray-900 text-sm sm:text-base line-clamp-1 group-hover:text-primary-600 transition-colors duration-300 group-[.featured]:text-white group-[.featured]:group-hover:text-primary-400">
+        <div className="p-3 md:p-4 flex flex-col flex-1">
+          <h3 className="font-heading font-bold text-gray-900 text-xs sm:text-sm md:text-base line-clamp-1 group-hover:text-primary-600 transition-colors duration-300 group-[.featured]:text-white group-[.featured]:group-hover:text-primary-400">
             {auction.title}
           </h3>
 
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1 min-w-0">
             {/* Seller chip — uses router.push instead of a nested <Link> so we
                 don't produce invalid HTML inside the outer <Link>. */}
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/seller/${auction.sellerId}`); }}
               aria-label={`View ${auction.seller.name || t("seller")}'s profile`}
-              className="flex items-center gap-1.5 min-w-0 hover:text-primary-600 transition-colors relative z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded"
+              className="flex items-center gap-1 min-w-0 hover:text-primary-600 transition-colors relative z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded"
             >
-              <span className="text-xs font-semibold text-gray-600 truncate group-[.featured]:text-slate-400 group-[.featured]:group-hover:text-primary-400">
+              <span className="text-[10px] md:text-xs font-semibold text-gray-600 truncate group-[.featured]:text-slate-400 group-[.featured]:group-hover:text-primary-400">
                 {auction.seller.name || t("seller")}
               </span>
               <VerificationBadge
@@ -225,6 +226,7 @@ export const AuctionCard = memo(({
                 isVerifiedSeller={!!auction.seller.isVerifiedSeller}
                 size="sm"
                 showText={false}
+                className="scale-90 origin-left"
               />
             </button>
             {(auction.seller.rating ?? 0) > 0 && (
@@ -232,15 +234,15 @@ export const AuctionCard = memo(({
                 rating={auction.seller.rating ?? 0}
                 ratingCount={auction.seller.ratingCount ?? 0}
                 size="sm"
-                className="scale-95 origin-left"
+                className="scale-75 md:scale-95 origin-left"
               />
             )}
           </div>
 
           {/* Price & Bid Count */}
-          <div className="mt-3 pt-3 border-t border-gray-100/60 flex flex-col gap-0.5">
+          <div className="mt-2 pt-2 md:mt-3 md:pt-3 border-t border-gray-100/60 flex flex-col gap-0.5">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+              <span className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
                 {displayStatus === "ACTIVE"
                   ? t("currentPrice") 
                   : displayStatus === "SOLD" 
@@ -249,17 +251,17 @@ export const AuctionCard = memo(({
                       ? t("auctionEnded") // Or "Processing..."
                       : t("auctionEnded")}
               </span>
-              <span className="flex items-center gap-1 text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-md">
-                <Users className="w-3 h-3" aria-hidden="true" />
+              <span className="flex items-center gap-0.5 md:gap-1 text-[8px] md:text-[10px] font-bold text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded-md">
+                <Users className="w-2.5 h-2.5 md:w-3 md:h-3" aria-hidden="true" />
                 {bidCount} {t("bids")}
               </span>
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="price text-lg sm:text-xl text-gray-900 font-black tracking-tighter group-[.featured]:text-white">
+            <div className="flex flex-wrap items-baseline gap-1 md:gap-2 mt-1">
+              <span className="price text-sm sm:text-base md:text-lg lg:text-xl text-gray-900 font-black tracking-tighter group-[.featured]:text-white">
                 {formatBDT(currentPrice)}
               </span>
               {auction.currentPrice > auction.startingPrice && (
-                <span className="text-xs text-gray-400 line-through font-medium">
+                <span className="text-[10px] md:text-xs text-gray-400 line-through font-medium">
                   {formatBDT(auction.startingPrice)}
                 </span>
               )}
@@ -285,10 +287,11 @@ export const AuctionCard = memo(({
           )}
 
           {/* Footer Timer */}
-          <div className="mt-auto pt-3 flex items-center justify-between">
+          <div className="mt-auto pt-2 md:pt-3 flex items-center justify-between">
             <CountdownTimer
               endTime={auction.endTime}
               variant="card-footer"
+              className="py-1.5 px-2 text-[10px] md:py-2 md:px-3 md:text-xs rounded-xl md:rounded-2xl"
             />
           </div>
 

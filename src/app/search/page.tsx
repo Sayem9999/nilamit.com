@@ -200,7 +200,7 @@ export default async function SearchPage({
           <div className="flex-1">
             {auctions.length > 0 ? (
               <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
                   {auctions.map((auction: AuctionWithSeller) => (
                     <AuctionCard
                       key={auction.id}

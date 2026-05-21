@@ -73,7 +73,7 @@ export function WatchlistButton({
         isWatchlisted
           ? "bg-red-50 text-red-500 hover:bg-red-100"
           : "bg-white/80 text-gray-500 hover:text-red-500 hover:bg-white"
-      } ${hoverOnly ? "opacity-0 group-hover:opacity-100" : ""} ${className}`}
+      } ${hoverOnly ? "opacity-100 md:opacity-0 md:group-hover:opacity-100" : ""} ${className}`}
     >
       <Heart
         aria-hidden="true"
