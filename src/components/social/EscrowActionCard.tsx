@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { payEscrowAdvance, confirmItemReceived } from "@/actions/escrow";
-import { ShieldCheck, Clock, CreditCard, AlertTriangle, MessageSquare } from "lucide-react";
+import { ShieldCheck, Clock, CreditCard, AlertTriangle, MessageSquare, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
@@ -110,6 +110,35 @@ export function EscrowActionCard({
     setIsDisputeOpen(true);
   };
 
+  let activeStep = 0;
+  if (isPending) activeStep = 0;
+  else if (isVerifying) activeStep = 1;
+  else if (isHeld || isDisputed) activeStep = 2;
+  else if (isReleased || isRefunded) activeStep = 3;
+
+  const steps = [
+    {
+      title: t("status_PENDING"),
+      description: t("awaitingPayment"),
+      icon: CreditCard,
+    },
+    {
+      title: t("status_VERIFICATION_PENDING"),
+      description: t("verificationInProgress"),
+      icon: Clock,
+    },
+    {
+      title: isDisputed ? t("status_DISPUTED") : t("status_HELD"),
+      description: isDisputed ? t("underDispute") : t("paymentSecured"),
+      icon: isDisputed ? AlertTriangle : ShieldCheck,
+    },
+    {
+      title: t("status_RELEASED"),
+      description: t("fundsReleased"),
+      icon: Check,
+    },
+  ];
+
   return (
     <Card className="overflow-hidden border-border bg-card">
       <CardHeader className="bg-slate-50 dark:bg-slate-900/50 py-4 flex flex-row items-center justify-between border-b">
@@ -138,6 +167,75 @@ export function EscrowActionCard({
       </CardHeader>
 
       <CardContent className="p-6">
+        {/* Visual Escrow Progress Tracker */}
+        <div className="relative mb-8 p-6 bg-slate-50/50 dark:bg-slate-900/10 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+          {/* Desktop connecting progress lines */}
+          <div className="absolute top-[44px] left-[52px] right-[52px] h-[2px] bg-slate-200 dark:bg-slate-800 hidden md:block -z-10">
+            <div 
+              className="h-full bg-gradient-to-r from-emerald-500 to-primary-600 transition-all duration-500 ease-in-out" 
+              style={{ width: `${activeStep === 0 ? 0 : activeStep === 1 ? 33.33 : activeStep === 2 ? 66.66 : 100}%` }}
+            />
+          </div>
+
+          {/* Mobile connecting progress lines */}
+          <div className="absolute left-[44px] top-[44px] bottom-[44px] w-[2px] bg-slate-200 dark:bg-slate-800 md:hidden -z-10">
+            <div 
+              className="w-full bg-gradient-to-b from-emerald-500 to-primary-600 transition-all duration-500 ease-in-out" 
+              style={{ height: `${activeStep === 0 ? 0 : activeStep === 1 ? 33.33 : activeStep === 2 ? 66.66 : 100}%` }}
+            />
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-0">
+            {steps.map((step, index) => {
+              const isCompleted = index < activeStep;
+              const isActive = index === activeStep;
+              const Icon = step.icon;
+
+              let circleStyles = "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700";
+              let textStyles = "text-slate-400 dark:text-slate-500";
+              let shadowStyles = "";
+
+              if (isCompleted) {
+                circleStyles = "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-emerald-400";
+                textStyles = "text-emerald-600 dark:text-emerald-400 font-semibold";
+              } else if (isActive) {
+                if (isDisputed && index === 2) {
+                  circleStyles = "bg-gradient-to-br from-red-500 to-rose-600 text-white border-red-400 animate-pulse";
+                  textStyles = "text-red-600 dark:text-red-400 font-bold";
+                  shadowStyles = "ring-4 ring-red-100 dark:ring-red-950/50 shadow-[0_0_15px_rgba(239,68,68,0.5)]";
+                } else {
+                  circleStyles = "bg-gradient-to-br from-primary-500 to-primary-700 text-white border-primary-400";
+                  textStyles = "text-primary font-bold";
+                  shadowStyles = "ring-4 ring-blue-50 dark:ring-blue-950/50 shadow-[0_0_15px_rgba(37,99,235,0.4)]";
+                }
+              }
+
+              return (
+                <div key={index} className="flex md:flex-col items-center flex-1 text-left md:text-center gap-4 md:gap-2 z-10">
+                  {/* Step Circle */}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 ease-in-out ${circleStyles} ${shadowStyles}`}>
+                    {isCompleted ? (
+                      <Check className="w-5 h-5" />
+                    ) : (
+                      <Icon className={`w-5 h-5 ${isActive && !isDisputed ? "animate-pulse" : ""}`} />
+                    )}
+                  </div>
+
+                  {/* Step Label */}
+                  <div className="flex flex-col">
+                    <span className={`text-xs md:text-sm transition-colors duration-300 ${textStyles}`}>
+                      {step.title}
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                      {step.description}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex-1">
             <h4 className="font-semibold text-lg text-slate-800 dark:text-slate-100 mb-1 bn">
