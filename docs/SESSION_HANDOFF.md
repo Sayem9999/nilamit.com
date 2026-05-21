@@ -2,6 +2,12 @@
 
 ## Current Session (2026-05-21)
 ### What we did
+* **Option A: High-Density & Mobile-Optimized Grid**: Redesigned core listings layouts to present elegant dual columns (`grid-cols-2`) on mobile viewports across Browse, Search, LoadMore scroll loads, Seller Storefronts, and Homepage ForYou & Featured sections to double visual post density and match Shopee/Daraz layouts:
+  - **AuctionCard.tsx Resizing**: Scaled body padding (`p-3 md:p-4`), category/condition/featured badges (`text-[8px] md:text-[10px]`), absolute MapPin location overlay (`bottom-2 inset-x-2 text-[9px]`), and countdown timer (`py-1.5 px-2 text-[10px] md:py-2 px-3`) dynamically on mobile to prevent overlapping.
+  - **Price Text BDT Wrapping**: Added responsive flex-wrap configurations and scaled BDT pricing (`text-sm sm:text-base md:text-lg lg:text-xl`) to eliminate line wrapping.
+  - **Watchlist Button Touch Optimization**: Modified `WatchlistButton.tsx` opacity logic (`opacity-100 md:opacity-0 md:group-hover:opacity-100`) so touch-screen viewports display the heart icon by default, maintaining hover-only aesthetics strictly on desktops.
+  - **Hydration & Skeletons Alignment**: Replaced search loading skeleton grid classes with dynamic double-column mobile setups (`grid-cols-2`) to match hydrated grids, fully resolving visual layout shifting (CLS).
+* **Hybrid Search Query System Resolver**: Integrated an elegant Firestore-level Hybrid Search Resolver in `src/services/auction/modules/auction-reader.ts` that filters search queries (e.g. `"tv"`) case-insensitively, sorts results dynamically in-memory, and calculates page cursor limits prior to hydrating seller/watchlist details to preserve O(1) read costs. Created a comprehensive vitest suite (`tests/unit/search.test.ts`) covering pagination, metadata hydration, and fallbacks.
 * **Server Action Exception Hardening**: Wrapped `requireAdmin()` check in try-catch blocks across all administrative server actions to guarantee unauthorized or database errors return structured `ServiceResponse` objects (e.g. `INTERNAL_ERROR`) instead of throwing raw 500 server errors to the client:
   - `adminToggleVerification` in [moderation.ts](file:///c:/nilamit.com/src/actions/admin/moderation.ts)
   - `resolveDispute` and `adminRefundEscrow` in [dispute.ts](file:///c:/nilamit.com/src/actions/dispute.ts)
