@@ -50,7 +50,7 @@ export default async function SellerProfilePage({ params }: Props) {
   const [auctionsSnap, followingRes, followerCountRes] = await Promise.all([
     db.collection('auctions')
       .where('sellerId', '==', id)
-      .where('status', 'in', ['ACTIVE', 'SOLD'])
+      .where('status', 'in', ['ACTIVE', 'SOLD', 'AWAITING_PAYMENT', 'OFFER_PENDING'])
       .orderBy('createdAt', 'desc')
       .limit(20)
       .get(),

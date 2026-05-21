@@ -264,7 +264,7 @@ export const AuctionCard = memo(({
           </div>
 
           {/* Seller Protection View */}
-          {session?.user?.id === auction.sellerId && displayStatus === "SOLD" && auction.commissionEarned && (
+          {session?.user?.id === auction.sellerId && (displayStatus === "SOLD" || displayStatus === "AWAITING_PAYMENT" || displayStatus === "OFFER_PENDING") && auction.commissionEarned && (
             <div className="mt-4 p-4 bg-primary-50/30 rounded-2xl border border-primary-100/50 space-y-2">
               <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 <span>{t("finalPrice")}</span>

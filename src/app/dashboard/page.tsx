@@ -137,7 +137,7 @@ export default async function DashboardPage({
         listingStats.totalListings++;
         const status = (a.status as string) ?? "";
         if (status === "ACTIVE")    listingStats.active++;
-        if (status === "SOLD") {
+        if (status === "SOLD" || status === "AWAITING_PAYMENT" || status === "OFFER_PENDING") {
           listingStats.sold++;
           const gross      = Number(a.currentPrice ?? 0);
           const commission = Number((a as { commissionEarned?: number }).commissionEarned ?? 0);
@@ -153,7 +153,7 @@ export default async function DashboardPage({
       const matches = (status: string): boolean => {
         if (listingFilter === "all")       return true;
         if (listingFilter === "active")    return status === "ACTIVE";
-        if (listingFilter === "sold")      return status === "SOLD";
+        if (listingFilter === "sold")      return status === "SOLD" || status === "AWAITING_PAYMENT" || status === "OFFER_PENDING";
         if (listingFilter === "expired")   return status === "EXPIRED";
         if (listingFilter === "cancelled") return status === "CANCELLED";
         return true;
