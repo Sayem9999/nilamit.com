@@ -107,6 +107,90 @@ export class AuctionReader {
       if (category && category !== 'all') query = query.where('category', '==', category);
       if (filters.location && filters.location !== 'all') query = query.where('location', '==', filters.location);
 
+      const searchKeyword = filters.search?.trim();
+      if (searchKeyword) {
+        // Hybrid Search Resolver: Fetch up to 1000 items matching other filters
+        const baseAuctionsSnap = await query.limit(1000).get();
+        const baseAuctions = snapDocs<Auction>(baseAuctionsSnap);
+
+        const searchLower = searchKeyword.toLowerCase();
+        const filteredDocs = baseAuctions.filter(a => {
+          const titleMatch = a.title?.toLowerCase().includes(searchLower);
+          const descMatch = a.description?.toLowerCase().includes(searchLower);
+          return titleMatch || descMatch;
+        });
+
+        // In-memory sorting
+        const ALLOWED_SORT_FIELDS = ['currentPrice', 'endTime', 'bidCount', 'createdAt', 'bids'];
+        const orderField = (sortBy && ALLOWED_SORT_FIELDS.includes(sortBy)) 
+          ? (sortBy === 'bids' ? 'bidCount' : sortBy) 
+          : 'endTime';
+
+        filteredDocs.sort((a, b) => {
+          let valA = a[orderField as keyof Auction];
+          let valB = b[orderField as keyof Auction];
+
+          if (valA instanceof Date) valA = valA.getTime();
+          if (valB instanceof Date) valB = valB.getTime();
+
+          if (valA === undefined || valA === null) return 1;
+          if (valB === undefined || valB === null) return -1;
+
+          if (valA < valB) return sortOrder === 'desc' ? 1 : -1;
+          if (valA > valB) return sortOrder === 'desc' ? -1 : 1;
+          return 0;
+        });
+
+        const total = filteredDocs.length;
+
+        // In-memory pagination
+        let startIndex = 0;
+        if (lastId) {
+          const prevIndex = filteredDocs.findIndex(a => a.id === lastId);
+          if (prevIndex !== -1) {
+            startIndex = prevIndex + 1;
+          }
+        }
+
+        const pagedDocs = filteredDocs.slice(startIndex, startIndex + limit);
+
+        const sellerIds = [...new Set(pagedDocs.map(a => a.sellerId))];
+        const sellerSnaps = sellerIds.length > 0 ? await db.getAll(...sellerIds.map(id => db.collection('users').doc(id))) : [];
+        const sellerMap = new Map(sellerSnaps.map(s => [s.id, toSellerPublic(s.id, s.data())]));
+
+        let watchlistSet = new Set<string>();
+        if (viewerId && pagedDocs.length > 0) {
+          const auctionIds = pagedDocs.map(a => a.id);
+          const watchlistSnap = await db.collection('users').doc(viewerId)
+            .collection('watchlist')
+            .where('auctionId', 'in', auctionIds)
+            .get();
+          watchlistSet = new Set(watchlistSnap.docs.map(d => d.data().auctionId));
+        }
+
+        const auctions = pagedDocs.map(a => {
+          const rawEnd = a.endTime as unknown as { toDate?: () => Date } | Date;
+          const endTime = rawEnd instanceof Date ? rawEnd : rawEnd?.toDate?.() ?? new Date(rawEnd as unknown as string);
+          
+          const { proxyMaxBid: _pmb, proxyBidderId: _pbi, ...safeData } = a as unknown as Record<string, unknown>;
+          void _pmb; void _pbi;
+          
+          return {
+            ...safeData,
+            seller: sellerMap.get(a.sellerId)!,
+            endTime,
+            isWatchlisted: watchlistSet.has(a.id)
+          };
+        }) as AuctionWithSeller[];
+
+        return successResponse({
+          auctions,
+          total,
+          lastId: pagedDocs.length > 0 ? pagedDocs[pagedDocs.length - 1].id : null,
+        });
+      }
+
+      // Standard Firestore-level pagination when no search filter is specified
       const ALLOWED_SORT_FIELDS = ['currentPrice', 'endTime', 'bidCount', 'createdAt', 'bids'];
       const orderField = (sortBy && ALLOWED_SORT_FIELDS.includes(sortBy)) 
         ? (sortBy === 'bids' ? 'bidCount' : sortBy) 
