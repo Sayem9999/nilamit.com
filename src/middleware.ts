@@ -53,6 +53,7 @@ export default auth((req) => {
     base-uri 'self';
     form-action 'self' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://*.firebaseapp.com;
     frame-ancestors 'none';
+    worker-src 'self' blob:;
     upgrade-insecure-requests;
   `.replace(/\s{2,}/g, ' ').trim();
 

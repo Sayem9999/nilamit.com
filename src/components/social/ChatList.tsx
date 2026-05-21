@@ -74,7 +74,7 @@ export default function ChatList({ conversations }: ChatListProps) {
             >
               <div className="w-14 h-14 rounded-2xl bg-gray-100 relative overflow-hidden flex-shrink-0">
                 {convo.auction?.images?.[0] ? (
-                  <Image src={convo.auction.images[0]} alt={convo.auction.title} fill className="object-cover" />
+                  <Image src={convo.auction.images[0]} alt={convo.auction.title} fill sizes="56px" className="object-cover" />
                 ) : (
                   <ShoppingBag className="w-6 h-6 text-gray-300 m-auto mt-4" />
                 )}
@@ -95,7 +95,7 @@ export default function ChatList({ conversations }: ChatListProps) {
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-4 h-4 rounded-full bg-gray-200 relative overflow-hidden">
                     {recipient?.image ? (
-                        <Image src={recipient.image} alt={recipient.name || ""} fill className="object-cover" />
+                        <Image src={recipient.image} alt={recipient.name || ""} fill sizes="16px" className="object-cover" />
                     ) : (
                         <User className="w-3 h-3 text-gray-400 m-auto" />
                     )}

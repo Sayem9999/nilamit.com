@@ -27,6 +27,7 @@ export default async function SocialDashboardPage() {
                     src={reputation.image}
                     alt={reputation.name || ""}
                     fill
+                    sizes="96px"
                     className="rounded-full object-cover"
                   />
                 ) : (

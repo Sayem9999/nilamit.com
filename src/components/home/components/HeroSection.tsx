@@ -159,6 +159,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                       src={`https://i.pravatar.cc/100?u=${i + 10}`}
                       alt="User"
                       fill
+                      sizes="40px"
                       className="object-cover"
                     />
                   </div>
@@ -209,6 +210,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                   alt="Auction Item"
                   fill
                   priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 {!systemConfig?.heroImage && (

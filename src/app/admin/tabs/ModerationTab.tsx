@@ -270,6 +270,7 @@ export function ModerationTab() {
                         src={report.auction.images[0]}
                         alt="Auction Preview"
                         fill
+                        sizes="192px"
                         className="object-cover"
                       />
                     ) : (
@@ -414,6 +415,7 @@ export function ModerationTab() {
                         src={auction.images[0]}
                         alt="Auction Preview"
                         fill
+                        sizes="128px"
                         className="object-cover"
                       />
                     ) : (

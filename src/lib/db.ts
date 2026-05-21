@@ -1,20 +1,11 @@
 import 'server-only';
-import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { getAdminApp } from './firebase-admin';
-
-let _db: FirebaseFirestore.Firestore | null = null;
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { adminFirestore } from './firebase-admin';
 
 export const db = new Proxy({} as unknown as FirebaseFirestore.Firestore, {
   get(target, prop) {
-    if (!_db) {
-      _db = getFirestore(getAdminApp());
-      try {
-        _db.settings({ ignoreUndefinedProperties: true });
-      } catch (err) {
-        console.warn('[Firestore Init] settings() ignoreUndefinedProperties could not be applied: ', err);
-      }
-    }
-    return Reflect.get(_db, prop);
+    const val = Reflect.get(adminFirestore.instance, prop);
+    return typeof val === 'function' ? val.bind(adminFirestore.instance) : val;
   }
 });
 export { FieldValue, Timestamp };

@@ -253,7 +253,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-12 h-12 relative rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                         {auction.images?.[0] ? (
-                          <Image src={auction.images[0]} alt={auction.title} fill className="object-cover" />
+                          <Image src={auction.images[0]} alt={auction.title} fill sizes="48px" className="object-cover" />
                         ) : (
                           <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
                             <ImageIcon className="w-5 h-5" />
@@ -354,7 +354,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-10 h-10 relative rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
                           {auction.images?.[0] ? (
-                            <Image src={auction.images[0]} alt={auction.title} fill className="object-cover" />
+                            <Image src={auction.images[0]} alt={auction.title} fill sizes="40px" className="object-cover" />
                           ) : (
                             <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300">
                               <ImageIcon className="w-4 h-4" />
