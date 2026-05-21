@@ -1,0 +1,4 @@
+# Firebase Functions build and dependency outputs
+node_modules/
+lib/
+*.tsbuildinfo

@@ -4,7 +4,7 @@ import { db, snapDocs, docData } from '@/lib/db';
 import { Auction, SystemConfig } from '@/types';
 import { requireAdmin } from '@/lib/admin-guard';
 import { AdminService } from '@/services/admin/admin-service';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 
@@ -20,17 +20,20 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   updatedAt: new Date(),
 } as SystemConfig;
 
-export async function getSystemConfig(): Promise<ServiceResponse<SystemConfig>> {
-  try {
-    await requireAdmin();
-  } catch {
-    return errorResponse(ErrorType.FORBIDDEN, 'Admin access required');
-  }
-
-  try {
+const getCachedSystemConfig = unstable_cache(
+  async () => {
     const snap = await db.collection('systemConfig').doc('default').get();
     const data = docData<SystemConfig>(snap);
-    return successResponse(data ?? DEFAULT_SYSTEM_CONFIG);
+    return data ?? DEFAULT_SYSTEM_CONFIG;
+  },
+  ['system-config-global'],
+  { revalidate: 3600, tags: ['config'] }
+);
+
+export async function getSystemConfig(): Promise<ServiceResponse<SystemConfig>> {
+  try {
+    const config = await getCachedSystemConfig();
+    return successResponse(config);
   } catch (e) {
     log.error('[admin-content] getSystemConfig failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch system config');
@@ -48,6 +51,7 @@ export async function updateSystemConfig(data: {
     await db.collection('systemConfig').doc('default').set(
       { ...data, id: 'default', updatedAt: new Date() }, { merge: true }
     );
+    revalidateTag('config', { expire: 0 });
     revalidatePath('/');
     revalidatePath('/admin');
     return successResponse(null);

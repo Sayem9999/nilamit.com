@@ -40,15 +40,27 @@ function getClientApp(): FirebaseApp {
   
   const app = initializeApp(firebaseConfig);
   
-  // Initialize App Check (reCAPTCHA v3) if in browser and key is provided
-  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
-    try {
-      initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
-        isTokenAutoRefreshEnabled: true
-      });
-    } catch (err) {
-      log.warn('[Firebase Client] App Check initialization failed', { error: err });
+  // Initialize App Check (reCAPTCHA v3) if in browser
+  if (typeof window !== 'undefined') {
+    const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    const isDev = process.env.NODE_ENV === 'development';
+    
+    if (siteKey || isDev) {
+      try {
+        if (isDev) {
+          // Enable debug token in development environment
+          const win = window as typeof window & { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string };
+          win.FIREBASE_APPCHECK_DEBUG_TOKEN = 
+            process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_DEBUG_TOKEN || true;
+        }
+        
+        initializeAppCheck(app, {
+          provider: new ReCaptchaV3Provider(siteKey || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'),
+          isTokenAutoRefreshEnabled: true
+        });
+      } catch (err) {
+        log.warn('[Firebase Client] App Check initialization failed', { error: err });
+      }
     }
   }
   
