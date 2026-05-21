@@ -26,6 +26,11 @@
 * **Expanded Security Unit Test Suite**: Created `tests/unit/security-audit.test.ts` to verify proxy bidding fallbacks, atomic uniqueness checks for MFS accounts, and concurrency safeguards for auction relisting.
 * **Firebase Deployments**: Committed and pushed changes to the `main` repository branch, triggering Husky auto-deployment of Firestore rules & indexes to `nilamit-52073` and Next.js auto-rollout via App Hosting. The build completed compilation on Firebase App Hosting successfully in 4m40s with `SUCCESS` status.
 * **E2E Smoke Testing & Firestore Index Fix**: Ran Playwright E2E smoke tests locally. Identified a missing Firestore composite index on the `bids` collection (`auctionId` ASCENDING, `amount` DESCENDING) which was causing page query crashes during bidding history fetches. Added the index to `firestore.indexes.json` and deployed it live via the Firebase CLI (`firebase deploy --only firestore:indexes`). Re-ran the tests and validated that all E2E critical paths (signup, login, listing, bidding, sales, escrow payment, logistics) pass successfully on Chromium (`2 passed`).
+* **Ended Auctions Dashboard & Profile Mapping**: Fixed the issue where ended transitional statuses (`AWAITING_PAYMENT`, `OFFER_PENDING`) appeared in the "ALL" tab of the seller dashboard but showed `0` counts and were hidden on specific tabs:
+  - **Seller Dashboard Statistics & Filters** ([page.tsx](file:///c:/nilamit.com/src/app/dashboard/page.tsx)): Integrated `AWAITING_PAYMENT` and `OFFER_PENDING` statuses under the `sold` tab calculations, stats aggregation (gross sales, net earnings, platform commission), and status matches filter check.
+  - **Seller Storefront** ([page.tsx](file:///c:/nilamit.com/src/app/seller/[id]/page.tsx)): Updated the Firestore query allowed statuses to fetch transitional ended listings alongside active and finalized sold items.
+  - **Earning Visibility** ([AuctionCard.tsx](file:///c:/nilamit.com/src/components/auction/AuctionCard.tsx)): Extended the Net Earnings / Seller Protection card visibility checks to include listings under `AWAITING_PAYMENT` and `OFFER_PENDING` states.
+  - **E2E Smoke Test Verification**: Confirmed that Playwright E2E smoke tests (`2 passed`) and Vitest unit tests (`72 passed`) execute cleanly with local dev server.
 
 ### Next Steps / Blockers
 * **Blocker**: None.
