@@ -71,7 +71,6 @@ export async function getPublicProfile(userId: string): Promise<ServiceResponse<
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch profile');
   }
 }
-
 export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): Promise<ServiceResponse<null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
@@ -89,15 +88,25 @@ export async function linkMFSAccount(type: 'bkash' | 'nagad', number: string): P
 
   try {
     const field = type === 'bkash' ? 'bkashNumber' : 'nagadNumber';
+    const userRef = db.collection('users').doc(session.user.id);
 
-    const existing = await db.collection('users').where(field, '==', validatedNumber).limit(1).get();
-    if (!existing.empty && existing.docs[0].id !== session.user.id) {
+    const result = await db.runTransaction(async (tx) => {
+      const query = db.collection('users').where(field, '==', validatedNumber).limit(1);
+      const existing = await tx.get(query);
+      if (!existing.empty && existing.docs[0].id !== session.user.id) {
+        return { error: 'CONFLICT' };
+      }
+      tx.update(userRef, {
+        [field]: validatedNumber,
+        updatedAt: new Date(),
+      });
+      return { success: true };
+    });
+
+    if (result.error === 'CONFLICT') {
       return errorResponse(ErrorType.CONFLICT, 'This number is already linked to another account.');
     }
 
-    await db.collection('users').doc(session.user.id).update({
-      [field]: validatedNumber, updatedAt: new Date(),
-    });
     return successResponse(null);
   } catch (e) {
     log.error(`[user] linkMFSAccount ${type}`, e);

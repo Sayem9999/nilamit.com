@@ -256,22 +256,34 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
   }
 
   try {
-    const userSnap = await db.collection('users').doc(userId).get();
-    const userData = userSnap.data();
-    const isEmailVerified = userData?.emailVerified != null;
-    if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
-    if (userData?.isBanned)         return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
+    const orig = await db.runTransaction(async (tx) => {
+      const userRef = db.collection('users').doc(userId);
+      const origRef = db.collection('auctions').doc(auctionId);
 
-    const origSnap = await db.collection('auctions').doc(auctionId).get();
-    if (!origSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
-    const orig = origSnap.data()!;
+      const [userSnap, origSnap] = await Promise.all([
+        tx.get(userRef),
+        tx.get(origRef),
+      ]);
 
-    if (orig.sellerId !== userId) {
-      return errorResponse(ErrorType.FORBIDDEN, 'Only the seller can relist this auction.');
-    }
-    if (!RELISTABLE_STATES.has(orig.status)) {
-      return errorResponse(ErrorType.CONFLICT, `Only EXPIRED or CANCELLED auctions can be relisted (current: ${orig.status}).`);
-    }
+      const userData = userSnap.data();
+      const isEmailVerified = userData?.emailVerified != null;
+      if (!isEmailVerified) throw new Error('VERIFICATION_REQUIRED');
+      if (userData?.isBanned) throw new Error('BANNED');
+
+      if (!origSnap.exists) throw new Error('NOT_FOUND');
+      const origData = origSnap.data()!;
+
+      if (origData.sellerId !== userId) throw new Error('UNAUTHORIZED');
+      if (!RELISTABLE_STATES.has(origData.status)) throw new Error('NOT_RELISTABLE');
+      if (origData.relisted) throw new Error('ALREADY_RELISTED');
+
+      tx.update(origRef, {
+        relisted: true,
+        updatedAt: new Date(),
+      });
+
+      return origData;
+    });
 
     const origStart = orig.startTime?.toDate ? orig.startTime.toDate() : new Date(orig.startTime);
     const origEnd   = orig.endTime?.toDate   ? orig.endTime.toDate()   : new Date(orig.endTime);
@@ -298,6 +310,11 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
     }, userId);
 
     if (!response.success || !response.data) {
+      // Revert the relisted flag if creation failed to allow another attempt
+      await db.collection('auctions').doc(auctionId).update({
+        relisted: false,
+        updatedAt: new Date(),
+      });
       return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to relist.');
     }
 
@@ -305,6 +322,14 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
     revalidatePath('/dashboard');
     return successResponse({ auctionId: response.data.id });
   } catch (error) {
+    const code = error instanceof Error ? error.message : 'INTERNAL';
+    if (code === 'VERIFICATION_REQUIRED') return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
+    if (code === 'BANNED') return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
+    if (code === 'NOT_FOUND') return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
+    if (code === 'UNAUTHORIZED') return errorResponse(ErrorType.FORBIDDEN, 'Only the seller can relist this auction.');
+    if (code === 'NOT_RELISTABLE') return errorResponse(ErrorType.CONFLICT, 'Only EXPIRED or CANCELLED auctions can be relisted.');
+    if (code === 'ALREADY_RELISTED') return errorResponse(ErrorType.CONFLICT, 'This auction has already been relisted.');
+
     log.error('[Action] relistAuction failed', error, { auctionId, userId });
     return errorResponse(ErrorType.INTERNAL, 'Failed to relist auction.');
   }

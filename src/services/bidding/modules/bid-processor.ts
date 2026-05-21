@@ -27,7 +27,7 @@ export class BidProcessor {
         }
 
         const now = new Date();
-        const existingProxy = auction.proxyMaxBid ?? 0;
+        const existingProxy = auction.proxyMaxBid || auction.currentPrice || 0;
         const existingProxyBidder = auction.proxyBidderId ?? null;
 
         let newCurrentPrice = auction.currentPrice;

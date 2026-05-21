@@ -43,17 +43,15 @@ export class EscrowService {
       });
 
       // Batch disputes
-      const disputeSnaps = await Promise.all(escrowDocs.map(e => 
-        db.collection('disputes').where('transactionId', '==', e.id).limit(1).get()
-      ));
+      const disputeSnaps = escrowDocs.length > 0
+        ? await db.getAll(...escrowDocs.map(e => db.collection('disputes').doc(e.id)))
+        : [];
       const disputeMap = new Map<string, Dispute | null>();
-      disputeSnaps.forEach((s, i) => {
-        const txId = escrowDocs[i].id;
-        if (!s.empty) {
-          const d = s.docs[0];
-          disputeMap.set(txId, { ...d.data(), id: d.id } as Dispute);
+      disputeSnaps.forEach((s) => {
+        if (s.exists) {
+          disputeMap.set(s.id, { ...s.data(), id: s.id } as Dispute);
         } else {
-          disputeMap.set(txId, null);
+          disputeMap.set(s.id, null);
         }
       });
 

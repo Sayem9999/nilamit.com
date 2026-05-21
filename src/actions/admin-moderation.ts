@@ -36,8 +36,8 @@ export async function getAdminReports(status?: string, page = 1, limit = 20): Pr
     const reporterIds = [...new Set(reportDocs.map(r => r.reporterId))];
 
     const [aSnaps, uSnaps] = await Promise.all([
-      Promise.all(auctionIds.map(id => db.collection('auctions').doc(id).get())),
-      Promise.all(reporterIds.map(id => db.collection('users').doc(id).get()))
+      auctionIds.length > 0 ? db.getAll(...auctionIds.map(id => db.collection('auctions').doc(id))) : Promise.resolve([]),
+      reporterIds.length > 0 ? db.getAll(...reporterIds.map(id => db.collection('users').doc(id))) : Promise.resolve([])
     ]);
 
     const aMap = new Map(aSnaps.map(s => [s.id, s.data() || {}]));
@@ -45,7 +45,7 @@ export async function getAdminReports(status?: string, page = 1, limit = 20): Pr
 
     // 2. Fetch Sellers (second-degree batch)
     const sellerIds = [...new Set(aSnaps.map(s => s.data()?.sellerId).filter(Boolean))];
-    const sSnaps    = await Promise.all(sellerIds.map(id => db.collection('users').doc(id).get()));
+    const sSnaps    = sellerIds.length > 0 ? await db.getAll(...sellerIds.map(id => db.collection('users').doc(id))) : [];
     const sMap      = new Map(sSnaps.map(s => [s.id, s.data() || {}]));
 
     const reports = reportDocs.map(r => {
@@ -79,7 +79,7 @@ export async function getAdminReports(status?: string, page = 1, limit = 20): Pr
 
 async function getUserMap(userIds: string[]) {
   const uniqueIds = [...new Set(userIds.filter(Boolean))];
-  const snaps = await Promise.all(uniqueIds.map((userId) => db.collection('users').doc(userId).get()));
+  const snaps = uniqueIds.length > 0 ? await db.getAll(...uniqueIds.map((userId) => db.collection('users').doc(userId))) : [];
   return new Map(
     snaps
       .filter((snap) => snap.exists)
