@@ -59,6 +59,7 @@ export const AuctionCard = memo(({
   const canRelist = isOwner && (displayStatus === "EXPIRED" || displayStatus === "CANCELLED");
 
   const [isFeatured, setIsFeatured] = useState(!!auction.isFeatured);
+  const [imageError, setImageError] = useState(false);
 
   const handleCancel = () => {
     setShowCancelConfirm(false);
@@ -110,10 +111,10 @@ export const AuctionCard = memo(({
   const cardLabel = `${auction.title} — ${formatBDT(currentPrice)}, by ${sellerName}, ${bidCount} bid${bidCount === 1 ? "" : "s"}`;
 
   return (
-    <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-[2rem] ${className}`} aria-label={cardLabel}>
-      <div className="bg-white rounded-[2rem] border border-gray-100/60 group-hover:border-primary-500/30 shadow-premium hover:shadow-[0_20px_45px_rgba(13,110,253,0.08)] transition-all duration-500 overflow-hidden group-hover:-translate-y-1.5 flex flex-col h-full group-[.featured]:bg-white/5 group-[.featured]:border-white/10 group-[.featured]:shadow-none group-[.featured]:hover:bg-white/10 group-[.featured]:hover:border-white/20">
+    <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl ${className}`} aria-label={cardLabel}>
+      <div className="bg-white rounded-2xl border border-gray-100/60 group-hover:border-primary-500/30 shadow-premium hover:shadow-[0_20px_45px_rgba(13,110,253,0.08)] transition-all duration-500 overflow-hidden group-hover:-translate-y-1.5 flex flex-col h-full group-[.featured]:bg-white/5 group-[.featured]:border-white/10 group-[.featured]:shadow-none group-[.featured]:hover:bg-white/10 group-[.featured]:hover:border-white/20">
         {/* Image Area */}
-        <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
+        <div className="relative aspect-[16/10] bg-gray-50 overflow-hidden">
           {lightweightMode ? (
             <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center gap-2 p-4 text-center">
               <Zap className="w-8 h-8 text-amber-500 animate-pulse" aria-hidden="true" />
@@ -123,7 +124,7 @@ export const AuctionCard = memo(({
             </div>
           ) : (
             <div className="relative w-full h-full">
-              {auction.images?.[0] ? (
+              {auction.images?.[0] && !imageError ? (
                 <Image
                   src={auction.images[0].includes('alt=media') ? auction.images[0].replace(/(\.[\w\d_-]+)(\?alt=media.*)?$/i, '_400x400$1$2') : auction.images[0]}
                   alt={`${auction.title} — auction listing photo`}
@@ -131,10 +132,12 @@ export const AuctionCard = memo(({
                   priority={priority}
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                   className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                  onError={() => setImageError(true)}
                 />
               ) : (
-                <div className="w-full h-full bg-gray-50 flex items-center justify-center">
-                  <Package className="w-8 h-8 text-gray-200" aria-hidden="true" />
+                <div className="w-full h-full bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center gap-1.5 p-4 text-center text-slate-300 dark:text-slate-700">
+                  <Package className="w-8 h-8 stroke-[1.5]" aria-hidden="true" />
+                  <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400/60">{t("noImage")}</span>
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
@@ -200,12 +203,12 @@ export const AuctionCard = memo(({
         </div>
 
         {/* Content */}
-        <div className="p-5 flex flex-col flex-1">
-          <h3 className="font-heading font-bold text-gray-900 text-base sm:text-lg line-clamp-1 group-hover:text-primary-600 transition-colors duration-300 group-[.featured]:text-white group-[.featured]:group-hover:text-primary-400">
+        <div className="p-4 flex flex-col flex-1">
+          <h3 className="font-heading font-bold text-gray-900 text-sm sm:text-base line-clamp-1 group-hover:text-primary-600 transition-colors duration-300 group-[.featured]:text-white group-[.featured]:group-hover:text-primary-400">
             {auction.title}
           </h3>
 
-          <div className="flex items-center gap-2 mt-1.5">
+          <div className="flex items-center gap-2 mt-1">
             {/* Seller chip — uses router.push instead of a nested <Link> so we
                 don't produce invalid HTML inside the outer <Link>. */}
             <button
@@ -235,7 +238,7 @@ export const AuctionCard = memo(({
           </div>
 
           {/* Price & Bid Count */}
-          <div className="mt-4 pt-4 border-t border-gray-100/60 flex flex-col gap-0.5">
+          <div className="mt-3 pt-3 border-t border-gray-100/60 flex flex-col gap-0.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
                 {displayStatus === "ACTIVE"
@@ -252,7 +255,7 @@ export const AuctionCard = memo(({
               </span>
             </div>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="price text-2xl text-gray-900 font-black tracking-tighter group-[.featured]:text-white">
+              <span className="price text-lg sm:text-xl text-gray-900 font-black tracking-tighter group-[.featured]:text-white">
                 {formatBDT(currentPrice)}
               </span>
               {auction.currentPrice > auction.startingPrice && (
@@ -282,7 +285,7 @@ export const AuctionCard = memo(({
           )}
 
           {/* Footer Timer */}
-          <div className="mt-auto pt-4 flex items-center justify-between">
+          <div className="mt-auto pt-3 flex items-center justify-between">
             <CountdownTimer
               endTime={auction.endTime}
               variant="card-footer"
