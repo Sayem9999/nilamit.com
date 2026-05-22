@@ -1,6 +1,19 @@
 # Session Handoff & Architecture Memory
 
-## Current Session (2026-05-21)
+## Current Session (2026-05-22)
+### What we did
+* **Real-time Navigation Tabs & Inbox**: Added dedicated **Notifications** (`Bell` icon) and **Chat** (`MessageSquare` icon) links to the authenticated header Navbar, desktop/mobile viewports, and the Dashboard sidebar:
+  - **Dynamic Badge Count**: Embedded a live subscriber to `/notifications/user/${userId}` in the upper Navbar to instantly render unread notification count badges.
+  - **Real-time Notifications View** ([NotificationsList.tsx](file:///c:/nilamit.com/src/components/social/NotificationsList.tsx)): Engineered a clean, responsive client inbox page that subscribes to Firebase Realtime Database and formats card updates based on events (e.g. outbid alerts, closing soon, chat, payments, reputations, won items) with action triggers (e.g. "Clear All" and individual card deletion).
+* **Scroll-State & Layout Elevation Fix**: Added window scroll-state detection hooks inside the main [Navbar.tsx](file:///c:/nilamit.com/src/components/layout/Navbar.tsx) and wired up corresponding style overrides (`.premium-navbar` transition, elevation shadows, and high-opacity fills) in [globals.css](file:///c:/nilamit.com/src/app/globals.css) to eliminate visual overlap and bleed-through when scrolling main layouts underneath the sticky navigation. Included fallback rules (`no-backdrop`) for environments that do not support backdrop-filters.
+* **React 19 Hooks Purity & ESLint Hardening**: Refactored the `formatTimeAgo` layout in `NotificationsList` to track reference time using state-based updates (`now` state initialized with a lazy initializer and updated using an interval effect) to resolve React 19 hooks purity execution warnings. Ignore-rules for `scratch/` script folder were added to [eslint.config.mjs](file:///c:/nilamit.com/eslint.config.mjs).
+* **Automated & Manual Verifications**:
+  - `npm run lint` compiles cleanly with zero warnings/errors.
+  - `npx tsc --noEmit` validates with zero errors.
+  - `npx vitest run` executes all 72 unit tests across 7 test suites successfully with zero failures.
+  - Merged and auto-deleted the branch via GitHub Pull Request [PR #30](https://github.com/Sayem9999/nilamit.com/pull/30).
+
+## Historical Session (2026-05-21)
 ### What we did
 * **Option A: High-Density & Mobile-Optimized Grid**: Redesigned core listings layouts to present elegant dual columns (`grid-cols-2`) on mobile viewports across Browse, Search, LoadMore scroll loads, Seller Storefronts, and Homepage ForYou & Featured sections to double visual post density and match Shopee/Daraz layouts:
   - **AuctionCard.tsx Resizing**: Scaled body padding (`p-3 md:p-4`), category/condition/featured badges (`text-[8px] md:text-[10px]`), absolute MapPin location overlay (`bottom-2 inset-x-2 text-[9px]`), and countdown timer (`py-1.5 px-2 text-[10px] md:py-2 px-3`) dynamically on mobile to prevent overlapping.
