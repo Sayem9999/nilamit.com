@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   Menu,
   X,
@@ -17,15 +17,86 @@ import {
   ChevronDown,
   LogOut,
   Store,
+  Bell,
+  MessageSquare,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { logoutAction } from "@/actions/auth";
 import { memo } from "react";
+import { getClientDB, ensureFirebaseAuth } from "@/lib/firebase-client";
+import { ref, onValue } from "firebase/database";
 
 export const Navbar = memo(function Navbar() {
   const { data: session } = useSession();
   const t = useTranslations("Navigation");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hasBackdrop, setHasBackdrop] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const userId = session?.user?.id;
+
+  useEffect(() => {
+    // Check if backdrop-filter is actually rendered/resolved to a blur
+    const checkBackdrop = () => {
+      if (typeof window !== "undefined") {
+        const testEl = document.createElement("div");
+        testEl.style.backdropFilter = "blur(1px)";
+        document.body.appendChild(testEl);
+        const computed = window.getComputedStyle(testEl).backdropFilter;
+        document.body.removeChild(testEl);
+        if (!computed || computed === "none") {
+          setHasBackdrop(false);
+        }
+      }
+    };
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    // Wrap inside requestAnimationFrame to avoid setState inside initial render effects
+    requestAnimationFrame(() => {
+      checkBackdrop();
+      handleScroll();
+    });
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!userId) {
+      return;
+    }
+
+    let unsub: (() => void) | null = null;
+    void (async () => {
+      try {
+        await ensureFirebaseAuth();
+        const db = getClientDB();
+        const notifRef = ref(db, `notifications/user/${userId}`);
+        unsub = onValue(notifRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const count = Object.keys(data).length;
+            setUnreadCount(count);
+          } else {
+            setUnreadCount(0);
+          }
+        });
+      } catch (err) {
+        console.error("Failed to subscribe to navbar notification count", err);
+      }
+    })();
+
+    return () => {
+      unsub?.();
+      setUnreadCount(0);
+    };
+  }, [userId]);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -40,7 +111,9 @@ export const Navbar = memo(function Navbar() {
 
   const isVerified = !!session?.user?.emailVerified;
   return (
-    <nav className="sticky top-0 z-50 glass !bg-white/70 border-b border-gray-100 shadow-sm">
+    <nav className={`sticky top-0 z-50 premium-navbar dark:border-gray-800 border-b border-gray-100 transition-all duration-300 ${
+      isScrolled ? "scrolled shadow-md" : "shadow-sm"
+    } ${!hasBackdrop ? "no-backdrop" : ""}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -131,6 +204,23 @@ export const Navbar = memo(function Navbar() {
                     className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
                   >
                     <LayoutDashboard className="w-4 h-4" /> {t("dashboard")}
+                  </Link>
+                  <Link
+                    href="/dashboard?tab=notifications"
+                    className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1 relative"
+                  >
+                    <Bell className="w-4 h-4" /> {t("notifications")}
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    href="/dashboard?tab=coordination"
+                    className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
+                  >
+                    <MessageSquare className="w-4 h-4" /> {t("chat")}
                   </Link>
                   <div className="relative group">
                     <button className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-100/50 transition-all group">
@@ -278,6 +368,25 @@ export const Navbar = memo(function Navbar() {
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {t("dashboard")}
+                    </Link>
+                    <Link
+                      href="/dashboard?tab=notifications"
+                      className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <span>{t("notifications")}</span>
+                      {unreadCount > 0 && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link
+                      href="/dashboard?tab=coordination"
+                      className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {t("chat")}
                     </Link>
                     <Link
                       href="/profile"

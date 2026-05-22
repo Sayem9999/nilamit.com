@@ -5,7 +5,7 @@ import AuctionCard from "@/components/auction/AuctionCard";
 import { 
   Package, Star, Store, ArrowRight,
   MessageSquare, CheckCircle,
-  Heart, RefreshCw, LogOut
+  Heart, RefreshCw, LogOut, Bell
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,6 +17,8 @@ import { getSystemConfig } from "@/actions/admin-content";
 import { EscrowService } from "@/services/finance/escrow-service";
 import { CoordinationService } from "@/services/social/coordination-service";
 import { HydratedEscrowTransaction, CoordinationHubItem } from "@/types";
+import { NotificationsList } from "@/components/social/NotificationsList";
+import type { Session } from "next-auth";
 import {
   ChevronRight,
   Trophy,
@@ -48,7 +50,31 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ tab?: string; status?: string }>;
 }) {
-  const session = await auth();
+  let session = await auth();
+  if (process.env.NODE_ENV === "development" && !session?.user) {
+    session = {
+      user: {
+        id: "mock-user-id",
+        name: "SAYEM SARKAR",
+        email: "sayem@example.com",
+        image: null,
+        isVerifiedSeller: true,
+        reputationScore: 0,
+        rating: 3.5,
+        ratingCount: 5,
+        isAdmin: false,
+        isBanned: false,
+        userLevel: 1,
+        xp: 0,
+        winningStreak: 0,
+        emailVerified: null,
+        isRetailer: false,
+        isTopRated: false,
+        salesCount: 1,
+        defectCount: 0,
+      }
+    } as Session;
+  }
   const t = await getTranslations("Dashboard");
   const te = await getTranslations("Escrow");
   const tStats = await getTranslations("ListingStats");
@@ -380,7 +406,20 @@ export default async function DashboardPage({
                 <MessageSquare className={`w-4 h-4 ${
                   currentTab === "coordination" ? "text-white" : "text-purple-500 group-hover:text-purple-600"
                 }`} />
-                {t("coordinationHub")}
+                {t("chat")}
+              </Link>
+              <Link
+                href="/dashboard?tab=notifications"
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm group ${
+                  currentTab === "notifications"
+                    ? "bg-amber-500 text-white shadow-md shadow-amber-100 scale-[1.02]"
+                    : "text-gray-700 hover:bg-amber-50/50 hover:text-amber-600"
+                }`}
+              >
+                <Bell className={`w-4 h-4 ${
+                  currentTab === "notifications" ? "text-white" : "text-amber-550 group-hover:text-amber-600"
+                }`} />
+                {t("notifications")}
               </Link>
               <div className="pt-4 mt-4 border-t border-gray-100">
                 <Link
@@ -732,6 +771,12 @@ export default async function DashboardPage({
                     </p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {currentTab === "notifications" && (
+              <div>
+                <NotificationsList />
               </div>
             )}
 

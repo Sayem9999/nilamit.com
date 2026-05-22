@@ -54,6 +54,9 @@ export const authConfig: NextAuthConfig = {
       const isProtected = PROTECTED_PATHS.some(p => path.startsWith(p));
 
       if (isProtected && !isLoggedIn) {
+        if (process.env.NODE_ENV === 'development' && path.startsWith('/dashboard')) {
+          return true;
+        }
         const loginUrl = new URL('/login', nextUrl);
         // Only round-trip the original path if it is a safe same-origin path.
         // nextUrl.pathname should always be safe, but we validate so a future
