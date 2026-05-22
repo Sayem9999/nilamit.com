@@ -100,6 +100,44 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Premium Sticky Navbar Glassmorphism with Solid Fallback for non-supporting browsers */
+.premium-navbar {
+  background-color: #ffffff; /* Solid white fallback */
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dark .premium-navbar {
+  background-color: #0f172a; /* Solid dark fallback */
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .premium-navbar {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+  .dark .premium-navbar {
+    background-color: rgba(15, 23, 42, 0.85);
+  }
+  .premium-navbar.scrolled {
+    background-color: rgba(255, 255, 255, 0.96) !important;
+  }
+  .dark .premium-navbar.scrolled {
+    background-color: rgba(15, 23, 42, 0.96) !important;
+  }
+}
+
+.premium-navbar.no-backdrop {
+  background-color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.dark .premium-navbar.no-backdrop {
+  background-color: #0f172a !important;
+}
+
+
 /* Refined Shadows */
 .shadow-premium {
   box-shadow:
