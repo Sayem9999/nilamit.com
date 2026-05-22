@@ -47,7 +47,7 @@ export default async function RetailerDashboardPage() {
   const stats = statsRes.data!;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-white pt-24 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-[#0a0a0b] text-white pt-28 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">

@@ -16,7 +16,6 @@ import {
   Trophy,
   ChevronDown,
   LogOut,
-  Store,
   Bell,
   MessageSquare,
 } from "lucide-react";
@@ -111,9 +110,13 @@ export const Navbar = memo(function Navbar() {
 
   const isVerified = !!session?.user?.emailVerified;
   return (
-    <nav className={`sticky top-0 z-50 premium-navbar dark:border-gray-800 border-b border-gray-100 transition-all duration-300 ${
-      isScrolled ? "scrolled shadow-md" : "shadow-sm"
-    } ${!hasBackdrop ? "no-backdrop" : ""}`}>
+    <nav className={`sticky top-0 z-50 border-b border-gray-100 dark:border-gray-800 transition-all duration-300 ${
+      isScrolled
+        ? "bg-white dark:bg-slate-900 shadow-md"
+        : (!hasBackdrop
+            ? "bg-white dark:bg-slate-900 shadow-sm"
+            : "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm")
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -188,40 +191,48 @@ export const Navbar = memo(function Navbar() {
               {session ? (
                 <>
                   <Link
-                    href="/auctions/create"
-                    className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
-                  >
-                    <Plus className="w-4 h-4" /> {t("sell")}
-                  </Link>
-                  <Link
-                    href="/dashboard?tab=listings"
-                    className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
-                  >
-                    <Store className="w-4 h-4 text-blue-500" /> {t("myListings")}
-                  </Link>
-                  <Link
                     href="/dashboard"
-                    className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
+                    className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1.5"
                   >
                     <LayoutDashboard className="w-4 h-4" /> {t("dashboard")}
                   </Link>
-                  <Link
-                    href="/dashboard?tab=notifications"
-                    className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1 relative"
-                  >
-                    <Bell className="w-4 h-4" /> {t("notifications")}
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Link>
-                  <Link
-                    href="/dashboard?tab=coordination"
-                    className="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors flex items-center gap-1"
-                  >
-                    <MessageSquare className="w-4 h-4" /> {t("chat")}
-                  </Link>
+
+                  {/* Divider */}
+                  <div className="h-4 w-px bg-gray-200" />
+
+                  {/* Actions group */}
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/auctions/create"
+                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> {t("sell")}
+                    </Link>
+
+                    <Link
+                      href="/dashboard?tab=coordination"
+                      className="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-50 rounded-full transition-colors relative"
+                      title={t("chat")}
+                    >
+                      <MessageSquare className="w-5 h-5" />
+                    </Link>
+
+                    <Link
+                      href="/dashboard?tab=notifications"
+                      className="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-50 rounded-full transition-colors relative"
+                      title={t("notifications")}
+                    >
+                      <Bell className="w-5 h-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white animate-in zoom-in duration-300">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-4 w-px bg-gray-200" />
                   <div className="relative group">
                     <button className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-100/50 transition-all group">
                       <div className="relative">

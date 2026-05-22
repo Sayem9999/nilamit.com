@@ -44,7 +44,7 @@ export default async function SearchPage({
     : { auctions: [] as AuctionWithSeller[], lastId: null as string | null };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+    <div className="min-h-screen bg-gray-50 pt-28 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -62,7 +62,7 @@ export default async function SearchPage({
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="w-full lg:w-64 flex-shrink-0 space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-28">
               <div className="flex items-center gap-2 font-semibold text-gray-900 mb-4 pb-4 border-b border-gray-100">
                 <SlidersHorizontal className="w-5 h-5 text-primary-600" />
                 {t("filters")}

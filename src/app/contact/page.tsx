@@ -6,7 +6,7 @@ export default async function ContactPage() {
   const t = await getTranslations("Contact");
 
   return (
-    <main className="pt-24 pb-20 min-h-screen bg-white">
+    <main className="pt-28 pb-20 min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <header className="text-center mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 motion-reduce:animate-none">
           <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-6 tracking-tight">

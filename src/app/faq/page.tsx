@@ -10,7 +10,7 @@ export default async function FAQPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-gray-50/50 pt-24 pb-12">
+    <main className="min-h-screen bg-gray-50/50 pt-28 pb-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <header className="text-center mb-12">
           <h1 className="text-4xl font-heading font-bold text-gray-900 mb-4">

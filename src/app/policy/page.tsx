@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function PolicyPage() {
   return (
-    <div className="min-h-screen bg-white pt-24 pb-16 px-4">
+    <div className="min-h-screen bg-white pt-28 pb-16 px-4">
       <div className="max-w-3xl mx-auto">
         <header className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary-50 rounded-full text-primary-600 text-xs font-bold mb-4">

@@ -47,6 +47,15 @@
       }
     },
 
+    "status": {
+      "auction": {
+        "$auctionId": {
+          ".read": true,
+          ".write": false
+        }
+      }
+    },
+
     "presence": {
       "auction": {
         "$auctionId": {

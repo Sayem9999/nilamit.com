@@ -26,10 +26,25 @@ export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions
   useEffect(() => {
     let mounted = true;
     const db = getClientDB();
+    let connTimeout: NodeJS.Timeout | null = null;
 
     const connectedRef = ref(db, ".info/connected");
     const unsubConn = onValue(connectedRef, (snap) => {
-      if (mounted) setIsConnected(!!snap.val());
+      if (!mounted) return;
+      const val = !!snap.val();
+      if (val) {
+        if (connTimeout) {
+          clearTimeout(connTimeout);
+          connTimeout = null;
+        }
+        setIsConnected(true);
+      } else {
+        if (!connTimeout) {
+          connTimeout = setTimeout(() => {
+            if (mounted) setIsConnected(false);
+          }, 4000);
+        }
+      }
     });
 
     const bidRef = ref(db, RTDB_PATHS.auctionBid(auctionId));
@@ -78,6 +93,7 @@ export function useAuctionBids(auctionId: string, options: UseAuctionBidsOptions
 
     return () => {
       mounted = false;
+      if (connTimeout) clearTimeout(connTimeout);
       unsubConn();
       unsubBid();
       unsubStatus();

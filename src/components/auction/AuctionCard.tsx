@@ -110,6 +110,11 @@ export const AuctionCard = memo(({
   const sellerName = auction.seller.name || t("seller");
   const cardLabel = `${auction.title} — ${formatBDT(currentPrice)}, by ${sellerName}, ${bidCount} bid${bidCount === 1 ? "" : "s"}`;
 
+  const isValidImageUrl = (url?: string) => {
+    if (!url) return false;
+    return url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/") || url.startsWith("data:");
+  };
+
   return (
     <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl ${className}`} aria-label={cardLabel}>
       <div className="bg-white rounded-2xl border border-gray-100/60 group-hover:border-primary-500/30 shadow-premium hover:shadow-[0_20px_45px_rgba(13,110,253,0.08)] transition-all duration-500 overflow-hidden group-hover:-translate-y-1.5 flex flex-col h-full group-[.featured]:bg-white/5 group-[.featured]:border-white/10 group-[.featured]:shadow-none group-[.featured]:hover:bg-white/10 group-[.featured]:hover:border-white/20">
@@ -124,7 +129,7 @@ export const AuctionCard = memo(({
             </div>
           ) : (
             <div className="relative w-full h-full">
-              {auction.images?.[0] && !imageError ? (
+              {auction.images?.[0] && isValidImageUrl(auction.images[0]) && !imageError ? (
                 <Image
                   src={auction.images[0].includes('alt=media') ? auction.images[0].replace(/(\.[\w\d_-]+)(\?alt=media.*)?$/i, '_400x400$1$2') : auction.images[0]}
                   alt={`${auction.title} — auction listing photo`}

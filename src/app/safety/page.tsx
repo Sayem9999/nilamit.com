@@ -19,7 +19,7 @@ export default async function SafetyPage() {
   ];
 
   return (
-    <main className="pt-24 pb-20 min-h-screen bg-white">
+    <main className="pt-28 pb-20 min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <header className="text-center mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 motion-reduce:animate-none">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-600 text-sm font-bold mb-6">

@@ -57,3 +57,5 @@ final-lint.txt
 
 playwright-report/
 test-results/
+/scratch/
+
