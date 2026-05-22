@@ -6,7 +6,8 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useLocale } from "next-intl";
 import { createAuction } from "@/actions/auction";
-import { getSmartPricingSuggestion, type SmartPricingResult } from "@/actions/pricing";
+import { getSmartPricingSuggestion } from "@/actions/pricing";
+import type { SmartPricingResult } from "@/services/pricing/pricing-service";
 import { CATEGORIES, LOCATIONS } from "@/types";
 import {
   ArrowLeft,
@@ -14,7 +15,9 @@ import {
   Check,
   AlertCircle,
   MapPin,
-  Zap,
+  Sparkles,
+  TrendingUp,
+  Info,
 } from "lucide-react";
 import { ImageUpload } from "@/components/upload/ImageUpload";
 import { VerificationGuard } from "@/components/auth/VerificationGuard";
@@ -48,17 +51,32 @@ export default function CreateAuctionPage() {
   });
   const [suggestion, setSuggestion] = useState<SmartPricingResult | null>(null);
   const [loadingSuggestion, setLoadingSuggestion] = useState(false);
+  const [debouncedTitle, setDebouncedTitle] = useState(form.title);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedTitle(form.title);
+    }, 400);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [form.title]);
 
   useEffect(() => {
     if (step === "pricing") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoadingSuggestion(true);
-      getSmartPricingSuggestion(form.category).then((res) => {
-        setSuggestion(res);
+      getSmartPricingSuggestion(form.category, form.condition, debouncedTitle).then((res) => {
+        if (res.success && res.data) {
+          setSuggestion(res.data);
+        } else {
+          setSuggestion(null);
+        }
         setLoadingSuggestion(false);
       });
     }
-  }, [form.category, step]);
+  }, [form.category, form.condition, debouncedTitle, step]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -263,33 +281,85 @@ export default function CreateAuctionPage() {
                     Analyzing market trends...
                   </div>
                 ) : suggestion ? (
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-4 shadow-sm">
-                    <div className="flex items-center gap-2 text-emerald-800 font-bold mb-2">
-                      <Zap className="w-4 h-4 text-emerald-500" />
-                      Smart Pricing Insights
+                  <div className="bg-gradient-to-br from-primary-50/40 via-white to-primary-50/10 border border-primary-100/80 rounded-2xl p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-primary-100/60 text-primary-600">
+                          <Sparkles className="w-4 h-4 animate-pulse" />
+                        </div>
+                        <div>
+                          <h3 className="font-heading font-semibold text-sm text-gray-900">
+                            Smart Pricing Engine
+                          </h3>
+                          <p className="text-[10px] text-gray-500">Real-time market analysis powered by Nilamit AI</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all ${
+                          suggestion.demandLevel === 'HIGH'
+                            ? "bg-violet-50 text-violet-700 border-violet-100"
+                            : suggestion.demandLevel === 'MODERATE'
+                            ? "bg-amber-50 text-amber-700 border-amber-100"
+                            : "bg-gray-50 text-gray-500 border-gray-100"
+                        }`}>
+                          <TrendingUp className="w-3 h-3" />
+                          {suggestion.demandLevel} DEMAND
+                        </span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all ${
+                          suggestion.confidence === 'HIGH'
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            : suggestion.confidence === 'MEDIUM'
+                            ? "bg-sky-50 text-sky-700 border-sky-100"
+                            : "bg-rose-50 text-rose-700 border-rose-100"
+                        }`}>
+                          {suggestion.confidence} CONFIDENCE
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xs text-emerald-700 mb-3 leading-relaxed">
-                      Based on {suggestion.dataPoints} recently sold {tCat(form.category).toLowerCase()}, here is what works best:
+
+                    <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+                      Based on <strong className="text-gray-900">{suggestion.dataPoints} recently sold {tCat(form.category || 'electronics').toLowerCase()}</strong>, here are our recommended price settings. Click a suggestion to apply it instantly.
                     </p>
-                    <div className="grid grid-cols-2 gap-3">
+
+                    <div className="grid grid-cols-2 gap-3.5">
                       <button
+                        type="button"
                         onClick={() => updateForm("startingPrice", suggestion.suggestedStart)}
-                        className="text-left bg-white p-2.5 rounded-lg border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all group"
+                        className="group relative text-left bg-white p-3.5 rounded-xl border border-gray-100 hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                       >
-                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Suggested Start</div>
-                        <div className="text-sm font-bold text-emerald-600 group-hover:text-emerald-700">৳{suggestion.suggestedStart}</div>
+                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-wider">Suggested Start Price</div>
+                        <div className="text-lg font-extrabold text-primary-600 group-hover:text-primary-700 flex items-baseline gap-0.5">
+                          <span className="text-xs font-semibold">৳</span>{suggestion.suggestedStart.toLocaleString()}
+                        </div>
+                        <div className="absolute right-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary-500">
+                          <Check className="w-4 h-4" />
+                        </div>
                       </button>
+
                       <button
+                        type="button"
                         onClick={() => updateForm("buyItNowPrice", suggestion.suggestedBuyNow)}
-                        className="text-left bg-white p-2.5 rounded-lg border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all group"
+                        className="group relative text-left bg-white p-3.5 rounded-xl border border-gray-100 hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                       >
-                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Suggested Buy-Now</div>
-                        <div className="text-sm font-bold text-emerald-600 group-hover:text-emerald-700">৳{suggestion.suggestedBuyNow}</div>
+                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-wider">Suggested Buy-Now</div>
+                        <div className="text-lg font-extrabold text-primary-600 group-hover:text-primary-700 flex items-baseline gap-0.5">
+                          <span className="text-xs font-semibold">৳</span>{suggestion.suggestedBuyNow.toLocaleString()}
+                        </div>
+                        <div className="absolute right-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary-500">
+                          <Check className="w-4 h-4" />
+                        </div>
                       </button>
                     </div>
-                    <p className="text-[10px] text-emerald-600/70 mt-3 italic text-center">
-                      Expected final price: ~৳{suggestion.expectedFinal}
-                    </p>
+
+                    <div className="mt-4 flex items-center justify-between pt-3.5 border-t border-gray-100/60 text-[10px] text-gray-400">
+                      <div className="flex items-center gap-1">
+                        <Info className="w-3.5 h-3.5 text-gray-400" />
+                        <span>Average bids per sold listing: <strong>{suggestion.avgBids}</strong></span>
+                      </div>
+                      <div>
+                        <span>Expected final value: <strong>৳{suggestion.expectedFinal.toLocaleString()}</strong></span>
+                      </div>
+                    </div>
                   </div>
                 ) : null}
               </div>
