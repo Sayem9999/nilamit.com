@@ -304,7 +304,7 @@ export const Navbar = memo(function Navbar() {
                 </>
               ) : (
                 <div className="flex items-center gap-2">
-                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-black text-blue-600 uppercase tracking-widest animate-in fade-in slide-in-from-right duration-500">
+                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-black text-blue-600 uppercase tracking-widest animate-in fade-in zoom-in-95 duration-300 whitespace-nowrap">
                     <ShieldCheck className="w-3 h-3 fill-blue-500" /> Secure
                   </div>
                   <Link
