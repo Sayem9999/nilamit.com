@@ -126,11 +126,11 @@ export default async function SellerProfilePage({ params }: Props) {
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100/20 rounded-full blur-3xl -mr-48 -mt-48" />
         
         <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row gap-8 items-end -mb-8 pb-16">
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-end -mb-8 pb-16">
             {/* Seller Avatar */}
             <div className="relative group">
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-2 shadow-2xl shadow-primary-200/50 relative z-10">
-                <div className="w-full h-full rounded-[2rem] overflow-hidden bg-gray-100 flex items-center justify-center">
+                <div className="w-full h-full rounded-[2rem] overflow-hidden bg-gray-100 flex items-center justify-center relative">
                   {seller.image ? (
                     <Image src={seller.image} alt={seller.name || ""} fill sizes="(max-width: 768px) 128px, 160px" className="object-cover" />
                   ) : (

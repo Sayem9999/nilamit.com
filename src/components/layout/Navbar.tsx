@@ -318,16 +318,38 @@ export const Navbar = memo(function Navbar() {
             </div>
 
             {/* Mobile menu button */}
-            <div className="flex items-center gap-4 md:hidden">
-              {/* Mobile Language Switcher Sidelined */}
-              {/* 
-              <button
-                onClick={toggleLanguage}
-                className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1.5 rounded-lg"
-              >
-                {locale === "en" ? "🇧🇩" : "🇺🇸"}
-              </button>
-              */}
+            <div className="flex items-center gap-3.5 md:hidden">
+              {session?.user && (
+                <Link
+                  href="/profile"
+                  className="relative group shrink-0"
+                >
+                  <div className="relative">
+                    {session.user.image ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={session.user.image}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        className="w-8 h-8 rounded-full ring-2 ring-white shadow-sm object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm shrink-0">
+                        <User className="w-4 h-4 text-primary-600" />
+                      </div>
+                    )}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center shadow-md ring-1 ring-black/5">
+                      {session.user.isVerifiedSeller ? (
+                        <Trophy className="w-2 h-2 text-amber-500 fill-amber-500" />
+                      ) : isVerified ? (
+                        <ShieldCheck className="w-2 h-2 text-blue-500 fill-blue-500" />
+                      ) : (
+                        <AlertTriangle className="w-2 h-2 text-amber-500" />
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              )}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 rounded-xl hover:bg-gray-50"
@@ -341,11 +363,47 @@ export const Navbar = memo(function Navbar() {
           </div>
         </div>
       </div>
-
+ 
         {/* Mobile Menu */}
         {mobileMenuOpen ? (
           <div className="md:hidden border-t border-gray-100 bg-white shadow-lg animate-in slide-in-from-top duration-300">
             <div className="px-4 py-4 space-y-2">
+              {session?.user && (
+                <div className="px-4 py-3 bg-gradient-to-br from-primary-50 to-primary-100/50 rounded-2xl border border-primary-100/30 mb-4 flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    {session.user.image ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={session.user.image}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        className="w-12 h-12 rounded-full ring-2 ring-white shadow-sm object-cover"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
+                        <User className="w-6 h-6 text-primary-600" />
+                      </div>
+                    )}
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 bg-white rounded-full flex items-center justify-center shadow-md ring-1 ring-black/5">
+                      {session.user.isVerifiedSeller ? (
+                        <Trophy className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                      ) : isVerified ? (
+                        <ShieldCheck className="w-2.5 h-2.5 text-blue-500 fill-blue-500" />
+                      ) : (
+                        <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-black text-gray-900 truncate uppercase tracking-tight">
+                      {session.user.name}
+                    </p>
+                    <p className="text-[10px] text-gray-400 font-bold truncate">
+                      {session.user.email}
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="pt-2 pb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 {t("settings")}
               </div>
