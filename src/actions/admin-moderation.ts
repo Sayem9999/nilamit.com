@@ -72,7 +72,8 @@ export async function getAdminReports(status?: string, page = 1, limit = 20): Pr
     });
 
     return successResponse({ reports, total, pages: Math.ceil(total / limit) });
-  } catch (_e) {
+  } catch (e) {
+    log.error('[Action] getAdminReports failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch reports');
   }
 }
@@ -122,7 +123,8 @@ export async function getAdminAuctions(page = 1, limit = 20, status?: string): P
     }));
 
     return successResponse({ auctions, total, pages: Math.ceil(total / limit) });
-  } catch (_e) {
+  } catch (e) {
+    log.error('[Action] getAdminAuctions failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to fetch auctions');
   }
 }
@@ -145,7 +147,8 @@ export async function resolveReport(reportId: string, status: string): Promise<S
 
     revalidatePath('/admin');
     return successResponse(null);
-  } catch (_e) {
+  } catch (e) {
+    log.error('[Action] resolveReport failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to resolve report');
   }
 }
@@ -194,7 +197,8 @@ export async function suspendAuction(auctionId: string, reportId: string, reason
 
     revalidatePath('/admin');
     return successResponse(null);
-  } catch (_e) {
+  } catch (e) {
+    log.error('[Action] suspendAuction failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to suspend auction');
   }
 }
@@ -250,7 +254,8 @@ export async function adminTakeDownAuction(auctionId: string, reason: string): P
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/');
     return successResponse(null);
-  } catch (_e) {
+  } catch (e) {
+    log.error('[Action] adminTakeDownAuction failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to take down auction');
   }
 }
@@ -308,7 +313,8 @@ export async function adminDeleteAuction(auctionId: string, reason: string): Pro
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/');
     return successResponse(null);
-  } catch (_e) {
+  } catch (e) {
+    log.error('[Action] adminDeleteAuction failed', e);
     return errorResponse(ErrorType.INTERNAL, 'Failed to permanently delete auction');
   }
 }

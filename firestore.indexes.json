@@ -327,6 +327,14 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "endTime", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "auctions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

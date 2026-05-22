@@ -63,6 +63,8 @@ export function ModerationTab() {
   const [reportFilter, setReportFilter] = useState<"PENDING" | "RESOLVED">("PENDING");
   const [reportPage, setReportPage] = useState(1);
   const [reportTotalPages, setReportTotalPages] = useState(1);
+  const [reportsError, setReportsError] = useState<string | null>(null);
+  const [reportsRetry, setReportsRetry] = useState(0);
 
   // Auctions state
   const [auctions, setAuctions] = useState<AdminAuction[]>([]);
@@ -70,6 +72,8 @@ export function ModerationTab() {
   const [auctionFilter, setAuctionFilter] = useState<string>("all");
   const [auctionPage, setAuctionPage] = useState(1);
   const [auctionTotalPages, setAuctionTotalPages] = useState(1);
+  const [auctionsError, setAuctionsError] = useState<string | null>(null);
+  const [auctionsRetry, setAuctionsRetry] = useState(0);
 
   const [isPending, startTransition] = useTransition();
 
@@ -84,18 +88,25 @@ export function ModerationTab() {
     let mounted = true;
     const load = async () => {
       setReportsLoading(true);
+      setReportsError(null);
       const res = await getAdminReports(reportFilter, reportPage);
-      if (mounted && res.success && res.data) {
-        setReports((res.data.reports as unknown as AdminReport[]) || []);
-        setReportTotalPages(res.data.pages || 1);
+      if (mounted) {
+        if (res.success && res.data) {
+          setReports((res.data.reports as unknown as AdminReport[]) || []);
+          setReportTotalPages(res.data.pages || 1);
+          setReportsError(null);
+        } else {
+          setReports([]);
+          setReportsError(res.error?.message || "Failed to load user reports queue.");
+        }
+        setReportsLoading(false);
       }
-      if (mounted) setReportsLoading(false);
     };
     load();
     return () => {
       mounted = false;
     };
-  }, [mode, reportFilter, reportPage]);
+  }, [mode, reportFilter, reportPage, reportsRetry]);
 
   // Load Auctions
   useEffect(() => {
@@ -103,19 +114,26 @@ export function ModerationTab() {
     let mounted = true;
     const load = async () => {
       setAuctionsLoading(true);
+      setAuctionsError(null);
       const statusParam = auctionFilter === "all" ? undefined : auctionFilter;
       const res = await getAdminAuctions(auctionPage, 10, statusParam);
-      if (mounted && res.success && res.data) {
-        setAuctions((res.data.auctions as unknown as AdminAuction[]) || []);
-        setAuctionTotalPages(res.data.pages || 1);
+      if (mounted) {
+        if (res.success && res.data) {
+          setAuctions((res.data.auctions as unknown as AdminAuction[]) || []);
+          setAuctionTotalPages(res.data.pages || 1);
+          setAuctionsError(null);
+        } else {
+          setAuctions([]);
+          setAuctionsError(res.error?.message || "Failed to load database listings.");
+        }
+        setAuctionsLoading(false);
       }
-      if (mounted) setAuctionsLoading(false);
     };
     load();
     return () => {
       mounted = false;
     };
-  }, [mode, auctionFilter, auctionPage]);
+  }, [mode, auctionFilter, auctionPage, auctionsRetry]);
 
   const handleDismissReport = (id: string) => {
     if (!confirm("Dismiss this report?")) return;
@@ -247,6 +265,20 @@ export function ModerationTab() {
           {reportsLoading ? (
             <div className="flex justify-center py-20">
               <Loader2 className="animate-spin w-8 h-8 text-primary-600" />
+            </div>
+          ) : reportsError ? (
+            <div className="text-center py-16 bg-red-50/50 rounded-3xl border-2 border-dashed border-red-200/50">
+              <AlertTriangle className="w-12 h-12 text-red-500/30 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-red-950 tracking-tight">Failed to Load Reports</h3>
+              <p className="text-red-700 text-xs mt-1">
+                {reportsError}
+              </p>
+              <button
+                onClick={() => setReportsRetry((prev) => prev + 1)}
+                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all"
+              >
+                Retry Query
+              </button>
             </div>
           ) : reports.length === 0 ? (
             <div className="text-center py-16 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200">
@@ -392,6 +424,20 @@ export function ModerationTab() {
           {auctionsLoading ? (
             <div className="flex justify-center py-20">
               <Loader2 className="animate-spin w-8 h-8 text-primary-600" />
+            </div>
+          ) : auctionsError ? (
+            <div className="text-center py-16 bg-red-50/50 rounded-3xl border-2 border-dashed border-red-200/50">
+              <AlertTriangle className="w-12 h-12 text-red-500/30 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-red-950 tracking-tight">Failed to Load Listings</h3>
+              <p className="text-red-700 text-xs mt-1">
+                {auctionsError}
+              </p>
+              <button
+                onClick={() => setAuctionsRetry((prev) => prev + 1)}
+                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all"
+              >
+                Retry Query
+              </button>
             </div>
           ) : auctions.length === 0 ? (
             <div className="text-center py-16 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200">
