@@ -6,6 +6,8 @@ import { requireAdmin } from '@/lib/admin-guard';
 import { revalidatePath } from 'next/cache';
 import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
+import { AdminBackupService } from '@/services/admin/admin-backup-service';
+import { importBackupSchema, formatZodError } from '@/lib/schemas';
 
 async function deleteCollection(name: string, batchSize = 100) {
   while (true) {
@@ -100,5 +102,37 @@ export async function exportTransactionsCSV() {
     const err = error as Error;
     log.error('[admin-system] CSV Export Error', err);
     return errorResponse(ErrorType.INTERNAL, 'Failed to generate CSV: ' + err.message);
+  }
+}
+
+export async function exportDatabaseBackup() {
+  try {
+    await requireAdmin();
+    const data = await AdminBackupService.exportDatabase();
+    return successResponse({ data: JSON.stringify(data, null, 2) });
+  } catch (error: unknown) {
+    const err = error as Error;
+    log.error('[admin-system] Export Database Error', err);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to export database: ' + err.message);
+  }
+}
+
+export async function importDatabaseBackup(input: unknown) {
+  try {
+    await requireAdmin();
+    const parsed = importBackupSchema.safeParse(input);
+    if (!parsed.success) {
+      return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
+    }
+
+    const { entries, wipeFirst } = parsed.data;
+    const result = await AdminBackupService.restoreDatabase(entries, wipeFirst);
+
+    revalidatePath('/');
+    return successResponse(result);
+  } catch (error: unknown) {
+    const err = error as Error;
+    log.error('[admin-system] Import Database Error', err);
+    return errorResponse(ErrorType.INTERNAL, 'Failed to import database: ' + err.message);
   }
 }

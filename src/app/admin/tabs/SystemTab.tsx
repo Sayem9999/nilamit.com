@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, AlertTriangle, AlertCircle, Download, FileText } from 'lucide-react';
-import { adminWipeTestData, exportTransactionsCSV } from '@/actions/admin-system';
+import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Database, Upload } from 'lucide-react';
+import { adminWipeTestData, exportTransactionsCSV, exportDatabaseBackup, importDatabaseBackup } from '@/actions/admin-system';
 import { getSystemConfig, updateSystemConfig } from '@/actions/admin-content';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
@@ -14,6 +14,14 @@ export function SystemTab() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [_isSavingConfig, setIsSavingConfig] = useState(false);
+
+  // Backup & Restore states
+  const [isExportingBackup, setIsExportingBackup] = useState(false);
+  const [isImportingBackup, setIsImportingBackup] = useState(false);
+  const [wipeBeforeRestore, setWipeBeforeRestore] = useState(true);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
+  const [backupEntries, setBackupEntries] = useState<unknown[] | null>(null);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -84,6 +92,89 @@ export function SystemTab() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setSelectedFile(null);
+      setBackupEntries(null);
+      return;
+    }
+    setSelectedFile(file);
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        if (Array.isArray(json)) {
+          setBackupEntries(json);
+        } else {
+          toast.error('Invalid backup format: Must be a JSON array of documents');
+          setSelectedFile(null);
+          setBackupEntries(null);
+        }
+      } catch {
+        toast.error('Failed to parse JSON file');
+        setSelectedFile(null);
+        setBackupEntries(null);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleExportBackup = async () => {
+    setIsExportingBackup(true);
+    try {
+      const result = await exportDatabaseBackup();
+      if (result.success && result.data?.data) {
+        const blob = new Blob([result.data.data], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nilamit-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success('Database backup exported successfully');
+      } else {
+        toast.error(result.error?.message || 'Backup failed');
+      }
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Backup failed');
+    } finally {
+      setIsExportingBackup(false);
+    }
+  };
+
+  const handleRestoreBackup = async () => {
+    if (!backupEntries) {
+      toast.error('No backup data loaded');
+      return;
+    }
+    setIsImportingBackup(true);
+    setIsRestoreConfirmOpen(false);
+    try {
+      const result = await importDatabaseBackup({
+        entries: backupEntries,
+        wipeFirst: wipeBeforeRestore,
+      });
+      
+      if (result.success) {
+        toast.success(`Successfully restored ${result.data?.successCount} documents!`);
+        setSelectedFile(null);
+        setBackupEntries(null);
+        const fileInput = document.getElementById('backup-file-input') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      } else {
+        toast.error(result.error?.message || 'Restore failed');
+      }
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Restore failed');
+    } finally {
+      setIsImportingBackup(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
 
@@ -118,6 +209,99 @@ export function SystemTab() {
                   )}
                   {isExporting ? 'Generating...' : 'Export CSV'}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="flex items-start gap-4">
+          <div className="bg-primary-50 p-3 rounded-xl">
+            <Database className="w-8 h-8 text-primary-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-heading font-bold text-lg text-gray-900">Database Backup & Restore</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Download complete database backups as JSON or restore database state from a backup file.
+            </p>
+
+            <div className="mt-6 space-y-6 border-t border-gray-50 pt-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-semibold text-gray-900">Export Database Backup</h4>
+                  <p className="text-xs text-gray-500 mt-1 max-w-sm">
+                    Downloads all collections recursively, preserving original types (timestamps, references, geopoints).
+                  </p>
+                </div>
+                <button
+                  onClick={handleExportBackup}
+                  disabled={isExportingBackup}
+                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 border border-gray-200 shadow-sm active:scale-95 disabled:opacity-50"
+                >
+                  {isExportingBackup ? (
+                    <span className="animate-spin w-4 h-4 border-2 border-primary-600/30 border-t-primary-600 rounded-full" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  {isExportingBackup ? 'Exporting...' : 'Export JSON'}
+                </button>
+              </div>
+
+              <div className="border-t border-gray-50 pt-6">
+                <h4 className="font-semibold text-gray-900">Restore Database Backup</h4>
+                <p className="text-xs text-gray-500 mt-1 max-w-lg">
+                  Select a previously exported JSON backup file to restore. Note that restoring may overwrite existing documents.
+                </p>
+
+                <div className="mt-4 flex flex-col md:flex-row md:items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      id="backup-file-input"
+                      accept=".json"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="backup-file-input"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 cursor-pointer shadow-sm transition-all active:scale-95"
+                    >
+                      <Upload className="w-4 h-4 text-gray-500" />
+                      {selectedFile ? 'Change File' : 'Select Backup File'}
+                    </label>
+                    {selectedFile && (
+                      <span className="ml-3 text-xs font-medium text-gray-600 bg-white border border-gray-200 px-2 py-1 rounded">
+                        {selectedFile.name} ({backupEntries?.length ?? 0} docs)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-600 select-none">
+                      <input
+                        type="checkbox"
+                        checked={wipeBeforeRestore}
+                        onChange={(e) => setWipeBeforeRestore(e.target.checked)}
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      Wipe DB before restoring
+                    </label>
+
+                    <button
+                      onClick={() => setIsRestoreConfirmOpen(true)}
+                      disabled={!backupEntries || isImportingBackup}
+                      className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                    >
+                      {isImportingBackup ? (
+                        <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      {isImportingBackup ? 'Restoring...' : 'Restore DB'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -189,6 +373,43 @@ export function SystemTab() {
                 className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
               >
                 {isPending ? 'Wiping...' : 'Yes, Delete Everything'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Restore Confirmation Modal */}
+      {isRestoreConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-4 text-primary-600 mb-4">
+              <AlertTriangle className="w-8 h-8 text-amber-500" />
+              <h3 className="text-lg font-bold">Confirm Database Restore</h3>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to restore the database from <strong>{selectedFile?.name}</strong>?
+            </p>
+            {wipeBeforeRestore && (
+              <div className="text-red-600 text-sm font-semibold mb-6 flex items-start gap-2 bg-red-50 p-3 rounded-lg border border-red-100">
+                <AlertCircle className="w-5 h-5 shrink-0" />
+                <span>Warning: This will permanently delete ALL current database records in all root collections and subcollections before writing the backup data.</span>
+              </div>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsRestoreConfirmOpen(false)}
+                disabled={isImportingBackup}
+                className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRestoreBackup}
+                disabled={isImportingBackup}
+                className="px-4 py-2 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+              >
+                {isImportingBackup ? 'Restoring...' : 'Yes, Restore Backup'}
               </button>
             </div>
           </div>

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node .next/standalone/server.js",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "node scripts/patch-emnapi.js"
   },
   "dependencies": {
     "@auth/firebase-adapter": "^2.7.4",

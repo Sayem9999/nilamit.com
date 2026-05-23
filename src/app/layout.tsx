@@ -9,6 +9,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
+import { headers } from "next/headers";
 
 // ─── Startup validation ──────────────────────────────────────
 if (typeof window === "undefined") {
@@ -121,6 +122,7 @@ export default async function RootLayout({
 }) {
   const locale = "en";
   const messages = await getMessages();
+  const nonce = (await headers()).get('x-nonce') || undefined;
 
   const metadataBase = getMetadataBase();
   const baseUrl = metadataBase.toString().replace(/\/$/, "");
@@ -165,6 +167,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <script
             type="application/ld+json"
+            nonce={nonce}
             dangerouslySetInnerHTML={{
               __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
             }}
@@ -186,7 +189,7 @@ export default async function RootLayout({
             <Footer />
           </Providers>
         </NextIntlClientProvider>
-        <Script src="/sw-register.js" strategy="afterInteractive" />
+        <Script src="/sw-register.js" strategy="afterInteractive" nonce={nonce} />
       </body>
     </html>
   );
