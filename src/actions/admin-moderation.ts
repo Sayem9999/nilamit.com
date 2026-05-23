@@ -9,6 +9,7 @@ import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/li
 import { adminDB } from '@/lib/firebase-admin';
 import { RTDB_PATHS } from '@/lib/firebase-events';
 import { log } from '@/lib/logger';
+import { AuditService } from '@/services/admin/audit-service';
 
 export async function getAdminReports(status?: string, page = 1, limit = 20): Promise<ServiceResponse<{ reports: unknown[], total: number, pages: number }>> {
   try {
@@ -162,9 +163,14 @@ export async function suspendAuction(auctionId: string, reportId: string, reason
     const aSnap = await aRef.get();
     const auctionData = aSnap.data();
 
-    batch.update(aRef, {
+    const beforeState = auctionData || null;
+    const updateData = {
       status: 'CANCELLED', updatedAt: new Date(),
-    });
+    };
+    const afterState = beforeState ? { ...beforeState, ...updateData } : null;
+
+    batch.update(aRef, updateData);
+    AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', session.user.id, batch).catch(() => {});
 
     if (auctionData?.sellerId) {
       batch.update(db.collection('users').doc(auctionData.sellerId), {
@@ -215,10 +221,15 @@ export async function adminTakeDownAuction(auctionId: string, reason: string): P
     }
     const auctionData = aSnap.data();
 
-    batch.update(aRef, {
+    const beforeState = auctionData || null;
+    const updateData = {
       status: 'CANCELLED',
       updatedAt: new Date(),
-    });
+    };
+    const afterState = beforeState ? { ...beforeState, ...updateData } : null;
+
+    batch.update(aRef, updateData);
+    AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', session.user.id, batch).catch(() => {});
 
     if (auctionData?.sellerId) {
       batch.update(db.collection('users').doc(auctionData.sellerId), {
@@ -282,6 +293,7 @@ export async function adminDeleteAuction(auctionId: string, reason: string): Pro
     // 2. Delete the auction itself and log in a final atomic batch
     const batch = db.batch();
     batch.delete(aRef);
+    AuditService.logAuctionChange(auctionId, auctionData || null, null, 'DELETE', session.user.id, batch).catch(() => {});
 
     // Mandatory Audit Log
     const logRef = db.collection('admin_logs').doc();

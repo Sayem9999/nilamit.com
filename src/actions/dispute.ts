@@ -10,6 +10,7 @@ import { updateSellerPerformance } from '@/lib/seller-performance';
 import { log } from '@/lib/logger';
 import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { AuditService } from '@/services/admin/audit-service';
 
 const REFUNDABLE_ESCROW_STATES = new Set(['HELD', 'DISPUTED', 'PENDING', 'VERIFICATION_PENDING']);
 
@@ -41,7 +42,11 @@ export async function raiseDispute(transactionId: string, reason: string): Promi
         id: transactionId, transactionId, openerId: session.user.id,
         reason: parsed.data.reason, status: 'OPEN', resolution: null, createdAt: now, updatedAt: now,
       });
-      tx.update(escrowRef, { status: 'DISPUTED', updatedAt: now });
+      const beforeState = { ...escrow };
+      const updateData = { status: 'DISPUTED', updatedAt: now };
+      const afterState = { ...beforeState, ...updateData };
+      tx.update(escrowRef, updateData);
+      AuditService.logEscrowChange(transactionId, beforeState, afterState, 'UPDATE', session.user.id, tx).catch(() => {});
     });
 
     revalidatePath('/dashboard/escrow');
@@ -84,7 +89,12 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
       const finalEscrow  = ruling === 'SELLER' ? 'RELEASED' : 'REFUNDED';
       const finalDispute = ruling === 'SELLER' ? 'RESOLVED_SELLER' : 'RESOLVED_BUYER';
 
-      tx.update(escrowRef,  { status: finalEscrow,  updatedAt: now });
+      const beforeState = { ...escrow };
+      const updateData = { status: finalEscrow,  updatedAt: now };
+      const afterState = { ...beforeState, ...updateData };
+
+      tx.update(escrowRef, updateData);
+      AuditService.logEscrowChange(dispute.transactionId, beforeState, afterState, 'UPDATE', adminSession.user.id, tx).catch(() => {});
       tx.update(disputeRef, { status: finalDispute, resolution: trimmedResolution, updatedAt: now });
 
       // Refund mirrors the seller-side accounting from refundEscrow so reputation
@@ -150,7 +160,12 @@ export async function adminRefundEscrow(transactionId: string, reason: string): 
       }
 
       const now = new Date();
-      tx.update(escrowRef, { status: 'REFUNDED', updatedAt: now });
+      const beforeEscrow = { ...escrow };
+      const updateEscrow = { status: 'REFUNDED', updatedAt: now };
+      const afterEscrow = { ...beforeEscrow, ...updateEscrow };
+
+      tx.update(escrowRef, updateEscrow);
+      AuditService.logEscrowChange(transactionId, beforeEscrow, afterEscrow, 'UPDATE', adminSession.user.id, tx).catch(() => {});
 
       let seller: string | null = null;
       if (escrow.auctionId) {
@@ -158,7 +173,12 @@ export async function adminRefundEscrow(transactionId: string, reason: string): 
         const aSnap = await tx.get(aRef);
         seller = (aSnap.data()?.sellerId as string | undefined) ?? null;
 
-        tx.update(aRef, { status: 'CANCELLED', updatedAt: now });
+        const beforeAuction = aSnap.data() || null;
+        const updateAuction = { status: 'CANCELLED', updatedAt: now };
+        const afterAuction = beforeAuction ? { ...beforeAuction, ...updateAuction } : null;
+
+        tx.update(aRef, updateAuction);
+        AuditService.logAuctionChange(escrow.auctionId, beforeAuction, afterAuction, 'UPDATE', adminSession.user.id, tx).catch(() => {});
 
         if (seller) {
           tx.update(db.collection('users').doc(seller), {

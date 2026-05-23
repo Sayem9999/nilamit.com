@@ -37,12 +37,19 @@ export default auth((req) => {
   }
 
   // 3. Security Headers
-  const response = NextResponse.next();
-  
+  const nonce = btoa(
+    Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map((b) => String.fromCharCode(b))
+      .join('')
+  );
+
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-nonce', nonce);
+
   // Content Security Policy
   const cspHeader = `
     default-src 'self' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://*.firebaseapp.com https://*.web.app;
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://*.firebasedatabase.app https://www.gstatic.com https://*.googleapis.com https://www.google.com https://*.recaptcha.net;
+    script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://*.firebasedatabase.app https://www.gstatic.com https://*.googleapis.com https://www.google.com https://*.recaptcha.net;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.nilamit.com https://nilamit.com https://*.hosted.app;
     img-src 'self' data: blob: https://*.googleusercontent.com https://utfs.io https://*.uploadthing.com https://firebasestorage.googleapis.com https://storage.googleapis.com https://avatars.githubusercontent.com https://i.pravatar.cc https://images.unsplash.com https://*.ingest.sentry.io https://*.nilamit.com https://nilamit.com https://*.hosted.app;
     font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com;
@@ -56,6 +63,14 @@ export default auth((req) => {
     worker-src 'self' blob:;
     upgrade-insecure-requests;
   `.replace(/\s{2,}/g, ' ').trim();
+
+  requestHeaders.set('Content-Security-Policy', cspHeader);
+
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 
   response.headers.set('Content-Security-Policy', cspHeader);
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');

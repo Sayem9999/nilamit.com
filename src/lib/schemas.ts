@@ -255,6 +255,19 @@ export const createAlertSchema = z.object({
 });
 export type CreateAlertInput = z.infer<typeof createAlertSchema>;
 
+// ─── Backup & Restore ──────────────────────────────────────────────────────
+
+const backupEntrySchema = z.object({
+  path: z.string(),
+  data: z.record(z.string(), z.any()),
+});
+
+export const importBackupSchema = z.object({
+  entries: z.array(backupEntrySchema),
+  wipeFirst: z.boolean(),
+});
+export type ImportBackupInput = z.infer<typeof importBackupSchema>;
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 /** Flatten a ZodError into a single human-readable line for action responses. */

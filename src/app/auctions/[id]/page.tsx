@@ -48,6 +48,7 @@ import { getAuctionChat } from "@/actions/chat";
 import { Metadata } from "next";
 import Link from "next/link";
 import Script from "next/script";
+import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { ErrorType, errorResponse } from "@/lib/errors";
 import { AuctionStatus } from "@/types";
@@ -105,6 +106,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AuctionDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await auth();
+  const nonce = (await headers()).get('x-nonce') || undefined;
   const isAdmin = isAdminEmail(session?.user?.email);
   const response = await getAuction(id);
   const auction = (response.success && response.data) ? response.data as AuctionWithBids : null;
@@ -152,6 +154,7 @@ export default async function AuctionDetailPage({ params }: Props) {
       <Script
         id="auction-jsonld"
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ 
           __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c').replace(/>/g, '\\u003e') 
         }}

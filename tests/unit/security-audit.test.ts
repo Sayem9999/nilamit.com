@@ -55,24 +55,37 @@ vi.mock('@/services/auction/auction-service', () => ({
 }));
 
 vi.mock('@/lib/db', () => {
-  const makeDocRef = (collectionName: string, id: string) => ({
-    path: `${collectionName}/${id}`,
-    id,
-    get: vi.fn().mockImplementation(async () => {
-      if (collectionName === 'verificationTokens') {
-        return {
-          exists: true,
-          data: () => ({
-            token: '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', // hash of '123456'
-            expires: { toDate: () => new Date(Date.now() + 5 * 60 * 1000) },
-            phone: '+8801712345678',
-          }),
+  const makeDocRef = (collectionName: string, id: string): any => {
+    const ref: any = {
+      path: `${collectionName}/${id}`,
+      id,
+      get: vi.fn().mockImplementation(async () => {
+        if (collectionName === 'verificationTokens') {
+          return {
+            exists: true,
+            data: () => ({
+              token: '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', // hash of '123456'
+              expires: { toDate: () => new Date(Date.now() + 5 * 60 * 1000) },
+              phone: '+8801712345678',
+            }),
+          };
+        }
+        return { exists: false };
+      }),
+      delete: vi.fn().mockResolvedValue(undefined),
+      set: vi.fn().mockResolvedValue(undefined),
+      collection: vi.fn((subColName: string) => {
+        const subCol: any = {
+          doc: vi.fn((subId) => makeDocRef(`${collectionName}/${id}/${subColName}`, subId || 'mock-id')),
+          where: vi.fn(() => subCol),
+          limit: vi.fn(() => subCol),
+          get: vi.fn(),
         };
-      }
-      return { exists: false };
-    }),
-    delete: vi.fn().mockResolvedValue(undefined),
-  });
+        return subCol;
+      }),
+    };
+    return ref;
+  };
 
   const mockCollection = (collectionName: string) => {
     const col: any = {
@@ -266,6 +279,7 @@ describe('relistAuction Security', () => {
           };
         }),
         update: mockUpdate,
+        set: vi.fn(),
       } as any;
       return callback(mockTx);
     });

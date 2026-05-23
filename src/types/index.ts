@@ -4,3 +4,4 @@ export * from './finance';
 export * from './auction';
 export * from './social';
 export * from './common';
+export * from './audit';

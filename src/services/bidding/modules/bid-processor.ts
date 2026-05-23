@@ -3,6 +3,7 @@ import { Auction, Bid, AuctionStatus, PlaceBidResult } from '@/types';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
 import { BidSideEffects } from './bid-side-effects';
+import { AuditService } from '@/services/admin/audit-service';
 
 export class BidProcessor {
   /**
@@ -89,8 +90,8 @@ export class BidProcessor {
           status: 'ACTIVE'
         };
 
-        tx.set(bidRef, bid);
-        tx.update(auctionRef, {
+        const beforeState = auctionSnap.data() || null;
+        const updateData = {
           currentPrice: newCurrentPrice,
           currentBidderId: newCurrentBidderId,
           proxyMaxBid: newProxyMaxBid,
@@ -100,7 +101,14 @@ export class BidProcessor {
           endTime: newEndTime,
           bidCount: (auction.bidCount || 0) + 1,
           updatedAt: now,
-        });
+        };
+        const afterState = beforeState ? { ...beforeState, ...updateData } : null;
+
+        tx.set(bidRef, bid);
+        tx.update(auctionRef, updateData);
+
+        // Log audit change atomically within the transaction
+        AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx).catch(() => {});
 
         // 5. Side Effects
         BidSideEffects.handleBidSideEffects(auction, bid, existingProxyBidder, newEndTime).catch(e => 

@@ -36,6 +36,7 @@ const eslintConfig = defineConfig([
     "functions/lib/**",
     "functions/node_modules/**",
     "scratch/**",
+    "scripts/**",
   ]),
 ]);
 

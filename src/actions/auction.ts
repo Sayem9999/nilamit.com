@@ -11,6 +11,7 @@ import { createAuctionSchema, editAuctionSchema, formatZodError } from '@/lib/sc
 import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { cache } from 'react';
+import { AuditService } from '@/services/admin/audit-service';
 
 import { unstable_cache } from 'next/cache';
 
@@ -172,10 +173,15 @@ export async function cancelAuction(auctionId: string): Promise<ServiceResponse<
       if (a.status !== AuctionStatus.ACTIVE) throw new Error('NOT_ACTIVE');
       if ((a.bidCount ?? 0) > 0)        throw new Error('HAS_BIDS');
 
-      tx.update(ref, {
+      const beforeState = { ...a };
+      const updateData = {
         status:    AuctionStatus.CANCELLED,
         updatedAt: new Date(),
-      });
+      };
+      const afterState = { ...beforeState, ...updateData };
+
+      tx.update(ref, updateData);
+      AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx).catch(() => {});
     });
 
     revalidatePath('/auctions');
@@ -219,11 +225,14 @@ export async function editAuction(input: unknown): Promise<ServiceResponse<null>
       if (a.status !== AuctionStatus.ACTIVE) throw new Error('NOT_ACTIVE');
       if ((a.bidCount ?? 0) > 0)             throw new Error('HAS_BIDS');
 
+      const beforeState = { ...a };
       const patch: Record<string, unknown> = { updatedAt: new Date() };
       if (description !== undefined) patch.description = description;
       if (images !== undefined)      patch.images      = images;
+      const afterState = { ...beforeState, ...patch };
 
       tx.update(ref, patch);
+      AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx).catch(() => {});
     });
 
     revalidatePath(`/auctions/${auctionId}`);
@@ -277,10 +286,15 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
       if (!RELISTABLE_STATES.has(origData.status)) throw new Error('NOT_RELISTABLE');
       if (origData.relisted) throw new Error('ALREADY_RELISTED');
 
-      tx.update(origRef, {
+      const beforeState = { ...origData };
+      const updateData = {
         relisted: true,
         updatedAt: new Date(),
-      });
+      };
+      const afterState = { ...beforeState, ...updateData };
+
+      tx.update(origRef, updateData);
+      AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx).catch(() => {});
 
       return origData;
     });
@@ -311,10 +325,18 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
 
     if (!response.success || !response.data) {
       // Revert the relisted flag if creation failed to allow another attempt
-      await db.collection('auctions').doc(auctionId).update({
+      const docRef = db.collection('auctions').doc(auctionId);
+      const docSnap = await docRef.get();
+      const beforeState = docSnap.exists ? docSnap.data() || null : null;
+      const updateData = {
         relisted: false,
         updatedAt: new Date(),
-      });
+      };
+      const afterState = beforeState ? { ...beforeState, ...updateData } : null;
+
+      await docRef.update(updateData);
+      AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId).catch(() => {});
+
       return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to relist.');
     }
 
