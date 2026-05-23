@@ -7,6 +7,7 @@ import { log } from '@/lib/logger';
 import type { CreateAuctionInputValidated } from '@/lib/schemas';
 import { scheduleAuctionClosure, scheduleClosingSoonAlert } from '@/lib/cloud-tasks';
 import { AuctionNotifier } from './auction-notifier';
+import { AuditService } from '@/services/admin/audit-service';
 
 export class AuctionWriter {
   /**
@@ -47,6 +48,9 @@ export class AuctionWriter {
       };
 
       await db.collection('auctions').doc(id).set(auction);
+      
+      // Log audit change asynchronously
+      AuditService.logAuctionChange(id, null, auction, 'CREATE', userId).catch(() => {});
 
       incrementGlobalStat('totalAuctions').catch(() => {});
 
@@ -93,13 +97,20 @@ export class AuctionWriter {
           return errorResponse(ErrorType.NOT_FOUND, 'No eligible second bidder recorded');
         }
 
-        tx.update(aRef, {
+        const beforeState = { ...auction };
+        const updateData = {
           status: 'OFFER_PENDING',
           currentBidderId: secondBidderId,
           currentPrice: secondAmount,
           updatedAt: new Date(),
           originalWinnerId: auction.currentBidderId,
-        });
+        };
+        const afterState = { ...beforeState, ...updateData };
+
+        tx.update(aRef, updateData);
+
+        // Log audit change atomically within the transaction
+        AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', undefined, tx).catch(() => {});
 
         log.info('Second chance offer created', { auctionId, secondBidderId, secondAmount });
         return successResponse(undefined);

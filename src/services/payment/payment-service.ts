@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { db } from '@/lib/db';
 import { EscrowTransaction, EscrowStatus } from '@/types';
+import { AuditService } from '@/services/admin/audit-service';
 import { ServiceResponse, successResponse, errorResponse, ErrorType } from '@/lib/errors';
 import { log } from '@/lib/logger';
 import { rtdbPush } from '@/lib/firebase-admin';
@@ -48,14 +49,24 @@ export class PaymentService {
           updatedAt: now,
         };
 
+        const beforeEscrow = { ...escrowData };
+        const afterEscrow = { ...beforeEscrow, ...updateData };
+
         tx.update(escrowDoc.ref, updateData);
+        AuditService.logEscrowChange(escrowDoc.id, beforeEscrow, afterEscrow, 'UPDATE', 'system', tx).catch(() => {});
 
         // 4. Update Auction state to SOLD (if it was AWAITING_PAYMENT)
         const aRef = db.collection('auctions').doc(escrowData.auctionId);
-        tx.update(aRef, {
+        const aSnap = await tx.get(aRef);
+        const beforeAuction = aSnap.data() || null;
+        const updateAuction = {
           status: 'SOLD',
           updatedAt: now,
-        });
+        };
+        const afterAuction = beforeAuction ? { ...beforeAuction, ...updateAuction } : null;
+
+        tx.update(aRef, updateAuction);
+        AuditService.logAuctionChange(escrowData.auctionId, beforeAuction, afterAuction, 'UPDATE', 'system', tx).catch(() => {});
 
         // 5. Notify parties via RTDB
         rtdbPush(RTDB_PATHS.userNotifications(escrowData.buyerId), {

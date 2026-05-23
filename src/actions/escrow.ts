@@ -12,6 +12,7 @@ import { randomUUID } from 'crypto';
 import { updateSellerPerformance } from '@/lib/seller-performance';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { adminRefundEscrow } from './dispute';
+import { AuditService } from '@/services/admin/audit-service';
 
 /**
  * Transitions PENDING → VERIFICATION_PENDING (buyer submits MFS payment ref).
@@ -65,13 +66,18 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       const convRef  = db.collection('conversations').doc(t.auctionId);
       const convSnap = await tx.get(convRef);
 
-      tx.update(txRef, {
+      const beforeState = { ...t };
+      const updateData = {
         status:           'VERIFICATION_PENDING',
         paymentMethod:    'mfs_manual',
         providerRef:      ref,
         verificationType: 'MANUAL',
         updatedAt:        new Date(),
-      });
+      };
+      const afterState = { ...beforeState, ...updateData };
+
+      tx.update(txRef, updateData);
+      AuditService.logEscrowChange(transactionId, beforeState, afterState, 'UPDATE', session.user.id, tx).catch(() => {});
 
       if (!convSnap.exists) {
         const now = new Date();
@@ -156,10 +162,21 @@ export async function confirmItemReceived(transactionId: string): Promise<Servic
       if (t.status !== 'HELD')           throw new Error('Not in a holdable state');
 
       const now = new Date();
-      tx.update(txRef, { status: 'RELEASED', updatedAt: now });
+      const beforeEscrow = { ...t };
+      const updateEscrow = { status: 'RELEASED', updatedAt: now };
+      const afterEscrow = { ...beforeEscrow, ...updateEscrow };
+
+      tx.update(txRef, updateEscrow);
+      AuditService.logEscrowChange(transactionId, beforeEscrow, afterEscrow, 'UPDATE', session.user.id, tx).catch(() => {});
 
       const aRef = db.collection('auctions').doc(t.auctionId);
-      tx.update(aRef, { deliveryStatus: 'DELIVERED', updatedAt: now });
+      const aSnap = await tx.get(aRef);
+      const beforeAuction = aSnap.data() || null;
+      const updateAuction = { deliveryStatus: 'DELIVERED', updatedAt: now };
+      const afterAuction = beforeAuction ? { ...beforeAuction, ...updateAuction } : null;
+
+      tx.update(aRef, updateAuction);
+      AuditService.logAuctionChange(t.auctionId, beforeAuction, afterAuction, 'UPDATE', session.user.id, tx).catch(() => {});
 
       tx.update(db.collection('users').doc(t.sellerId), {
         salesCount: FieldValue.increment(1),
@@ -226,7 +243,12 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
       if (!aSnap.exists)                              throw new Error('Auction not found');
       if (aSnap.data()!.sellerId !== session.user.id) throw new Error('Unauthorized');
 
-      tx.update(aRef, { deliveryStatus: 'SHIPPED', trackingNumber: safeTracking, updatedAt: new Date() });
+      const beforeAuction = aSnap.data() || null;
+      const updateAuction = { deliveryStatus: 'SHIPPED', trackingNumber: safeTracking, updatedAt: new Date() };
+      const afterAuction = beforeAuction ? { ...beforeAuction, ...updateAuction } : null;
+
+      tx.update(aRef, updateAuction);
+      AuditService.logAuctionChange(t.auctionId, beforeAuction, afterAuction, 'UPDATE', session.user.id, tx).catch(() => {});
 
       return { buyerId: t.buyerId as string, auctionId: t.auctionId as string };
     });
