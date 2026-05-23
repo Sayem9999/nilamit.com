@@ -110,7 +110,16 @@ describe('Admin Backup Service — Serialization / Deserialization', () => {
     const deserialized = deserializeValue(serialized);
     expect(deserialized).toBeInstanceOf(GeoPoint);
     expect(deserialized.latitude).toBe(23.8103);
-    expect(deserialized.longitude).toBe(90.4125);
+  });
+
+  it('should NOT serialize regular objects containing latitude and longitude as GeoPoints if they are not class instances of GeoPoint', () => {
+    const regularObj = {
+      latitude: 23.8103,
+      longitude: 90.4125,
+      label: 'Dhaka',
+    };
+    const serialized = serializeValue(regularObj);
+    expect(serialized).toEqual(regularObj);
   });
 
   it('should serialize and deserialize DocumentReferences', () => {

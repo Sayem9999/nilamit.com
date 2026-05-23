@@ -44,7 +44,11 @@ export function serializeValue(val: unknown): unknown {
         nanoseconds: typeof obj.nanoseconds === 'number' ? obj.nanoseconds : 0,
       };
     }
-    if (typeof obj.latitude === 'number' && typeof obj.longitude === 'number') {
+    if (
+      typeof obj.latitude === 'number' &&
+      typeof obj.longitude === 'number' &&
+      (obj.constructor?.name === 'GeoPoint' || typeof obj.isEqual === 'function')
+    ) {
       return {
         __type__: 'geopoint',
         latitude: obj.latitude,
