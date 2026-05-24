@@ -62,7 +62,7 @@ const nextConfig: NextConfig = {
       "media-src 'self' https://*.nilamit.com https://nilamit.com https://*.hosted.app",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://*.firebaseapp.com https://*.facebook.com",
+      "form-action 'self' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://*.firebaseapp.com https://*.facebook.com https://accounts.google.com",
       "frame-ancestors 'none'",
     ].join('; ');
 
