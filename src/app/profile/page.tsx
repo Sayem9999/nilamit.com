@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
+import { getProxiedAvatarUrl } from "@/lib/avatar";
 import { logoutAction } from "@/actions/auth";
 import { sendMFSVerificationOTP } from "@/actions/otp";
 import { calculateLevelProgress } from "@/lib/gamification-engine";
@@ -341,7 +342,7 @@ export default function ProfilePage() {
                   {session.user?.image ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
-                      src={session.user.image}
+                      src={getProxiedAvatarUrl(session.user.image) || ""}
                       alt="Profile"
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

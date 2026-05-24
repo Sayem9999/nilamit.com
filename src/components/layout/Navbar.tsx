@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { logoutAction } from "@/actions/auth";
+import { getProxiedAvatarUrl } from "@/lib/avatar";
 import { memo } from "react";
 import { getClientDB, ensureFirebaseAuth } from "@/lib/firebase-client";
 import { ref, onValue } from "firebase/database";
@@ -235,7 +236,7 @@ export const Navbar = memo(function Navbar() {
                         {session.user?.image ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
-                            src={session.user.image}
+                            src={getProxiedAvatarUrl(session.user.image) || ""}
                             alt=""
                             referrerPolicy="no-referrer"
                             className="w-9 h-9 rounded-full ring-2 ring-white shadow-sm object-cover"
@@ -324,7 +325,7 @@ export const Navbar = memo(function Navbar() {
                     {session.user.image ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
-                        src={session.user.image}
+                        src={getProxiedAvatarUrl(session.user.image) || ""}
                         alt=""
                         referrerPolicy="no-referrer"
                         className="w-8 h-8 rounded-full ring-2 ring-white shadow-sm object-cover"
@@ -370,7 +371,7 @@ export const Navbar = memo(function Navbar() {
                     {session.user.image ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
-                        src={session.user.image}
+                        src={getProxiedAvatarUrl(session.user.image) || ""}
                         alt=""
                         referrerPolicy="no-referrer"
                         className="w-12 h-12 rounded-full ring-2 ring-white shadow-sm object-cover"
