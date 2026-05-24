@@ -617,11 +617,16 @@
   },
   "Categories": {
     "mobile-phones": "Mobile Phones",
+    "computers-laptops": "Computers & Laptops",
     "electronics": "Electronics",
+    "cameras-optics": "Cameras & Optics",
+    "watches-jewelry": "Watches & Jewelry",
     "vehicles": "Vehicles",
     "fashion": "Fashion",
     "home-garden": "Home & Garden",
+    "home-appliances": "Home Appliances",
     "sports": "Sports",
+    "hobbies-music": "Hobbies & Music",
     "books": "Books",
     "collectibles": "Collectibles",
     "other": "Other"
@@ -636,7 +641,18 @@
     "mohammadpur": "Mohammadpur",
     "badda": "Badda",
     "khilgaon": "Khilgaon",
-    "farmgate": "Farmgate"
+    "farmgate": "Farmgate",
+    "chattogram": "Chattogram",
+    "sylhet": "Sylhet",
+    "khulna": "Khulna",
+    "rajshahi": "Rajshahi",
+    "barishal": "Barishal",
+    "rangpur": "Rangpur",
+    "mymensingh": "Mymensingh",
+    "cumilla": "Cumilla",
+    "coxsbazar": "Cox's Bazar",
+    "gazipur": "Gazipur",
+    "narayanganj": "Narayanganj"
   },
   "Meta": {
     "title": "Nilamit — Bangladesh's Trusted Auction Marketplace",

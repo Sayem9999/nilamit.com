@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { 
   Users, Zap, MapPin, Package, X, RotateCcw, Pencil, Star,
-  Smartphone, Tv, Car, Shirt, Home, Dumbbell, BookOpen, Gem, Wrench, Sparkles, RefreshCw, HelpCircle, ShieldAlert
+  Smartphone, Tv, Car, Shirt, Home, Dumbbell, BookOpen, Gem, Wrench, Sparkles, RefreshCw, HelpCircle, ShieldAlert,
+  Laptop, Camera, Watch, Gamepad, Plug
 } from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
@@ -34,10 +35,25 @@ const getCategoryBadgeStyles = (cat?: string) => {
         className: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
         icon: Smartphone
       };
+    case 'computers-laptops':
+      return {
+        className: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Laptop
+      };
     case 'electronics':
       return {
         className: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
         icon: Tv
+      };
+    case 'cameras-optics':
+      return {
+        className: "bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Camera
+      };
+    case 'watches-jewelry':
+      return {
+        className: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Watch
       };
     case 'vehicles':
       return {
@@ -54,10 +70,20 @@ const getCategoryBadgeStyles = (cat?: string) => {
         className: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
         icon: Home
       };
+    case 'home-appliances':
+      return {
+        className: "bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Plug
+      };
     case 'sports':
       return {
         className: "bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
         icon: Dumbbell
+      };
+    case 'hobbies-music':
+      return {
+        className: "bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Gamepad
       };
     case 'books':
       return {
