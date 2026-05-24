@@ -108,7 +108,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
             const isThumbBroken = failedImages[index] || !isValidImageUrl(image);
             const thumbSrc = isThumbBroken
               ? FALLBACK_IMAGE
-              : (image.includes('alt=media') ? image.replace(/(\.[\w\d_-]+)(\?alt=media.*)?$/i, '_400x400$1$2') : image);
+              : (image.includes('alt=media') ? image.replace(/(\.[\w\d_-]+)(\?alt=media.*)?$/i, '_200x200$1$2') : image);
 
             return (
               <button

@@ -131,7 +131,7 @@ export const AuctionCard = memo(({
             <div className="relative w-full h-full">
               {auction.images?.[0] && isValidImageUrl(auction.images[0]) && !imageError ? (
                 <Image
-                  src={auction.images[0].includes('alt=media') ? auction.images[0].replace(/(\.[\w\d_-]+)(\?alt=media.*)?$/i, '_400x400$1$2') : auction.images[0]}
+                  src={auction.images[0].includes('alt=media') ? auction.images[0].replace(/(\.[\w\d_-]+)(\?alt=media.*)?$/i, '_200x200$1$2') : auction.images[0]}
                   alt={`${auction.title} — auction listing photo`}
                   fill
                   priority={priority}
