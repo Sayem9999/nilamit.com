@@ -36,15 +36,11 @@ export const Navbar = memo(function Navbar() {
   const userId = session?.user?.id;
 
   useEffect(() => {
-    // Check if backdrop-filter is actually rendered/resolved to a blur
     const checkBackdrop = () => {
-      if (typeof window !== "undefined") {
-        const testEl = document.createElement("div");
-        testEl.style.backdropFilter = "blur(1px)";
-        document.body.appendChild(testEl);
-        const computed = window.getComputedStyle(testEl).backdropFilter;
-        document.body.removeChild(testEl);
-        if (!computed || computed === "none") {
+      if (typeof window !== "undefined" && typeof CSS !== "undefined") {
+        const supported = CSS.supports("backdrop-filter", "blur(1px)") || 
+                          CSS.supports("-webkit-backdrop-filter", "blur(1px)");
+        if (!supported) {
           setHasBackdrop(false);
         }
       }

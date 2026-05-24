@@ -55,7 +55,7 @@ function getClientApp(): FirebaseApp {
         }
         
         initializeAppCheck(app, {
-          provider: new ReCaptchaV3Provider(siteKey || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'),
+          provider: new ReCaptchaV3Provider(siteKey || '6Leg4fUsAAAAAIITIGqtUG5pzOqB5WX7F3tbD5be'),
           isTokenAutoRefreshEnabled: true
         });
       } catch (err) {
