@@ -80,6 +80,9 @@ export function NotificationsList() {
             setNotifications([]);
           }
           setIsLoading(false);
+        }, (error) => {
+          console.error("Failed to subscribe to notifications:", error);
+          setIsLoading(false);
         });
       } catch (err) {
         console.error("Failed to subscribe to notifications", err);

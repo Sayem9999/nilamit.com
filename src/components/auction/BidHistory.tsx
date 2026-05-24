@@ -53,7 +53,7 @@ export function BidHistory({ auctionId, initialBids = [] }: BidHistoryProps) {
           <TrendingUp className="w-4 h-4 text-indigo-500" /> Bid History
         </h3>
         <span className="text-xs text-gray-400 font-medium">
-          {allBids.length} bids
+          {allBids.length} {allBids.length === 1 ? 'bid' : 'bids'} · {new Set(allBids.map(b => b.bidder.id)).size} {new Set(allBids.map(b => b.bidder.id)).size === 1 ? 'bidder' : 'bidders'}
         </span>
       </div>
 

@@ -82,6 +82,9 @@ export const Navbar = memo(function Navbar() {
           } else {
             setUnreadCount(0);
           }
+        }, (error) => {
+          console.error("Failed to subscribe to navbar notifications:", error);
+          setUnreadCount(0);
         });
       } catch (err) {
         console.error("Failed to subscribe to navbar notification count", err);
