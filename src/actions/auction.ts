@@ -9,6 +9,7 @@ import type { AuctionFilters, AuctionWithSeller, AuctionListResponse, LatestActi
 import { AuctionStatus } from '@/types';
 import { createAuctionSchema, editAuctionSchema, formatZodError } from '@/lib/schemas';
 import { log } from '@/lib/logger';
+import { getSystemConfig } from '@/actions/admin-content';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { cache } from 'react';
 import { AuditService } from '@/services/admin/audit-service';
@@ -65,11 +66,17 @@ export async function createAuction(input: unknown): Promise<ServiceResponse<{ a
   if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
 
   try {
+    const configRes = await getSystemConfig();
+    const systemConfig = configRes.success ? configRes.data : null;
+    const postingReqs = systemConfig?.postingRequirementsEnabled ?? true;
+
     const userSnap = await db.collection('users').doc(session.user.id).get();
     const userData = userSnap.data();
 
-    const isEmailVerified = userData?.emailVerified != null;
-    if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
+    if (postingReqs) {
+      const isEmailVerified = userData?.emailVerified != null;
+      if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
+    }
     if (userData?.isBanned) return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
     if (userData?.isMinor) return errorResponse(ErrorType.FORBIDDEN, 'Users under 18 are not eligible to list auctions.', 'MINOR');
 
@@ -265,6 +272,10 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
   }
 
   try {
+    const configRes = await getSystemConfig();
+    const systemConfig = configRes.success ? configRes.data : null;
+    const postingReqs = systemConfig?.postingRequirementsEnabled ?? true;
+
     const orig = await db.runTransaction(async (tx) => {
       const userRef = db.collection('users').doc(userId);
       const origRef = db.collection('auctions').doc(auctionId);
@@ -275,8 +286,10 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
       ]);
 
       const userData = userSnap.data();
-      const isEmailVerified = userData?.emailVerified != null;
-      if (!isEmailVerified) throw new Error('VERIFICATION_REQUIRED');
+      if (postingReqs) {
+        const isEmailVerified = userData?.emailVerified != null;
+        if (!isEmailVerified) throw new Error('VERIFICATION_REQUIRED');
+      }
       if (userData?.isBanned) throw new Error('BANNED');
 
       if (!origSnap.exists) throw new Error('NOT_FOUND');

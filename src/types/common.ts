@@ -21,6 +21,11 @@ export interface SystemConfig {
   showAnnouncement: boolean;
   treasuryBkash?: string | null;
   treasuryNagad?: string | null;
+  mfsLinkageRequired?: boolean;
+  escrowRequired?: boolean;
+  commissionPercentageEnabled?: boolean;
+  postingRequirementsEnabled?: boolean;
+  biddingRequirementsEnabled?: boolean;
   updatedAt: Date;
 }
 

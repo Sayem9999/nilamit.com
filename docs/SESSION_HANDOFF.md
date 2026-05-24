@@ -1,6 +1,22 @@
 # Session Handoff & Architecture Memory
 
-## Current Session (2026-05-22)
+## Current Session (2026-05-24)
+### What we did
+* **Upgraded Overlay Badges UI/UX** ([AuctionCard.tsx](file:///c:/nilamit.com/src/components/auction/AuctionCard.tsx)): Completely redesigned all absolute-positioned badges overlay on auction listing cards to feel state-of-the-art, premium, and highly visually cohesive:
+  - **Dynamic Category Pills**: Mapped each category (`mobile-phones`, `electronics`, `vehicles`, `fashion`, `home-garden`, `sports`, `books`, `collectibles`, `other`) to dynamic glassmorphic pills with matching HSL semi-transparent text/borders and dedicated Lucide micro-icons (`Smartphone`, `Tv`, `Car`, `Shirt`, `Home`, `Dumbbell`, `BookOpen`, `Gem`, `Package`).
+  - **Condition Badges**: Replaced raw text/emoji with clean, high-fidelity chips and icons (`Sparkles` for `NEW`, `RefreshCw` for `USED`, `Wrench` for `REFURBISHED`).
+  - **Featured Badge**: Elevated to a highly premium amber-to-yellow sunset gradient pill with a glowing star icon and a slow, high-end pulse animation (`animate-pulse`).
+  - **Reserve Status Tooltip**: Redesigned "Reserve not met" into a refined rose warning pill with `ShieldAlert` and `HelpCircle` micro-icons. Engineered a self-contained, CSS-only tooltip that expands on hover/tap to explain the reserve mechanism to bidders.
+* **Administrative Operational Bootstrap Toggles**:
+  - Integrated administrative controls inside Firestore configuration templates (`SystemConfig` extended with `mfsLinkageRequired`, `escrowRequired`, `commissionPercentageEnabled`, `biddingRequirementsEnabled`, `postingRequirementsEnabled`).
+  - Embedded settings across bidding, posting, listing, and billing services to cleanly bypass restrictions during early traction phases.
+  - Implemented the elegant control dashboard inside the Admin settings panel ([SystemTab.tsx](file:///c:/nilamit.com/src/app/admin/tabs/SystemTab.tsx)) and split creation date/time pickers side-by-side in [page.tsx](file:///c:/nilamit.com/src/app/auctions/create/page.tsx).
+* **Compiles & Verification Passes**:
+  - `npx tsc --noEmit` validates 100% cleanly with zero compilation errors.
+  - `npm run lint` completes cleanly with **zero errors and zero warnings** (cleaned up unused `Shield` imports and escaped JSX quotes with `&apos;`).
+  - `npx vitest run` executes all **106 tests** with **100% pass rate**.
+
+## Previous Session (2026-05-22)
 ### What we did
 * **Real-time Navigation Tabs & Inbox**: Added dedicated **Notifications** (`Bell` icon) and **Chat** (`MessageSquare` icon) links to the authenticated header Navbar, desktop/mobile viewports, and the Dashboard sidebar:
   - **Dynamic Badge Count**: Embedded a live subscriber to `/notifications/user/${userId}` in the upper Navbar to instantly render unread notification count badges.

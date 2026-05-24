@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { Bid, Auction, PlaceBidResult, BidWithBidder } from '@/types';
+import { Bid, Auction, PlaceBidResult, BidWithBidder, SystemConfig } from '@/types';
 import { ServiceResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
 import { BidProcessor } from './modules/bid-processor';
@@ -98,8 +98,13 @@ export class BiddingService {
       if (auction.sellerId === userId) throw new Error(ERROR_CODES.SELF_BID_FORBIDDEN);
       if (!auction.buyItNowPrice) throw new Error('BUY_IT_NOW_NOT_AVAILABLE');
 
-      const sellerSnap = await tx.get(db.collection('users').doc(auction.sellerId));
+      const configRef = db.collection('systemConfig').doc('default');
+      const [sellerSnap, configSnap] = await Promise.all([
+        tx.get(db.collection('users').doc(auction.sellerId)),
+        tx.get(configRef),
+      ]);
       const sellerData = sellerSnap.data() || {};
+      const systemConfig = configSnap.exists ? configSnap.data() as SystemConfig : null;
 
       return processAuctionSale(
         tx,
@@ -117,6 +122,7 @@ export class BiddingService {
           name:  userName,
         },
         auction.buyItNowPrice,
+        systemConfig,
       );
     });
 

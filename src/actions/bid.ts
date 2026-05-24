@@ -11,9 +11,10 @@ import { log } from '@/lib/logger';
 
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { placeBidSchema, formatZodError } from '@/lib/schemas';
-import { BidWithBidder, PlaceBidResult } from '@/types';
+import { getSystemConfig } from '@/actions/admin-content';
+import { BidWithBidder, PlaceBidResult, SystemConfig } from '@/types';
 
-async function requireBiddingPrivileges(userId: string): Promise<ServiceResponse<Record<string, unknown>>> {
+async function requireBiddingPrivileges(userId: string, systemConfig?: SystemConfig | null): Promise<ServiceResponse<Record<string, unknown>>> {
   const fetchPrivileges = unstable_cache(
     async (uid: string) => {
       const userSnap = await db.collection('users').doc(uid).get();
@@ -28,8 +29,11 @@ async function requireBiddingPrivileges(userId: string): Promise<ServiceResponse
   if (result.error) return errorResponse(ErrorType.NOT_FOUND, 'User not found', result.error);
   
   const user = result.data!;
-  const isEmailVerified = user.emailVerified != null;
-  if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
+  const biddingReqs = systemConfig?.biddingRequirementsEnabled ?? true;
+  if (biddingReqs) {
+    const isEmailVerified = user.emailVerified != null;
+    if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
+  }
   if (user.isBanned) return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
   if (user.isMinor) return errorResponse(ErrorType.FORBIDDEN, 'Users under 18 are not eligible to place binding bids or purchases.', 'MINOR');
 
@@ -54,13 +58,17 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
   if (!rateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, 'Too many bids placed rapidly. Please wait a moment.');
 
   try {
-    const privileges = await requireBiddingPrivileges(userId);
+    const configRes = await getSystemConfig();
+    const systemConfig = configRes.success ? configRes.data : null;
+
+    const privileges = await requireBiddingPrivileges(userId, systemConfig);
     if (!privileges.success) return privileges as ServiceResponse<never>;
     const user = privileges.data!;
 
     // ─── TIER 2: MFS Linkage Check (৳50,000+) ────────────────────────────────
     // Deter "fun bidders" by requiring a traceable payment account linked.
-    if (amount >= 50000 && !user.bkashNumber && !user.nagadNumber) {
+    const mfsReq = systemConfig?.mfsLinkageRequired ?? true;
+    if (mfsReq && amount >= 50000 && !user.bkashNumber && !user.nagadNumber) {
       return errorResponse(
         ErrorType.FORBIDDEN,
         'MFS account linkage required for high-stake bidding (৳50,000+). Please link bKash or Nagad in your profile.',
@@ -169,7 +177,10 @@ export async function executeBuyItNow(auctionId: string): Promise<ServiceRespons
   if (!binRateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, 'Too many purchase attempts. Please wait a moment.');
 
   try {
-    const privileges = await requireBiddingPrivileges(userId);
+    const configRes = await getSystemConfig();
+    const systemConfig = configRes.success ? configRes.data : null;
+
+    const privileges = await requireBiddingPrivileges(userId, systemConfig);
     if (!privileges.success) return privileges as ServiceResponse<never>;
     const user = privileges.data!;
 

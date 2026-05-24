@@ -118,6 +118,38 @@ export default function CreateAuctionPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Helper to split datetime string into [date, time]
+  const splitDateTime = (dtStr: string): [string, string] => {
+    if (!dtStr) return ["", ""];
+    const [d, t] = dtStr.split("T");
+    return [d || "", t ? t.slice(0, 5) : ""];
+  };
+
+  // Helper to combine date and time strings
+  const combineDateTime = (dStr: string, tStr: string): string => {
+    if (!dStr) return "";
+    const time = tStr || "00:00";
+    return `${dStr}T${time}`;
+  };
+
+  const formatReviewDateTime = (dtStr: string): string => {
+    if (!dtStr) return "-";
+    try {
+      const d = new Date(dtStr);
+      if (isNaN(d.getTime())) return dtStr;
+      return d.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return dtStr;
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-2">
@@ -454,40 +486,58 @@ export default function CreateAuctionPage() {
         )}
 
         {/* Step: Schedule */}
-        {step === "schedule" && (
-          <div className="space-y-4">
-            <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
-              {t("schedule")}
-            </h2>
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
-                {t("startTime")}
-              </label>
-              <input
-                type="datetime-local"
-                name="startTime"
-                value={form.startTime}
-                onChange={(e) => updateForm("startTime", e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-              />
+        {step === "schedule" && (() => {
+          const [startDate, startTimeVal] = splitDateTime(form.startTime);
+          const [endDate, endTimeVal] = splitDateTime(form.endTime);
+          return (
+            <div className="space-y-4">
+              <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
+                {t("schedule")}
+              </h2>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  {t("startTime")}
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => updateForm("startTime", combineDateTime(e.target.value, startTimeVal))}
+                    className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  />
+                  <input
+                    type="time"
+                    value={startTimeVal}
+                    onChange={(e) => updateForm("startTime", combineDateTime(startDate, e.target.value))}
+                    className="w-32 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none font-mono"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  {t("endTime")}
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => updateForm("endTime", combineDateTime(e.target.value, endTimeVal))}
+                    className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  />
+                  <input
+                    type="time"
+                    value={endTimeVal}
+                    onChange={(e) => updateForm("endTime", combineDateTime(endDate, e.target.value))}
+                    className="w-32 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none font-mono"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  {t("antiSnipeNote")}
+                </p>
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">
-                {t("endTime")}
-              </label>
-              <input
-                type="datetime-local"
-                name="endTime"
-                value={form.endTime}
-                onChange={(e) => updateForm("endTime", e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                {t("antiSnipeNote")}
-              </p>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Step: Review */}
         {step === "review" && (
@@ -547,7 +597,7 @@ export default function CreateAuctionPage() {
               <div>
                 <strong className="text-gray-700">{t("timerLabel")}:</strong>{" "}
                 <span className="text-gray-600">
-                  {form.startTime} → {form.endTime}
+                  {formatReviewDateTime(form.startTime)} → {formatReviewDateTime(form.endTime)}
                 </span>
               </div>
               <div>

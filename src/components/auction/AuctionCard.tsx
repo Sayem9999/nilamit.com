@@ -3,7 +3,10 @@
 import Link from "next/link";
 
 import Image from "next/image";
-import { Users, Zap, MapPin, Package, Shield, X, RotateCcw, Pencil, Star } from "lucide-react";
+import { 
+  Users, Zap, MapPin, Package, X, RotateCcw, Pencil, Star,
+  Smartphone, Tv, Car, Shirt, Home, Dumbbell, BookOpen, Gem, Wrench, Sparkles, RefreshCw, HelpCircle, ShieldAlert
+} from "lucide-react";
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
@@ -21,6 +24,82 @@ import toast from "react-hot-toast";
 import { useAuctionPrice } from "@/hooks/useAuctionPrice";
 
 import React, { memo, useState, useTransition } from "react";
+
+// Premium dynamic styling and Lucide icons for categories
+const getCategoryBadgeStyles = (cat?: string) => {
+  const normalized = (cat || 'other').toLowerCase().replace(/_/g, '-');
+  switch (normalized) {
+    case 'mobile-phones':
+      return {
+        className: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Smartphone
+      };
+    case 'electronics':
+      return {
+        className: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Tv
+      };
+    case 'vehicles':
+      return {
+        className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Car
+      };
+    case 'fashion':
+      return {
+        className: "bg-pink-500/10 text-pink-700 dark:text-pink-300 border-pink-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Shirt
+      };
+    case 'home-garden':
+      return {
+        className: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Home
+      };
+    case 'sports':
+      return {
+        className: "bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Dumbbell
+      };
+    case 'books':
+      return {
+        className: "bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: BookOpen
+      };
+    case 'collectibles':
+      return {
+        className: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Gem
+      };
+    default:
+      return {
+        className: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Package
+      };
+  }
+};
+
+// Premium dynamic styling and Lucide icons for item conditions
+const getConditionBadgeStyles = (cond?: string) => {
+  const normalized = (cond || '').toUpperCase();
+  switch (normalized) {
+    case 'NEW':
+      return {
+        className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Sparkles
+      };
+    case 'USED':
+      return {
+        className: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: RefreshCw
+      };
+    case 'REFURBISHED':
+      return {
+        className: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        icon: Wrench
+      };
+    default:
+      return null;
+  }
+};
 
 export const AuctionCard = memo(({
   auction,
@@ -150,24 +229,53 @@ export const AuctionCard = memo(({
           )}
 
           {/* Badges */}
-          <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col gap-1 md:gap-2 z-10">
-            <span className="glass px-1.5 py-0.5 md:px-2.5 md:py-1 rounded md:rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-wider text-primary-700 border border-primary-100/50 shadow-sm flex items-center gap-1 md:gap-1.5 backdrop-blur-md">
-              {tCat(auction.category || 'other')}
-            </span>
-            {auction.condition && (
-              <span className="glass px-1.5 py-0.5 md:px-2.5 md:py-1 rounded md:rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-wider text-gray-700 border border-gray-200/50 shadow-sm flex items-center gap-1 md:gap-1.5 backdrop-blur-md">
-                <span aria-hidden="true">✨</span> {auction.condition}
-              </span>
-            )}
+          <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col gap-1.5 md:gap-2 z-10">
+            {/* Category Badge */}
+            {(() => {
+              const styles = getCategoryBadgeStyles(auction.category);
+              const CatIcon = styles.icon;
+              return (
+                <span className={styles.className}>
+                  <CatIcon className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" aria-hidden="true" />
+                  {tCat(auction.category || 'other')}
+                </span>
+              );
+            })()}
+
+            {/* Condition Badge */}
+            {auction.condition && (() => {
+              const styles = getConditionBadgeStyles(auction.condition);
+              if (!styles) return null;
+              const CondIcon = styles.icon;
+              return (
+                <span className={styles.className}>
+                  <CondIcon className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" aria-hidden="true" />
+                  {auction.condition}
+                </span>
+              );
+            })()}
+
+            {/* Featured Badge */}
             {auction.isFeatured && (
-              <span className="bg-gradient-to-r from-primary-600 to-primary-400 text-white px-1.5 py-0.5 md:px-2.5 md:py-1 rounded md:rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-wider shadow-lg backdrop-blur-md flex items-center gap-1 md:gap-1.5 border border-white/20">
-                <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-white" aria-hidden="true" /> Featured
+              <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white px-2.5 py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-wider shadow-[0_4px_12px_rgba(245,158,11,0.35)] border border-amber-400/40 flex items-center gap-1.5 backdrop-blur-md animate-pulse">
+                <Star className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 fill-white text-white" aria-hidden="true" />
+                Featured
               </span>
             )}
+
+            {/* Reserve Not Met Badge with Premium CSS Tooltip */}
             {auction.reservePrice && (auction.isReserveMet === false || auction.currentPrice < (auction.reservePrice || 0)) && (
-              <span className="bg-amber-500/90 text-white px-1.5 py-0.5 md:px-2.5 md:py-1 rounded md:rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-wider shadow-md backdrop-blur-md flex items-center gap-1 md:gap-1.5 border border-amber-400/50">
-                <Shield className="w-2.5 h-2.5 md:w-3 md:h-3" aria-hidden="true" /> Reserve not met
-              </span>
+              <div className="group/tooltip relative flex items-center">
+                <span className="bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20 shadow-sm rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold tracking-wider uppercase flex items-center gap-1.5 border backdrop-blur-md select-none cursor-help">
+                  <ShieldAlert className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+                  <span>Reserve not met</span>
+                  <HelpCircle className="w-2.5 h-2.5 opacity-60 hover:opacity-100" />
+                </span>
+                <div className="absolute left-0 top-full mt-2 hidden group-hover/tooltip:block w-52 bg-slate-900/95 text-white text-[10px] p-2.5 rounded-xl shadow-xl backdrop-blur-sm z-50 border border-white/10 leading-normal normal-case font-medium">
+                  <p className="font-bold text-rose-400 uppercase tracking-wider text-[9px] mb-1">What is this?</p>
+                  The current highest bid is below the seller&apos;s minimum price. The seller is not obligated to sell unless bidding reaches this hidden threshold.
+                </div>
+              </div>
             )}
           </div>
 

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Database, Upload } from 'lucide-react';
+import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Database, Upload, Loader2, Sparkles, Mail, Wallet, ShieldCheck, Percent } from 'lucide-react';
 import { adminWipeTestData, exportTransactionsCSV, exportDatabaseBackup, importDatabaseBackup } from '@/actions/admin-system';
 import { getSystemConfig, updateSystemConfig } from '@/actions/admin-content';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { SystemConfig } from '@/types';
 
 export function SystemTab() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -14,6 +15,10 @@ export function SystemTab() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [_isSavingConfig, setIsSavingConfig] = useState(false);
+
+  // Operational Config State
+  const [config, setConfig] = useState<SystemConfig | null>(null);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
   // Backup & Restore states
   const [isExportingBackup, setIsExportingBackup] = useState(false);
@@ -25,12 +30,38 @@ export function SystemTab() {
 
   useEffect(() => {
     const fetchConfig = async () => {
+      setIsLoadingConfig(true);
       const res = await getSystemConfig();
       if (res.success && res.data) {
+        setConfig(res.data);
       }
+      setIsLoadingConfig(false);
     };
     fetchConfig();
   }, []);
+
+  const handleToggle = async (field: keyof SystemConfig, value: boolean) => {
+    if (!config) return;
+    const previousValue = config[field];
+    const updatedConfig = { ...config, [field]: value };
+    setConfig(updatedConfig);
+    
+    const loadingToast = toast.loading(`Updating ${field}...`);
+    try {
+      const res = await updateSystemConfig({
+        [field]: value
+      });
+      if (res.success) {
+        toast.success('Operational mode updated!', { id: loadingToast });
+      } else {
+        toast.error(res.error?.message || 'Failed to update setting', { id: loadingToast });
+        setConfig({ ...config, [field]: previousValue });
+      }
+    } catch {
+      toast.error('An error occurred while updating setting', { id: loadingToast });
+      setConfig({ ...config, [field]: previousValue });
+    }
+  };
 
   const _handleUpdateConfig = async () => {
     setIsSavingConfig(true);
@@ -177,6 +208,164 @@ export function SystemTab() {
 
   return (
     <div className="space-y-6">
+
+      {/* Operational Bootstrap & Growth Modes */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+        <div className="flex items-start gap-4">
+          <div className="bg-primary-50 p-3 rounded-xl">
+            <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-heading font-bold text-lg text-gray-900">Bootstrap & Operational Modes</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Configure system-wide requirement bypasses to boost transactions, ease onboarding friction, and scale user activity.
+            </p>
+
+            {isLoadingConfig ? (
+              <div className="mt-8 flex items-center justify-center py-6 text-sm text-gray-400">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Loading operational modes...
+              </div>
+            ) : !config ? (
+              <div className="mt-8 text-center text-sm text-gray-400 py-6 border border-dashed border-gray-200 rounded-xl">
+                Failed to load system configuration.
+              </div>
+            ) : (
+              <div className="mt-8 space-y-6 border-t border-gray-50 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Toggle: Posting Requirements */}
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-indigo-500" />
+                        <span className="font-semibold text-gray-900 text-sm">Require Posting Verification</span>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Enforce email verification check on sellers before creating or relisting items.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleToggle('postingRequirementsEnabled', !(config.postingRequirementsEnabled ?? true))}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        (config.postingRequirementsEnabled ?? true) ? 'bg-primary-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          (config.postingRequirementsEnabled ?? true) ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Toggle: Bidding Requirements */}
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-indigo-500" />
+                        <span className="font-semibold text-gray-900 text-sm">Require Bidding Verification</span>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Enforce email verification check on bidders before placing any bid or Buy It Now.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleToggle('biddingRequirementsEnabled', !(config.biddingRequirementsEnabled ?? true))}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        (config.biddingRequirementsEnabled ?? true) ? 'bg-primary-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          (config.biddingRequirementsEnabled ?? true) ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Toggle: MFS Linkage */}
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <Wallet className="w-4 h-4 text-pink-500" />
+                        <span className="font-semibold text-gray-900 text-sm">Require MFS Linkage</span>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Require linked bKash/Nagad accounts for high-value bids (৳50,000+) or escrow payments.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleToggle('mfsLinkageRequired', !(config.mfsLinkageRequired ?? true))}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        (config.mfsLinkageRequired ?? true) ? 'bg-primary-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          (config.mfsLinkageRequired ?? true) ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Toggle: Escrow Requirements */}
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                        <span className="font-semibold text-gray-900 text-sm">Require Secured Escrow</span>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Route sales through secure treasury holds. When disabled, won auctions coordinate instantly with funds released.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleToggle('escrowRequired', !(config.escrowRequired ?? true))}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        (config.escrowRequired ?? true) ? 'bg-primary-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          (config.escrowRequired ?? true) ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Toggle: Platform Commission */}
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                    <div className="space-y-1 pr-4">
+                      <div className="flex items-center gap-2">
+                        <Percent className="w-4 h-4 text-amber-500" />
+                        <span className="font-semibold text-gray-900 text-sm">Enable Platform Success Fees</span>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Calculate success fees on finished auctions. If disabled, transactions are completed with 0% fees.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleToggle('commissionPercentageEnabled', !(config.commissionPercentageEnabled ?? true))}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        (config.commissionPercentageEnabled ?? true) ? 'bg-primary-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          (config.commissionPercentageEnabled ?? true) ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-start gap-4">

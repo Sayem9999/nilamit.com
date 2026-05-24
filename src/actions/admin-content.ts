@@ -17,6 +17,11 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   showAnnouncement: false,
   treasuryBkash: null,
   treasuryNagad: null,
+  mfsLinkageRequired: true,
+  escrowRequired: true,
+  commissionPercentageEnabled: true,
+  postingRequirementsEnabled: true,
+  biddingRequirementsEnabled: true,
   updatedAt: new Date(),
 } as SystemConfig;
 
@@ -45,6 +50,11 @@ export async function updateSystemConfig(data: {
   announcement?: string; showAnnouncement?: boolean;
   treasuryBkash?: string; treasuryNagad?: string;
   defaultCommissionRate?: number;
+  mfsLinkageRequired?: boolean;
+  escrowRequired?: boolean;
+  commissionPercentageEnabled?: boolean;
+  postingRequirementsEnabled?: boolean;
+  biddingRequirementsEnabled?: boolean;
 }): Promise<ServiceResponse<null>> {
   try {
     await requireAdmin();

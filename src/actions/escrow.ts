@@ -42,10 +42,16 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       };
 
       const buyerRef  = db.collection('users').doc(session.user.id);
-      const buyerSnap = await tx.get(buyerRef);
+      const configRef = db.collection('systemConfig').doc('default');
+      const [buyerSnap, configSnap] = await Promise.all([
+        tx.get(buyerRef),
+        tx.get(configRef),
+      ]);
       const buyer     = buyerSnap.data() || {};
+      const systemConfig = configSnap.exists ? configSnap.data() : null;
+      const mfsReq = systemConfig?.mfsLinkageRequired ?? true;
 
-      if (!buyer.bkashNumber && !buyer.nagadNumber) {
+      if (mfsReq && !buyer.bkashNumber && !buyer.nagadNumber) {
         throw new Error('MFS_LINKAGE_REQUIRED');
       }
       if (!buyer.address) {

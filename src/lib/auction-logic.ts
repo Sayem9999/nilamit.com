@@ -3,7 +3,7 @@ import { db, incrementGlobalStat } from '@/lib/db';
 import { sendAuctionWonEmail } from '@/lib/firebase-email';
 import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
-import type { AuctionStatus } from '@/types';
+import type { AuctionStatus, SystemConfig } from '@/types';
 import { log } from '@/lib/logger';
 import { scheduleEnforcePaymentPolicy } from '@/lib/cloud-tasks';
 
@@ -47,12 +47,14 @@ export function processAuctionSale(
   seller: { id: string; isVerifiedSeller: boolean },
   winner: { id: string; email: string | null; name: string | null },
   finalPrice: number,
+  systemConfig?: SystemConfig | null,
 ): SaleNotifyPayload {
   if (auction.reservePrice && finalPrice < auction.reservePrice) {
     throw new Error('Reserve price not met.');
   }
 
-  const { fee, rate } = calculateSuccessFee(finalPrice);
+  const commissionEnabled = systemConfig?.commissionPercentageEnabled ?? true;
+  const { fee, rate } = commissionEnabled ? calculateSuccessFee(finalPrice) : { fee: 0, rate: 0 };
   const now = new Date();
 
   const auctionRef = db.collection('auctions').doc(auction.id);
@@ -69,6 +71,9 @@ export function processAuctionSale(
   const deliveryCharge = auction.deliveryCharge ?? 0;
   const escrowAmount   = finalPrice + deliveryCharge;
 
+  const escrowRequired = systemConfig?.escrowRequired ?? true;
+  const escrowStatus = escrowRequired ? 'PENDING' : 'RELEASED';
+
   const escrowRef = db.collection('escrowTransactions').doc(auction.id);
   // set() without merge so a second call can never silently re-open a closed escrow.
   transaction.set(escrowRef, {
@@ -77,7 +82,7 @@ export function processAuctionSale(
     buyerId:          winner.id,
     sellerId:         auction.sellerId,
     amount:           escrowAmount,
-    status:           'PENDING',
+    status:           escrowStatus,
     paymentMethod:    null,
     providerRef:      null,
     verificationType: null,
@@ -190,13 +195,16 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
         return { expired: true, auctionId };
       }
 
-      const [winnerSnap, sellerSnap] = await Promise.all([
+      const configRef = db.collection('systemConfig').doc('default');
+      const [winnerSnap, sellerSnap, configSnap] = await Promise.all([
         tx.get(db.collection('users').doc(winnerId)),
         tx.get(db.collection('users').doc(a.sellerId)),
+        tx.get(configRef),
       ]);
 
       const winnerData = winnerSnap.data() || {};
       const sellerData = sellerSnap.data() || {};
+      const systemConfig = configSnap.exists ? configSnap.data() as SystemConfig : null;
 
       return processAuctionSale(
         tx,
@@ -205,6 +213,7 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
         { id: a.sellerId, isVerifiedSeller: sellerData.isVerifiedSeller ?? false },
         { id: winnerId, email: winnerData.email ?? null, name: winnerData.name ?? 'Winner' },
         finalPrice,
+        systemConfig,
       );
     });
 
