@@ -150,7 +150,7 @@ export default function ChatInterface({
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary-50 relative overflow-hidden flex items-center justify-center">
             {recipientImage ? (
-              <Image src={recipientImage} alt={recipientName} fill sizes="40px" className="object-cover" />
+              <Image src={recipientImage} alt={recipientName} fill sizes="40px" className="object-cover" referrerPolicy="no-referrer" unoptimized />
             ) : (
               <User className="w-5 h-5 text-primary-400" />
             )}

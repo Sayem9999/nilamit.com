@@ -132,7 +132,7 @@ export default async function SellerProfilePage({ params }: Props) {
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-2 shadow-2xl shadow-primary-200/50 relative z-10">
                 <div className="w-full h-full rounded-[2rem] overflow-hidden bg-gray-100 flex items-center justify-center relative">
                   {seller.image ? (
-                    <Image src={seller.image} alt={seller.name || ""} fill sizes="(max-width: 768px) 128px, 160px" className="object-cover" />
+                    <Image src={seller.image} alt={seller.name || ""} fill sizes="(max-width: 768px) 128px, 160px" className="object-cover" referrerPolicy="no-referrer" unoptimized />
                   ) : (
                     <span className="text-4xl font-bold text-primary-300">{(seller.name || "?")[0]}</span>
                   )}
@@ -285,7 +285,7 @@ export default async function SellerProfilePage({ params }: Props) {
                       <p className="text-sm text-gray-600 font-medium mb-2">&quot;{review.comment}&quot;</p>
                       <div className="flex items-center gap-2">
                         <div className="w-5 h-5 rounded-full bg-gray-100 overflow-hidden">
-                          {review.from.image && <Image src={review.from.image} alt="" width={20} height={20} />}
+                          {review.from.image && <Image src={review.from.image} alt="" width={20} height={20} referrerPolicy="no-referrer" unoptimized />}
                         </div>
                         <span className="text-[10px] font-bold text-gray-500 uppercase">{review.from.name || "Anonymous"}</span>
                       </div>

@@ -333,6 +333,8 @@ export default async function AuctionDetailPage({ params }: Props) {
                     width={48}
                     height={48}
                     className="w-12 h-12 rounded-full object-cover"
+                    referrerPolicy="no-referrer"
+                    unoptimized
                   />
                 ) : (
                   <User className="w-6 h-6 text-primary-600" />
