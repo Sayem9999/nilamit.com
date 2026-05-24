@@ -52,6 +52,7 @@
     "signInBtn": "Sign In",
     "signUpBtn": "Create Account",
     "googleBtn": "Continue with Google",
+    "facebookBtn": "Continue with Facebook",
     "sendResetBtn": "Send Reset Code",
     "verifyBtn": "Verify",
     "noAccount": "Don't have an account?",

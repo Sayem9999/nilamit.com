@@ -49,6 +49,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  FACEBOOK_CLIENT_ID: z.string().optional(),
+  FACEBOOK_CLIENT_SECRET: z.string().optional(),
   SENTRY_DSN: z.string().url().optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   RESEND_API_KEY: z.string().optional(),

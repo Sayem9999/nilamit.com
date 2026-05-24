@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import type { Adapter, AdapterUser, AdapterAccount, VerificationToken, AdapterSession } from 'next-auth/adapters';
 import Google from 'next-auth/providers/google';
+import Facebook from 'next-auth/providers/facebook';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
@@ -158,6 +159,14 @@ if (!googleEnabled && process.env.NODE_ENV === 'production') {
   log.error('[Auth-WARN] Google OAuth disabled — missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET');
 }
 
+const facebookClientId     = env.FACEBOOK_CLIENT_ID;
+const facebookClientSecret = env.FACEBOOK_CLIENT_SECRET;
+const facebookEnabled      = Boolean(facebookClientId && facebookClientSecret);
+
+if (!facebookEnabled && process.env.NODE_ENV === 'production') {
+  log.error('[Auth-WARN] Facebook OAuth disabled — missing FACEBOOK_CLIENT_ID / FACEBOOK_CLIENT_SECRET');
+}
+
 // 5 minutes: short enough that ban/verification changes propagate quickly,
 // long enough to avoid hammering Firestore on every request.
 const _TOKEN_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
@@ -172,6 +181,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           Google({
             clientId: googleClientId!,
             clientSecret: googleClientSecret!,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
+    ...(facebookEnabled
+      ? [
+          Facebook({
+            clientId: facebookClientId!,
+            clientSecret: facebookClientSecret!,
             allowDangerousEmailAccountLinking: true,
           }),
         ]
@@ -227,11 +245,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.nagadNumber      = user.nagadNumber ?? null;
 
         let finalImage = user.image ?? null;
-        // Sync Google photo on Google sign-in
-        if (account?.provider === 'google' && profile) {
-          const googleImage = profile.picture || (profile as Record<string, unknown>).image as string | undefined;
-          if (googleImage) {
-            finalImage = googleImage;
+        // Sync OAuth photo on OAuth sign-in (Google or Facebook)
+        if ((account?.provider === 'google' || account?.provider === 'facebook') && profile) {
+          const oauthImage = user.image;
+          if (oauthImage) {
+            finalImage = oauthImage;
             // Asynchronously sync to database if user document has no image set
             try {
               const userRef = db.collection('users').doc(user.id!);
@@ -239,12 +257,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               if (snap.exists) {
                 const currentData = snap.data()!;
                 if (!currentData.image) {
-                  await userRef.update({ image: googleImage, updatedAt: new Date() });
-                  log.info(`[Auth] Synced Google avatar to Firestore for user: ${user.id}`);
+                  await userRef.update({ image: oauthImage, updatedAt: new Date() });
+                  log.info(`[Auth] Synced ${account.provider} avatar to Firestore for user: ${user.id}`);
                 }
               }
             } catch (err) {
-              log.error('[Auth] Failed to sync Google avatar to database', err);
+              log.error(`[Auth] Failed to sync ${account.provider} avatar to database`, err);
             }
           }
         }
