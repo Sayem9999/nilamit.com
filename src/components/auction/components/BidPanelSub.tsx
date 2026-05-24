@@ -59,6 +59,8 @@ interface PriceInfoProps {
   proxyBidderId?: string | null;
   currentUserId?: string;
   auctionId: string;
+  bidCount: number;
+  biddersCount: number;
 }
 
 export const BidPriceInfo = memo(function BidPriceInfo({
@@ -69,12 +71,21 @@ export const BidPriceInfo = memo(function BidPriceInfo({
   proxyMaxBid,
   proxyBidderId,
   currentUserId,
-  auctionId
+  auctionId,
+  bidCount,
+  biddersCount
 }: PriceInfoProps) {
   return (
     <>
       <div className="bg-primary-50 rounded-xl p-4 mb-4">
-        <p className="text-xs text-primary-600 font-medium mb-1">{t("currentPrice")}</p>
+        <div className="flex items-baseline justify-between mb-1">
+          <p className="text-xs text-primary-600 font-medium">{t("currentPrice")}</p>
+          <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tight flex items-center gap-1.5 bg-white/60 px-2 py-0.5 rounded-full border border-primary-100/50 shadow-sm select-none">
+            <span>{bidCount} {bidCount === 1 ? 'Bid' : 'Bids'}</span>
+            <span className="w-1 h-1 bg-gray-300 rounded-full" />
+            <span>{biddersCount} {biddersCount === 1 ? 'Bidder' : 'Bidders'}</span>
+          </div>
+        </div>
         <p className="price text-2xl text-primary-700">{formatBDT(displayPrice)}</p>
         {startingPrice && (
           <p className="text-xs text-gray-400 mt-1">

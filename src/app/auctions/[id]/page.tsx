@@ -310,6 +310,8 @@ export default async function AuctionDetailPage({ params }: Props) {
             proxyMaxBid={auction.proxyMaxBid}
             proxyBidderId={auction.proxyBidderId}
             initialStatus={auction.status}
+            initialBidCount={bids.length}
+            initialBiddersCount={new Set(bids.map(b => b.bidder.id)).size}
             initialBids={bids.slice(0, 10).map((b) => ({
               id:         b.id,
               amount:     b.amount,

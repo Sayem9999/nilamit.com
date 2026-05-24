@@ -22,6 +22,8 @@ interface BidPanelProps {
   onBidPlaced?: () => void;
   startingPrice?: number;
   initialStatus?: string;
+  initialBidCount?: number;
+  initialBiddersCount?: number;
 }
 
 const BidPanel = dynamic(

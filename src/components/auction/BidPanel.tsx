@@ -11,6 +11,7 @@ import { ErrorType, ServiceResponse } from "@/lib/errors";
 import { ERROR_CODES } from "@/lib/constants";
 import { PlaceBidResult, RealTimeBid } from "@/types";
 import { useAuctionBids } from "@/hooks/useAuctionBids";
+import { useAuctionPrice } from "@/hooks/useAuctionPrice";
 import { useSound } from "@/hooks/useSound";
 import { useSettings } from "@/context/SettingsContext";
 import { VerificationGuard } from "@/components/auth/VerificationGuard";
@@ -49,6 +50,8 @@ interface BidPanelProps {
   onBidPlaced?: () => void;
   startingPrice?: number;
   initialStatus?: string;
+  initialBidCount?: number;
+  initialBiddersCount?: number;
 }
 
 export function BidPanel({
@@ -66,13 +69,33 @@ export function BidPanel({
   onBidPlaced,
   startingPrice,
   initialStatus,
+  initialBidCount = 0,
+  initialBiddersCount = 0,
 }: BidPanelProps) {
   const { data: session } = useSession();
   const { soundEffectsEnabled, toggleSoundEffects } = useSettings();
   const { play: playGavel } = useSound("/sounds/gavel.mp3");
   const t = useTranslations("BidPanel");
   const { newBids, currentEndTime, isConnected, status: rtStatus } = useAuctionBids(auctionId, { initialBids, initialStatus });
+  const { bidCount: rtBidCount } = useAuctionPrice(auctionId, currentPrice, initialBidCount, initialStatus);
   
+  const [knownBidderIds, setKnownBidderIds] = useState<Set<string>>(() => {
+    const ids = new Set<string>();
+    initialBids?.forEach(b => { if (b.bidderId) ids.add(b.bidderId); });
+    return ids;
+  });
+
+  useEffect(() => {
+    if (newBids.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setKnownBidderIds(prev => {
+        const next = new Set(prev);
+        newBids.forEach(b => { if (b.bidderId) next.add(b.bidderId); });
+        return next;
+      });
+    }
+  }, [newBids]);
+
   const currentStatus = rtStatus || initialStatus || "ACTIVE"; 
   const [optimisticBid, setOptimisticBid] = useState<number | null>(null);
 
@@ -247,6 +270,8 @@ export function BidPanel({
             proxyBidderId={proxyBidderId}
             currentUserId={session?.user?.id}
             auctionId={auctionId}
+            bidCount={rtBidCount}
+            biddersCount={Math.max(initialBiddersCount, knownBidderIds.size)}
           />
 
           {buyItNowPrice && (
