@@ -85,7 +85,7 @@ export function getAdminApp(): App {
     return initializeApp({
     credential: cert({ projectId, clientEmail, privateKey }),
     databaseURL: process.env.FIREBASE_DATABASE_URL ??
-      `https://${projectId}-default-rtdb.firebaseio.com`,
+      `https://${projectId}-default-rtdb.asia-southeast1.firebasedatabase.app`,
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET ??
       `${projectId}.firebasestorage.app`,
     });

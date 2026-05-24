@@ -85,7 +85,12 @@ export async function getClientAnalytics(): Promise<Analytics | null> {
 }
 
 export function getClientDB(): Database {
-  if (!_db) _db = getDatabase(getClientApp());
+  if (!_db) {
+    const app = getClientApp();
+    const url = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
+                "https://nilamit-52073-default-rtdb.asia-southeast1.firebasedatabase.app";
+    _db = getDatabase(app, url);
+  }
   return _db;
 }
 
