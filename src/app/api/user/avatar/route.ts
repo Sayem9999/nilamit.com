@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const parsedUrl = new URL(targetUrl);
-    if (!ALLOWED_HOSTS.includes(parsedUrl.hostname)) {
+    const isGoogle = parsedUrl.hostname === 'googleusercontent.com' || parsedUrl.hostname.endsWith('.googleusercontent.com');
+    if (!isGoogle && !ALLOWED_HOSTS.includes(parsedUrl.hostname)) {
       return new NextResponse('Host not allowed', { status: 400 });
     }
 

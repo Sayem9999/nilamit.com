@@ -5,6 +5,7 @@ import { getUserReviews } from "@/actions/review";
 import { Star, MessageSquare, Clock, User } from "lucide-react";
 import { formatRelativeTime } from "@/lib/format";
 import Image from "next/image";
+import { getProxiedAvatarUrl } from "@/lib/avatar";
 
 interface ReviewListProps {
   userId: string;
@@ -81,7 +82,7 @@ export function ReviewList({ userId }: ReviewListProps) {
               <div className="w-8 h-8 bg-primary-50 rounded-full flex items-center justify-center">
                 {review.from.image ? (
                   <Image
-                    src={review.from.image}
+                    src={getProxiedAvatarUrl(review.from.image) || ""}
                     alt="User"
                     width={32}
                     height={32}

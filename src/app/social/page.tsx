@@ -2,6 +2,7 @@ import { getUserReputation, getUserConversations } from "@/actions/social";
 import ChatList from "@/components/social/ChatList";
 import UserBadge from "@/components/social/UserBadge";
 import Image from "next/image";
+import { getProxiedAvatarUrl } from "@/lib/avatar";
 import { auth } from "@/lib/auth";
 import { User, Trophy, ShieldCheck } from "lucide-react";
 
@@ -24,7 +25,7 @@ export default async function SocialDashboardPage() {
               <div className="w-24 h-24 bg-primary-50 rounded-full mx-auto mb-6 flex items-center justify-center relative">
                 {reputation.image ? (
                   <Image
-                    src={reputation.image}
+                    src={getProxiedAvatarUrl(reputation.image) || ""}
                     alt={reputation.name || ""}
                     fill
                     sizes="96px"
@@ -49,7 +50,8 @@ export default async function SocialDashboardPage() {
                 <UserBadge
                   level={reputation.userLevel}
                   streak={reputation.winningStreak}
-                  reputation={reputation.reputationScore}
+                  reputation={reputation.rating ?? reputation.reputationScore}
+                  ratingCount={reputation.ratingCount}
                 />
               </div>
 

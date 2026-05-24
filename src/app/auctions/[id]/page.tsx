@@ -43,6 +43,7 @@ import { DetailFeatureButton } from "@/components/auction/DetailFeatureButton";
 import { isWatched } from "@/actions/watchlist";
 import { ShareButton } from "@/components/auction/ShareButton";
 import UserBadge from "@/components/social/UserBadge";
+import { getProxiedAvatarUrl } from "@/lib/avatar";
 import { GatedContactInfo } from "@/components/ui/GatedContactInfo";
 import { getAuctionChat } from "@/actions/chat";
 import { Metadata } from "next";
@@ -328,7 +329,7 @@ export default async function AuctionDetailPage({ params }: Props) {
               <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
                 {auction.seller?.image ? (
                   <Image
-                    src={auction.seller.image}
+                    src={getProxiedAvatarUrl(auction.seller.image) || ""}
                     alt={auction.seller.name || t("sellerFallback")}
                     width={48}
                     height={48}
@@ -410,6 +411,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                     level={auction.seller?.userLevel || 1}
                     streak={auction.seller?.winningStreak || 0}
                     reputation={auction.seller?.rating || 0}
+                    ratingCount={auction.seller?.ratingCount || 0}
                   />
                 </div>
               </div>

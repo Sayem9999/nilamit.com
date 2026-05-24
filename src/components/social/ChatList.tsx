@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { formatRelativeTime } from '@/lib/format';
 import { useTranslations } from 'next-intl';
+import { getProxiedAvatarUrl } from '@/lib/avatar';
 
 interface ConversationWithMeta {
   id: string;
@@ -95,7 +96,7 @@ export default function ChatList({ conversations }: ChatListProps) {
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-4 h-4 rounded-full bg-gray-200 relative overflow-hidden">
                     {recipient?.image ? (
-                        <Image src={recipient.image} alt={recipient.name || ""} fill sizes="16px" className="object-cover" referrerPolicy="no-referrer" unoptimized />
+                        <Image src={getProxiedAvatarUrl(recipient.image) || ""} alt={recipient.name || ""} fill sizes="16px" className="object-cover" referrerPolicy="no-referrer" unoptimized />
                     ) : (
                         <User className="w-3 h-3 text-gray-400 m-auto" />
                     )}
