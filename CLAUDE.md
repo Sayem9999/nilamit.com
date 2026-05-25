@@ -64,6 +64,8 @@ This file is loaded automatically by Claude Code at the start of every session.
   
   17. **High-Scalability Services** — For large features (Auction, Bidding), use the **Modular Service Pattern**: split into `modules/reader`, `modules/writer`, and `modules/notifier`.
 
+  18. **Data Purity & Live Database Integrity** — Never return mock/seed array values on live production files, showcase pages, or server actions. If no data exists, let the client component gracefully degrade, render a clean empty state, or hide the section entirely. Mocks belong only in unit testing environments.
+
 ---
 
 ## Architecture

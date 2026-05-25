@@ -19,10 +19,10 @@ interface GlobalStats {
 }
 
 const FALLBACK_STATS: Required<Omit<GlobalStats, "updatedAt">> & { updatedAt: Date } = {
-  totalUsers: 2450,
-  totalBids: 15600,
-  totalAuctions: 840,
-  totalVerifiedSellers: 320,
+  totalUsers: 0,
+  totalBids: 0,
+  totalAuctions: 0,
+  totalVerifiedSellers: 0,
   isReal: false,
   updatedAt: new Date(),
 };

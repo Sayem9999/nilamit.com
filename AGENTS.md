@@ -68,7 +68,7 @@ export async function doSomething(input: unknown): Promise<ServiceResponse<null>
 ## Boundaries
 - ✅ **Always do**: Use the Service layer for business logic. Return `ServiceResponse`. Run `npx tsc --noEmit` and `npx vitest run` before pushing.
 - ⚠️ **Ask first**: Changing database schemas (Firestore/RTDB), adding top-level dependencies, rotating secrets in Firebase Secret Manager, modifying CI workflows, deploying to production.
-- 🚫 **Never do**: Write directly to Firestore from the client. Commit secrets to `.env` files. Use `Math.random()` for OTPs (use `crypto.randomInt`). Call `Storage.makePublic()` on user content.
+- 🚫 **Never do**: Write directly to Firestore from the client. Commit secrets to `.env` files. Use `Math.random()` for OTPs (use `crypto.randomInt`). Call `Storage.makePublic()` on user content. **Serve hardcoded mock/fake seed data fallback arrays on production actions or showcase views.**
 
 ## Branch & merge protocol
 - `main` is unprotected, but operate as if it weren't: open a PR for review unless the user explicitly says "push direct to main".

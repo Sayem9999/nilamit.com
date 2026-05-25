@@ -23,7 +23,6 @@ import {
   ShieldCheck,
   Zap,
   Trophy,
-  Activity,
   LogOut,
   Camera,
   Loader2,
@@ -275,6 +274,8 @@ export default function ProfilePage() {
     xp: number;
     userLevel: number;
     winningStreak: number;
+    salesCount?: number;
+    defectCount?: number;
   };
 
   const handleSaveName = () => {
@@ -568,9 +569,19 @@ export default function ProfilePage() {
               <div className="w-12 h-12 bg-primary-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Star className="text-primary-600 w-6 h-6 fill-primary-600/20" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("reputation") || "Reputation"}</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("reputation") || "Feedback Score"}</p>
               <p className="text-2xl font-black text-gray-900 leading-tight">
                 {((user?.rating as number) || 3.5).toFixed(1)} <span className="text-xs text-gray-400 font-medium">/ 5.0</span>
+              </p>
+           </div>
+
+            <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+              <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <ShieldCheck className="text-emerald-600 w-6 h-6 fill-emerald-600/20" />
+              </div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Standing</p>
+              <p className="text-2xl font-black text-gray-900 leading-tight truncate">
+                {user.isRetailer ? "Pro Retailer" : user.isVerifiedSeller ? "Verified Seller" : "Basic Bidder"}
               </p>
            </div>
 
@@ -578,29 +589,19 @@ export default function ProfilePage() {
               <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Zap className="text-purple-600 w-6 h-6 fill-purple-600/20" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("level") || "Level"}</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("level") || "Trader Standing"}</p>
               <p className="text-2xl font-black text-gray-900 leading-tight">
-                {user.userLevel || 1} <span className="text-xs text-gray-400 font-medium tracking-tight">Rank</span>
+                Tier {user.userLevel || 1}
               </p>
            </div>
 
            <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
-              <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Activity className="text-orange-600 w-6 h-6" />
+              <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Trophy className="text-indigo-600 w-6 h-6 fill-indigo-600/20" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("xpPoints") || "XP Points"}</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("winningStreak") || "Completed Deals"}</p>
               <p className="text-2xl font-black text-gray-900 leading-tight">
-                {user.xp || 0} <span className="text-xs text-gray-400 font-medium tracking-tight">XP</span>
-              </p>
-           </div>
-
-           <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
-              <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Trophy className="text-blue-600 w-6 h-6 fill-blue-600/20" />
-              </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("winningStreak") || "Win Streak"}</p>
-              <p className="text-2xl font-black text-gray-900 leading-tight">
-                {user.winningStreak || 0} <span className="text-xs text-gray-400 font-medium tracking-tight">Wins</span>
+                {user.salesCount || 0} <span className="text-xs text-gray-400 font-medium tracking-tight">Trades</span>
               </p>
            </div>
         </motion.div>
@@ -1118,22 +1119,22 @@ export default function ProfilePage() {
           {/* Right Column: Reviews & Gamification */}
           <div className="space-y-8">
              {/* Dynamic Progress Card */}
-             <motion.div variants={itemVariants} className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
+             <motion.div variants={itemVariants} className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary-500/20 rounded-full blur-3xl" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                      <Zap className="text-primary-400" size={24} />
+                      <ShieldCheck className="text-primary-400" size={24} />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Growth Path</p>
-                      <h4 className="font-black text-xl leading-tight">Level {user.userLevel || 1}</h4>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Merchant Trust Standing</p>
+                      <h4 className="font-black text-xl leading-tight">Tier {user.userLevel || 1} Merchant</h4>
                     </div>
                   </div>
 
                   <div className="space-y-2 mb-6">
                     <div className="flex justify-between text-xs font-black uppercase tracking-wider">
-                       <span>XP: {user.xp || 0}</span>
+                       <span>Trust Standing Index</span>
                        <span className="text-primary-400">{Math.round(calculateLevelProgress(user.xp || 0))}%</span>
                     </div>
                     <div className="h-3 bg-white/10 rounded-full overflow-hidden p-0.5">
@@ -1152,8 +1153,8 @@ export default function ProfilePage() {
                         <p className="text-xs font-bold truncate">Early Adopter</p>
                      </div>
                      <div className="bg-white/5 rounded-2xl p-3 border border-white/10">
-                        <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Streak</p>
-                        <p className="text-xs font-bold">{user.winningStreak || 0} Wins</p>
+                        <p className="text-[9px] font-black text-gray-500 uppercase mb-1">Completed Deals</p>
+                        <p className="text-xs font-bold">{user.salesCount || 0} Trades</p>
                      </div>
                   </div>
                 </div>

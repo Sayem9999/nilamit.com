@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import AuctionCard from "@/components/auction/AuctionCard";
-import { Star, ShieldCheck, MapPin, Calendar, Award, Shield, Package, CheckCircle } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, Calendar, Award, Shield, Package, CheckCircle, Search } from 'lucide-react';
 import Image from "next/image";
 import { type User, type Auction, type Review, type AuctionWithSeller } from "@/types";
 import { FollowSellerButton } from "@/components/social/FollowSellerButton";
@@ -33,10 +33,12 @@ const safeFormatDate = (dateInput: unknown) => {
 
 interface Props {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ search?: string }>;
 }
 
-export default async function SellerProfilePage({ params }: Props) {
+export default async function SellerProfilePage({ params, searchParams }: Props) {
   const { id } = await params;
+  const { search } = await searchParams;
 
   const sellerSnap = await db.collection('users').doc(id).get();
   if (!sellerSnap.exists) return notFound();
@@ -70,7 +72,7 @@ export default async function SellerProfilePage({ params }: Props) {
       .where('sellerId', '==', id)
       .where('status', 'in', ['ACTIVE', 'SOLD', 'AWAITING_PAYMENT', 'OFFER_PENDING'])
       .orderBy('createdAt', 'desc')
-      .limit(20)
+      .limit(50)
       .get(),
     isFollowingSeller(id),
     getFollowerCount(id),
@@ -79,7 +81,7 @@ export default async function SellerProfilePage({ params }: Props) {
   const initialFollowing     = followingRes.success ? followingRes.data!.following : false;
   const initialFollowerCount = followerCountRes.success ? followerCountRes.data!.count : 0;
 
-  const auctions = await Promise.all(auctionsSnap.docs.map(async d => {
+  const rawAuctions = await Promise.all(auctionsSnap.docs.map(async d => {
     const a = d.data() as Auction;
     const abidsSnap = await db.collection('bids').where('auctionId', '==', d.id).get();
     const result: AuctionWithSeller = {
@@ -109,6 +111,11 @@ export default async function SellerProfilePage({ params }: Props) {
     };
     return result;
   }));
+
+  // Dynamic server-side search filter
+  const auctions = search
+    ? rawAuctions.filter(a => a.title.toLowerCase().includes(search.toLowerCase()))
+    : rawAuctions;
 
   const reviewsSnap = await db.collection('reviews')
     .where('toId', '==', id)
@@ -263,7 +270,7 @@ export default async function SellerProfilePage({ params }: Props) {
             <p className="text-3xl font-black text-emerald-500 font-heading">{feedbackPercentage}%</p>
           </div>
           <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Reputation</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Feedback Score</p>
             <p className="text-3xl font-black text-primary-600 font-heading">{seller.reputationScore}</p>
           </div>
           <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
@@ -277,12 +284,28 @@ export default async function SellerProfilePage({ params }: Props) {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Listings Area */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black text-gray-900 font-heading tracking-tight flex items-center gap-3">
-                <Package className="w-6 h-6 text-primary-600" />
-                Active Auctions
-              </h2>
-              <span className="text-sm font-bold text-gray-400">{auctions.length} Items Found</span>
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 className="text-2xl font-black text-gray-900 font-heading tracking-tight flex items-center gap-3">
+                  <Package className="w-6 h-6 text-primary-600" />
+                  Active Auctions
+                </h2>
+                <span className="text-sm font-bold text-gray-400 shrink-0">{auctions.length} {auctions.length === 1 ? 'Item' : 'Items'} Found</span>
+              </div>
+
+              {/* Storefront Active Auctions Search */}
+              <form className="relative w-full sm:max-w-md" action="" method="GET">
+                <div className="relative">
+                  <input
+                    type="search"
+                    name="search"
+                    placeholder="Search this seller's active listings..."
+                    defaultValue={search || ""}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-xs font-bold text-gray-700 shadow-sm transition-all animate-in fade-in slide-in-from-top-2 duration-350"
+                  />
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                </div>
+              </form>
             </div>
 
             {auctions.length > 0 ? (
@@ -307,7 +330,7 @@ export default async function SellerProfilePage({ params }: Props) {
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-8">
               <h2 className="text-xl font-black text-gray-900 font-heading mb-6 flex items-center gap-2">
                 <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                Recent Feedback
+                Feedback Profile Feed
               </h2>
               
               {reviews.length > 0 ? (

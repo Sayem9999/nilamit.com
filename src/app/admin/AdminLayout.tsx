@@ -84,9 +84,9 @@ export function AdminLayout({
         <div className="p-6">
           <h2 className="text-xl font-bold font-heading text-indigo-900 flex items-center gap-2">
             <ShieldAlert className="w-6 h-6 text-indigo-600" />
-            Admin Panel
+            Marketplace Control Board
           </h2>
-          <p className="text-xs text-gray-500 mt-1">Command Center v2.0</p>
+          <p className="text-xs text-gray-500 mt-1">Nilamit C2C Management Console</p>
         </div>
 
         <nav className="px-4 space-y-1">

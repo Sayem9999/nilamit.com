@@ -135,7 +135,7 @@ export async function getTopSellers(limitCount: number = 4): Promise<ServiceResp
       .limit(limitCount)
       .get();
     
-    let sellers = snap.docs.map(doc => {
+    const sellers = snap.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -148,51 +148,6 @@ export async function getTopSellers(limitCount: number = 4): Promise<ServiceResp
         isTopRated: !!data.isTopRated,
       };
     });
-
-    if (sellers.length === 0) {
-      sellers = [
-        {
-          id: "seed-seller-1",
-          name: "Safeer Rahman",
-          image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
-          rating: 4.9,
-          ratingCount: 38,
-          userLevel: 12,
-          salesCount: 42,
-          isTopRated: true,
-        },
-        {
-          id: "seed-seller-2",
-          name: "Moin Sarkar",
-          image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200",
-          rating: 4.8,
-          ratingCount: 29,
-          userLevel: 8,
-          salesCount: 31,
-          isTopRated: true,
-        },
-        {
-          id: "seed-seller-3",
-          name: "Taskin Ahmed",
-          image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200",
-          rating: 5.0,
-          ratingCount: 17,
-          userLevel: 6,
-          salesCount: 19,
-          isTopRated: true,
-        },
-        {
-          id: "seed-seller-4",
-          name: "Nabil Khan",
-          image: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&q=80&w=200",
-          rating: 4.7,
-          ratingCount: 22,
-          userLevel: 9,
-          salesCount: 25,
-          isTopRated: true,
-        }
-      ];
-    }
     
     return successResponse(sellers);
   } catch (error) {

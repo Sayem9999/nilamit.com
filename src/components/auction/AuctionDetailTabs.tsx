@@ -122,27 +122,27 @@ export function AuctionDetailTabs({
             className="space-y-6 animate-in fade-in duration-300"
           >
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Escrow Mechanism */}
+              {/* Buyer Protection Mechanism */}
               <div className="bg-primary-50/30 rounded-2xl border border-primary-100/50 p-5 space-y-3">
                 <h4 className="flex items-center gap-2 font-bold text-primary-800 text-sm uppercase tracking-wide">
                   <ShieldCheck className="w-4.5 h-4.5 text-primary-600" />
-                  Nilamit Escrow System
+                  Nilamit Buyer Protection Guarantee
                 </h4>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  We secure transaction integrity through manual mobile money escrow. When you win, you send the bid price to the secure Nilamit Treasury bKash/Nagad accounts.
+                  We secure trade safety through secure mobile money escrow. When you win, you send the deposit/full amount to secure Nilamit Treasury bKash/Nagad accounts.
                 </p>
                 <ul className="space-y-2 text-[11px] text-gray-600 font-medium">
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Funds are held securely by Nilamit until successful handoff.</span>
+                    <span>Funds are held securely by Nilamit until successful trade verification.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Buyer inspects item first before releasing escrow.</span>
+                    <span>Buyer inspects item first before releasing payment to seller.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Dispute safeguards protect both buyer and seller.</span>
+                    <span>Full dispute safeguards protect both buyers and sellers.</span>
                   </li>
                 </ul>
               </div>
@@ -152,10 +152,10 @@ export function AuctionDetailTabs({
                 <div>
                   <h4 className="flex items-center gap-2 font-bold text-gray-800 text-xs uppercase tracking-wide mb-2">
                     <Truck className="w-4 h-4 text-primary-500" />
-                    Direct Coordination & Shipping
+                    Local Handoff & Courier Dispatch
                   </h4>
                   <p className="text-xs text-gray-500 leading-relaxed">
-                    Nilamit is a self-coordinated C2C marketplace. Buyers and sellers communicate directly via coordination chat to arrange face-to-face meetups, direct handoffs, or self-directed courier deliveries (e.g. Pathao, Steadfast, Redx) in <span className="font-bold text-gray-800">{location}</span>.
+                    Nilamit is a direct-trade C2C marketplace. Buyers and sellers chat directly in active conversations to arrange face-to-face meetups, direct handoffs, or self-directed courier deliveries (e.g. Pathao, Steadfast, Redx) in <span className="font-bold text-gray-800">{location}</span>.
                   </p>
                 </div>
 
@@ -251,7 +251,7 @@ export function AuctionDetailTabs({
                   <TrendingUp className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900 text-sm">Excellent Seller Performance Metric</h4>
+                  <h4 className="font-bold text-gray-900 text-sm">Trusted Shop Standing</h4>
                   <p className="text-xs text-gray-500 mt-0.5">
                     This seller satisfies all platform response time guidelines and dispute handling measures.
                   </p>
