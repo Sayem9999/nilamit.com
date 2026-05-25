@@ -21,11 +21,11 @@ export class PaymentService {
     try {
       return await db.runTransaction(async (tx) => {
         // 1. Find the exact escrow by its unique automation token
-        const escrowSnap = await db.collection('escrowTransactions')
+        const query = db.collection('escrowTransactions')
           .where('automationToken', '==', automationToken)
           .where('status', '==', 'PENDING')
-          .limit(1)
-          .get();
+          .limit(1);
+        const escrowSnap = await tx.get(query);
 
         if (escrowSnap.empty) {
           log.warn('Payment: No matching pending escrow found', { transactionId, amount, provider });

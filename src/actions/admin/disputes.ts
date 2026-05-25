@@ -75,10 +75,11 @@ export async function resolveAdminDispute(transactionId: string, resolution: 'RE
       const aSnap = await tx.get(db.collection('auctions').doc(t.auctionId));
       const sellerId = aSnap.data()?.sellerId ?? null;
 
-      const disputeSnap = await db.collection('disputes')
+      const disputeQuery = db.collection('disputes')
         .where('transactionId', '==', transactionId)
         .where('status', '==', 'OPEN')
-        .limit(1).get();
+        .limit(1);
+      const disputeSnap = await tx.get(disputeQuery);
 
       if (!disputeSnap.empty) {
         const dRef = disputeSnap.docs[0].ref;
