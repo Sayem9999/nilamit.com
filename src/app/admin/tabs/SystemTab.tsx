@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Database, Upload, Loader2, Sparkles, Mail, Wallet, ShieldCheck, Percent, Megaphone, Layout, Landmark, Type, Image as ImageIcon } from 'lucide-react';
+import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Database, Upload, Loader2, Sparkles, Mail, Wallet, ShieldCheck, Percent, Megaphone, Landmark } from 'lucide-react';
 import { adminWipeTestData, exportTransactionsCSV, exportDatabaseBackup, importDatabaseBackup } from '@/actions/admin-system';
 import { getSystemConfig, updateSystemConfig } from '@/actions/admin-content';
 import { useEffect } from 'react';
@@ -509,78 +509,6 @@ export function SystemTab() {
         </div>
       </div>
 
-      {/* Homepage Hero Management */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
-        <div className="flex items-start gap-4">
-          <div className="bg-blue-50 p-3 rounded-xl">
-            <Layout className="w-8 h-8 text-blue-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-heading font-bold text-lg text-gray-900">Homepage Hero Management</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Customize the main landing page hero title, subtitle, and image.
-            </p>
-
-            {isLoadingConfig ? (
-              <div className="mt-8 flex items-center justify-center py-6 text-sm text-gray-400">
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Loading...
-              </div>
-            ) : !config ? null : (
-              <div className="mt-8 space-y-6 border-t border-gray-50 pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
-                  <div className="flex flex-col gap-2 md:col-span-2">
-                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <Type className="w-4 h-4 text-blue-500" />
-                      Hero Title
-                    </label>
-                    <input
-                      type="text"
-                      value={config.heroTitle || ''}
-                      onChange={(e) => setConfig({ ...config, heroTitle: e.target.value })}
-                      onBlur={(e) => handleTextChange('heroTitle', e.target.value)}
-                      placeholder="e.g. Bangladesh's Premier Auction Platform"
-                      className="w-full p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900 font-bold"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2 md:col-span-2">
-                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <Type className="w-4 h-4 text-blue-400" />
-                      Hero Subtitle
-                    </label>
-                    <textarea
-                      value={config.heroSubtitle || ''}
-                      onChange={(e) => setConfig({ ...config, heroSubtitle: e.target.value })}
-                      onBlur={(e) => handleTextChange('heroSubtitle', e.target.value)}
-                      placeholder="e.g. Discover exclusive items and bid with confidence..."
-                      className="w-full min-h-[80px] p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2 md:col-span-2">
-                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4 text-purple-500" />
-                      Hero Image URL
-                    </label>
-                    <input
-                      type="text"
-                      value={config.heroImage || ''}
-                      onChange={(e) => setConfig({ ...config, heroImage: e.target.value })}
-                      onBlur={(e) => handleTextChange('heroImage', e.target.value)}
-                      placeholder="https://..."
-                      className="w-full p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900"
-                    />
-                    <p className="text-xs text-gray-500">Saves automatically when you click outside the box.</p>
-                  </div>
-
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Treasury Configuration */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
