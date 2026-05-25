@@ -706,7 +706,7 @@ export default function ProfilePage() {
                   <Trophy size={22} className="text-primary-600" /> Storefront Customization
                 </h3>
                 <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-primary-50 text-primary-700 rounded-full border border-primary-100">
-                  eBay-Style Shop
+                  Custom Storefront
                 </span>
               </div>
 
