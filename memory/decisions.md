@@ -8,6 +8,11 @@
 - **Currency**: Strictly BDT (৳).
 - **Timezone**: `Asia/Dhaka` (UTC+6).
 
+- **v2.4.0 (Aesthetics, Live Activity & Bidding Stabilization)**:
+    - **Admin Control Expansion**: Added site-wide announcements, landing page hero marketing texts, and treasury bKash/Nagad number settings, fully integrated with blur-save events.
+    - **Auction Listing UI Overhaul**: Redesigned layout to move category/condition overlay badges into text body container underneath titles to guarantee 100% item image visibility (eBay Style).
+    - **Live Ticker Flex Fix**: Redesigned ticker component's flex dimensions (`flex items-center gap-2`) to avoid layout overlapping and show scrolling bids horizontally in real-time.
+    - **Proxy Bidding Restoration**: Restored robust eBay-style proxy bidding calculations in `bid-processor.ts`, maintaining maximum bids hidden while dynamically scaling visible currents relative to competing boundaries.
 - **v2.3.3 (Native Firebase Client Verification & Safe Auth)**:
     - **Native Firebase Verification**: Migrated from unstable third-party SMTP email verification (Resend) to native, zero-cost, highly-reliable Firebase Client-Side Auth email verification.
     - **Safe-Auth Object Coercion**: Patched database auth hooks and NextAuth callbacks to convert Firestore `Timestamp` objects into serializable `Date` objects, correcting NextAuth client-side serialization crashes.

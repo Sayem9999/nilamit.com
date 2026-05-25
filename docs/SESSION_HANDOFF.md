@@ -1,6 +1,15 @@
 # Session Handoff & Architecture Memory
 
-## Current Session (2026-05-24)
+## Current Session (2026-05-25)
+### What we did
+* **Expanded Admin Panel Configuration Toggles** ([SystemTab.tsx](file:///c:/nilamit.com/src/app/admin/tabs/SystemTab.tsx)): Added dynamic control boxes to regulate site-wide announcements, home hero banner layouts, and official bKash/Nagad agent phone details. The updates use clean `onBlur` auto-save mechanisms.
+* **Simplified Auction Cards layout (eBay style)** ([AuctionCard.tsx](file:///c:/nilamit.com/src/components/auction/AuctionCard.tsx)): Moved the category, condition, and featured badges from overlay containers down directly below the title. This exposes 100% of the item preview image and mimics modern, high-conversion layouts like eBay.
+* **Fixed Real-Time Activity horizontal flow** ([LiveTicker.tsx](file:///c:/nilamit.com/src/components/home/LiveTicker.tsx)): Redesigned layout boundaries inside the Live Ticker, switching the animation display container to a clean horizontal `flex items-center gap-2` row to resolve overlapping.
+* **Restored robust eBay-style Proxy Bidding** ([bid-processor.ts](file:///c:/nilamit.com/src/services/bidding/modules/bid-processor.ts)): Confirmed and fully restored the automatic proxy bidding algorithm. Placing a high bid securely preserves the user's hidden maximum limit and only raises the visible price when competing entries are received, exactly matching eBay's real-world behavior.
+* **Type-Safety & Build Integrity**:
+  - `npx tsc --noEmit` and `npm run lint` execute cleanly with zero compilation warnings or styling debts (unused imports removed).
+
+## Previous Session (2026-05-24)
 ### What we did
 * **Upgraded Overlay Badges UI/UX** ([AuctionCard.tsx](file:///c:/nilamit.com/src/components/auction/AuctionCard.tsx)): Completely redesigned all absolute-positioned badges overlay on auction listing cards to feel state-of-the-art, premium, and highly visually cohesive:
   - **Dynamic Category Pills**: Mapped each category (`mobile-phones`, `electronics`, `vehicles`, `fashion`, `home-garden`, `sports`, `books`, `collectibles`, `other`) to dynamic glassmorphic pills with matching HSL semi-transparent text/borders and dedicated Lucide micro-icons (`Smartphone`, `Tv`, `Car`, `Shirt`, `Home`, `Dumbbell`, `BookOpen`, `Gem`, `Package`).

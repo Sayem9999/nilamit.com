@@ -39,3 +39,9 @@
 - **Client-side Firebase Auth Sync & Reload**:
     - *Lesson*: Client-side Firebase Auth instances do not automatically update user metadata (like `emailVerified`) in real-time unless `.reload()` is explicitly called on the `currentUser`.
     - *Fix*: Call `await auth.currentUser.reload()` before checking `auth.currentUser.emailVerified` inside profile synchronization hooks to capture native, client-side email verification states accurately.
+- **Framer Motion Layout horizontal overflow in Ticker**:
+    - *Lesson*: Ticker elements wrapped in `AnimatePresence` with `mode="popLayout"` without a `flex` container parent will stack vertically instead of flowing horizontally.
+    - *Fix*: Ensure ticker wrappers use `flex items-center gap-2` to support continuous horizontal flow.
+- **Bidding System Clarity vs Proxy Bidding**:
+    - *Lesson*: Users can easily misinterpret proxy bidding as a bug when they place a large bid and the price only increments slightly.
+    - *Fix*: Provide clear tooltips or explainers in the UI (or in developer handoffs) explaining that max bids are kept private, and keep direct bidding as a secondary option rather than hard-disabling proxy logic unless specifically required.
