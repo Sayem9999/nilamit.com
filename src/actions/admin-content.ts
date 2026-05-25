@@ -20,6 +20,7 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   mfsLinkageRequired: true,
   escrowRequired: true,
   commissionPercentageEnabled: true,
+  commissionPercentage: null,
   postingRequirementsEnabled: true,
   biddingRequirementsEnabled: true,
   updatedAt: new Date(),
@@ -53,6 +54,7 @@ export async function updateSystemConfig(data: {
   mfsLinkageRequired?: boolean;
   escrowRequired?: boolean;
   commissionPercentageEnabled?: boolean;
+  commissionPercentage?: number | null;
   postingRequirementsEnabled?: boolean;
   biddingRequirementsEnabled?: boolean;
 }): Promise<ServiceResponse<null>> {

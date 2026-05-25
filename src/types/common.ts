@@ -24,6 +24,7 @@ export interface SystemConfig {
   mfsLinkageRequired?: boolean;
   escrowRequired?: boolean;
   commissionPercentageEnabled?: boolean;
+  commissionPercentage?: number | null;
   postingRequirementsEnabled?: boolean;
   biddingRequirementsEnabled?: boolean;
   updatedAt: Date;

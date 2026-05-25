@@ -8,7 +8,11 @@ import { log } from '@/lib/logger';
 import { scheduleEnforcePaymentPolicy } from '@/lib/cloud-tasks';
 
 // ─── Commission Tiers ────────────────────────────────────────────────────────
-export function calculateSuccessFee(finalPrice: number): { fee: number; rate: number } {
+export function calculateSuccessFee(finalPrice: number, customPercentage?: number | null): { fee: number; rate: number } {
+  if (customPercentage !== undefined && customPercentage !== null) {
+    const rate = customPercentage / 100;
+    return { fee: Math.round(finalPrice * rate), rate };
+  }
   if (finalPrice <= 10000)  return { fee: Math.round(finalPrice * 0.025) + 20, rate: 0.025 };
   if (finalPrice <= 150000) return { fee: Math.round(finalPrice * 0.015) + 20, rate: 0.015 };
   return { fee: Math.round(finalPrice * 0.01) + 20, rate: 0.01 };
@@ -54,7 +58,8 @@ export function processAuctionSale(
   }
 
   const commissionEnabled = systemConfig?.commissionPercentageEnabled ?? true;
-  const { fee, rate } = commissionEnabled ? calculateSuccessFee(finalPrice) : { fee: 0, rate: 0 };
+  const customPercentage = systemConfig?.commissionPercentage;
+  const { fee, rate } = commissionEnabled ? calculateSuccessFee(finalPrice, customPercentage) : { fee: 0, rate: 0 };
   const now = new Date();
 
   const auctionRef = db.collection('auctions').doc(auction.id);

@@ -40,10 +40,10 @@ export function SystemTab() {
     fetchConfig();
   }, []);
 
-  const handleToggle = async (field: keyof SystemConfig, value: boolean) => {
+  const handleToggle = async (field: keyof SystemConfig, value: boolean | number | null) => {
     if (!config) return;
     const previousValue = config[field];
-    const updatedConfig = { ...config, [field]: value };
+    const updatedConfig = { ...config, [field]: value } as SystemConfig;
     setConfig(updatedConfig);
     
     const loadingToast = toast.loading(`Updating ${field}...`);
@@ -335,28 +335,91 @@ export function SystemTab() {
                   </div>
 
                   {/* Toggle: Platform Commission */}
-                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
-                    <div className="space-y-1 pr-4">
-                      <div className="flex items-center gap-2">
-                        <Percent className="w-4 h-4 text-amber-500" />
-                        <span className="font-semibold text-gray-900 text-sm">Enable Platform Success Fees</span>
+                  <div className="flex flex-col gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200 col-span-1 md:col-span-2">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1 pr-4">
+                        <div className="flex items-center gap-2">
+                          <Percent className="w-4 h-4 text-amber-500" />
+                          <span className="font-semibold text-gray-900 text-sm">Platform Success Fees & Commissions</span>
+                        </div>
+                        <p className="text-xs text-gray-500 leading-relaxed">
+                          Calculate success commissions on finished auctions. If disabled, all listings incur 0% fees.
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500 leading-relaxed">
-                        Calculate success fees on finished auctions. If disabled, transactions are completed with 0% fees.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleToggle('commissionPercentageEnabled', !(config.commissionPercentageEnabled ?? true))}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        (config.commissionPercentageEnabled ?? true) ? 'bg-primary-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          (config.commissionPercentageEnabled ?? true) ? 'translate-x-5' : 'translate-x-0'
+                      <button
+                        onClick={() => handleToggle('commissionPercentageEnabled', !(config.commissionPercentageEnabled ?? true))}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          (config.commissionPercentageEnabled ?? true) ? 'bg-primary-600' : 'bg-gray-200'
                         }`}
-                      />
-                    </button>
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            (config.commissionPercentageEnabled ?? true) ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {(config.commissionPercentageEnabled ?? true) && (
+                      <div className="pt-3 border-t border-gray-100/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-semibold text-gray-700">Commission Fee Structure</span>
+                          <div className="flex items-center gap-4 mt-1">
+                            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="commissionMode"
+                                checked={config.commissionPercentage === undefined || config.commissionPercentage === null}
+                                onChange={() => handleToggle('commissionPercentage', null)}
+                                className="rounded-full border-gray-300 text-primary-600 focus:ring-primary-500"
+                              />
+                              Dynamic Tiers (Default)
+                            </label>
+                            <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="commissionMode"
+                                checked={config.commissionPercentage !== undefined && config.commissionPercentage !== null}
+                                onChange={() => handleToggle('commissionPercentage', 1.5)} // default custom rate to 1.5%
+                                className="rounded-full border-gray-300 text-primary-600 focus:ring-primary-500"
+                              />
+                              Flat Custom Rate (%)
+                            </label>
+                          </div>
+                        </div>
+
+                        {config.commissionPercentage !== undefined && config.commissionPercentage !== null && (
+                          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-xs">
+                            <span className="text-xs font-bold text-gray-500">Rate:</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              value={config.commissionPercentage}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val)) {
+                                  setConfig({ ...config, commissionPercentage: val });
+                                }
+                              }}
+                              onBlur={async (e) => {
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val) && val >= 0 && val <= 100) {
+                                  await updateSystemConfig({ commissionPercentage: val });
+                                  toast.success(`Commission rate set to ${val}%`);
+                                } else {
+                                  setConfig({ ...config, commissionPercentage: 1.5 });
+                                  await updateSystemConfig({ commissionPercentage: 1.5 });
+                                }
+                              }}
+                              className="w-16 text-xs text-center border-gray-200 rounded-lg focus:ring-primary-500 focus:border-primary-500 p-1 font-bold text-gray-900"
+                            />
+                            <span className="text-xs font-bold text-gray-700">%</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                 </div>
