@@ -89,7 +89,7 @@ export function HomeContent({
 
       {/* Featured Auctions — Premium Curator's Choice */}
       {featuredAuctions.length > 0 && (
-        <section className="py-24 relative overflow-hidden bg-slate-950" style={{ backgroundColor: '#020617' }} aria-labelledby="featured-heading">
+        <section className="py-24 relative overflow-hidden bg-slate-950 dark" style={{ backgroundColor: '#020617' }} aria-labelledby="featured-heading">
           {/* Animated Background Elements */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl animate-pulse" />
@@ -99,8 +99,8 @@ export function HomeContent({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-xs font-bold uppercase tracking-widest">
-                  <Star className="w-3 h-3 fill-primary-400" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-widest">
+                  <Star className="w-3 h-3 fill-amber-400" />
                   Curator&apos;s Choice
                 </div>
                 <h2 id="featured-heading" className="font-heading font-black text-4xl md:text-5xl text-white tracking-tight">
@@ -113,18 +113,21 @@ export function HomeContent({
               
               <div className="hidden md:block">
                 <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm text-white/60 text-sm">
-                  Showing <span className="text-primary-400 font-bold">{featuredAuctions.length}</span> handpicked items
+                  Showing <span className="text-amber-400 font-bold">{featuredAuctions.length}</span> handpicked items
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {featuredAuctions.map((auction, idx) => (
-                <div key={auction.id} className="group transition-all duration-500 hover:-translate-y-2">
+                <div key={auction.id} className="group relative transition-all duration-500 hover:-translate-y-2">
+                  {/* Premium Gold/Amber Glow behind card on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/20 to-primary-600/10 rounded-2xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                  
                   <AuctionCard 
                     auction={auction} 
                     priority={idx < 4} 
-                    className="featured h-full border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all"
+                    className="featured h-full border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 hover:border-amber-500/30 transition-all shadow-[0_0_30px_-15px_rgba(245,158,11,0.1)] hover:shadow-[0_15px_40px_rgba(245,158,11,0.15)] duration-500"
                   />
                 </div>
               ))}

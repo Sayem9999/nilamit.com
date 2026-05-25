@@ -363,9 +363,9 @@ export const AuctionCard = memo(({
           </div>
 
           {/* Price & Bid Count */}
-          <div className="mt-2 pt-2 md:mt-3 md:pt-3 border-t border-gray-100/60 flex flex-col gap-0.5">
+          <div className="mt-2 pt-2 md:mt-3 md:pt-3 border-t border-gray-100/60 group-[.featured]:border-white/10 flex flex-col gap-0.5">
             <div className="flex items-center justify-between">
-              <span className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+              <span className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none group-[.featured]:text-slate-400">
                 {displayStatus === "ACTIVE"
                   ? t("currentPrice") 
                   : displayStatus === "SOLD" 
@@ -374,7 +374,7 @@ export const AuctionCard = memo(({
                       ? t("auctionEnded") // Or "Processing..."
                       : t("auctionEnded")}
               </span>
-              <span className="flex items-center gap-0.5 md:gap-1 text-[8px] md:text-[10px] font-bold text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded-md">
+              <span className="flex items-center gap-0.5 md:gap-1 text-[8px] md:text-[10px] font-bold text-primary-600 bg-primary-50 group-[.featured]:bg-primary-500/10 group-[.featured]:text-primary-400 px-1.5 py-0.5 rounded-md">
                 <Users className="w-2.5 h-2.5 md:w-3 md:h-3" aria-hidden="true" />
                 {bidCount} {t("bids")}
               </span>
@@ -384,7 +384,7 @@ export const AuctionCard = memo(({
                 {formatBDT(currentPrice)}
               </span>
               {auction.currentPrice > auction.startingPrice && (
-                <span className="text-[10px] md:text-xs text-gray-400 line-through font-medium">
+                <span className="text-[10px] md:text-xs text-gray-400 group-[.featured]:text-slate-500 line-through font-medium">
                   {formatBDT(auction.startingPrice)}
                 </span>
               )}
