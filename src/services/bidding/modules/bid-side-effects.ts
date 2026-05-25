@@ -37,6 +37,16 @@ export class BidSideEffects {
       createdAt: new Date().toISOString(),
     }).catch(e => log.error('[BidSideEffects] RTDB update failed', e)));
 
+    // 1.5. RTDB Update for global live ticker
+    tasks.push(rtdbPush(RTDB_PATHS.globalActivity(), {
+      event: FIREBASE_EVENTS.NEW_BID,
+      amount: bidAmount,
+      bidderName,
+      auctionTitle: auction.title,
+      auctionId: auction.id,
+      timestamp: Date.now(),
+    }).catch(e => log.error('[BidSideEffects] Global RTDB feed update failed', e)));
+
     // 2. Outbid Notification
     if (prevBidderId && prevBidderId !== bid.bidderId) {
       tasks.push(this.notifyOutbid(prevBidderId, auction, bidAmount));
