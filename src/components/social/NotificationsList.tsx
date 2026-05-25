@@ -14,11 +14,14 @@ import {
   ArrowRight,
   Sparkles,
   HelpCircle,
-  Loader2
+  Loader2,
+  Gavel,
+  Truck
 } from "lucide-react";
 import { getClientDB, ensureFirebaseAuth } from "@/lib/firebase-client";
 import { ref, onValue, remove, set } from "firebase/database";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 interface NotificationItem {
   id: string;
@@ -33,6 +36,8 @@ interface NotificationItem {
     icon?: string;
   };
   _ts: number;
+  senderName?: string;
+  preview?: string;
 }
 
 export function NotificationsList() {
@@ -111,8 +116,10 @@ export function NotificationsList() {
     try {
       const db = getClientDB();
       await set(ref(db, `notifications/user/${userId}`), null);
+      toast.success("All notifications cleared successfully");
     } catch (err) {
       console.error("Failed to clear notifications", err);
+      toast.error("Failed to clear notifications");
     }
   };
 
@@ -121,8 +128,10 @@ export function NotificationsList() {
     try {
       const db = getClientDB();
       await remove(ref(db, `notifications/user/${userId}/${id}`));
+      toast.success("Notification removed");
     } catch (err) {
       console.error("Failed to delete notification", err);
+      toast.error("Failed to remove notification");
     }
   };
 
@@ -250,15 +259,66 @@ export function NotificationsList() {
           link: `/auctions/${item.auctionId}`,
           linkText: "View Answer",
         };
+      case "new_bid":
+        return {
+          icon: <Gavel className="w-5 h-5 text-blue-500" />,
+          bgColor: "bg-blue-50 dark:bg-blue-950/20",
+          borderColor: "border-blue-100 dark:border-blue-950/30",
+          title: "New Bid Placed",
+          body: `Someone bid ৳${item.amount?.toLocaleString()} on your auction "${item.auctionTitle}".`,
+          link: `/auctions/${item.auctionId}`,
+          linkText: "View Bid",
+        };
+      case "payment_success":
+        return {
+          icon: <CheckCircle className="w-5 h-5 text-emerald-500" />,
+          bgColor: "bg-emerald-50 dark:bg-emerald-950/20",
+          borderColor: "border-emerald-100 dark:border-emerald-950/30",
+          title: "Payment Verified!",
+          body: item.message || "Advance payment successfully held in escrow.",
+          link: `/dashboard?tab=escrow`,
+          linkText: "View Escrow",
+        };
+      case "ITEM_SHIPPED":
+      case "item_shipped":
+        return {
+          icon: <Truck className="w-5 h-5 text-emerald-500" />,
+          bgColor: "bg-emerald-50 dark:bg-emerald-950/20",
+          borderColor: "border-emerald-100 dark:border-emerald-950/30",
+          title: "Item Shipped!",
+          body: item.message || "Your order has been shipped by the seller!",
+          link: `/dashboard?tab=escrow`,
+          linkText: "Track Order",
+        };
+      case "new_message":
+        return {
+          icon: <MessageSquare className="w-5 h-5 text-purple-500" />,
+          bgColor: "bg-purple-50 dark:bg-purple-950/20",
+          borderColor: "border-purple-100 dark:border-purple-950/30",
+          title: `New Message from ${item.senderName || "Buyer/Seller"}`,
+          body: item.preview || item.message || "You have a new message.",
+          link: `/dashboard?tab=coordination`,
+          linkText: "Reply Now",
+        };
+      case "pii_violation":
+        return {
+          icon: <AlertTriangle className="w-5 h-5 text-red-500" />,
+          bgColor: "bg-red-50 dark:bg-red-950/20",
+          borderColor: "border-red-100 dark:border-red-950/30",
+          title: "Safety Policy Violation",
+          body: item.message || "Your message was blocked due to personal contact details sharing. To protect yourself and others, please keep communications within Nilamit.",
+          link: undefined,
+          linkText: undefined,
+        };
       default:
         return {
           icon: <Bell className="w-5 h-5 text-gray-500" />,
           bgColor: "bg-gray-50 dark:bg-gray-950/20",
           borderColor: "border-gray-100 dark:border-gray-950/30",
-          title: item.title || "Notification",
+          title: item.title || "Nilamit Notification",
           body: item.message || "A system event has occurred.",
-          link: undefined,
-          linkText: undefined,
+          link: item.auctionId ? `/auctions/${item.auctionId}` : undefined,
+          linkText: item.auctionId ? "View Auction" : undefined,
         };
     }
   };

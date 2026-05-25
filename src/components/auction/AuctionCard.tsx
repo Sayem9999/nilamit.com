@@ -351,12 +351,16 @@ export const AuctionCard = memo(({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-0.5 text-xs font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded-md">
-                  <Users className="w-3.5 h-3.5" />
-                  {bidCount} {t("bids")}
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1 text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-1.5 rounded-lg whitespace-nowrap flex-shrink-0">
+                  <Users className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{bidCount} {bidCount === 1 ? t("bid") : t("bids")}</span>
                 </div>
-                <CountdownTimer endTime={auction.endTime} variant="card-footer" className="py-1 px-2 text-[10px] rounded-lg" />
+                <CountdownTimer
+                  endTime={auction.endTime}
+                  variant="card-footer"
+                  className="py-1 px-2.5 text-xs rounded-lg whitespace-nowrap flex-shrink-0 w-auto h-auto font-sans"
+                />
               </div>
             </div>
           </div>
@@ -521,7 +525,7 @@ export const AuctionCard = memo(({
               </span>
               <span className="flex items-center gap-0.5 md:gap-1 text-[8px] md:text-[10px] font-bold text-primary-600 bg-primary-50 group-[.featured]:bg-primary-500/10 group-[.featured]:text-primary-400 px-1.5 py-0.5 rounded-md">
                 <Users className="w-2.5 h-2.5 md:w-3 md:h-3" aria-hidden="true" />
-                {bidCount} {t("bids")}
+                {bidCount} {bidCount === 1 ? t("bid") : t("bids")}
               </span>
             </div>
             <div className="flex flex-wrap items-baseline gap-1 md:gap-2 mt-1">

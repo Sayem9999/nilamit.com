@@ -158,6 +158,7 @@
     "live": "Live",
     "seller": "Seller",
     "currentPrice": "Current Bid",
+    "bid": "Bid",
     "bids": "Bids",
     "finalPrice": "Final Sold Price",
     "successFee": "Platform Success Fee",

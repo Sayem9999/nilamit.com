@@ -69,9 +69,10 @@ export const CountdownTimer = memo(({
 
   // Render for Card Footer variant
   if (variant === "card-footer") {
+    const hasWidth = className.includes("w-");
     return (
       <div
-        className={`w-full flex items-center justify-center gap-2 py-2 px-3 rounded-2xl border transition-all duration-500 font-mono tracking-tight text-xs font-bold ${
+        className={`${hasWidth ? "" : "w-full"} flex items-center justify-center gap-2 py-2 px-3 rounded-2xl border transition-all duration-500 font-mono tracking-tight text-xs font-bold ${
           state.isExpired
             ? "bg-gray-100/60 border-gray-200 text-gray-400"
             : state.isUrgent
