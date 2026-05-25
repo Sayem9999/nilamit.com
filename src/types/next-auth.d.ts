@@ -20,6 +20,8 @@ declare module 'next-auth' {
       defectCount: number;
       bkashNumber?: string | null;
       nagadNumber?: string | null;
+      bio?: string | null;
+      banner?: string | null;
     } & DefaultSession['user'];
   }
 
@@ -36,12 +38,13 @@ declare module 'next-auth' {
     winningStreak?: number;
     emailVerified?: Date | null;
     isRetailer?: boolean;
-
     isTopRated?: boolean;
     salesCount?: number;
     defectCount?: number;
     bkashNumber?: string | null;
     nagadNumber?: string | null;
+    bio?: string | null;
+    banner?: string | null;
   }
 }
 
@@ -65,5 +68,7 @@ declare module 'next-auth/jwt' {
     lastDbRefresh: number;
     bkashNumber?: string | null;
     nagadNumber?: string | null;
+    bio?: string | null;
+    banner?: string | null;
   }
 }

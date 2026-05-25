@@ -239,9 +239,11 @@ export const answerQuestionSchema = z.object({
 export type AnswerQuestionInput = z.infer<typeof answerQuestionSchema>;
 
 export const updateProfileSchema = z.object({
-  name:  z.string().trim().min(2, 'Name too short').max(80, 'Name too long').optional(),
-  image: z.union([z.string().url('Invalid image URL').max(2048), z.null()]).optional(),
-}).refine(d => d.name !== undefined || d.image !== undefined, {
+  name:   z.string().trim().min(2, 'Name too short').max(80, 'Name too long').optional(),
+  image:  z.union([z.string().url('Invalid image URL').max(2048), z.null()]).optional(),
+  bio:    z.union([z.string().max(1000, 'Bio too long'), z.null()]).optional(),
+  banner: z.union([z.string().url('Invalid banner URL').max(2048), z.null()]).optional(),
+}).refine(d => d.name !== undefined || d.image !== undefined || d.bio !== undefined || d.banner !== undefined, {
   message: 'Provide at least one field to update',
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

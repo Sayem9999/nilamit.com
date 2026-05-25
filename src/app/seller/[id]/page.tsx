@@ -45,6 +45,7 @@ export default async function SellerProfilePage({ params }: Props) {
     salesCount: sellerData.salesCount || 0,
     defectCount: sellerData.defectCount || 0,
     bio: sellerData.bio,
+    banner: sellerData.banner,
     _count: { bids: bidsSnap.size },
   };
 
@@ -121,16 +122,34 @@ export default async function SellerProfilePage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-12">
-      {/* Premium Storefront Header */}
-      <div className="relative bg-white border-b border-gray-100 overflow-hidden pt-12">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50/40 via-transparent to-accent-50/20" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-100/20 rounded-full blur-3xl -mr-48 -mt-48" />
-        
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row gap-8 items-center md:items-end -mb-8 pb-16">
+      {/* Storefront cover banner billboard */}
+      <div className="relative h-48 md:h-72 bg-gray-100 overflow-hidden w-full border-b border-gray-200 shadow-inner">
+        {seller.banner ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={seller.banner}
+            alt={`${seller.name || 'Store'} Banner`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-500 to-indigo-800" />
+            <div className="absolute inset-0 opacity-10" 
+                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm52-70c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM9 32c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm53 17c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM8 46c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm91-10c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM40 52c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm7 0c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm14-27c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm11 5c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-1 30c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-13 14c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-2 10c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-10-2c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-15-2c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm-8-31c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm0-1c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z' fill='%23ffffff' fill-opacity='0.08' fill-rule='evenodd'/%3E%3C/svg%3E")` }} 
+            />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-[100px] -mr-48 -mt-48" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-[80px] -ml-32 -mb-32" />
+          </>
+        )}
+      </div>
+
+      {/* Overlapping Profile Details Card Block */}
+      <div className="relative bg-white border-b border-gray-100 pb-12 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 relative z-10 -mt-16 md:-mt-24">
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-end pb-4">
             {/* Seller Avatar */}
             <div className="relative group">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-2 shadow-2xl shadow-primary-200/50 relative z-10">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-2 shadow-2xl shadow-primary-200/40 relative z-10 ring-4 ring-white">
                 <div className="w-full h-full rounded-[2rem] overflow-hidden bg-gray-100 flex items-center justify-center relative">
                   {seller.image ? (
                     <Image src={getProxiedAvatarUrl(seller.image) || ""} alt={seller.name || ""} fill sizes="(max-width: 768px) 128px, 160px" className="object-cover" referrerPolicy="no-referrer" unoptimized />
@@ -149,9 +168,9 @@ export default async function SellerProfilePage({ params }: Props) {
             </div>
 
             {/* Seller Info */}
-            <div className="flex-1 text-center md:text-left">
+            <div className="flex-1 text-center md:text-left pt-6 md:pt-0">
               <div className="flex flex-col md:flex-row md:items-center gap-3 mb-3">
-                <h1 className="text-3xl md:text-4xl font-heading font-black text-gray-900 tracking-tight">
+                <h1 className="text-3xl md:text-4xl font-heading font-black text-gray-900 tracking-tight drop-shadow-sm">
                   {seller.name}
                 </h1>
                 <div className="flex items-center justify-center md:justify-start">
@@ -161,7 +180,7 @@ export default async function SellerProfilePage({ params }: Props) {
                     initialFollowerCount={initialFollowerCount}
                   />
                 </div>
-                <div className="flex items-center justify-center md:justify-start gap-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                   {seller.isVerifiedSeller && (
                     <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100 flex items-center gap-1.5 shadow-sm">
                       <Shield className="w-3 h-3" /> VERIFIED SELLER
@@ -182,7 +201,7 @@ export default async function SellerProfilePage({ params }: Props) {
                 </div>
               </div>
 
-              <p className="text-gray-500 text-sm max-w-2xl mb-6 font-medium">
+              <p className="text-gray-600 text-sm max-w-3xl mb-6 font-medium leading-relaxed">
                 {seller.bio || `Welcome to ${seller.name}'s official storefront. Providing quality auctions and trusted service in Bangladesh since ${new Date(seller.createdAt).getFullYear()}.`}
               </p>
 

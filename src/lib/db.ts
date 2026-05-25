@@ -44,7 +44,9 @@ export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
     userLevel: (d.userLevel as number) ?? 1,
     salesCount: (d.salesCount as number) ?? 0,
     defectCount: (d.defectCount as number) ?? 0,
-    isBanned: !!d.isBanned
+    isBanned: !!d.isBanned,
+    bio: (d.bio as string) ?? null,
+    banner: (d.banner as string) ?? null,
   };
 }
 

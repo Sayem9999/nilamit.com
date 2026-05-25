@@ -11,7 +11,7 @@ import { updateProfileSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { verifyAndLinkMFSAccount } from '@/actions/otp';
 
-export async function updateProfile(data: unknown): Promise<ServiceResponse<{ user: Pick<User, 'id' | 'name' | 'email' | 'image'> }>> {
+export async function updateProfile(data: unknown): Promise<ServiceResponse<{ user: Pick<User, 'id' | 'name' | 'email' | 'image' | 'bio' | 'banner'> }>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated.');
 
@@ -25,8 +25,10 @@ export async function updateProfile(data: unknown): Promise<ServiceResponse<{ us
   const sanitized = sanitizeObject(parsed.data);
   const update: Record<string, unknown> = { updatedAt: new Date() };
   if (sanitized.name  !== undefined) update.name  = sanitized.name;
-  // Handle image separately: null means "remove photo" (sanitizeObject may strip nulls)
-  if (parsed.data.image !== undefined) update.image = parsed.data.image ?? null;
+  if (parsed.data.bio !== undefined) update.bio   = sanitized.bio ?? null;
+  // Handle image and banner separately: null means "remove" (sanitizeObject may strip nulls)
+  if (parsed.data.image  !== undefined) update.image  = parsed.data.image ?? null;
+  if (parsed.data.banner !== undefined) update.banner = parsed.data.banner ?? null;
 
   await db.collection('users').doc(session.user.id).update(update);
   
@@ -41,6 +43,8 @@ export async function updateProfile(data: unknown): Promise<ServiceResponse<{ us
       name: userData.name || null,
       image: userData.image || null,
       email: userData.email || null,
+      bio: userData.bio || null,
+      banner: userData.banner || null,
     } 
   });
 }
