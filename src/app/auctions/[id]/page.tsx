@@ -108,6 +108,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AuctionDetailPage({ params }: Props) {
+  const now = new Date();
   const { id } = await params;
   const session = await auth();
   const nonce = (await headers()).get('x-nonce') || undefined;
@@ -157,7 +158,6 @@ export default async function AuctionDetailPage({ params }: Props) {
     },
   };
 
-  const now = new Date();
   const serverTime = now.toISOString();
 
   return (

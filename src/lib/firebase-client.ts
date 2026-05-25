@@ -21,7 +21,7 @@ import { getDatabase, type Database } from 'firebase/database';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAuth, sendEmailVerification, signInWithCustomToken, type Auth, type User } from 'firebase/auth';
 import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+// import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { log } from '@/lib/logger';
 
 const firebaseConfig = {
@@ -41,6 +41,7 @@ function getClientApp(): FirebaseApp {
   const app = initializeApp(firebaseConfig);
   
   // Initialize App Check (reCAPTCHA v3) if in browser
+  /*
   if (typeof window !== 'undefined') {
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
     const isDev = process.env.NODE_ENV === 'development';
@@ -63,6 +64,7 @@ function getClientApp(): FirebaseApp {
       }
     }
   }
+  */
   
   return app;
 }

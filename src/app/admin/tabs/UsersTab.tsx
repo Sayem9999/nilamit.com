@@ -10,6 +10,7 @@ import {
 } from "@/actions/admin-users";
 import { Search, Shield, ShieldOff, Users, Ban
 } from "lucide-react";
+import Link from "next/link";
 
 export function UsersTab() {
   interface AdminUser {
@@ -165,32 +166,55 @@ export function UsersTab() {
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
-                        {user.image ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
-                            src={user.image}
-                            alt=""
-                            referrerPolicy="no-referrer"
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <Users className="w-4 h-4 text-primary-500" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900">
-                            {user.name || "Unnamed"}
-                          </p>
-                          {user.isBanned && (
-                            <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wider">
-                              Banned
-                            </span>
+                      <Link
+                        href={`/seller/${user.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 group"
+                        title="View storefront / public profile"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden group-hover:ring-2 group-hover:ring-primary-500 transition-all">
+                          {user.image ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={user.image}
+                              alt=""
+                              referrerPolicy="no-referrer"
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <Users className="w-4 h-4 text-primary-500" />
                           )}
                         </div>
-                        <p className="text-xs text-gray-400">{user.email}</p>
-                      </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
+                              {user.name || "Unnamed"}
+                            </p>
+                            {user.isVerifiedSeller ? (
+                              user.isTopRated ? (
+                                <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5">
+                                  ★ Top Seller
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 text-[9px] font-black uppercase tracking-wider">
+                                  Seller
+                                </span>
+                              )
+                            ) : (
+                              <span className="px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200/50 text-[9px] font-black uppercase tracking-wider">
+                                Bidder
+                              </span>
+                            )}
+                            {user.isBanned && (
+                              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wider">
+                                Banned
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400 group-hover:text-gray-500 transition-colors">{user.email}</p>
+                        </div>
+                      </Link>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-gray-400 text-xs">
