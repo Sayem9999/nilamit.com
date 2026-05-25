@@ -22,29 +22,31 @@ export async function GET() {
   }
 
   try {
-    // Sync user email and displayName to Firebase Authentication user record (best-effort)
-    try {
-      const updateData: Record<string, unknown> = {
-        email: session.user.email ?? undefined,
-        displayName: session.user.name ?? undefined,
-      };
+    // Sync user email and displayName to Firebase Authentication user record (best-effort, non-blocking)
+    void (async () => {
+      try {
+        const updateData: Record<string, unknown> = {
+          email: session.user.email ?? undefined,
+          displayName: session.user.name ?? undefined,
+        };
 
-      await adminAuth.instance.updateUser(session.user.id, updateData);
-    } catch (err) {
-      if (err && typeof err === 'object' && 'code' in err && err.code === 'auth/user-not-found') {
-        try {
-          await adminAuth.instance.createUser({
-            uid: session.user.id,
-            email: session.user.email ?? undefined,
-            displayName: session.user.name ?? undefined,
-          });
-        } catch (createErr) {
-          log.warn('[Firebase Token] Failed to create user in Firebase Auth during sync', { error: createErr });
+        await adminAuth.instance.updateUser(session.user.id, updateData);
+      } catch (err) {
+        if (err && typeof err === 'object' && 'code' in err && err.code === 'auth/user-not-found') {
+          try {
+            await adminAuth.instance.createUser({
+              uid: session.user.id,
+              email: session.user.email ?? undefined,
+              displayName: session.user.name ?? undefined,
+            });
+          } catch (createErr) {
+            log.warn('[Firebase Token] Failed to create user in Firebase Auth during sync', { error: createErr });
+          }
+        } else {
+          log.warn('[Firebase Token] Failed to update user in Firebase Auth during sync', { error: err });
         }
-      } else {
-        log.warn('[Firebase Token] Failed to update user in Firebase Auth during sync', { error: err });
       }
-    }
+    })();
 
     const customClaims: Record<string, unknown> = {};
     if ('isAdmin' in session.user && session.user.isAdmin) {

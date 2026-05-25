@@ -59,6 +59,12 @@ export function NotificationsList() {
       setIsLoading(true);
     }, 0);
 
+    // Bulletproof UX safeguard: if real-time data takes longer than 5 seconds (e.g. database offline or WS blocked),
+    // cancel the loading spinner and fallback to the placeholder screen.
+    const fallbackTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
     void (async () => {
       try {
         await ensureFirebaseAuth();
@@ -66,6 +72,7 @@ export function NotificationsList() {
         const notifRef = ref(db, `notifications/user/${userId}`);
 
         unsub = onValue(notifRef, (snapshot) => {
+          clearTimeout(fallbackTimer);
           const data = snapshot.val() as Record<string, Omit<NotificationItem, "id">> | null;
           if (data) {
             const list = Object.entries(data).map(([key, val]) => ({
@@ -81,10 +88,12 @@ export function NotificationsList() {
           }
           setIsLoading(false);
         }, (error) => {
+          clearTimeout(fallbackTimer);
           console.error("Failed to subscribe to notifications:", error);
           setIsLoading(false);
         });
       } catch (err) {
+        clearTimeout(fallbackTimer);
         console.error("Failed to subscribe to notifications", err);
         setIsLoading(false);
       }
@@ -93,6 +102,7 @@ export function NotificationsList() {
     return () => {
       unsub?.();
       clearTimeout(loadingTimer);
+      clearTimeout(fallbackTimer);
     };
   }, [userId]);
 
