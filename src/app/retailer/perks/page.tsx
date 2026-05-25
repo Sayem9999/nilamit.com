@@ -47,7 +47,7 @@ export default function RetailerPerksPage() {
             href="/retailer/dashboard"
             className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-4 transition-colors focus-visible:outline-none"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to command center
+            <ArrowLeft className="w-4 h-4" /> Back to Seller Hub
           </Link>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">

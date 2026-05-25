@@ -169,7 +169,7 @@ export default function BulkUploadPage() {
               href="/retailer/dashboard"
               className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-4 transition-colors focus-visible:outline-none"
             >
-              <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Back to command center
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Back to Seller Hub
             </Link>
             
             <div className="flex items-center gap-4">
@@ -470,7 +470,7 @@ export default function BulkUploadPage() {
                   href="/retailer/dashboard"
                   className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-indigo-500/20"
                 >
-                  Return to command center
+                  Return to Seller Hub
                 </Link>
                 <button
                   type="button"

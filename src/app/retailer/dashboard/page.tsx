@@ -66,7 +66,7 @@ export default async function RetailerDashboardPage() {
               )}
             </div>
             <h1 className="text-4xl font-black tracking-tight text-white mb-1">
-              Command Center
+              Seller Hub
             </h1>
             <p className="text-gray-400 text-sm font-medium">
               Real-time performance analytics for <span className="text-white">@{session.user.name?.split(' ')[0].toLowerCase()}</span>

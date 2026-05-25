@@ -304,9 +304,9 @@ export default async function DashboardPage({
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
           {/* Sidebar */}
-          <div className="w-full md:w-64 flex-shrink-0">
+          <div className="lg:col-span-1 w-full">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-2">
               <Link
                 href="/dashboard?tab=watchlist"
@@ -386,14 +386,27 @@ export default async function DashboardPage({
                   </span>
                 )}
               </Link>
-              {session.user.isVerifiedSeller && (
-                 <Link
-                  href="/auctions/create?bulk=true"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm text-gray-700 hover:bg-emerald-50/50 hover:text-emerald-600 border border-dashed border-transparent hover:border-emerald-100`}
-                >
-                  <Package className="w-4 h-4 text-emerald-500" />
-                  Bulk Inventory
-                 </Link>
+              {(session.user.isVerifiedSeller || session.user.isRetailer || session.user.emailVerified) && (
+                <>
+                  <Link
+                    href="/retailer/dashboard"
+                    className="flex items-center justify-between px-4 py-3 rounded-xl transition-all font-semibold text-sm text-gray-700 bg-gradient-to-br from-indigo-50 to-indigo-100/40 hover:from-indigo-100 hover:to-indigo-200/50 border border-indigo-200/30 hover:border-indigo-300 shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <BarChart3 className="w-4 h-4 text-indigo-600 animate-pulse" />
+                      <span className="font-bold text-indigo-950 uppercase tracking-tight text-[11px]">Seller Hub</span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-indigo-600" />
+                  </Link>
+
+                  <Link
+                    href="/seller/inventory/bulk"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm text-gray-700 hover:bg-indigo-50/50 hover:text-indigo-600 border border-dashed border-transparent hover:border-indigo-100"
+                  >
+                    <Package className="w-4 h-4 text-indigo-500" />
+                    <span>Bulk Upload</span>
+                  </Link>
+                </>
               )}
               <Link
                 href="/dashboard?tab=coordination"
@@ -453,91 +466,58 @@ export default async function DashboardPage({
                 </Link>
 
                 {/* Seller Performance Sync */}
-                {(session.user.isVerifiedSeller || session.user.emailVerified) && (
-                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seller Status</span>
-                      {session.user.isTopRated ? (
-                        <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
-                          <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                          <span className="text-[9px] font-black text-amber-700">TOP RATED</span>
-                        </div>
-                      ) : (session.user.salesCount ?? 0) > 0 ? (
-                        <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
-                          <Shield className="w-2.5 h-2.5 text-blue-500 fill-blue-500/10" />
-                          <span className="text-[9px] font-black text-blue-700">ACTIVE SELLER</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 bg-gray-100 px-2.5 py-0.5 rounded border border-gray-200">
-                          <Shield className="w-2.5 h-2.5 text-gray-500" />
-                          <span className="text-[9px] font-black text-gray-600">BASIC BIDDER</span>
-                        </div>
-                      )}
+                <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Account Type</span>
+                    {session.user.isTopRated ? (
+                      <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 animate-pulse">
+                        <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                        <span className="text-[9px] font-black text-amber-700">TOP RATED</span>
+                      </div>
+                    ) : session.user.isRetailer ? (
+                      <div className="flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                        <Shield className="w-2.5 h-2.5 text-indigo-500 fill-indigo-500/10" />
+                        <span className="text-[9px] font-black text-indigo-700">RETAILER</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                        <Shield className="w-2.5 h-2.5 text-blue-550 fill-blue-550/10" />
+                        <span className="text-[9px] font-black text-blue-700">SELLER / BIDDER</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white p-2 rounded-xl border border-gray-50">
+                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Sales</p>
+                      <p className="text-sm font-black text-gray-900">{session.user.salesCount || 0}</p>
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white p-2 rounded-xl border border-gray-50">
-                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Sales</p>
-                        <p className="text-sm font-black text-gray-900">{session.user.salesCount || 0}</p>
-                      </div>
-                      <div className="bg-white p-2 rounded-xl border border-gray-50">
-                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Defect Rate</p>
-                        <p className={`text-sm font-black ${
-                          (session.user.defectCount / (session.user.salesCount + session.user.defectCount || 1)) > 0.03 
-                            ? "text-red-600" 
-                            : "text-emerald-600"
-                        }`}>
-                          {((session.user.defectCount || 0) / (session.user.salesCount + session.user.defectCount || 1) * 100).toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-
-                    {(session.user.salesCount ?? 0) === 0 && !session.user.isTopRated ? (
-                      <div className="p-2 bg-indigo-50/50 rounded-xl border border-dashed border-indigo-150">
-                        <p className="text-[9px] text-indigo-700 leading-tight">
-                          <span className="font-bold">Pro Tip:</span> Create a listing or use bulk upload to activate your Seller profile!
-                        </p>
-                      </div>
-                    ) : !session.user.isTopRated ? (
-                      <div className="p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                        <p className="text-[9px] text-gray-500 leading-tight">
-                          <span className="font-bold">Goal:</span> 10 sales & &lt;5% defect rate for <span className="text-amber-600 font-bold">Top Rated</span> status.
-                        </p>
-                      </div>
-                    ) : null}
-
-                    {/* Retailer Specific Tools */}
-                    <div className="pt-3">
-                      <Link
-                        href="/retailer/dashboard"
-                        className="flex items-center justify-between w-full py-2.5 px-3 bg-[#0a0a0b] hover:bg-black rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <BarChart3 className="w-3 h-3 text-indigo-400 group-hover:scale-110 transition-transform" />
-                          <span>Command Center</span>
-                        </div>
-                        <ArrowRight className="w-3 h-3 opacity-50" />
-                      </Link>
-
-                      <Link
-                        href="/seller/inventory/bulk"
-                        className="flex items-center justify-between w-full py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all shadow-md shadow-indigo-100 group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Package className="w-3 h-3 text-indigo-200 group-hover:scale-110 transition-transform" />
-                          <span>Bulk Upload</span>
-                        </div>
-                        <ArrowRight className="w-3 h-3 opacity-50" />
-                      </Link>
+                    <div className="bg-white p-2 rounded-xl border border-gray-50">
+                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Defect Rate</p>
+                      <p className={`text-sm font-black ${
+                        (session.user.defectCount / (session.user.salesCount + session.user.defectCount || 1)) > 0.03 
+                          ? "text-red-600" 
+                          : "text-emerald-600"
+                      }`}>
+                        {((session.user.defectCount || 0) / (session.user.salesCount + session.user.defectCount || 1) * 100).toFixed(1)}%
+                      </p>
                     </div>
                   </div>
-                )}
+
+                  {!session.user.isTopRated && (
+                    <div className="p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                      <p className="text-[9px] text-gray-500 leading-tight">
+                        <span className="font-bold">Goal:</span> 10 sales & &lt;5% defect rate for <span className="text-amber-600 font-bold">Top Rated</span> status.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1">
+          <div className="lg:col-span-3 w-full">
             {currentTab === "watchlist" && (
               <div>
                 <h2 className="text-xl font-heading font-semibold text-gray-900 mb-6">

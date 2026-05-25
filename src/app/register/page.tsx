@@ -100,8 +100,8 @@ export default function RegisterPage() {
             {step === "account-type" && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="mb-8">
-                  <h3 className="text-2xl font-black text-gray-900 mb-1">Choose account type</h3>
-                  <p className="text-sm text-gray-500 font-medium tracking-tight">Join Nilamit as a buyer or business retailer.</p>
+                  <h3 className="text-2xl font-black text-gray-900 mb-1">Choose Account Category</h3>
+                  <p className="text-sm text-gray-500 font-medium tracking-tight">Select whether you are a casual standard user or a professional retailer.</p>
                 </div>
                 
                 <div className="space-y-4">
@@ -117,8 +117,8 @@ export default function RegisterPage() {
                         <User className="w-6 h-6 text-gray-400 group-hover:text-primary-600" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900">Personal Account</h4>
-                        <p className="text-xs text-gray-500 font-medium">For casual bidding and selling.</p>
+                        <h4 className="font-bold text-gray-900">Seller / Bidder (Standard)</h4>
+                        <p className="text-xs text-gray-500 font-medium">For standard bidding, buying, and casual selling.</p>
                       </div>
                     </div>
                     <ArrowRight className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-200 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" />
@@ -136,8 +136,8 @@ export default function RegisterPage() {
                         <Gavel className="w-6 h-6 text-gray-400 group-hover:text-indigo-600" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900">Business Account</h4>
-                        <p className="text-xs text-gray-500 font-medium">For retailers and high-volume sales.</p>
+                        <h4 className="font-bold text-gray-900">Professional Retailer</h4>
+                        <p className="text-xs text-gray-500 font-medium">For verified businesses, shops, and bulk inventory tools.</p>
                       </div>
                     </div>
                     <ArrowRight className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-200 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
@@ -208,7 +208,7 @@ export default function RegisterPage() {
 
                 <div className="mb-4">
                   <h3 className="text-xl font-bold text-gray-900 mb-1">
-                    {accountType === "business" ? "Business Email Signup" : t("emailSignupTitle")}
+                    {accountType === "business" ? "Professional Retailer Signup" : t("emailSignupTitle")}
                   </h3>
                   <p className="text-sm text-gray-500 font-medium">{t("emailSignupDesc")}</p>
                 </div>

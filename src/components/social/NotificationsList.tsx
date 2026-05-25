@@ -78,20 +78,40 @@ export function NotificationsList() {
 
         unsub = onValue(notifRef, (snapshot) => {
           clearTimeout(fallbackTimer);
-          const data = snapshot.val() as Record<string, Omit<NotificationItem, "id">> | null;
-          if (data) {
-            const list = Object.entries(data).map(([key, val]) => ({
-              id: key,
-              ...val,
-              _ts: val._ts || Date.now(),
-            }));
-            // Sort by timestamp descending
-            list.sort((a, b) => b._ts - a._ts);
-            setNotifications(list);
-          } else {
+          try {
+            const data = snapshot.val();
+            if (data && typeof data === 'object') {
+              const list: NotificationItem[] = [];
+              for (const [key, val] of Object.entries(data)) {
+                if (val && typeof val === 'object') {
+                  const typedVal = val as Record<string, unknown>;
+                  list.push({
+                    id: key,
+                    event: typeof typedVal.event === 'string' ? typedVal.event : "",
+                    amount: typeof typedVal.amount === 'number' ? typedVal.amount : undefined,
+                    auctionId: typeof typedVal.auctionId === 'string' ? typedVal.auctionId : undefined,
+                    auctionTitle: typeof typedVal.auctionTitle === 'string' ? typedVal.auctionTitle : undefined,
+                    message: typeof typedVal.message === 'string' ? typedVal.message : undefined,
+                    title: typeof typedVal.title === 'string' ? typedVal.title : undefined,
+                    badge: typedVal.badge && typeof typedVal.badge === 'object' ? (typedVal.badge as { label?: string; icon?: string }) : undefined,
+                    senderName: typeof typedVal.senderName === 'string' ? typedVal.senderName : undefined,
+                    preview: typeof typedVal.preview === 'string' ? typedVal.preview : undefined,
+                    _ts: typeof typedVal._ts === 'number' ? typedVal._ts : Date.now(),
+                  });
+                }
+              }
+              // Sort by timestamp descending
+              list.sort((a, b) => b._ts - a._ts);
+              setNotifications(list);
+            } else {
+              setNotifications([]);
+            }
+          } catch (parseErr) {
+            console.error("Failed to parse notifications data:", parseErr);
             setNotifications([]);
+          } finally {
+            setIsLoading(false);
           }
-          setIsLoading(false);
         }, (error) => {
           clearTimeout(fallbackTimer);
           console.error("Failed to subscribe to notifications:", error);

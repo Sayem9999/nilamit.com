@@ -104,7 +104,7 @@ export default function RetailerSettingsPage() {
             href="/retailer/dashboard"
             className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-4 transition-colors focus-visible:outline-none"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to command center
+            <ArrowLeft className="w-4 h-4" /> Back to Seller Hub
           </Link>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
@@ -270,7 +270,7 @@ export default function RetailerSettingsPage() {
                   <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">
                     {user.isRetailer 
                       ? "Full access to high-volume bulk inventory sync, pro badges, and 0% escrow promotional fees."
-                      : "Access to the standard Command Center, unlimited single listings, and standard buyer coordination tools."}
+                      : "Access to the standard Seller Hub, unlimited single listings, and standard buyer coordination tools."}
                   </p>
                 </div>
 

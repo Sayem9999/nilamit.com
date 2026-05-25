@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { updateProfile, linkMFSAccount } from "@/actions/user";
+import { toggleRetailerUpgrade } from "@/actions/retailer-settings";
 import { getProxiedAvatarUrl } from "@/lib/avatar";
 import { logoutAction } from "@/actions/auth";
 import { sendMFSVerificationOTP } from "@/actions/otp";
@@ -42,6 +43,7 @@ export default function ProfilePage() {
   const t_prof = useTranslations("Profile");
   const t_nav = useTranslations("Navigation");
   const [isPending, startTransition] = useTransition();
+  const [isUpgrading, startUpgradeTransition] = useTransition();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
   const [msg, setMsg] = useState("");
@@ -263,6 +265,7 @@ export default function ProfilePage() {
   const user = (session.user as unknown) as { 
     id: string; 
     isVerifiedSeller: boolean; 
+    isRetailer: boolean;
     rating: number; 
     ratingCount: number;
     email?: string;
@@ -282,6 +285,23 @@ export default function ProfilePage() {
       setEditing(false);
       setName("");
       toast.success("Profile name updated successfully!");
+    });
+  };
+
+  const handleToggleTier = () => {
+    const nextStatus = !user.isRetailer;
+    startUpgradeTransition(async () => {
+      const res = await toggleRetailerUpgrade(nextStatus);
+      if (res.success) {
+        toast.success(
+          nextStatus 
+            ? "Switched to Professional Retailer! Bulk upload and advanced tools are now unlocked."
+            : "Switched to standard Seller / Bidder."
+        );
+        await update(); // Sync NextAuth session
+      } else {
+        toast.error(res.error?.message || "Failed to switch role category.");
+      }
     });
   };
 
@@ -697,6 +717,38 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+
+            {/* Account Category Switcher Card */}
+            <motion.div variants={itemVariants} className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
+                  <ShieldCheck size={22} className="text-primary-600" /> Account Category
+                </h3>
+                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${
+                  user.isRetailer 
+                    ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                    : 'bg-primary-50 text-primary-700 border-primary-100'
+                }`}>
+                  {user.isRetailer ? "Professional Retailer" : "Seller / Bidder"}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mb-6 font-medium leading-relaxed">
+                You can switch between a standard <strong>Seller / Bidder</strong> account and a professional <strong>Retailer</strong> account at any time. Retailer accounts unlock high-volume bulk inventory sync, lower commission rates, and pro dashboard tools.
+              </p>
+              <button
+                type="button"
+                onClick={handleToggleTier}
+                disabled={isUpgrading}
+                className={`w-full py-4 rounded-2xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm ${
+                  user.isRetailer
+                    ? "bg-red-500/10 border border-red-200 text-red-600 hover:bg-red-500/20"
+                    : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-100 hover:shadow-md"
+                }`}
+              >
+                {isUpgrading && <Loader2 size={16} className="animate-spin" />}
+                {user.isRetailer ? "Switch to Standard User (Seller / Bidder)" : "Switch to Professional Retailer"}
+              </button>
             </motion.div>
 
             {/* Storefront Customization Card */}
