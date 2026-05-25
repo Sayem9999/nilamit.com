@@ -6,7 +6,7 @@ type: project
 
 Platform is LIVE at https://www.nilamit.com
 
-**Project:** nilamit-52073 | **Region:** asia-southeast1 | **Admin:** sayemf21@gmail.com
+**Project:** nilamit-52073 | **Region:** asia-southeast1 | **Admins:** sayemf21@gmail.com, md.moimsarkar22@gmail.com
 
 **Why:** Full stabilization and Auth Hardening completed May 4, 2026. Resolved critical 403 Forbidden errors and internal URL redirect mismatches in Firebase App Hosting.
 
@@ -21,7 +21,7 @@ Platform is LIVE at https://www.nilamit.com
 - Product/Auction Uploads: Stable server-side image processing utilizing Firebase Admin Storage, completely immune to client-side auth configuration limitations.
 - Media Rendering: Localized bKash and Nagad vector SVG paths in `/public`, completely bypassing CSP blockades and browser hotlink failures.
 - Dashboard (watchlist, bids, escrow, listings, coordination)
-- Admin panel at /admin (requires login as sayemf21@gmail.com)
+- Admin panel at /admin (requires login as sayemf21@gmail.com or md.moimsarkar22@gmail.com)
 - Firestore rules + indexes deployed
 - All 19 secrets stored in Secret Manager with correct IAM grants (including new UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN).
 

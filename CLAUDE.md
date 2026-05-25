@@ -14,7 +14,7 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **Live URL:** `https://www.nilamit.com`
 
-**Admin panel:** `/admin` — gated by `requireAdmin()` in [src/lib/admin-guard.ts](src/lib/admin-guard.ts) (DB-deep check, not JWT-only). Admin emails come from `ADMIN_EMAILS` (`sayemf21@gmail.com`).
+**Admin panel:** `/admin` — gated by `requireAdmin()` in [src/lib/admin-guard.ts](src/lib/admin-guard.ts) (DB-deep check, not JWT-only). Admin emails come from `ADMIN_EMAILS` (`sayemf21@gmail.com`, `md.moimsarkar22@gmail.com`).
 
 **Cron:** GitHub Actions workflow in [.github/workflows/cron.yml](.github/workflows/cron.yml) hits the `/api/cron/*` POST endpoints with `Bearer ${CRON_SECRET}`. There is **no** Cloud Scheduler. Five jobs scheduled: `close-auctions` + `process-alerts` (every 5 min), `closing-soon` (every 15 min), `enforce-policies` (hourly), `gc-uploads` (weekly Sun 04:00 UTC).
 
@@ -148,7 +148,7 @@ DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (ad
 | Secret | Status | Notes |
 |---|---|---|
 | `AUTH_SECRET` | ✓ Real | `aFOCaYn0TDGp6WA4Gi77noq0vu/S/LbFx5UT5GBkz9Q=` |
-| `ADMIN_EMAILS` | ✓ Real | `sayemf21@gmail.com` |
+| `ADMIN_EMAILS` | ✓ Real | `sayemf21@gmail.com,md.moimsarkar22@gmail.com` |
 | `CRON_SECRET` | ✓ Real | Auto-generated hex |
 | `FIREBASE_PROJECT_ID` | ✓ Real | `nilamit-52073` |
 | `FIREBASE_CLIENT_EMAIL` | ✓ Real | Firebase Admin SDK SA |
