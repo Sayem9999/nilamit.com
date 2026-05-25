@@ -17,6 +17,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SystemConfig } from "@/types";
 import { useTranslations } from "next-intl";
+import { CATEGORIES } from "@/types";
 
 interface HeroSectionProps {
   systemConfig?: SystemConfig;
@@ -25,13 +26,19 @@ interface HeroSectionProps {
 
 export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
   const t = useTranslations("Home");
+  const tCat = useTranslations("Categories");
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchCategory, setSearchCategory] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/auctions?search=${encodeURIComponent(searchQuery)}`);
+    if (searchQuery.trim() || searchCategory) {
+      const url = `/auctions?`;
+      const params = [];
+      if (searchQuery.trim()) params.push(`search=${encodeURIComponent(searchQuery)}`);
+      if (searchCategory) params.push(`category=${encodeURIComponent(searchCategory)}`);
+      router.push(url + params.join("&"));
     }
   };
 
@@ -108,23 +115,36 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
               variants={itemVariants}
               onSubmit={handleSearch}
               role="search"
-              className="mt-10 relative max-w-xl bg-white rounded-2xl shadow-xl shadow-gray-200/50 border-2 border-primary-100 p-2 flex gap-2"
+              className="mt-10 relative max-w-xl bg-white rounded-2xl shadow-xl shadow-gray-200/50 border-2 border-primary-100 p-2 flex items-center gap-2"
             >
               <label htmlFor="hero-search" className="sr-only">{t("searchPlaceholder")}</label>
               <div className="flex-1 px-4 flex items-center gap-3">
-                <Search className="w-5 h-5 text-gray-400" aria-hidden="true" />
+                <Search className="w-5 h-5 text-gray-400 shrink-0" aria-hidden="true" />
                 <input
                   id="hero-search"
                   type="search"
                   placeholder={t("searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-full bg-transparent focus:outline-none text-gray-900 font-medium placeholder:text-gray-400"
+                  className="w-full h-full bg-transparent focus:outline-none text-gray-900 font-medium placeholder:text-gray-400 text-sm"
                 />
               </div>
+              <div className="h-6 w-px bg-gray-200 shrink-0" />
+              <select
+                value={searchCategory}
+                onChange={(e) => setSearchCategory(e.target.value)}
+                className="bg-transparent text-xs font-bold text-gray-500 hover:text-gray-800 focus:outline-none px-3 cursor-pointer shrink-0 max-w-[130px]"
+              >
+                <option value="">All Categories</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.slug} value={cat.slug}>
+                    {tCat(cat.slug)}
+                  </option>
+                ))}
+              </select>
               <button
                 type="submit"
-                className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2"
+                className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 shrink-0 text-sm"
               >
                 {t("searchBtn")}
               </button>

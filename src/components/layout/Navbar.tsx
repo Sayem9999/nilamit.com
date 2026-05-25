@@ -25,10 +25,12 @@ import { getProxiedAvatarUrl } from "@/lib/avatar";
 import { memo } from "react";
 import { getClientDB, ensureFirebaseAuth } from "@/lib/firebase-client";
 import { ref, onValue } from "firebase/database";
+import { CATEGORIES } from "@/types";
 
 export const Navbar = memo(function Navbar() {
   const { data: session } = useSession();
   const t = useTranslations("Navigation");
+  const tCat = useTranslations("Categories");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hasBackdrop, setHasBackdrop] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -130,17 +132,35 @@ export const Navbar = memo(function Navbar() {
           </Link>
 
           {/* Search Bar (Desktop) */}
-          <div className="hidden lg:flex items-center flex-1 max-w-xs mx-6">
+          <div className="hidden lg:flex items-center flex-1 max-w-lg mx-6">
             <form
               action="/auctions"
-              className="w-full relative group"
+              className="w-full flex items-center bg-gray-50/50 border border-gray-200/60 rounded-xl focus-within:bg-white focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10 outline-none transition-all"
             >
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-primary-500 transition-colors" />
-              <input
-                type="search"
-                name="search"
-                placeholder={t("searchPlaceholder")}
-                className="w-full pl-10 pr-4 py-2 bg-gray-50/50 border border-gray-200/60 rounded-xl focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm font-medium"
+              <div className="relative flex-1 flex items-center">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3.5" />
+                <input
+                  type="search"
+                  name="search"
+                  placeholder={t("searchPlaceholder")}
+                  className="w-full pl-10 pr-3 py-2 bg-transparent outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                />
+              </div>
+              <div className="h-6 w-px bg-gray-200" />
+              <select
+                name="category"
+                className="bg-transparent text-xs font-bold text-gray-500 hover:text-gray-800 focus:outline-none px-3 py-1 cursor-pointer max-w-[130px] truncate"
+              >
+                <option value="" className="text-gray-900 bg-white">All Categories</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.slug} value={cat.slug} className="text-gray-900 bg-white">
+                    {tCat(cat.slug)}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="hidden"
               />
             </form>
           </div>

@@ -7,6 +7,7 @@ import { db, docData } from "@/lib/db";
 import { SystemConfig } from "@/types/common";
 import type { AuctionWithSeller, LatestActivity } from "@/types";
 import { log } from "@/lib/logger";
+import { getTopSellers } from "@/actions/user";
 
 interface GlobalStats {
   totalUsers?: number;
@@ -41,6 +42,16 @@ interface ResolvedHomeData {
   featuredAuctions: AuctionWithSeller[];
   stats: { totalUsers: number; totalBids: number; totalAuctions: number; verifiedSellers: number };
   systemConfig: SystemConfig;
+  topSellers: Array<{
+    id: string;
+    name: string;
+    image: string | null;
+    rating: number;
+    ratingCount: number;
+    userLevel: number;
+    salesCount: number;
+    isTopRated: boolean;
+  }>;
 }
 
 async function getCachedGlobalStats() {
@@ -114,12 +125,14 @@ async function loadHomeData(): Promise<ResolvedHomeData> {
     featuredRes,
     statsData,
     systemConfig,
+    sellersRes,
   ] = await Promise.all([
     getAuctions({ sortBy: "bids", sortOrder: "desc", limit: 8 }),
     getSpecializedFeeds(),
     getAuctions({ isFeatured: true, sortOrder: "asc", limit: 4 }),
     getCachedGlobalStats(),
     getCachedSystemConfig(),
+    getTopSellers(4),
   ]);
 
   return {
@@ -134,6 +147,7 @@ async function loadHomeData(): Promise<ResolvedHomeData> {
       verifiedSellers: Number(statsData.totalVerifiedSellers ?? 0),
     },
     systemConfig,
+    topSellers:       sellersRes.success ? sellersRes.data! : [],
   };
 }
 
@@ -155,6 +169,7 @@ export default async function HomePage() {
       featuredAuctions: [],
       stats: { totalUsers: 0, totalBids: 0, totalAuctions: 0, verifiedSellers: 0 },
       systemConfig:     FALLBACK_SYSTEM_CONFIG,
+      topSellers:       [],
     };
   }
 
@@ -167,6 +182,7 @@ export default async function HomePage() {
         featuredAuctions={data.featuredAuctions}
         stats={data.stats}
         systemConfig={data.systemConfig}
+        topSellers={data.topSellers}
         locale={locale}
       />
       <ForYouFeed />

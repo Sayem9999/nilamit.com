@@ -17,6 +17,13 @@ interface BidHistoryProps {
   initialBids?: Bid[];
 }
 
+function maskBidderName(name: string | null): string {
+  if (!name) return "b***r";
+  const trimmed = name.trim();
+  if (trimmed.length <= 2) return `${trimmed[0]}***`;
+  return `${trimmed[0]}***${trimmed[trimmed.length - 1]}`;
+}
+
 export function BidHistory({ auctionId, initialBids = [] }: BidHistoryProps) {
   const { newBids } = useAuctionBids(auctionId);
   
@@ -48,11 +55,16 @@ export function BidHistory({ auctionId, initialBids = [] }: BidHistoryProps) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
-        <h3 className="font-heading font-semibold text-gray-900 text-sm flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-indigo-500" /> Bid History
-        </h3>
-        <span className="text-xs text-gray-400 font-medium">
+      <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between gap-4">
+        <div className="space-y-0.5">
+          <h3 className="font-heading font-semibold text-gray-900 text-sm flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-indigo-500" /> Bid History
+          </h3>
+          <p className="text-[10px] text-gray-450 font-medium leading-none">
+            Bidder identities are masked for security and privacy.
+          </p>
+        </div>
+        <span className="text-xs text-gray-400 font-medium shrink-0">
           {allBids.length} {allBids.length === 1 ? 'bid' : 'bids'} · {new Set(allBids.map(b => b.bidder.id)).size} {new Set(allBids.map(b => b.bidder.id)).size === 1 ? 'bidder' : 'bidders'}
         </span>
       </div>
@@ -75,7 +87,7 @@ export function BidHistory({ auctionId, initialBids = [] }: BidHistoryProps) {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {bid.bidder.name || "Anonymous"}
+                  {maskBidderName(bid.bidder.name)}
                 </p>
                 <p className="text-xs text-gray-400 flex items-center gap-1">
                   <Clock className="w-3 h-3" />

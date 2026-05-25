@@ -1,4 +1,4 @@
-import { getAuction } from "@/actions/auction";
+import { getAuction, getAuctions } from "@/actions/auction";
 import { env } from "@/lib/env";
 import { log } from "@/lib/logger";
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ import ChatInterface from "@/components/social/ChatInterface";
 import { isAdminEmail } from "@/lib/admin-guard";
 import { AdminAuctionControls } from "@/components/auction/AdminAuctionControls";
 
-import { AuctionWithBids, Bid } from "@/types";
+import { AuctionWithBids, Bid, AuctionWithSeller } from "@/types";
 import { auth } from "@/lib/auth";
 import { WatchlistButton } from "@/components/auction/WatchlistButton";
 import { DetailFeatureButton } from "@/components/auction/DetailFeatureButton";
@@ -60,6 +60,7 @@ import { SecondChanceOfferButton } from "@/components/auction/SecondChanceOfferB
 import { AuctionStatusBadge } from "@/components/auction/AuctionStatusBadge";
 import { AuctionBidCount } from "@/components/auction/AuctionBidCount";
 import { StartChatButton } from "@/components/social/StartChatButton";
+import AuctionCard from "@/components/auction/AuctionCard";
 
 interface Props {
   params: Promise<{ id: string; locale: string }>;
@@ -118,12 +119,13 @@ export default async function AuctionDetailPage({ params }: Props) {
   const t = await getTranslations("Auction");
   if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
 
-  const [bidsRes, watchedRes, chatRes, reviewRes, questionsRes] = await Promise.all([
+  const [bidsRes, watchedRes, chatRes, reviewRes, questionsRes, relatedRes] = await Promise.all([
     getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     isWatched(id).catch((e) => { log.error('[AuctionDetail] isWatched failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed') as unknown as Awaited<ReturnType<typeof isWatched>>; }),
     getAuctionChat(id).catch((e) => { log.error('[AuctionDetail] getAuctionChat failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     canReviewAuction(id).catch((e) => { log.error('[AuctionDetail] canReviewAuction failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     getAuctionQuestions(id).catch((e) => { log.error('[AuctionDetail] getAuctionQuestions failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
+    getAuctions({ category: auction.category, status: AuctionStatus.ACTIVE, limit: 5 }).catch((e) => { log.error('[AuctionDetail] getRelatedAuctions failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
   ]);
 
   const bids = (bidsRes.success && bidsRes.data ? bidsRes.data : []) as (Bid & { bidder: { id: string, name: string, image: string | null } })[];
@@ -131,6 +133,9 @@ export default async function AuctionDetailPage({ params }: Props) {
   const chat = (chatRes.success && chatRes.data) ? chatRes.data : null;
   const canReview = (reviewRes.success && reviewRes.data) ? reviewRes.data : false;
   const questions = (questionsRes.success && questionsRes.data) ? questionsRes.data : [];
+  const relatedAuctions = (relatedRes.success && relatedRes.data?.auctions 
+    ? relatedRes.data.auctions.filter(a => a.id !== id) 
+    : []).slice(0, 3) as AuctionWithSeller[];
   const tLoc = await getTranslations("Locations");
 
   const bids24h = bids.filter((b) => {
@@ -580,6 +585,20 @@ export default async function AuctionDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Related Listings Section */}
+      {relatedAuctions.length > 0 && (
+        <section className="mt-16 pt-12 border-t border-gray-100" aria-labelledby="related-heading">
+          <h2 id="related-heading" className="font-heading font-black text-2xl text-gray-900 tracking-tight mb-8">
+            People Who Viewed This Item Also Viewed
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+            {relatedAuctions.map((relatedAuction) => (
+              <AuctionCard key={relatedAuction.id} auction={relatedAuction} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Page-level legal footer — meta-content, not bid-panel content */}
       <aside className="mt-12 pt-6 border-t border-gray-100 max-w-3xl mx-auto">

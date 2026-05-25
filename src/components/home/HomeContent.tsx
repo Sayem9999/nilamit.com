@@ -17,6 +17,7 @@ import { TrustFeatures } from "./components/TrustFeatures";
 import { StatsBar } from "./components/StatsBar";
 
 import { AreaQuickLinks } from "./components/AreaQuickLinks";
+import { TopSellersShowcase } from "./components/TopSellersShowcase";
 
 interface HomeContentProps {
   trendingAuctions?: AuctionWithSeller[];
@@ -31,6 +32,16 @@ interface HomeContentProps {
     totalAuctions: number;
     verifiedSellers: number;
   };
+  topSellers?: Array<{
+    id: string;
+    name: string;
+    image: string | null;
+    rating: number;
+    ratingCount: number;
+    userLevel: number;
+    salesCount: number;
+    isTopRated: boolean;
+  }>;
 }
 
 export function HomeContent({
@@ -41,6 +52,7 @@ export function HomeContent({
   systemConfig,
   locale = "en",
   stats,
+  topSellers = [],
 }: HomeContentProps) {
   const t = useTranslations("Home");
 
@@ -142,6 +154,9 @@ export function HomeContent({
         containerVariants={containerVariants}
         itemVariants={itemVariants}
       />
+
+      {/* Top Rated Sellers Showcase */}
+      <TopSellersShowcase sellers={topSellers} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Ending Soon Section */}
