@@ -131,10 +131,12 @@ export const AuctionCard = memo(({
   auction,
   priority = false,
   className = "",
+  viewMode = "grid",
 }: {
   auction: AuctionWithSeller;
   priority?: boolean;
   className?: string;
+  viewMode?: "grid" | "list";
 }) => {
   const { data: session } = useSession();
   const { lightweightMode } = useSettings();
@@ -219,6 +221,149 @@ export const AuctionCard = memo(({
     if (!url) return false;
     return url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/") || url.startsWith("data:");
   };
+
+  // CLASSIC HORIZONTAL EBAY LIST LAYOUT
+  if (viewMode === "list") {
+    return (
+      <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl ${className}`} aria-label={cardLabel}>
+        <div className="bg-white rounded-2xl border border-gray-100/60 group-hover:border-primary-500/30 shadow-premium hover:shadow-[0_15px_30px_rgba(13,110,253,0.06)] transition-all duration-300 overflow-hidden flex flex-col sm:flex-row h-full">
+          {/* Image Area */}
+          <div className="relative w-full sm:w-56 aspect-[16/10] sm:aspect-[4/3] bg-gray-50 overflow-hidden flex-shrink-0">
+            {lightweightMode ? (
+              <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center gap-1 p-4 text-center">
+                <Zap className="w-6 h-6 text-amber-500" aria-hidden="true" />
+              </div>
+            ) : (
+              <div className="relative w-full h-full">
+                {auction.images?.[0] && isValidImageUrl(auction.images[0]) && !imageError ? (
+                  <Image
+                    src={auction.images[0].includes('alt=media') ? auction.images[0].replace(/(\.[\w\d_-]+)(\?alt=media.*)?$/i, '_200x200$1$2') : auction.images[0]}
+                    alt={`${auction.title} — auction listing photo`}
+                    fill
+                    priority={priority}
+                    sizes="(max-width: 768px) 50vw, 200px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4 text-center text-slate-350">
+                    <Package className="w-8 h-8 stroke-[1.5]" aria-hidden="true" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Floating Admin & Watchlist button overlays */}
+            <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleToggleFeatured}
+                  disabled={isPending}
+                  className={`w-7 h-7 rounded-full backdrop-blur-md flex items-center justify-center border transition-all ${
+                    isFeatured ? "bg-amber-500 text-white border-amber-400" : "bg-white/20 text-white/70 border-white/15"
+                  }`}
+                >
+                  <Star className={`w-3 h-3 ${isFeatured ? "fill-white" : ""}`} />
+                </button>
+              )}
+              <WatchlistButton
+                auctionId={auction.id}
+                initialIsWatchlisted={isWatchlisted}
+                className="w-7 h-7"
+                hoverOnly
+              />
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="p-4 flex flex-col flex-1 min-w-0">
+            <div className="flex-1 space-y-2">
+              <h3 className="font-heading font-bold text-gray-900 text-sm sm:text-base md:text-lg line-clamp-1 group-hover:text-primary-600 transition-colors duration-300">
+                {auction.title}
+              </h3>
+
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(() => {
+                  const styles = getCategoryBadgeStyles(auction.category);
+                  const CatIcon = styles.icon;
+                  return (
+                    <span className="bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 backdrop-blur-md rounded-full px-2 py-0.5 text-[9px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
+                      <CatIcon className="w-2.5 h-2.5" />
+                      {tCat(auction.category || 'other')}
+                    </span>
+                  );
+                })()}
+                {auction.condition && (() => {
+                  const styles = getConditionBadgeStyles(auction.condition);
+                  if (!styles) return null;
+                  const CondIcon = styles.icon;
+                  return (
+                    <span className="bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20 backdrop-blur-md rounded-full px-2 py-0.5 text-[9px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
+                      <CondIcon className="w-2.5 h-2.5" />
+                      {auction.condition}
+                    </span>
+                  );
+                })()}
+              </div>
+
+              {/* Seller details & Locations */}
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/seller/${auction.sellerId}`); }}
+                  className="flex items-center gap-1 hover:text-primary-600 transition-colors"
+                >
+                  <span className="font-semibold text-gray-500 truncate">
+                    {auction.seller.name || t("seller")}
+                  </span>
+                  <VerificationBadge
+                    emailVerified={auction.seller.emailVerified}
+                    isVerifiedSeller={!!auction.seller.isVerifiedSeller}
+                    size="sm"
+                    showText={false}
+                  />
+                </button>
+
+                <span className="text-gray-400 font-bold flex items-center gap-1 bg-gray-50 border border-gray-100 rounded px-1.5 py-0.5 text-[10px]">
+                  <MapPin className="w-3 h-3 text-primary-500" />
+                  {auction.location ? tLoc(auction.location) : tLoc("mirpur")}
+                </span>
+              </div>
+            </div>
+
+            {/* Bottom pricing section */}
+            <div className="mt-4 pt-3 border-t border-gray-100/60 flex flex-wrap items-end justify-between gap-4">
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block leading-none">
+                  {t("currentPrice")}
+                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-base sm:text-lg font-black text-gray-900 tracking-tight">
+                    {formatBDT(currentPrice)}
+                  </span>
+                  {auction.currentPrice > auction.startingPrice && (
+                    <span className="text-xs text-gray-400 line-through">
+                      {formatBDT(auction.startingPrice)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5 text-xs font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded-md">
+                  <Users className="w-3.5 h-3.5" />
+                  {bidCount} {t("bids")}
+                </div>
+                <CountdownTimer endTime={auction.endTime} variant="card-footer" className="py-1 px-2 text-[10px] rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl ${className}`} aria-label={cardLabel}>

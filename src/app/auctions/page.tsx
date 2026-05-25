@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import AuctionCard from "@/components/auction/AuctionCard";
 import LoadMore from "@/components/auction/LoadMore";
 import Link from "next/link";
-import { Search as SearchIcon, SlidersHorizontal, MapPin } from "lucide-react";
+import { Search as SearchIcon, SlidersHorizontal, MapPin, LayoutGrid, Rows3 } from "lucide-react";
 import { CATEGORIES, LOCATIONS, AuctionWithSeller, AuctionStatus } from "@/types";
 import { getTranslations } from "next-intl/server";
 
@@ -15,6 +15,7 @@ interface AuctionsSearchParams {
   sortOrder?: string;
   status?: string;
   location?: string;
+  view?: string;
 }
 
 interface Props {
@@ -40,6 +41,8 @@ export default async function AuctionsPage({ searchParams }: Props) {
   const t    = await getTranslations("Search");
   const tCat = await getTranslations("Categories");
   const tLoc = await getTranslations("Locations");
+
+  const viewMode = (params.view as "grid" | "list") || "grid";
 
   const filters = {
     category: params.category,
@@ -70,9 +73,32 @@ export default async function AuctionsPage({ searchParams }: Props) {
                 ? t("resultsFor", { query: params.search })
                 : t("title")}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {t("found", { count: total })}
-          </p>
+          <div className="flex items-center gap-4 mt-1.5">
+            <p className="text-sm text-gray-500 font-semibold">
+              {t("found", { count: total })}
+            </p>
+            {/* eBay Grid/List Toggle Switcher */}
+            <div className="flex items-center bg-gray-100 dark:bg-slate-800 rounded-lg p-0.5 border border-gray-200/50">
+              <Link
+                href={buildQs(params, { view: "grid" })}
+                className={`p-1.5 rounded-md transition-all ${
+                  viewMode === "grid" ? "bg-white dark:bg-slate-900 text-primary-600 shadow-xs" : "text-gray-400 hover:text-gray-600"
+                }`}
+                aria-label="Grid view"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </Link>
+              <Link
+                href={buildQs(params, { view: "list" })}
+                className={`p-1.5 rounded-md transition-all ${
+                  viewMode === "list" ? "bg-white dark:bg-slate-900 text-primary-600 shadow-xs" : "text-gray-400 hover:text-gray-600"
+                }`}
+                aria-label="List view"
+              >
+                <Rows3 className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
         </div>
         {hasActiveFilter && (
           <Link
@@ -200,13 +226,13 @@ export default async function AuctionsPage({ searchParams }: Props) {
             </div>
           ) : (
             <div className="space-y-8">
-              <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
+              <div className={viewMode === "list" ? "flex flex-col gap-4" : "grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6"}>
                 {initialAuctions.map((auction) => (
-                  <AuctionCard key={auction.id} auction={auction} />
+                  <AuctionCard key={auction.id} auction={auction} viewMode={viewMode} />
                 ))}
               </div>
 
-              <LoadMore key={JSON.stringify(filters)} filters={filters} initialLastId={lastId} />
+              <LoadMore key={JSON.stringify(filters)} filters={filters} initialLastId={lastId} viewMode={viewMode} />
             </div>
           )}
         </section>

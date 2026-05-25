@@ -9,11 +9,13 @@ import { Loader2 } from "lucide-react";
 interface LoadMoreProps {
   filters: AuctionFilters;
   initialLastId: string | null;
+  viewMode?: "grid" | "list";
 }
 
 export default function LoadMore({
   filters,
   initialLastId,
+  viewMode = "grid",
 }: LoadMoreProps) {
   const [auctions, setAuctions] = useState<AuctionWithSeller[]>([]);
   const [lastId, setLastId] = useState<string | null>(initialLastId);
@@ -68,9 +70,9 @@ export default function LoadMore({
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
+      <div className={viewMode === "list" ? "flex flex-col gap-4" : "grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6"}>
         {auctions.map((auction) => (
-          <AuctionCard key={auction.id} auction={auction} />
+          <AuctionCard key={auction.id} auction={auction} viewMode={viewMode} />
         ))}
       </div>
 

@@ -20,8 +20,11 @@ import {
   Truck,
   Info,
   MapPin,
+  Flame,
+  Zap,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { AuctionDetailTabs } from "@/components/auction/AuctionDetailTabs";
 import { canReviewAuction } from "@/actions/review";
 import { getAuctionQuestions } from "@/actions/qa";
 import { QnaSection } from "@/components/auction/QnaSection";
@@ -127,6 +130,13 @@ export default async function AuctionDetailPage({ params }: Props) {
   const chat = (chatRes.success && chatRes.data) ? chatRes.data : null;
   const canReview = (reviewRes.success && reviewRes.data) ? reviewRes.data : false;
   const questions = (questionsRes.success && questionsRes.data) ? questionsRes.data : [];
+  const tLoc = await getTranslations("Locations");
+
+  const bids24h = bids.filter((b) => {
+    const bidTime = new Date(b.createdAt);
+    return now.getTime() - bidTime.getTime() <= 24 * 60 * 60 * 1000;
+  }).length;
+  const watchersCount = auction.watchlist?.length ?? 0;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -233,15 +243,23 @@ export default async function AuctionDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Description */}
-          <section aria-labelledby="auction-description-heading">
-            <h2 id="auction-description-heading" className="font-heading font-semibold text-lg text-gray-900 mb-3">
-              {t("description")}
-            </h2>
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-              {auction.description}
-            </p>
-          </section>
+          {/* eBay Multi-Tab Details Switcher */}
+          <AuctionDetailTabs
+            description={auction.description}
+            location={auction.location || undefined}
+            seller={{
+              id: auction.sellerId,
+              name: auction.seller?.name,
+              image: auction.seller?.image,
+              rating: auction.seller?.rating,
+              ratingCount: auction.seller?.ratingCount,
+              userLevel: auction.seller?.userLevel,
+              winningStreak: auction.seller?.winningStreak,
+              isVerifiedSeller: !!auction.seller?.isVerifiedSeller,
+              isTopRated: !!auction.seller?.isTopRated,
+            }}
+            commissionRate={auction.commissionRate}
+          />
 
           {/* Bid History */}
           <BidHistory
@@ -295,6 +313,32 @@ export default async function AuctionDetailPage({ params }: Props) {
 
         {/* Right: Bid Panel + Seller Info */}
         <div id="mobile-bid-anchor" className="lg:w-96 flex-shrink-0 space-y-6">
+          {/* eBay Urgency Signals */}
+          <div className="flex flex-col gap-2 p-4 bg-orange-50/50 border border-orange-100/60 rounded-2xl shadow-xs">
+            {bids24h > 0 ? (
+              <div className="flex items-center gap-2 text-xs font-semibold text-orange-850">
+                <Flame className="w-4 h-4 text-orange-500 fill-orange-500/20 animate-pulse" />
+                <span>🔥 {bids24h} bid{bids24h === 1 ? "" : "s"} placed in the last 24h</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
+                <Flame className="w-4 h-4 text-gray-400" />
+                <span>Steady bidding activity</span>
+              </div>
+            )}
+            {watchersCount > 0 ? (
+              <div className="flex items-center gap-2 text-xs font-semibold text-primary-850">
+                <Eye className="w-4 h-4 text-primary-500 animate-pulse" />
+                <span>👀 {watchersCount} active watcher{watchersCount === 1 ? "" : "s"} interested</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
+                <Eye className="w-4 h-4 text-gray-400" />
+                <span>Be the first to watch this item</span>
+              </div>
+            )}
+          </div>
+
           {/* Bid Panel */}
           <BidPanelWrapper
             auctionId={id}
@@ -321,6 +365,63 @@ export default async function AuctionDetailPage({ params }: Props) {
               createdAt:  b.createdAt.toString(),
             }))}
           />
+
+          {/* eBay Specifications Table */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 space-y-4 shadow-sm">
+            <h3 className="font-heading font-bold text-xs uppercase tracking-wider text-gray-400 border-b border-gray-100 pb-2">
+              Item Specifications
+            </h3>
+            <div className="grid grid-cols-2 gap-y-3 text-xs">
+              <div className="text-gray-400 font-medium">Condition</div>
+              <div className="text-gray-900 font-bold uppercase tracking-wider">
+                <span className="bg-slate-100 border border-gray-200/50 rounded px-1.5 py-0.5 text-[10px]">
+                  {auction.condition || "Used"}
+                </span>
+              </div>
+
+              <div className="text-gray-400 font-medium">Category</div>
+              <div className="text-gray-900 font-bold uppercase tracking-wider truncate">
+                {auction.category}
+              </div>
+
+              <div className="text-gray-400 font-medium">Verified Seller</div>
+              <div className="text-gray-900 font-bold flex items-center gap-1">
+                {auction.seller?.isVerifiedSeller ? (
+                  <span className="text-blue-600 font-black flex items-center gap-1">
+                    <Shield className="w-3.5 h-3.5 fill-blue-500/15" /> Yes
+                  </span>
+                ) : (
+                  <span className="text-gray-500">Standard</span>
+                )}
+              </div>
+
+              <div className="text-gray-400 font-medium">Divisional Area</div>
+              <div className="text-gray-900 font-bold flex items-center gap-1 truncate">
+                <MapPin className="w-3.5 h-3.5 text-primary-500" />
+                {auction.location ? tLoc(auction.location) : "Dhaka"}
+              </div>
+
+              <div className="text-gray-400 font-medium">Bidding Policy</div>
+              <div className="text-gray-900 font-bold text-primary-600 uppercase tracking-tight flex items-center gap-1">
+                <Zap className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500/20" /> Anti-Snipe
+              </div>
+
+              <div className="text-gray-400 font-medium">Reserve Met</div>
+              <div className="text-gray-900 font-bold">
+                {auction.reservePrice ? (
+                  auction.currentPrice >= auction.reservePrice ? (
+                    <span className="text-green-600 font-extrabold flex items-center gap-1">
+                      <CheckCircle className="w-3.5 h-3.5" /> Yes
+                    </span>
+                  ) : (
+                    <span className="text-orange-600 font-bold">No</span>
+                  )
+                ) : (
+                  <span className="text-gray-500">No Reserve</span>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Seller Info */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6">
