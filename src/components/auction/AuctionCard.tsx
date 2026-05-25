@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { 
   Users, Zap, MapPin, Package, X, RotateCcw, Pencil, Star,
-  Smartphone, Tv, Car, Shirt, Home, Dumbbell, BookOpen, Gem, Wrench, Sparkles, RefreshCw, HelpCircle, ShieldAlert,
+  Smartphone, Tv, Car, Shirt, Home, Dumbbell, BookOpen, Gem, Wrench, Sparkles, RefreshCw,
   Laptop, Camera, Watch, Gamepad, Plug
 } from "lucide-react";
 import { formatBDT } from "@/lib/format";
@@ -254,56 +254,7 @@ export const AuctionCard = memo(({
             </div>
           )}
 
-          {/* Badges */}
-          <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col gap-1.5 md:gap-2 z-10">
-            {/* Category Badge */}
-            {(() => {
-              const styles = getCategoryBadgeStyles(auction.category);
-              const CatIcon = styles.icon;
-              return (
-                <span className={styles.className}>
-                  <CatIcon className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" aria-hidden="true" />
-                  {tCat(auction.category || 'other')}
-                </span>
-              );
-            })()}
-
-            {/* Condition Badge */}
-            {auction.condition && (() => {
-              const styles = getConditionBadgeStyles(auction.condition);
-              if (!styles) return null;
-              const CondIcon = styles.icon;
-              return (
-                <span className={styles.className}>
-                  <CondIcon className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" aria-hidden="true" />
-                  {auction.condition}
-                </span>
-              );
-            })()}
-
-            {/* Featured Badge */}
-            {auction.isFeatured && (
-              <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white px-2.5 py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-wider shadow-[0_4px_12px_rgba(245,158,11,0.35)] border border-amber-400/40 flex items-center gap-1.5 backdrop-blur-md animate-pulse">
-                <Star className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 fill-white text-white" aria-hidden="true" />
-                Featured
-              </span>
-            )}
-
-            {/* Reserve Not Met Badge with Premium CSS Tooltip */}
-            {auction.reservePrice && (auction.isReserveMet === false || auction.currentPrice < (auction.reservePrice || 0)) && (
-              <div className="group/tooltip relative flex items-center">
-                <span className="bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20 shadow-sm rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold tracking-wider uppercase flex items-center gap-1.5 border backdrop-blur-md select-none cursor-help">
-                  <ShieldAlert className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
-                  <span>Reserve not met</span>
-                  <HelpCircle className="w-2.5 h-2.5 opacity-60 hover:opacity-100" />
-                </span>
-                <div className="absolute left-0 top-full mt-2 hidden group-hover/tooltip:block w-52 bg-slate-900/95 text-white text-[10px] p-2.5 rounded-xl shadow-xl backdrop-blur-sm z-50 border border-white/10 leading-normal normal-case font-medium">
-                  <p className="font-bold text-rose-400 uppercase tracking-wider text-[9px] mb-1">What is this?</p>
-                  The current highest bid is below the seller&apos;s minimum price. The seller is not obligated to sell unless bidding reaches this hidden threshold.
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Badges moved to content area below */}
 
           {/* Action Buttons (Watchlist & Admin Feature) */}
           <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 flex items-center gap-1 md:gap-2">
@@ -348,7 +299,40 @@ export const AuctionCard = memo(({
             {auction.title}
           </h3>
 
-          <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-1 mt-1.5 min-w-0">
+            {/* Badges moved here for cleaner UI */}
+            {(() => {
+              const styles = getCategoryBadgeStyles(auction.category);
+              const CatIcon = styles.icon;
+              return (
+                <span className={styles.className}>
+                  <CatIcon className="w-2.5 h-2.5" aria-hidden="true" />
+                  {tCat(auction.category || 'other')}
+                </span>
+              );
+            })()}
+
+            {auction.condition && (() => {
+              const styles = getConditionBadgeStyles(auction.condition);
+              if (!styles) return null;
+              const CondIcon = styles.icon;
+              return (
+                <span className={styles.className}>
+                  <CondIcon className="w-2.5 h-2.5" aria-hidden="true" />
+                  {auction.condition}
+                </span>
+              );
+            })()}
+
+            {auction.isFeatured && (
+              <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
+                <Star className="w-2.5 h-2.5 fill-white text-white" aria-hidden="true" />
+                Featured
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1.5 min-w-0">
             {/* Seller chip — uses router.push instead of a nested <Link> so we
                 don't produce invalid HTML inside the outer <Link>. */}
             <button

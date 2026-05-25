@@ -39,31 +39,24 @@ export class BidProcessor {
         let newSecondHighestBidderId = auction.secondHighestBidderId ?? null;
         let newSecondHighestBidAmount = auction.secondHighestBidAmount ?? 0;
 
-        // 2. Proxy Bidding Logic
+        // 2. Direct Bidding Logic (User requested highest bid = current price)
         if (!newCurrentBidderId) {
-          newCurrentPrice = auction.startingPrice;
+          newCurrentPrice = amount;
           newCurrentBidderId = userId;
           newProxyMaxBid = amount;
           newProxyBidderId = userId;
         } else if (userId === existingProxyBidder) {
-          if (amount > existingProxy) {
-            newProxyMaxBid = amount;
-          } else {
-            return errorResponse(ErrorType.VALIDATION, 'You already have a higher or equal max bid.');
-          }
+          return errorResponse(ErrorType.VALIDATION, 'You are already the highest bidder.');
         } else {
           if (amount > existingProxy) {
             newSecondHighestBidderId = existingProxyBidder;
             newSecondHighestBidAmount = existingProxy;
-            newCurrentPrice = Math.min(amount, existingProxy + increment);
+            newCurrentPrice = amount;
             newCurrentBidderId = userId;
             newProxyMaxBid = amount;
             newProxyBidderId = userId;
           } else {
-            newSecondHighestBidderId = userId;
-            newSecondHighestBidAmount = amount;
-            newCurrentPrice = Math.min(existingProxy, amount + increment);
-            newCurrentBidderId = existingProxyBidder;
+            return errorResponse(ErrorType.VALIDATION, `Bid must be higher than current bid of ${existingProxy}`);
           }
         }
 

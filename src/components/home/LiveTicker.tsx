@@ -55,7 +55,7 @@ export default function LiveTicker() {
         <span className="text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">Live Ticker</span>
       </div>
 
-      <div className="flex-1 overflow-hidden relative h-full">
+      <div className="flex-1 overflow-hidden relative h-full flex items-center gap-2">
         <AnimatePresence mode="popLayout">
           {items.map((item) => (
             <motion.div
