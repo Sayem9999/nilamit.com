@@ -9,6 +9,28 @@ import { FollowSellerButton } from "@/components/social/FollowSellerButton";
 import { isFollowingSeller, getFollowerCount } from "@/actions/seller-follow";
 import { getProxiedAvatarUrl } from "@/lib/avatar";
 
+const safeGetYear = (dateInput: unknown) => {
+  if (!dateInput) return new Date().getFullYear();
+  let d: Date;
+  if (dateInput && typeof (dateInput as { toDate?: () => Date }).toDate === 'function') {
+    d = (dateInput as { toDate: () => Date }).toDate();
+  } else {
+    d = new Date(dateInput as string | number | Date);
+  }
+  return isNaN(d.getTime()) ? new Date().getFullYear() : d.getFullYear();
+};
+
+const safeFormatDate = (dateInput: unknown) => {
+  if (!dateInput) return "N/A";
+  let d: Date;
+  if (dateInput && typeof (dateInput as { toDate?: () => Date }).toDate === 'function') {
+    d = (dateInput as { toDate: () => Date }).toDate();
+  } else {
+    d = new Date(dateInput as string | number | Date);
+  }
+  return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
+};
+
 interface Props {
   params: Promise<{ locale: string; id: string }>;
 }
@@ -21,12 +43,6 @@ export default async function SellerProfilePage({ params }: Props) {
   const sellerData = sellerSnap.data() as User;
   
   const bidsSnap = await db.collection('bids').where('bidderId', '==', id).get();
-  
-  // Calculate success rate
-  const totalTransactions = (sellerData.salesCount || 0) + (sellerData.defectCount || 0);
-  const successRate = totalTransactions > 0 
-    ? (((sellerData.salesCount || 0) / totalTransactions) * 100).toFixed(0) 
-    : "100";
 
   const seller = {
     id: sellerSnap.id,
@@ -113,12 +129,18 @@ export default async function SellerProfilePage({ params }: Props) {
     };
   }));
 
+  const score = seller.reputationScore || 0;
   const avgRating =
     reviews.length > 0
       ? (
           reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
         ).toFixed(1)
-      : (seller.reputationScore / 20).toFixed(1); // Fallback to internal score conversion
+      : (score > 0 ? (score / 20).toFixed(1) : "0.0");
+
+  const positiveReviews = reviews.filter(r => r.rating >= 4).length;
+  const feedbackPercentage = reviews.length > 0
+    ? ((positiveReviews / reviews.length) * 100).toFixed(0)
+    : "100";
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-12">
@@ -202,13 +224,13 @@ export default async function SellerProfilePage({ params }: Props) {
               </div>
 
               <p className="text-gray-600 text-sm max-w-3xl mb-6 font-medium leading-relaxed">
-                {seller.bio || `Welcome to ${seller.name}'s official storefront. Providing quality auctions and trusted service in Bangladesh since ${new Date(seller.createdAt).getFullYear()}.`}
+                {seller.bio || `Welcome to ${seller.name}'s official storefront. Providing quality auctions and trusted service in Bangladesh since ${safeGetYear(seller.createdAt)}.`}
               </p>
 
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-sm">
                 <div className="flex items-center gap-2 text-gray-500">
                   <Calendar className="w-4 h-4 text-primary-500" />
-                  <span className="font-bold">Member Since {new Date(seller.createdAt).getFullYear()}</span>
+                  <span className="font-bold">Member Since {safeGetYear(seller.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-500">
                   <MapPin className="w-4 h-4 text-primary-500" />
@@ -237,8 +259,8 @@ export default async function SellerProfilePage({ params }: Props) {
             <p className="text-3xl font-black text-gray-900 font-heading">{seller.salesCount}</p>
           </div>
           <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Success Rate</p>
-            <p className="text-3xl font-black text-emerald-500 font-heading">{successRate}%</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Positive Feedback</p>
+            <p className="text-3xl font-black text-emerald-500 font-heading">{feedbackPercentage}%</p>
           </div>
           <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Reputation</p>
@@ -299,7 +321,7 @@ export default async function SellerProfilePage({ params }: Props) {
                           ))}
                         </div>
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-auto">
-                          {new Date(review.createdAt).toLocaleDateString()}
+                          {safeFormatDate(review.createdAt)}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 font-medium mb-2">&quot;{review.comment}&quot;</p>

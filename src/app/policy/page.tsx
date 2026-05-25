@@ -16,7 +16,7 @@ export default function PolicyPage() {
         </header>
 
         <div className="space-y-12">
-          {/* Section: Logistics Protection */}
+          {/* Section: Shipping & Coordination */}
           <section className="relative p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-5">
                 <Truck className="w-32 h-32 text-gray-900" />
@@ -25,11 +25,10 @@ export default function PolicyPage() {
                 <div className="p-2 bg-white rounded-xl shadow-sm">
                   <Truck className="w-6 h-6 text-indigo-600" />
                 </div>
-                Zero-Loss Logistics
+                Direct Coordination & Shipping
              </h2>
              <p className="text-gray-600 leading-relaxed mb-6">
-                To protect our sellers from unnecessary shipping costs, we implement a commitment-based logistics rule. 
-                Sellers are small micro-entrepreneurs; we ensure they don&apos;t lose cash on shipping.
+                Nilamit is a self-coordinated C2C marketplace. Buyers and sellers communicate directly via coordination chat to arrange face-to-face meetups, direct handoffs, or self-directed courier deliveries (e.g. Pathao, Steadfast, Redx).
              </p>
              <ul className="space-y-4">
                 <li className="flex gap-4">
@@ -37,8 +36,8 @@ export default function PolicyPage() {
                       <CheckCircle2 className="w-4 h-4 text-white" />
                    </div>
                    <div>
-                      <strong className="block text-gray-900 font-bold">120 BDT Protection</strong>
-                      <span className="text-sm text-gray-500">If a buyer rejects an item without cause (e.g. change of mind), 120 BDT is deducted from their refund to cover the seller&apos;s courier fee.</span>
+                      <strong className="block text-gray-900 font-bold">Secure Direct Deals</strong>
+                      <span className="text-sm text-gray-500">Nilamit secures the buyer&apos;s payment in our escrow system before shipping. Once the buyer receives and verifies the item directly from the seller or courier, funds are released.</span>
                    </div>
                 </li>
              </ul>

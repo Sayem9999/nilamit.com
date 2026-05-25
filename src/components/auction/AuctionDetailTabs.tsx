@@ -152,10 +152,10 @@ export function AuctionDetailTabs({
                 <div>
                   <h4 className="flex items-center gap-2 font-bold text-gray-800 text-xs uppercase tracking-wide mb-2">
                     <Truck className="w-4 h-4 text-primary-500" />
-                    Zero-Loss Logistics
+                    Direct Coordination & Shipping
                   </h4>
                   <p className="text-xs text-gray-500 leading-relaxed">
-                    Our logistics agents assist with regional verification, face-to-face meetups, and escrow handoffs in major divisional areas like <span className="font-bold text-gray-800">{location}</span>.
+                    Nilamit is a self-coordinated C2C marketplace. Buyers and sellers communicate directly via coordination chat to arrange face-to-face meetups, direct handoffs, or self-directed courier deliveries (e.g. Pathao, Steadfast, Redx) in <span className="font-bold text-gray-800">{location}</span>.
                   </p>
                 </div>
 
@@ -165,7 +165,11 @@ export function AuctionDetailTabs({
                     Commission Policy
                   </h4>
                   <p className="text-[11px] text-gray-500 leading-relaxed">
-                    Nilamit charges a standard {commissionRate}% seller success fee only on successfully completed transactions. Bidding is 100% free with no deposit requirements.
+                    {commissionRate && commissionRate > 0 ? (
+                      `Nilamit charges a standard ${commissionRate}% seller success fee only on successfully completed transactions. Bidding is 100% free with no deposit requirements.`
+                    ) : (
+                      "Nilamit is currently 100% free with a 0% success fee! Listing, bidding, and selling are completely free with no platform commission cuts."
+                    )}
                   </p>
                 </div>
               </div>
@@ -176,7 +180,7 @@ export function AuctionDetailTabs({
               <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <span className="font-black uppercase tracking-wider block mb-1">Safe Bidding Guarantee</span>
-                Never pay a seller directly outside the Nilamit platform! Always utilize the secure treasury accounts shown on the dashboard after winning to be fully covered by our Zero-Loss Guarantee.
+                Never pay a seller directly outside the Nilamit platform! Always utilize the secure treasury accounts shown on the dashboard after winning to be fully covered by our Nilamit Escrow Guarantee.
               </div>
             </div>
           </div>
