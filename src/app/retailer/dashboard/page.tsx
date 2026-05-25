@@ -29,7 +29,7 @@ export default async function RetailerDashboardPage() {
     redirect("/login?callbackUrl=/retailer/dashboard");
   }
 
-  if (!session.user.isVerifiedSeller && !session.user.isRetailer) {
+  if (!session.user.isVerifiedSeller && !session.user.isRetailer && !session.user.emailVerified) {
     redirect("/dashboard");
   }
 

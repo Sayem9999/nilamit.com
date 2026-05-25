@@ -453,7 +453,7 @@ export default async function DashboardPage({
                 </Link>
 
                 {/* Seller Performance Sync */}
-                {session.user.isVerifiedSeller && (
+                {(session.user.isVerifiedSeller || session.user.emailVerified) && (
                   <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Seller Status</span>
@@ -462,10 +462,15 @@ export default async function DashboardPage({
                           <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
                           <span className="text-[9px] font-black text-amber-700">TOP RATED</span>
                         </div>
-                      ) : (
+                      ) : (session.user.salesCount ?? 0) > 0 ? (
                         <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                           <Shield className="w-2.5 h-2.5 text-blue-500 fill-blue-500/10" />
-                          <span className="text-[9px] font-black text-blue-700">VERIFIED</span>
+                          <span className="text-[9px] font-black text-blue-700">ACTIVE SELLER</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 bg-gray-100 px-2.5 py-0.5 rounded border border-gray-200">
+                          <Shield className="w-2.5 h-2.5 text-gray-500" />
+                          <span className="text-[9px] font-black text-gray-600">BASIC BIDDER</span>
                         </div>
                       )}
                     </div>
@@ -487,13 +492,19 @@ export default async function DashboardPage({
                       </div>
                     </div>
 
-                    {!session.user.isTopRated && (
+                    {(session.user.salesCount ?? 0) === 0 && !session.user.isTopRated ? (
+                      <div className="p-2 bg-indigo-50/50 rounded-xl border border-dashed border-indigo-150">
+                        <p className="text-[9px] text-indigo-700 leading-tight">
+                          <span className="font-bold">Pro Tip:</span> Create a listing or use bulk upload to activate your Seller profile!
+                        </p>
+                      </div>
+                    ) : !session.user.isTopRated ? (
                       <div className="p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                         <p className="text-[9px] text-gray-500 leading-tight">
                           <span className="font-bold">Goal:</span> 10 sales & &lt;5% defect rate for <span className="text-amber-600 font-bold">Top Rated</span> status.
                         </p>
                       </div>
-                    )}
+                    ) : null}
 
                     {/* Retailer Specific Tools */}
                     <div className="pt-3">

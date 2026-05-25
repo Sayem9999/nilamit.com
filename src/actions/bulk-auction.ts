@@ -10,7 +10,7 @@ export async function bulkCreateAuctions(items: unknown[]): Promise<ServiceRespo
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated', ERROR_CODES.NOT_AUTHENTICATED);
 
-  if (!session.user.isVerifiedSeller && !session.user.isRetailer) {
+  if (!session.user.isVerifiedSeller && !session.user.isRetailer && !session.user.emailVerified) {
     return errorResponse(ErrorType.FORBIDDEN, 'Bulk upload requires verified seller status.');
   }
 

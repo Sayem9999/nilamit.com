@@ -85,9 +85,18 @@ export async function createAuction(input: unknown): Promise<ServiceResponse<{ a
     if (!response.success) {
       return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to create auction.');
     }
+
+    if (!userData?.isVerifiedSeller) {
+      await db.collection('users').doc(session.user.id).update({
+        isVerifiedSeller: true,
+        updatedAt: new Date()
+      });
+    }
     
     revalidatePath('/auctions');
     revalidatePath('/');
+    revalidatePath('/dashboard');
+    revalidatePath('/retailer/dashboard');
     
     return successResponse({ auctionId: response.data!.id });
   } catch (error) {
@@ -307,6 +316,15 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
       const afterState = { ...beforeState, ...updateData };
 
       tx.update(origRef, updateData);
+
+      // Auto-upgrade to verified seller inside the same transaction
+      if (!userData?.isVerifiedSeller) {
+        tx.update(userRef, {
+          isVerifiedSeller: true,
+          updatedAt: new Date()
+        });
+      }
+
       AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx).catch(() => {});
 
       return origData;
@@ -355,6 +373,7 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
 
     revalidatePath('/auctions');
     revalidatePath('/dashboard');
+    revalidatePath('/retailer/dashboard');
     return successResponse({ auctionId: response.data.id });
   } catch (error) {
     const code = error instanceof Error ? error.message : 'INTERNAL';

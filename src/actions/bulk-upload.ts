@@ -21,7 +21,7 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
 
   const userSnap = await db.collection('users').doc(session.user.id).get();
   const userData = userSnap.data();
-  if (!userData?.isVerifiedSeller) {
+  if (!userData?.isVerifiedSeller && !userData?.emailVerified) {
     return errorResponse(ErrorType.FORBIDDEN, 'Only verified sellers can bulk upload.');
   }
 

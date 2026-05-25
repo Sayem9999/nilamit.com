@@ -227,7 +227,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // First login — seed from freshly-authenticated user
       if (user) {
         token.id               = user.id!;
-        token.isVerifiedSeller = user.isVerifiedSeller ?? false;
+        
+        let isVerifiedSeller = user.isVerifiedSeller ?? false;
+        const isEmailVerified = user.emailVerified != null;
+        if (isEmailVerified && !isVerifiedSeller && !user.isBanned) {
+          db.collection('users').doc(user.id!).update({
+            isVerifiedSeller: true,
+            updatedAt: new Date()
+          }).catch((e) => log.error('[Auth] First login auto-seller upgrade failed', e));
+          isVerifiedSeller = true;
+        }
+
+        token.isVerifiedSeller = isVerifiedSeller;
         token.reputationScore  = user.reputationScore ?? 0;
         token.rating           = user.rating ?? user.reputationScore ?? 0;
         token.ratingCount      = user.ratingCount ?? 0;
@@ -282,7 +293,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const snap = await db.collection('users').doc(token.id as string).get();
           if (snap.exists) {
             const u = snap.data()!;
-            token.isVerifiedSeller = u.isVerifiedSeller;
+            let isVerifiedSeller = u.isVerifiedSeller ?? false;
+            const isEmailVerified = u.emailVerified != null;
+            if (isEmailVerified && !isVerifiedSeller && !u.isBanned) {
+              await db.collection('users').doc(token.id as string).update({
+                isVerifiedSeller: true,
+                updatedAt: new Date()
+              });
+              isVerifiedSeller = true;
+            }
+
+            token.isVerifiedSeller = isVerifiedSeller;
             token.reputationScore  = u.reputationScore;
             token.rating           = u.rating ?? u.reputationScore;
             token.ratingCount      = u.ratingCount;

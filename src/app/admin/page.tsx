@@ -95,7 +95,7 @@ async function OverviewTab({
               <tr>
                 <th scope="col" className="px-4 py-3">{t("colName")}</th>
                 <th scope="col" className="px-4 py-3">{t("colEmail")}</th>
-                <th scope="col" className="px-4 py-3">{t("colReputation")}</th>
+                <th scope="col" className="px-4 py-3 text-center">{t("colReputation")}</th>
                 <th scope="col" className="px-4 py-3">{t("colVerified")}</th>
               </tr>
             </thead>

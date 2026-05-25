@@ -95,9 +95,10 @@ export async function verifyEmailToken(token: string, email: string) {
 
     const userId = userSnap.docs[0].id;
 
-    // Mark as verified
+    // Mark as verified and auto-upgrade to verified seller
     await db.collection('users').doc(userId).update({
       emailVerified: new Date(),
+      isVerifiedSeller: true,
       updatedAt: new Date(),
     });
 
@@ -131,6 +132,7 @@ export async function markEmailVerifiedNatively(): Promise<ServiceResponse<null>
 
     await db.collection('users').doc(session.user.id).update({
       emailVerified: new Date(),
+      isVerifiedSeller: true,
       updatedAt: new Date(),
     });
 

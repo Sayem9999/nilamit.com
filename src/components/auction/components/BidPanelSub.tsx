@@ -30,20 +30,22 @@ export const BidPanelHeader = memo(function BidPanelHeader({
         <TrendingUp className="w-5 h-5 text-primary-600" aria-hidden="true" />
         {t("placeBid")}
       </h3>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 shrink-0">
         <ViewerCount auctionId={auctionId} />
         <button
           type="button"
           onClick={toggleSoundEffects}
-          className={`p-1.5 rounded-lg transition-colors ${
-            soundEffectsEnabled ? "text-primary-600 bg-primary-50" : "text-gray-400 bg-gray-50"
+          className={`flex items-center justify-center w-8 h-8 rounded-xl border transition-colors shrink-0 ${
+            soundEffectsEnabled 
+              ? "text-primary-600 bg-primary-50 border-primary-100/50" 
+              : "text-gray-400 bg-gray-50 border-gray-100"
           }`}
         >
           {soundEffectsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </button>
-        <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg">
-          <Clock className="w-4 h-4" />
-          <CountdownTimer endTime={displayEndTime} serverTime={serverTime} />
+        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-gray-50 border border-gray-100 px-3 h-8 rounded-xl shrink-0 select-none">
+          <Clock className="w-3.5 h-3.5 text-gray-400" />
+          <CountdownTimer endTime={displayEndTime} serverTime={serverTime} className="font-mono text-xs" />
         </div>
       </div>
     </div>
