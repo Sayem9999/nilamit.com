@@ -18,7 +18,7 @@ interface WatchlistButtonProps {
 export function WatchlistButton({
   auctionId,
   initialIsWatchlisted = false,
-  className = "",
+  className = "w-11 h-11",
   hoverOnly = false,
 }: WatchlistButtonProps) {
   const { data: session } = useSession();
@@ -40,9 +40,6 @@ export function WatchlistButton({
 
     if (isPending) return;
 
-    // Snapshot the pre-toggle state OUTSIDE startTransition so rollback uses
-    // the real previous value, not whatever closure `isWatchlisted` has at
-    // the time the server responds.
     const previous = isWatchlisted;
     setIsWatchlisted(!previous);
 
@@ -61,6 +58,9 @@ export function WatchlistButton({
   };
 
   const label = isWatchlisted ? "Remove from watchlist" : "Add to watchlist";
+  const isSmall = className.includes("w-7") || className.includes("w-8") || className.includes("h-7") || className.includes("h-8");
+  const iconSizeClass = isSmall ? "w-3.5 h-3.5" : "w-5 h-5";
+
   return (
     <button
       type="button"
@@ -69,7 +69,7 @@ export function WatchlistButton({
       aria-label={label}
       aria-pressed={isWatchlisted}
       title={label}
-      className={`inline-flex items-center justify-center w-11 h-11 rounded-full backdrop-blur-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
+      className={`inline-flex items-center justify-center rounded-full backdrop-blur-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
         isWatchlisted
           ? "bg-red-50 text-red-500 hover:bg-red-100"
           : "bg-white/80 text-gray-500 hover:text-red-500 hover:bg-white"
@@ -77,7 +77,7 @@ export function WatchlistButton({
     >
       <Heart
         aria-hidden="true"
-        className="w-5 h-5 transition-transform"
+        className={`${iconSizeClass} transition-transform`}
         fill={isWatchlisted ? "currentColor" : "none"}
       />
     </button>
