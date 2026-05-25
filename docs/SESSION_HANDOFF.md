@@ -2,12 +2,29 @@
 
 ## Current Session (2026-05-25)
 ### What we did
+* **Command Center Sub-Pages & 404 Resolution (Phase 10)** ([settings](file:///c:/nilamit.com/src/app/retailer/settings/page.tsx), [perks](file:///c:/nilamit.com/src/app/retailer/perks/page.tsx), [orders](file:///c:/nilamit.com/src/app/retailer/orders/page.tsx), [disputes](file:///c:/nilamit.com/src/app/retailer/disputes/page.tsx)):
+  - Built 4 fully interactive, dark-themed sub-pages inside `/retailer/` matching the Command Center’s aesthetic:
+    - **Settings & Profile**: Manage storefront details, bKash/Nagad billing, and self-service Professional Retailer upgrades via dynamic Firestore actions ([retailer-settings.ts](file:///c:/nilamit.com/src/actions/retailer-settings.ts)).
+    - **Unlockables & Perks**: Interactive comparison grids detailing limits, fee structures, and active sales trackers.
+    - **Order Fulfillment**: Clean searchable orders list in BDT format, one-click shipping status updates, and chat coordinates.
+    - **Dispute Center**: Proactive metrics console monitoring active claims, escrow holds, and case reviews.
+* **Bulk Upload Premium Redesign (Phase 10)** ([bulk page](file:///c:/nilamit.com/src/app/seller/inventory/bulk/page.tsx)):
+  - Upgraded the CSV bulk sync screen to use Nilamit's premium dark glassmorphism layout (`bg-[#0a0a0b]`).
+  - Restored header back navigation to safely link sellers to `/retailer/dashboard`.
+  * Injected visually prominent Zod parsing warnings, preview data tables, and batch sync logs.
+* **eBay-Style Seller Categorization (Phases 8 & 10)** ([auth.ts](file:///c:/nilamit.com/src/lib/auth.ts), [dashboard](file:///c:/nilamit.com/src/app/dashboard/page.tsx)):
+  - Dynamically classifies user tiers (**Bidder**, **Verified Seller**, and **Professional Retailer**) detailing limits, fees, and requirements.
+  - Enabled immediate self-service Professional Retailer tier upgrades in Business Profile to unlock bulk uploads.
+* **Presence Capsules Visual Alignment Polish (Phase 9)** ([ViewerCount.tsx](file:///c:/nilamit.com/src/components/auction/ViewerCount.tsx), [BidPanelSub.tsx](file:///c:/nilamit.com/src/components/auction/components/BidPanelSub.tsx), [page.tsx](file:///c:/nilamit.com/src/app/admin/page.tsx)):
+  - Standardized the bidding panel's presence pill, sound toggle, and countdown timer to share a uniform `h-8` height and `rounded-xl` borders.
+  - Corrected the alignment offset in the admin overview table by centering the `Reputation` column header to match its centered rows.
 * **Expanded Admin Panel Configuration Toggles** ([SystemTab.tsx](file:///c:/nilamit.com/src/app/admin/tabs/SystemTab.tsx)): Added dynamic control boxes to regulate site-wide announcements, home hero banner layouts, and official bKash/Nagad agent phone details. The updates use clean `onBlur` auto-save mechanisms.
 * **Simplified Auction Cards layout (eBay style)** ([AuctionCard.tsx](file:///c:/nilamit.com/src/components/auction/AuctionCard.tsx)): Moved the category, condition, and featured badges from overlay containers down directly below the title. This exposes 100% of the item preview image and mimics modern, high-conversion layouts like eBay.
 * **Fixed Real-Time Activity horizontal flow** ([LiveTicker.tsx](file:///c:/nilamit.com/src/components/home/LiveTicker.tsx)): Redesigned layout boundaries inside the Live Ticker, switching the animation display container to a clean horizontal `flex items-center gap-2` row to resolve overlapping.
 * **Restored robust eBay-style Proxy Bidding** ([bid-processor.ts](file:///c:/nilamit.com/src/services/bidding/modules/bid-processor.ts)): Confirmed and fully restored the automatic proxy bidding algorithm. Placing a high bid securely preserves the user's hidden maximum limit and only raises the visible price when competing entries are received, exactly matching eBay's real-world behavior.
-* **Type-Safety & Build Integrity**:
-  - `npx tsc --noEmit` and `npm run lint` execute cleanly with zero compilation warnings or styling debts (unused imports removed).
+* **Type-Safety, Lint & Build Purity**:
+  - `npx tsc --noEmit` and `npm run lint` execute cleanly with **zero compilation warnings or styling debts** across all newly created server actions and page components.
+  - Executed all **106 out of 106 unit tests** with a **100% pass rate** via Vitest.
 
 ## Previous Session (2026-05-24)
 ### What we did
