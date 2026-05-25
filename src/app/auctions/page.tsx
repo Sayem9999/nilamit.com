@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import AuctionCard from "@/components/auction/AuctionCard";
 import LoadMore from "@/components/auction/LoadMore";
+import SortSelector from "@/components/auction/SortSelector";
 import Link from "next/link";
 import { Search as SearchIcon, SlidersHorizontal, MapPin, LayoutGrid, Rows3 } from "lucide-react";
 import { CATEGORIES, LOCATIONS, AuctionWithSeller, AuctionStatus } from "@/types";
@@ -73,7 +74,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
                 ? t("resultsFor", { query: params.search })
                 : t("title")}
           </h1>
-          <div className="flex items-center gap-4 mt-1.5">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-1.5">
             <p className="text-sm text-gray-500 font-semibold">
               {t("found", { count: total })}
             </p>
@@ -98,6 +99,12 @@ export default async function AuctionsPage({ searchParams }: Props) {
                 <Rows3 className="w-3.5 h-3.5" />
               </Link>
             </div>
+            {/* eBay-Style Sorting Selector */}
+            <SortSelector
+              currentSortBy={filters.sortBy}
+              currentSortOrder={filters.sortOrder}
+              baseParams={params as unknown as Record<string, string>}
+            />
           </div>
         </div>
         {hasActiveFilter && (

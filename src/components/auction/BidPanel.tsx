@@ -17,6 +17,7 @@ import { useSettings } from "@/context/SettingsContext";
 import { VerificationGuard } from "@/components/auth/VerificationGuard";
 import { BidPanelHeader, BidPriceInfo } from "./components/BidPanelSub";
 import { MFSLinkagePrompt, EliteBarrierPrompt } from "./components/BidPrompts";
+import toast from "react-hot-toast";
 
 // Lazy-load confetti so it doesn't ship in the initial bundle of every auction page.
 type ConfettiOpts = {
@@ -132,16 +133,45 @@ export function BidPanel({
 
   const prevTopBidRef = useRef(newBids[0]?.id);
   useEffect(() => {
-    const currentTopBid = newBids[0]?.id;
-    if (currentTopBid && currentTopBid !== prevTopBidRef.current) {
+    const currentTopBid = newBids[0];
+    const previousTopBidId = prevTopBidRef.current;
+    
+    if (currentTopBid && currentTopBid.id !== previousTopBidId) {
       playGavel();
-      if (optimisticBid && newBids[0]?.amount >= optimisticBid) {
+      if (optimisticBid && currentTopBid.amount >= optimisticBid) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setOptimisticBid(null);
       }
+
+      // Live Outbid Notification Logic
+      if (session?.user?.id && previousTopBidId) {
+        const previousBid = newBids.find(b => b.id === previousTopBidId) || 
+                            initialBids?.find(b => b.id === previousTopBidId);
+        
+        const wasUserTop = previousBid?.bidderId === session.user.id;
+        const isNewBidderOthers = currentTopBid.bidderId !== session.user.id;
+        
+        if (wasUserTop && isNewBidderOthers) {
+          toast.error(`⚠️ Outbid! Someone placed a higher bid of ${formatBDT(currentTopBid.amount)}. Bid again now!`, {
+            duration: 8000,
+            position: "top-center",
+            style: {
+              background: "#dc2626",
+              color: "#ffffff",
+              fontWeight: "900",
+              fontSize: "13px",
+              textTransform: "uppercase",
+              letterSpacing: "0.025em",
+              borderRadius: "16px",
+              boxShadow: "0 20px 40px -5px rgba(220,38,38,0.25)",
+              border: "1px solid rgba(255,255,255,0.15)",
+            }
+          });
+        }
+      }
     }
-    prevTopBidRef.current = currentTopBid;
-  }, [newBids, playGavel, optimisticBid]);
+    prevTopBidRef.current = currentTopBid?.id;
+  }, [newBids, playGavel, optimisticBid, session, initialBids]);
 
   const quickBids = useMemo(() => [
     minBid,
