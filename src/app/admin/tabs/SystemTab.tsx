@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Database, Upload, Loader2, Sparkles, Mail, Wallet, ShieldCheck, Percent } from 'lucide-react';
+import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Database, Upload, Loader2, Sparkles, Mail, Wallet, ShieldCheck, Percent, Megaphone, Layout, Landmark, Type, Image as ImageIcon } from 'lucide-react';
 import { adminWipeTestData, exportTransactionsCSV, exportDatabaseBackup, importDatabaseBackup } from '@/actions/admin-system';
 import { getSystemConfig, updateSystemConfig } from '@/actions/admin-content';
 import { useEffect } from 'react';
@@ -59,6 +59,26 @@ export function SystemTab() {
       }
     } catch {
       toast.error('An error occurred while updating setting', { id: loadingToast });
+      setConfig({ ...config, [field]: previousValue });
+    }
+  };
+
+  const handleTextChange = async (field: keyof SystemConfig, value: string | null) => {
+    if (!config) return;
+    const previousValue = config[field];
+    const updatedConfig = { ...config, [field]: value } as SystemConfig;
+    setConfig(updatedConfig);
+    
+    try {
+      const res = await updateSystemConfig({ [field]: value });
+      if (res.success) {
+        toast.success(`${field} updated successfully!`);
+      } else {
+        toast.error(res.error?.message || 'Failed to update setting');
+        setConfig({ ...config, [field]: previousValue });
+      }
+    } catch {
+      toast.error('An error occurred while updating setting');
       setConfig({ ...config, [field]: previousValue });
     }
   };
@@ -426,6 +446,191 @@ export function SystemTab() {
               </div>
             )}
 
+          </div>
+        </div>
+      </div>
+
+      {/* Global Announcement */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
+        <div className="flex items-start gap-4">
+          <div className="bg-orange-50 p-3 rounded-xl">
+            <Megaphone className="w-8 h-8 text-orange-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-heading font-bold text-lg text-gray-900">Global Announcement Banner</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Push a site-wide alert banner across all pages.
+            </p>
+
+            {isLoadingConfig ? (
+              <div className="mt-8 flex items-center justify-center py-6 text-sm text-gray-400">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Loading...
+              </div>
+            ) : !config ? null : (
+              <div className="mt-8 space-y-6 border-t border-gray-50 pt-6">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                    <div className="space-y-1 pr-4">
+                      <span className="font-semibold text-gray-900 text-sm">Enable Announcement</span>
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Toggle the visibility of the global announcement banner.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleToggle('showAnnouncement', !(config.showAnnouncement ?? false))}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        (config.showAnnouncement ?? false) ? 'bg-primary-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          (config.showAnnouncement ?? false) ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-gray-700">Announcement Text</label>
+                    <textarea
+                      value={config.announcement || ''}
+                      onChange={(e) => setConfig({ ...config, announcement: e.target.value })}
+                      onBlur={(e) => handleTextChange('announcement', e.target.value)}
+                      placeholder="Enter the announcement message..."
+                      className="w-full min-h-[100px] p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900"
+                    />
+                    <p className="text-xs text-gray-500">Saves automatically when you click outside the box.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Homepage Hero Management */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
+        <div className="flex items-start gap-4">
+          <div className="bg-blue-50 p-3 rounded-xl">
+            <Layout className="w-8 h-8 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-heading font-bold text-lg text-gray-900">Homepage Hero Management</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Customize the main landing page hero title, subtitle, and image.
+            </p>
+
+            {isLoadingConfig ? (
+              <div className="mt-8 flex items-center justify-center py-6 text-sm text-gray-400">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Loading...
+              </div>
+            ) : !config ? null : (
+              <div className="mt-8 space-y-6 border-t border-gray-50 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  <div className="flex flex-col gap-2 md:col-span-2">
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Type className="w-4 h-4 text-blue-500" />
+                      Hero Title
+                    </label>
+                    <input
+                      type="text"
+                      value={config.heroTitle || ''}
+                      onChange={(e) => setConfig({ ...config, heroTitle: e.target.value })}
+                      onBlur={(e) => handleTextChange('heroTitle', e.target.value)}
+                      placeholder="e.g. Bangladesh's Premier Auction Platform"
+                      className="w-full p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900 font-bold"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2 md:col-span-2">
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Type className="w-4 h-4 text-blue-400" />
+                      Hero Subtitle
+                    </label>
+                    <textarea
+                      value={config.heroSubtitle || ''}
+                      onChange={(e) => setConfig({ ...config, heroSubtitle: e.target.value })}
+                      onBlur={(e) => handleTextChange('heroSubtitle', e.target.value)}
+                      placeholder="e.g. Discover exclusive items and bid with confidence..."
+                      className="w-full min-h-[80px] p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2 md:col-span-2">
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4 text-purple-500" />
+                      Hero Image URL
+                    </label>
+                    <input
+                      type="text"
+                      value={config.heroImage || ''}
+                      onChange={(e) => setConfig({ ...config, heroImage: e.target.value })}
+                      onBlur={(e) => handleTextChange('heroImage', e.target.value)}
+                      placeholder="https://..."
+                      className="w-full p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900"
+                    />
+                    <p className="text-xs text-gray-500">Saves automatically when you click outside the box.</p>
+                  </div>
+
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Treasury Configuration */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
+        <div className="flex items-start gap-4">
+          <div className="bg-emerald-50 p-3 rounded-xl">
+            <Landmark className="w-8 h-8 text-emerald-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-heading font-bold text-lg text-gray-900">Treasury Configuration</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Set the official MFS numbers used for receiving escrow deposits.
+            </p>
+
+            {isLoadingConfig ? (
+              <div className="mt-8 flex items-center justify-center py-6 text-sm text-gray-400">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Loading...
+              </div>
+            ) : !config ? null : (
+              <div className="mt-8 space-y-6 border-t border-gray-50 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-gray-700">bKash Treasury Number</label>
+                    <input
+                      type="text"
+                      value={config.treasuryBkash || ''}
+                      onChange={(e) => setConfig({ ...config, treasuryBkash: e.target.value })}
+                      onBlur={(e) => handleTextChange('treasuryBkash', e.target.value)}
+                      placeholder="e.g. 01700000000"
+                      className="w-full p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900 font-bold"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-gray-700">Nagad Treasury Number</label>
+                    <input
+                      type="text"
+                      value={config.treasuryNagad || ''}
+                      onChange={(e) => setConfig({ ...config, treasuryNagad: e.target.value })}
+                      onBlur={(e) => handleTextChange('treasuryNagad', e.target.value)}
+                      placeholder="e.g. 01600000000"
+                      className="w-full p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900 font-bold"
+                    />
+                  </div>
+
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Saves automatically when you click outside the box.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
