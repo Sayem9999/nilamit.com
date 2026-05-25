@@ -2,6 +2,12 @@
 
 ## Current Session (2026-05-25)
 ### What we did
+* **COD-Escrow Hybrid Transaction Model (Option A) & Adjustable Configurations** ([auction-logic.ts](file:///c:/nilamit.com/src/lib/auction-logic.ts), [SystemTab.tsx](file:///c:/nilamit.com/src/app/admin/tabs/SystemTab.tsx), [EscrowActionCard.tsx](file:///c:/nilamit.com/src/components/social/EscrowActionCard.tsx), [escrow.ts](file:///c:/nilamit.com/src/actions/escrow.ts), [logistics.ts](file:///c:/nilamit.com/src/lib/logistics.ts)):
+  - Re-architected Nilamit's transaction engine to support the **COD-Escrow Hybrid Model (Option A)**. Buyers pay a partial online advance deposit (Delivery Charge + commitment deposit) to cover logistics and secure trades, and the remaining 98% is paid at the doorstep as Cash on Delivery (COD) to the courier.
+  - Built full administrator toggles and inputs in the **Admin System Panel** supporting custom **Commitment Deposit Percentage (%)** configurations (from 0% to 100% in 0.5% steps) with automatic blur-triggered server-saving and instant validation.
+  - Dynamically calculates the split during finalized sales based on configuration states, persisting `amount` (as advance), `codAmount`, and `totalAmount` in the Firestore transaction document.
+  - Updated courier logistics order creation to carry and persist `codAmount` in the auction sub-document's logistics object.
+  - Upgraded the buyer-facing `EscrowActionCard` with a premium visual grid displaying all three split pricing columns with rich typography, support for legacy transactions (graceful fallback to 100% upfront escrow), and dynamic routing to the manual MFS payment gateway.
 * **Command Center Sub-Pages & 404 Resolution (Phase 10)** ([settings](file:///c:/nilamit.com/src/app/retailer/settings/page.tsx), [perks](file:///c:/nilamit.com/src/app/retailer/perks/page.tsx), [orders](file:///c:/nilamit.com/src/app/retailer/orders/page.tsx), [disputes](file:///c:/nilamit.com/src/app/retailer/disputes/page.tsx)):
   - Built 4 fully interactive, dark-themed sub-pages inside `/retailer/` matching the Command Center’s aesthetic:
     - **Settings & Profile**: Manage storefront details, bKash/Nagad billing, and self-service Professional Retailer upgrades via dynamic Firestore actions ([retailer-settings.ts](file:///c:/nilamit.com/src/actions/retailer-settings.ts)).

@@ -318,6 +318,11 @@
     "showAll": "Show All Listings"
   },
   "Escrow": {
+    "totalDealValue": "Total Deal Value",
+    "advanceDeposit": "Advance Deposit (Pay Online)",
+    "cashOnDelivery": "Cash on Delivery",
+    "codDescription": "Pay {amount} in cash to the courier at your doorstep upon delivery.",
+    "advanceDescription": "Includes commitment deposit + delivery fee to cover logistics and platform costs.",
     "fundsReleased": "Payment released to seller",
     "paymentSecured": "Payment secured (Escrow)",
     "awaitingPayment": "Awaiting your payment",

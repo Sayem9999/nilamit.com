@@ -6,6 +6,8 @@ export interface EscrowTransaction {
   buyerId: string;
   sellerId: string; // Ensure this is present
   amount: number;
+  totalAmount?: number;
+  codAmount?: number;
   deliveryDeposit: number;
   status: EscrowStatus;
   paymentMethod?: string | null;

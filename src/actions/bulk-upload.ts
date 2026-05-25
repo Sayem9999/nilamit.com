@@ -5,6 +5,8 @@ import { auth } from '@/lib/auth';
 import { filterPII } from '@/lib/pii-filter';
 import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { AuditService } from '@/services/admin/audit-service';
+import { scheduleAuctionClosure } from '@/lib/cloud-tasks';
 
 const MAX_BULK_ROWS    = 1000;
 const BATCH_SIZE       = 499; // Firestore max is 500 ops per batch
@@ -21,6 +23,9 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
 
   const userSnap = await db.collection('users').doc(session.user.id).get();
   const userData = userSnap.data();
+  if (userData?.isBanned) {
+    return errorResponse(ErrorType.FORBIDDEN, 'Your account is banned for policy violations.', 'BANNED');
+  }
   if (!userData?.isVerifiedSeller && !userData?.emailVerified) {
     return errorResponse(ErrorType.FORBIDDEN, 'Only verified sellers can bulk upload.');
   }
@@ -51,8 +56,9 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
       const auctionId = newId();
       const rowNow    = new Date();
       const auctionRef = db.collection('auctions').doc(auctionId);
+      const endTime = new Date(rowNow.getTime() + (validatedRow.durationHours || 24) * 3_600_000);
 
-      batch.set(auctionRef, {
+      const auctionData = {
         id: auctionId,
         title:            filterPII(validatedRow.title),
         description:      filterPII(validatedRow.description),
@@ -62,7 +68,7 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
         minBidIncrement:  validatedRow.minIncrement || 100,
         images:           validatedRow.images || [],
         startTime:        rowNow,
-        endTime:          new Date(rowNow.getTime() + (validatedRow.durationHours || 24) * 3_600_000),
+        endTime:          endTime,
         status:           'ACTIVE',
         sellerId:         session.user.id,
         sellerName:       userData.name || 'Verified Seller',
@@ -79,7 +85,15 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
         location:         validatedRow.location || 'Dhaka',
         createdAt:        rowNow,
         updatedAt:        rowNow,
-      });
+      };
+
+      batch.set(auctionRef, auctionData);
+
+      // Log audit change and schedule Cloud Task closure
+      AuditService.logAuctionChange(auctionId, null, auctionData, 'CREATE', session.user.id, batch).catch(() => {});
+      scheduleAuctionClosure(auctionId, endTime).catch((e) =>
+        log.error('[BulkUpload] Cloud Task scheduling failed', e, { auctionId })
+      );
 
       batchCount++;
       processed++;

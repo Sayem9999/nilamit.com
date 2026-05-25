@@ -105,32 +105,31 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         buyerAddress:  buyer.address as string,
         sellerAddress: seller.address as string,
         ref,
+        codAmount:     t.codAmount ?? 0,
       };
     });
 
     // Post-transaction side-effects. Logistics call is now an internal helper
     // (server-only, not 'use server'), bypassing the public Server Action surface.
-    // Wrapped in a non-blocking background promise to prevent network latency from hanging the client.
-    void (async () => {
-      try {
-        await createLogisticsOrder({
-          auctionId:       result.auction.id,
-          sellerId:        result.auction.sellerId as string,
-          buyerId:         session.user.id,
-          sellerAddress:   result.sellerAddress,
-          buyerAddress:    result.buyerAddress,
-        });
+    try {
+      await createLogisticsOrder({
+        auctionId:       result.auction.id,
+        sellerId:        result.auction.sellerId as string,
+        buyerId:         session.user.id,
+        sellerAddress:   result.sellerAddress,
+        buyerAddress:    result.buyerAddress,
+        codAmount:       result.codAmount,
+      });
 
-        await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId as string), {
-          event:        FIREBASE_EVENTS.ADVANCE_PAID,
-          auctionId:    result.auction.id,
-          auctionTitle: result.auction.title,
-          message:      `Payment submitted for "${result.auction.title}". Verification pending.`,
-        });
-      } catch (sideEffectErr) {
-        log.error('[escrow] side-effects failed after successful TX', sideEffectErr, { area: 'escrow', severity: 'warning' });
-      }
-    })();
+      await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId as string), {
+        event:        FIREBASE_EVENTS.ADVANCE_PAID,
+        auctionId:    result.auction.id,
+        auctionTitle: result.auction.title,
+        message:      `Payment submitted for "${result.auction.title}". Verification pending.`,
+      });
+    } catch (sideEffectErr) {
+      log.error('[escrow] side-effects failed after successful TX', sideEffectErr, { area: 'escrow', severity: 'warning' });
+    }
 
     revalidatePath('/dashboard');
     return successResponse(null);
@@ -192,25 +191,23 @@ export async function confirmItemReceived(transactionId: string): Promise<Servic
       return t;
     });
 
-    void (async () => {
-      try {
-        const aSnap    = await db.collection('auctions').doc(result.auctionId).get();
-        const sellerId = aSnap.data()?.sellerId as string | undefined;
+    try {
+      const aSnap    = await db.collection('auctions').doc(result.auctionId).get();
+      const sellerId = aSnap.data()?.sellerId as string | undefined;
 
-        if (sellerId) {
-          await Promise.all([
-            recalculateUserRating(sellerId),
-            recalculateUserRating(session.user.id),
-            rtdbPush(RTDB_PATHS.userNotifications(sellerId), {
-              event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Sale confirmed! Funds released.',
-            }),
-            updateSellerPerformance(sellerId),
-          ]);
-        }
-      } catch (err) {
-        log.error('[escrow] background updates failed', err, { area: 'escrow', severity: 'warning' });
+      if (sellerId) {
+        await Promise.all([
+          recalculateUserRating(sellerId),
+          recalculateUserRating(session.user.id),
+          rtdbPush(RTDB_PATHS.userNotifications(sellerId), {
+            event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Sale confirmed! Funds released.',
+          }),
+          updateSellerPerformance(sellerId),
+        ]);
       }
-    })();
+    } catch (err) {
+      log.error('[escrow] updates failed after successful TX', err, { area: 'escrow', severity: 'warning' });
+    }
 
     revalidatePath('/dashboard');
     return successResponse(null);

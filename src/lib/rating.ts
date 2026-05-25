@@ -15,7 +15,9 @@ export async function recalculateUserRating(userId: string): Promise<{ rating: n
   try {
     const reviewsSnap = await db.collection('reviews').where('toId', '==', userId).get();
 
-    const ratings = reviewsSnap.docs.map(d => d.data().rating as number).filter(Boolean);
+    const ratings = reviewsSnap.docs
+      .map(d => d.data().rating)
+      .filter((r): r is number => r !== null && r !== undefined);
     const v = ratings.length;
     const R = v > 0 ? ratings.reduce((a, b) => a + b, 0) / v : 0;
 

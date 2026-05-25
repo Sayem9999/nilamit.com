@@ -23,6 +23,8 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   commissionPercentage: null,
   postingRequirementsEnabled: true,
   biddingRequirementsEnabled: true,
+  hybridEscrowEnabled: false,
+  hybridCommitmentPercentage: 2,
   updatedAt: new Date(),
 } as SystemConfig;
 
@@ -57,6 +59,8 @@ export async function updateSystemConfig(data: {
   commissionPercentage?: number | null;
   postingRequirementsEnabled?: boolean;
   biddingRequirementsEnabled?: boolean;
+  hybridEscrowEnabled?: boolean;
+  hybridCommitmentPercentage?: number | null;
 }): Promise<ServiceResponse<null>> {
   try {
     await requireAdmin();

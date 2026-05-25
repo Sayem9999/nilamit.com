@@ -50,14 +50,6 @@ export function normalizePhone(raw: string): string {
     return '+880' + cleaned;
   }
 
-  if (cleaned.startsWith('8801') && cleaned.length === 13) {
-      return '+' + cleaned;
-  }
-
-  if (cleaned.length === 10 && cleaned.startsWith('1')) {
-    return '+880' + cleaned;
-  }
-
   return raw.trim();
 }
 

@@ -254,20 +254,45 @@ export function EscrowActionCard({
               <span className="text-[10px] text-slate-400 font-medium bn italic">{t("logisticsProtectedDesc")}</span>
             </div>
 
-            <div className="mt-4 flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
-              <div className="flex items-center gap-1.5">
-                <CreditCard className="w-4 h-4 text-primary" />
-                <span className="font-medium text-slate-900 dark:text-white">
-                  {formatBDT(transaction.amount)}
+            {/* Payment Split Breakdown */}
+            <div className="mt-5 bg-slate-50/70 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-4 space-y-3">
+              <div className="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <span>{t("advanceDeposit")}</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono">{formatBDT(transaction.amount)}</span>
+              </div>
+              <p className="text-[10px] text-slate-400 leading-normal bg-white dark:bg-slate-900/40 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/50">
+                {t("advanceDescription")}
+              </p>
+
+              {(transaction.codAmount ?? 0) > 0 && (
+                <>
+                  <div className="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-slate-400 border-t border-dashed border-slate-200 dark:border-slate-800 pt-3">
+                    <span>{t("cashOnDelivery")}</span>
+                    <span className="font-bold text-slate-900 dark:text-white font-mono">{formatBDT(transaction.codAmount!)}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-normal bg-white dark:bg-slate-900/40 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/50">
+                    {t("codDescription", { amount: formatBDT(transaction.codAmount!) })}
+                  </p>
+                </>
+              )}
+
+              <div className="flex justify-between items-center text-sm font-bold text-slate-800 dark:text-slate-200 border-t border-slate-200 dark:border-slate-800 pt-3">
+                <span className="flex items-center gap-1.5">
+                  <CreditCard className="w-4 h-4 text-primary-500" />
+                  {t("totalDealValue")}
+                </span>
+                <span className="text-primary-600 dark:text-primary-400 font-mono text-base font-black">
+                  {formatBDT(transaction.totalAmount ?? transaction.amount)}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
-                <span className="bn">
-                  {t("wonDate")}:{" "}
-                  {new Date(transaction.auction.endTime).toLocaleDateString("en-US")}
-                </span>
-              </div>
+            </div>
+
+            <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="bn">
+                {t("wonDate")}:{" "}
+                {new Date(transaction.auction.endTime).toLocaleDateString("en-US")}
+              </span>
             </div>
           </div>
 
@@ -399,7 +424,7 @@ export function EscrowActionCard({
         isOpen={isPaymentOpen}
         onClose={() => setIsPaymentOpen(false)}
         onSuccess={handlePaymentSuccess}
-        amount={transaction.amount > 100000 ? 250 : 0} // Logic for advance (Current threshold check)
+        amount={transaction.amount}
         provider={paymentProvider}
         merchantNumber={(paymentProvider === 'bkash' ? treasuryNumbers?.bkash : treasuryNumbers?.nagad) || ""}
       />

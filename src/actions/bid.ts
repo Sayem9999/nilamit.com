@@ -137,7 +137,8 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
         // amount portion to avoid concatenating digits embedded in the prefix.
         if (message.startsWith(ERROR_CODES.BID_TOO_LOW)) {
           const amountPart = message.slice(ERROR_CODES.BID_TOO_LOW.length);
-          const newMinimum = parseInt(amountPart.replace(/\D/g, ''), 10) || undefined;
+          const match = amountPart.match(/\d+([,.]\d+)*/);
+          const newMinimum = match ? parseInt(match[0].replace(/\D/g, ''), 10) : undefined;
           return errorResponse(ErrorType.CONFLICT, message, ERROR_CODES.BID_TOO_LOW, { newMinimum });
         }
         

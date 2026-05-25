@@ -27,6 +27,8 @@ export interface SystemConfig {
   commissionPercentage?: number | null;
   postingRequirementsEnabled?: boolean;
   biddingRequirementsEnabled?: boolean;
+  hybridEscrowEnabled?: boolean;
+  hybridCommitmentPercentage?: number | null;
   updatedAt: Date;
 }
 

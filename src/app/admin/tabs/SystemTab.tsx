@@ -354,6 +354,71 @@ export function SystemTab() {
                     </button>
                   </div>
 
+                  {/* Toggle: COD-Escrow Hybrid Model */}
+                  <div className="flex flex-col gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200 col-span-1 md:col-span-2">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1 pr-4">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4 text-primary-600" />
+                          <span className="font-semibold text-gray-900 text-sm">COD-Escrow Hybrid Model (Option A)</span>
+                        </div>
+                        <p className="text-xs text-gray-500 leading-relaxed">
+                          Enable buyers to pay only a partial advance deposit (Delivery Charge + commitment deposit) and the rest in Cash on Delivery at their doorstep.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleToggle('hybridEscrowEnabled', !(config.hybridEscrowEnabled ?? false))}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          (config.hybridEscrowEnabled ?? false) ? 'bg-primary-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            (config.hybridEscrowEnabled ?? false) ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {(config.hybridEscrowEnabled ?? false) && (
+                      <div className="pt-3 border-t border-gray-100/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-semibold text-gray-700">Commitment Deposit Percentage</span>
+                          <p className="text-[10px] text-gray-400 font-medium">The fraction of the bid price paid in advance as a buyer commitment guarantee.</p>
+                        </div>
+
+                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-xs">
+                          <span className="text-xs font-bold text-gray-500">Rate:</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.5"
+                            value={config.hybridCommitmentPercentage ?? 2}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val)) {
+                                setConfig({ ...config, hybridCommitmentPercentage: val });
+                              }
+                            }}
+                            onBlur={async (e) => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val) && val >= 0 && val <= 100) {
+                                await updateSystemConfig({ hybridCommitmentPercentage: val });
+                                toast.success(`Commitment deposit set to ${val}%`);
+                              } else {
+                                setConfig({ ...config, hybridCommitmentPercentage: 2 });
+                                await updateSystemConfig({ hybridCommitmentPercentage: 2 });
+                              }
+                            }}
+                            className="w-16 text-xs text-center border-gray-200 rounded-lg focus:ring-primary-500 focus:border-primary-500 p-1 font-bold text-gray-900"
+                          />
+                          <span className="text-xs font-bold text-gray-700">%</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Toggle: Platform Commission */}
                   <div className="flex flex-col gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200 col-span-1 md:col-span-2">
                     <div className="flex items-start justify-between">

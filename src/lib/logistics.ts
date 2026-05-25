@@ -34,6 +34,7 @@ export interface CreateLogisticsOrderInput {
   buyerId:       string;
   sellerAddress: string;
   buyerAddress:  string;
+  codAmount?:    number;
 }
 
 function newTrackingId(): string {
@@ -65,6 +66,7 @@ export async function createLogisticsOrder(input: CreateLogisticsOrderInput): Pr
       status:          LogisticsStatus.READY_FOR_PICKUP,
       pickupAddress:   input.sellerAddress,
       deliveryAddress: input.buyerAddress,
+      codAmount:       input.codAmount ?? 0,
       updatedAt:       now,
       history: [
         { status: LogisticsStatus.PENDING,          timestamp: now, note: 'Order created in Nilamit' },

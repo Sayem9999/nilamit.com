@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     ]);
 
     if (!watchlistSnap.empty) {
-      const watcherIds = watchlistSnap.docs.map(d => d.data().userId as string);
+      const watcherIds = [...new Set(watchlistSnap.docs.map(d => d.data().userId as string))];
       const userSnaps  = await db.getAll(...watcherIds.map(id => db.collection('users').doc(id)));
       const usersMap   = new Map(userSnaps.map(s => [s.id, s.exists ? { id: s.id, ...s.data() } as User : null]));
 

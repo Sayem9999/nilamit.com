@@ -71,10 +71,20 @@ export function processAuctionSale(
     updatedAt:        now,
   });
 
-  // Always escrow the full final price regardless of seller verification status.
-  // Commission is extracted on release (not on creation) so refunds remain whole.
+  // Calculate amounts dynamically based on SystemConfig (Traditional Escrow vs COD-Escrow Hybrid)
   const deliveryCharge = auction.deliveryCharge ?? 0;
-  const escrowAmount   = finalPrice + deliveryCharge;
+  const hybridEnabled  = systemConfig?.hybridEscrowEnabled ?? false;
+  const commitmentPct  = systemConfig?.hybridCommitmentPercentage ?? 2;
+
+  const advanceAmount = hybridEnabled
+    ? deliveryCharge + Math.round(finalPrice * (commitmentPct / 100))
+    : finalPrice + deliveryCharge;
+
+  const codAmount = hybridEnabled
+    ? finalPrice - Math.round(finalPrice * (commitmentPct / 100))
+    : 0;
+
+  const totalAmount = finalPrice + deliveryCharge;
 
   const escrowRequired = systemConfig?.escrowRequired ?? true;
   const escrowStatus = escrowRequired ? 'PENDING' : 'RELEASED';
@@ -86,7 +96,10 @@ export function processAuctionSale(
     auctionId:        auction.id,
     buyerId:          winner.id,
     sellerId:         auction.sellerId,
-    amount:           escrowAmount,
+    amount:           advanceAmount,
+    totalAmount:      totalAmount,
+    codAmount:        codAmount,
+    deliveryDeposit:  deliveryCharge,
     status:           escrowStatus,
     paymentMethod:    null,
     providerRef:      null,
