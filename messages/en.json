@@ -92,11 +92,11 @@
     "bannedDesc": "Your account has been restricted from performing this action due to policy violations."
   },
   "Home": {
-    "title": "Vibrant C2C Marketplace",
-    "subtitle": "Bangladesh's first trust-focused C2C auction marketplace. Sell your used goods for quick cash, bid on authentic items, and trade safely via secure mobile escrow.",
+    "title": "Vibrant Auction Marketplace",
+    "subtitle": "Bangladesh's first trust-focused peer-to-peer auction marketplace. Sell your used goods for quick cash, bid on authentic items, and trade safely via secure mobile escrow.",
     "marketplace": "Auctions",
     "heroTitle": "Sell What You Don't Use. Bid on What You Love.",
-    "heroSubtitle": "Bangladesh's first trust-focused C2C auction marketplace. List pre-loved items in seconds, place live bids in real-time, and trade with absolute confidence using secure mobile escrow.",
+    "heroSubtitle": "Bangladesh's first trust-focused peer-to-peer auction marketplace. List pre-loved items in seconds, place live bids in real-time, and trade with absolute confidence using secure mobile escrow.",
     "searchPlaceholder": "Search phones, laptops, bikes, consoles...",
     "trendingTag": "Trending Now",
     "trendingTitle": "Most Active Auctions",
@@ -107,7 +107,7 @@
     "categoriesTitle": "Browse Categories",
     "categoriesSubtitle": "Discover pre-loved treasures and premium deals across popular categories.",
     "featuredTitle": "Curator's Choice",
-    "featuredSubtitle": "Handpicked high-demand C2C items verified for community trust.",
+    "featuredSubtitle": "Handpicked high-demand items verified for community trust.",
     "featuredSubtitleMobile": "Handpicked for trust.",
     "activeMembers": "Active Traders",
     "liveAuctions": "Live Auctions",
@@ -137,7 +137,7 @@
     "step2Desc": "Participate in transparent auctions with anti-sniping protection and real-time live bidding updates.",
     "step3Title": "Local Escrow & Handoff",
     "step3Desc": "Coordinate local handovers (e.g. Dhanmondi, Gulshan) or home shipping via our secure bKash/Nagad escrow holding.",
-    "trustTitle": "Bangladesh's Safest C2C Community",
+    "trustTitle": "Bangladesh's Safest Bidding Community",
     "trustSubtitle": "We have engineered direct safeguards so you can trade second-hand items without anxiety.",
     "trust1Title": "৳0 Listing & Bidding Fees",
     "trust1Desc": "No corporate subscriptions or hidden costs. It is entirely free to list your goods and place bids.",
@@ -296,7 +296,7 @@
     "salesVelocityChart": "Sales Velocity Chart",
     "emptyListings": "You haven't listed any items for auction yet.",
     "heroTitle": "Buy & Sell in Real-time Auctions",
-    "heroSubtitle": "Bangladesh's most trusted C2C marketplace."
+    "heroSubtitle": "Bangladesh's most trusted bidding marketplace."
   },
   "ListingStats": {
     "newListingBtn": "New Listing",
@@ -570,7 +570,7 @@
     "compliance": "Compliance Standard: v1.8.0 / PSSA 2024"
   },
   "Footer": {
-    "brandDesc": "Bangladesh's trusted C2C auction marketplace. Buy and sell with confidence through transparent, real-time bidding.",
+    "brandDesc": "Bangladesh's trusted bidding marketplace. Buy and sell with confidence through transparent, real-time bidding.",
     "marketplace": "Marketplace",
     "browse": "Browse Auctions",
     "sell": "Sell an Item",
@@ -662,7 +662,7 @@
   },
   "Meta": {
     "title": "Nilamit — Bangladesh's Trusted Auction Marketplace",
-    "description": "Buy and sell through transparent auctions. Verified sellers, anti-sniping protection, and real-time bidding. Bangladesh's #1 C2C auction platform.",
+    "description": "Buy and sell through transparent auctions. Verified sellers, anti-sniping protection, and real-time bidding. Bangladesh's #1 peer-to-peer auction platform.",
     "keywords": "nilamit,nilamit.com,nilam,auction,bangladesh,bidding,marketplace,নিলাম,নিলামিত,নীলামিত"
   },
   "Banned": {

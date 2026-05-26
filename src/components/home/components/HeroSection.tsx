@@ -117,7 +117,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 (systemConfig?.escrowRequired ?? true) ? (
                   t("subtitle")
                 ) : (
-                  "Bangladesh's first trust-focused C2C auction marketplace. List pre-loved items in seconds, place live bids in real-time, and coordinate secure handovers with local cash-on-delivery."
+                  "Bangladesh's first trust-focused peer-to-peer auction marketplace. List pre-loved items in seconds, place live bids in real-time, and coordinate secure handovers with local cash-on-delivery."
                 )
               )}
             </motion.p>

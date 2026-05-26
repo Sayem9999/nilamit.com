@@ -12,7 +12,7 @@ export default function PolicyPage() {
             <ShieldCheck className="w-4 h-4" /> Nilamit Trust Guarantee
           </div>
           <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-4">Marketplace Policy</h1>
-          <p className="text-gray-500 font-medium">Building the most trusted C2C community in Bangladesh.</p>
+          <p className="text-gray-500 font-medium">Building the most trusted peer-to-peer community in Bangladesh.</p>
         </header>
 
         <div className="space-y-12">
@@ -28,7 +28,7 @@ export default function PolicyPage() {
                 Direct Coordination & Shipping
              </h2>
              <p className="text-gray-600 leading-relaxed mb-6">
-                Nilamit is a self-coordinated C2C marketplace. Buyers and sellers communicate directly via coordination chat to arrange face-to-face meetups, direct handoffs, or self-directed courier deliveries (e.g. Pathao, Steadfast, Redx).
+                Nilamit is a self-coordinated peer-to-peer marketplace. Buyers and sellers communicate directly via coordination chat to arrange face-to-face meetups, direct handoffs, or self-directed courier deliveries (e.g. Pathao, Steadfast, Redx).
              </p>
              <ul className="space-y-4">
                 <li className="flex gap-4">

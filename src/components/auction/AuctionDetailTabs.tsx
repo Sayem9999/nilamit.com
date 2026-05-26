@@ -156,7 +156,7 @@ export function AuctionDetailTabs({
                     Local Handoff & Courier Dispatch
                   </h4>
                   <p className="text-xs text-gray-500 leading-relaxed">
-                    Nilamit is a direct-trade C2C marketplace. Buyers and sellers chat directly in active conversations to arrange face-to-face meetups, direct handoffs, or self-directed courier deliveries (e.g. Pathao, Steadfast, Redx) in <span className="font-bold text-gray-800">{location}</span>.
+                    Nilamit is a direct-trade peer-to-peer marketplace. Buyers and sellers chat directly in active conversations to arrange face-to-face meetups, direct handoffs, or self-directed courier deliveries (e.g. Pathao, Steadfast, Redx) in <span className="font-bold text-gray-800">{location}</span>.
                   </p>
                 </div>
 

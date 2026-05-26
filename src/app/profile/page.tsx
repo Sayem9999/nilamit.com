@@ -28,7 +28,6 @@ import {
   Loader2,
   Trash2,
   MapPin,
-  Check,
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
@@ -49,15 +48,13 @@ export default function ProfilePage() {
   const [name, setName] = useState("");
   const [msg, setMsg] = useState("");
 
-  // BDT C2C localized Address Book and payout disbursement states
+  // Localized Address Book states
   const [addressStreet, setAddressStreet] = useState("");
   const [addressArea, setAddressArea] = useState("");
   const [addressDistrict, setAddressDistrict] = useState("");
   const [addressZip, setAddressZip] = useState("");
-  const [defaultPayout, setDefaultPayout] = useState<"bkash" | "nagad" | "">("");
   const [editingAddress, setEditingAddress] = useState(false);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
-  const [isSavingPayout, setIsSavingPayout] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
@@ -66,13 +63,11 @@ export default function ProfilePage() {
         addressArea?: string | null;
         addressDistrict?: string | null;
         addressZip?: string | null;
-        defaultPayout?: string | null;
       };
       setAddressStreet(u.addressStreet || "");
       setAddressArea(u.addressArea || "");
       setAddressDistrict(u.addressDistrict || "");
       setAddressZip(u.addressZip || "");
-      setDefaultPayout((u.defaultPayout as "bkash" | "nagad") || "");
     }
   }, [session]);
 
@@ -100,26 +95,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSavePayout = async (payout: "bkash" | "nagad" | "") => {
-    setIsSavingPayout(true);
-    try {
-      const res = await updateProfile({
-        defaultPayout: payout || null,
-      });
-      if (res.success) {
-        await update();
-        setDefaultPayout(payout);
-        toast.success("Preferred payout channel updated successfully!");
-      } else {
-        toast.error(res.error?.message || "Failed to update payout channel.");
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to update payout channel.");
-    } finally {
-      setIsSavingPayout(false);
-    }
-  };
+
   
   // Profile Photo Upload State
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -756,15 +732,13 @@ export default function ProfilePage() {
               </button>
             </motion.div>
 
-            {/* Address Book Card & Default Disbursement Channel Selector Card */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Address Book Card */}
+            {/* Address Book Card */}
+            <motion.div variants={itemVariants}>
               <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col justify-between h-full hover:shadow-md transition-shadow">
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-                      <MapPin size={20} className="text-primary-600" /> C2C Address Book
+                      <MapPin size={20} className="text-primary-600" /> Address Book
                     </h3>
                     {!editingAddress && (
                       <button 
@@ -884,80 +858,6 @@ export default function ProfilePage() {
                       )}
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Default Payout Channel Selector Card */}
-              <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col justify-between h-full hover:shadow-md transition-shadow">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
-                      <Wallet size={20} className="text-primary-600" /> Default Payout Channel
-                    </h3>
-                  </div>
-
-                  <p className="text-xs text-gray-500 mb-6 font-medium leading-relaxed">
-                    Select your preferred mobile wallet for secure automated sales commission payouts and escrow releases.
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <button
-                      type="button"
-                      onClick={() => handleSavePayout(defaultPayout === 'bkash' ? '' : 'bkash')}
-                      disabled={isSavingPayout}
-                      className={`relative p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all ${
-                        defaultPayout === 'bkash'
-                          ? 'border-[#E2125D] bg-[#E2125D]/5 ring-2 ring-[#E2125D]/20'
-                          : 'border-slate-150 bg-white hover:bg-slate-50'
-                      }`}
-                    >
-                      {defaultPayout === 'bkash' && (
-                        <div className="absolute top-2 right-2 w-4 h-4 bg-[#E2125D] text-white rounded-full flex items-center justify-center p-0.5 shadow-sm">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                        </div>
-                      )}
-                      <Image 
-                        src={BKASH_LOGO_PRIMARY} 
-                        alt="bKash" 
-                        width={36} 
-                        height={36} 
-                        className="object-contain mb-1 h-8" 
-                      />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">bKash Payout</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSavePayout(defaultPayout === 'nagad' ? '' : 'nagad')}
-                      disabled={isSavingPayout}
-                      className={`relative p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all ${
-                        defaultPayout === 'nagad'
-                          ? 'border-[#F69320] bg-[#F69320]/5 ring-2 ring-[#F69320]/20'
-                          : 'border-slate-150 bg-white hover:bg-slate-50'
-                      }`}
-                    >
-                      {defaultPayout === 'nagad' && (
-                        <div className="absolute top-2 right-2 w-4 h-4 bg-[#F69320] text-white rounded-full flex items-center justify-center p-0.5 shadow-sm">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                        </div>
-                      )}
-                      <Image 
-                        src={NAGAD_LOGO_PRIMARY} 
-                        alt="Nagad" 
-                        width={36} 
-                        height={36} 
-                        className="object-contain mb-1 h-8" 
-                      />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">Nagad Payout</span>
-                    </button>
-                  </div>
-
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                    <p className="text-[9px] text-slate-400 font-semibold leading-normal uppercase">
-                      Platforms payouts are audited and secured via secure multi-party escrow holding.
-                    </p>
-                  </div>
                 </div>
               </div>
             </motion.div>
