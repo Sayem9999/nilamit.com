@@ -79,38 +79,38 @@ export async function getUserConversations() {
 }
 
 export async function getLeaderboardData() {
-  const streaksSnap = await db.collection('users')
-    .where('winningStreak', '>', 0)
-    .orderBy('winningStreak', 'desc')
+  const volumeSnap = await db.collection('users')
+    .orderBy('salesCount', 'desc')
     .limit(5)
     .get();
 
-  const topStreaks = streaksSnap.docs.map(doc => {
+  const topMerchants = volumeSnap.docs.map(doc => {
     const data = doc.data() as User & { badges?: { badgeId: string }[] };
     return {
       id: doc.id,
       name: data.name,
       image: data.image,
-      winningStreak: data.winningStreak || 0,
+      salesCount: data.salesCount || 0,
       badges: data.badges || [],
     };
   });
 
-  const buyersSnap = await db.collection('users')
+  const trustedSnap = await db.collection('users')
     .orderBy('rating', 'desc')
     .limit(5)
     .get();
 
-  const topBuyers = buyersSnap.docs.map(doc => {
+  const topTrusted = trustedSnap.docs.map(doc => {
     const data = doc.data() as User & { badges?: { badgeId: string }[] };
     return {
       id: doc.id,
       name: data.name,
       image: data.image,
       badges: data.badges || [],
-      rating: data.rating || 3.5,
+      rating: data.rating || 5.0,
+      ratingCount: data.ratingCount || 0,
     };
   });
 
-  return { topStreaks, topBuyers };
+  return { topMerchants, topTrusted };
 }
