@@ -1,4 +1,5 @@
 import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
+import { ShillDetectorService } from '@/services/security/shill-detector';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { Auction, Bid } from '@/types';
 import { log } from '@/lib/logger';
@@ -12,6 +13,11 @@ export class BidSideEffects {
    */
   static async handleBidSideEffects(auction: Auction, bid: Bid, prevBidderId: string | null, newEndTime?: Date): Promise<void> {
     const tasks: Promise<unknown>[] = [];
+
+    // Asynchronously audit bid for potential shill bidding fraud patterns
+    tasks.push(ShillDetectorService.detectShillBidding(auction, bid).catch(e => 
+      log.error('[BidSideEffects] Shill Bidding detection failed', e, { auctionId: auction.id, bidId: bid.id })
+    ));
 
     // Fetch bidder name for real-time feed
     let bidderName = 'Someone';

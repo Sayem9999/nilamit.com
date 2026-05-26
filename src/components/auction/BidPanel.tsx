@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect, useRef, useMemo, useCallback } from
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { CheckCircle, AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { placeBid, executeBuyItNow } from "@/actions/bid";
 import { formatBDT } from "@/lib/format";
 import { ErrorType, ServiceResponse } from "@/lib/errors";
@@ -99,6 +99,19 @@ export function BidPanel({
 
   const currentStatus = rtStatus || initialStatus || "ACTIVE"; 
   const [optimisticBid, setOptimisticBid] = useState<number | null>(null);
+  const [liveBidAlert, setLiveBidAlert] = useState<{ amount: number; bidderName: string; isAntiSnipe: boolean } | null>(null);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    if (liveBidAlert) {
+      timer = setTimeout(() => {
+        setLiveBidAlert(null);
+      }, 5000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [liveBidAlert]);
 
   const displayPrice = useMemo(() => 
     optimisticBid ?? (newBids.length > 0 ? newBids[0].amount : currentPrice),
@@ -141,6 +154,16 @@ export function BidPanel({
       if (optimisticBid && currentTopBid.amount >= optimisticBid) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setOptimisticBid(null);
+      }
+
+      // Visual Live Bid Alert Banner
+      if (previousTopBidId && currentTopBid.bidderId !== session?.user?.id) {
+        const isAntiSnipe = currentEndTime ? (new Date(currentEndTime).getTime() > new Date(endTime).getTime()) : false;
+        setLiveBidAlert({
+          amount: currentTopBid.amount,
+          bidderName: currentTopBid.bidderName ?? 'Someone',
+          isAntiSnipe,
+        });
       }
 
       // Live Outbid Notification Logic
@@ -270,6 +293,52 @@ export function BidPanel({
         displayEndTime={displayEndTime}
         serverTime={serverTime}
       />
+      
+      <AnimatePresence>
+        {liveBidAlert && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, y: -10, marginBottom: 0 }}
+            animate={{ opacity: 1, height: "auto", y: 0, marginBottom: 16 }}
+            exit={{ opacity: 0, height: 0, y: -10, marginBottom: 0 }}
+            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+            className="overflow-hidden"
+          >
+            <style dangerouslySetInnerHTML={{ __html: `
+              @keyframes shrink {
+                from { width: 100%; }
+                to { width: 0%; }
+              }
+              .animate-shrink-bar {
+                animation: shrink 5s linear forwards;
+              }
+            `}} />
+            <div className="bg-gradient-to-r from-primary-600 via-indigo-600 to-purple-600 text-white rounded-xl p-4 shadow-lg border border-white/10 relative overflow-hidden">
+              <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center justify-end pr-4 pointer-events-none select-none">
+                <span className="text-7xl font-black italic">BID</span>
+              </div>
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/25 backdrop-blur-sm animate-pulse">
+                  <span className="text-sm">⚡</span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-primary-200">Live Bid Alert</span>
+                    {liveBidAlert.isAntiSnipe && (
+                      <span className="text-[9px] bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-bounce">
+                        Anti-Snipe Extended
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-semibold text-white mt-0.5">
+                    <span className="font-bold text-yellow-300">{liveBidAlert.bidderName}</span> placed <span className="font-extrabold text-white text-sm">{formatBDT(liveBidAlert.amount)}</span>!
+                  </p>
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 h-[3px] bg-white/30 animate-shrink-bar" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {!isConnected && (
         <div className="mb-4 bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-center gap-3 animate-pulse">

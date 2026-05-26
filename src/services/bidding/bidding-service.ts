@@ -20,10 +20,12 @@ export class BiddingService {
     amount: number, 
     userId: string, 
     _userName: string, 
-    _userEmail: string
+    _userEmail: string,
+    ip?: string,
+    userAgent?: string
   ): Promise<ServiceResponse<PlaceBidResult>> {
     void _userName; void _userEmail;
-    return BidProcessor.placeBid(auctionId, amount, userId);
+    return BidProcessor.placeBid(auctionId, amount, userId, ip, userAgent);
   }
 
   /**

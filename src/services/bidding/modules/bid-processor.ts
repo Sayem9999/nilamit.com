@@ -9,7 +9,13 @@ export class BidProcessor {
   /**
    * Atomic Transaction for placing a bid with Proxy Bidding support
    */
-  static async placeBid(auctionId: string, amount: number, userId: string): Promise<ServiceResponse<PlaceBidResult>> {
+  static async placeBid(
+    auctionId: string, 
+    amount: number, 
+    userId: string,
+    ip?: string,
+    userAgent?: string
+  ): Promise<ServiceResponse<PlaceBidResult>> {
     try {
       return await db.runTransaction(async (tx) => {
         const auctionRef = db.collection('auctions').doc(auctionId);
@@ -87,7 +93,9 @@ export class BidProcessor {
           amount,
           publicAmount: newCurrentPrice,
           createdAt: now,
-          status: 'ACTIVE'
+          status: 'ACTIVE',
+          ip,
+          userAgent,
         };
 
         const beforeState = auctionSnap.data() || null;

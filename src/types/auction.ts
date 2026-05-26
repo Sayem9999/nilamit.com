@@ -52,6 +52,8 @@ export interface Bid {
   bidderId: string;
   status?: 'ACTIVE' | 'CANCELLED';
   createdAt: Date;
+  ip?: string;
+  userAgent?: string;
 }
 
 export interface RealTimeBid {

@@ -53,11 +53,19 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
 
   const h = await headers();
   const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
+  const userAgent = h.get('user-agent') ?? 'unknown';
   // bidLimiter is fail-closed in production (see ratelimit.ts).
   const { success: rateLimitOk } = await bidLimiter.limit(`bid_${userId}_${ip}`);
   if (!rateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, 'Too many bids placed rapidly. Please wait a moment.');
 
   try {
+    // Asynchronously update bidder's last active IP and UA in Firestore
+    db.collection('users').doc(userId).update({
+      lastActiveIp: ip,
+      lastActiveUserAgent: userAgent,
+      updatedAt: new Date(),
+    }).catch(e => log.error('[bid] Failed to update user last active IP/UA', e, { userId }));
+
     const configRes = await getSystemConfig();
     const systemConfig = configRes.success ? configRes.data : null;
 
@@ -116,7 +124,15 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
 
     while (attempts < MAX_ATTEMPTS) {
       try {
-        const result = await BiddingService.placeBid(auctionId, amount, userId, session.user.name || 'Someone', session.user.email || '');
+        const result = await BiddingService.placeBid(
+          auctionId,
+          amount,
+          userId,
+          session.user.name || 'Someone',
+          session.user.email || '',
+          ip,
+          userAgent
+        );
         
         revalidateTag('auctions', { expire: 0 });
         revalidateTag('bids',     { expire: 0 });

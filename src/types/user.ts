@@ -23,6 +23,8 @@ export interface User {
   defectCount: number;
   bio?: string | null;
   banner?: string | null;
+  lastActiveIp?: string | null;
+  lastActiveUserAgent?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +46,8 @@ export interface SellerPublic {
   isBanned: boolean;
   bio?: string | null;
   banner?: string | null;
+  lastActiveIp?: string | null;
+  lastActiveUserAgent?: string | null;
 }
 
 export interface PublicProfile extends SellerPublic {
