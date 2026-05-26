@@ -194,7 +194,7 @@ export function BidPanel({
       }
     }
     prevTopBidRef.current = currentTopBid?.id;
-  }, [newBids, playGavel, optimisticBid, session, initialBids]);
+  }, [newBids, playGavel, optimisticBid, session, initialBids, currentEndTime, endTime]);
 
   const quickBids = useMemo(() => [
     minBid,

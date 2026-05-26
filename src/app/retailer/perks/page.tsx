@@ -33,9 +33,7 @@ export default function RetailerPerksPage() {
   // Tiers calculation logic
   const currentTier = user.isRetailer 
     ? "Professional Retailer" 
-    : user.isVerifiedSeller 
-      ? "Verified Seller" 
-      : "Basic Bidder";
+    : "Standard Trader";
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 pt-36 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
@@ -122,12 +120,11 @@ export default function RetailerPerksPage() {
             Comparison Table & Privileges
           </h3>
 
-          <table className="w-full text-left border-collapse min-w-[600px]">
+          <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
               <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/50">
                 <th className="py-4 px-3">Feature / Privilege</th>
-                <th className="py-4 text-center">Basic Bidder</th>
-                <th className="py-4 text-center">Verified Seller</th>
+                <th className="py-4 text-center">Standard Trader</th>
                 <th className="py-4 text-center">Pro Retailer</th>
               </tr>
             </thead>
@@ -139,17 +136,14 @@ export default function RetailerPerksPage() {
                 </td>
                 <td className="py-4 text-center text-emerald-600 font-bold">Unlimited</td>
                 <td className="py-4 text-center text-emerald-600 font-bold">Unlimited</td>
-                <td className="py-4 text-center text-emerald-600 font-bold">Unlimited</td>
               </tr>
               <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
                 <td className="py-4 px-3 font-bold text-slate-900">Individual Listings limit</td>
-                <td className="py-4 text-center text-slate-500">3 active</td>
                 <td className="py-4 text-center text-indigo-600 font-bold">Unlimited</td>
                 <td className="py-4 text-center text-indigo-600 font-bold">Unlimited</td>
               </tr>
               <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
                 <td className="py-4 px-3 font-bold text-slate-900">Bulk Inventory Sync</td>
-                <td className="py-4 text-center text-red-500"><Lock className="w-3.5 h-3.5 mx-auto" /></td>
                 <td className="py-4 text-center text-red-500"><Lock className="w-3.5 h-3.5 mx-auto" /></td>
                 <td className="py-4 text-center text-emerald-600 font-bold">CSV Enabled</td>
               </tr>
@@ -158,25 +152,21 @@ export default function RetailerPerksPage() {
                   <Percent className="w-4 h-4 text-slate-400" />
                   Commission Rate
                 </td>
-                <td className="py-4 text-center text-slate-500">5.0%</td>
                 <td className="py-4 text-center text-blue-600 font-bold">0% (Promo active)</td>
                 <td className="py-4 text-center text-indigo-600 font-black">0% (Promo active)</td>
               </tr>
               <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
                 <td className="py-4 px-3 font-bold text-slate-900">Dynamic Storefront Biography</td>
-                <td className="py-4 text-center text-red-500"><Lock className="w-3.5 h-3.5 mx-auto" /></td>
                 <td className="py-4 text-center text-emerald-600 font-bold">Enabled</td>
                 <td className="py-4 text-center text-emerald-600 font-bold">Enabled</td>
               </tr>
               <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
                 <td className="py-4 px-3 font-bold text-slate-900">Escrow Release Speed</td>
                 <td className="py-4 text-center text-slate-500">Standard (7 days)</td>
-                <td className="py-4 text-center text-slate-500">Standard (7 days)</td>
                 <td className="py-4 text-center text-emerald-600 font-bold">Priority (3 days)</td>
               </tr>
               <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
                 <td className="py-4 px-3 font-bold text-slate-900">Support SLA</td>
-                <td className="py-4 text-center text-slate-500">Standard</td>
                 <td className="py-4 text-center text-slate-500">Standard</td>
                 <td className="py-4 text-center text-emerald-600 font-bold">Priority Response</td>
               </tr>

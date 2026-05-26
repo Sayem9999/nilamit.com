@@ -3,13 +3,10 @@
 import { useState, useEffect, useTransition } from "react";
 import {
   getAdminUsers,
-  grantVerifiedSeller,
-  revokeVerifiedSeller,
   banUser,
   unbanUser,
 } from "@/actions/admin-users";
-import { Search, Shield, ShieldOff, Users, Ban
-} from "lucide-react";
+import { Search, Users, Ban } from "lucide-react";
 import Link from "next/link";
 
 export function UsersTab() {
@@ -67,21 +64,7 @@ export function UsersTab() {
     };
   }, [cursorStack, debouncedSearch]);
 
-  const handleToggleVerified = (userId: string, currentStatus: boolean) => {
-    startTransition(async () => {
-      const action = currentStatus ? () => revokeVerifiedSeller(userId) : () => grantVerifiedSeller(userId);
-      const result = await action();
-      if (result.success) {
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === userId ? { ...u, isVerifiedSeller: !currentStatus } : u,
-          ),
-        );
-      } else {
-        alert(result.error?.message || "Failed to update verified status");
-      }
-    });
-  };
+
 
   const handleToggleBan = (userId: string, isBanned: boolean) => {
     if (!confirm(`Are you sure you want to ${isBanned ? 'unban' : 'ban'} this user?`)) return;
@@ -150,9 +133,7 @@ export function UsersTab() {
                 <th className="text-left px-4 py-3 font-medium text-gray-500">
                   Bids
                 </th>
-                <th className="text-right px-4 py-3 font-medium text-gray-500">
-                  Verified Seller
-                </th>
+
                 <th className="text-right px-4 py-3 font-medium text-gray-500">
                   Actions
                 </th>
@@ -240,29 +221,7 @@ export function UsersTab() {
                   <td className="px-4 py-3 text-gray-500 text-xs">
                     {user._count.bids}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() =>
-                        handleToggleVerified(user.id, user.isVerifiedSeller)
-                      }
-                      disabled={isPending}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                        user.isVerifiedSeller
-                           ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                           : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                      }`}
-                    >
-                      {user.isVerifiedSeller ? (
-                        <>
-                          <Shield className="w-3.5 h-3.5" /> Verified
-                        </>
-                      ) : (
-                        <>
-                          <ShieldOff className="w-3.5 h-3.5" /> Grant
-                        </>
-                      )}
-                    </button>
-                  </td>
+
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handleToggleBan(user.id, user.isBanned)}
