@@ -126,7 +126,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
               variants={itemVariants}
               onSubmit={handleSearch}
               role="search"
-              className="mt-10 relative max-w-xl bg-white rounded-2xl shadow-xl shadow-gray-200/50 border-2 border-primary-100 p-2 flex items-center gap-2"
+              className="mt-10 relative max-w-xl bg-white rounded-xl shadow-lg border border-gray-300 p-2 flex items-center gap-2 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 transition-all"
             >
               <label htmlFor="hero-search" className="sr-only">{t("searchPlaceholder")}</label>
               <div className="flex-1 px-4 flex items-center gap-3">
@@ -227,12 +227,12 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                     </span>
                   </div>
                 </div>
-                <div className="glass text-red-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter animate-pulse shadow-sm">
+                <div className="bg-red-50 text-red-650 border border-red-150 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter animate-pulse shadow-sm">
                   {t("hotDeal")}
                 </div>
               </div>
 
-              <div className="aspect-[4/3] bg-gray-50 rounded-2xl mb-6 overflow-hidden relative group border border-gray-100/50">
+              <div className="aspect-[4/3] bg-gray-50 rounded-xl mb-6 overflow-hidden relative group border border-gray-200">
                 <Image
                   src={
                     systemConfig?.heroImage ||
@@ -242,10 +242,10 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover group-hover:scale-110 transition-transform duration-700"
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 {!systemConfig?.heroImage && (
-                  <div className="absolute top-4 right-4 glass px-3 py-1 rounded-full text-xs font-bold text-gray-900 shadow-sm border border-white/50">
+                  <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded border border-gray-200 text-xs font-bold text-gray-900 shadow-sm">
                     ৳ 12,500
                   </div>
                 )}
@@ -280,9 +280,9 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 repeat: Infinity,
                 ease: "easeInOut" as const,
               }}
-              className="absolute -top-12 -left-12 z-30 glass border border-white/50 rounded-2xl p-4 shadow-xl -rotate-12"
+              className="absolute -top-12 -left-12 z-30 bg-white border border-gray-200 rounded-xl p-4 shadow-xl -rotate-6"
             >
-              <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mb-2">
+              <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center mb-2 border border-primary-100">
                 <Gavel className="w-5 h-5 text-primary-600" />
               </div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
@@ -301,10 +301,10 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 ease: "easeInOut" as const,
                 delay: 0.5,
               }}
-              className="absolute top-1/4 -right-16 z-30 glass border border-white/50 rounded-2xl p-4 shadow-xl shadow-orange-100/20"
+              className="absolute top-1/4 -right-16 z-30 bg-white border border-gray-200 rounded-xl p-4 shadow-xl"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-orange-100/80 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-50 rounded-full flex items-center justify-center border border-orange-100">
                   <Bell className="w-4 h-4 text-orange-600" />
                 </div>
                 <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
@@ -321,10 +321,10 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 ease: "easeInOut" as const,
                 delay: 1,
               }}
-              className="absolute -bottom-10 -right-8 z-30 glass border border-white/50 rounded-2xl p-4 shadow-xl rotate-6"
+              className="absolute -bottom-10 -right-8 z-30 bg-white border border-gray-200 rounded-xl p-4 shadow-xl rotate-6"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100/80 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center border border-blue-100">
                   <Shield className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
@@ -341,10 +341,10 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
             <motion.div
               animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
               transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              className="absolute -left-20 bottom-12 z-30 glass border border-white/50 rounded-2xl p-4 shadow-xl shadow-primary-100/20"
+              className="absolute -left-20 bottom-12 z-30 bg-white border border-gray-200 rounded-xl p-4 shadow-xl"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary-100/80 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-primary-50 rounded-full flex items-center justify-center border border-primary-100">
                   <MapPin className="w-4 h-4 text-primary-600" />
                 </div>
                 <div className="text-xs font-bold text-gray-900">

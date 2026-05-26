@@ -106,6 +106,16 @@ const nextConfig: NextConfig = {
         destination: '/dashboard',
         permanent: false,
       },
+      {
+        source: '/profile',
+        destination: '/dashboard?tab=profile',
+        permanent: false,
+      },
+      {
+        source: '/seller/:id',
+        destination: '/profile/:id',
+        permanent: false,
+      },
     ];
   },
 

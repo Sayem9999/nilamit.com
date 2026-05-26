@@ -29,97 +29,41 @@ import React, { memo, useState, useTransition } from "react";
 // Premium dynamic styling and Lucide icons for categories
 const getCategoryBadgeStyles = (cat?: string) => {
   const normalized = (cat || 'other').toLowerCase().replace(/_/g, '-');
+  const className = "bg-slate-100/70 text-slate-600 dark:text-slate-300 border-slate-200/60 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 border uppercase tracking-wider";
   switch (normalized) {
-    case 'mobile-phones':
-      return {
-        className: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Smartphone
-      };
-    case 'computers-laptops':
-      return {
-        className: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Laptop
-      };
-    case 'electronics':
-      return {
-        className: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Tv
-      };
-    case 'cameras-optics':
-      return {
-        className: "bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Camera
-      };
-    case 'watches-jewelry':
-      return {
-        className: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Watch
-      };
-    case 'vehicles':
-      return {
-        className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Car
-      };
-    case 'fashion':
-      return {
-        className: "bg-pink-500/10 text-pink-700 dark:text-pink-300 border-pink-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Shirt
-      };
-    case 'home-garden':
-      return {
-        className: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Home
-      };
-    case 'home-appliances':
-      return {
-        className: "bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Plug
-      };
-    case 'sports':
-      return {
-        className: "bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Dumbbell
-      };
-    case 'hobbies-music':
-      return {
-        className: "bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Gamepad
-      };
-    case 'books':
-      return {
-        className: "bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: BookOpen
-      };
-    case 'collectibles':
-      return {
-        className: "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Gem
-      };
-    default:
-      return {
-        className: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
-        icon: Package
-      };
+    case 'mobile-phones': return { className, icon: Smartphone };
+    case 'computers-laptops': return { className, icon: Laptop };
+    case 'electronics': return { className, icon: Tv };
+    case 'cameras-optics': return { className, icon: Camera };
+    case 'watches-jewelry': return { className, icon: Watch };
+    case 'vehicles': return { className, icon: Car };
+    case 'fashion': return { className, icon: Shirt };
+    case 'home-garden': return { className, icon: Home };
+    case 'home-appliances': return { className, icon: Plug };
+    case 'sports': return { className, icon: Dumbbell };
+    case 'hobbies-music': return { className, icon: Gamepad };
+    case 'books': return { className, icon: BookOpen };
+    case 'collectibles': return { className, icon: Gem };
+    default: return { className, icon: Package };
   }
 };
 
-// Premium dynamic styling and Lucide icons for item conditions
 const getConditionBadgeStyles = (cond?: string) => {
   const normalized = (cond || '').toUpperCase();
   switch (normalized) {
     case 'NEW':
       return {
-        className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        className: "bg-emerald-50 text-emerald-700 dark:text-emerald-350 border-emerald-200/60 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 border uppercase tracking-wider",
         icon: Sparkles
       };
     case 'USED':
       return {
-        className: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        className: "bg-slate-50 text-slate-700 dark:text-slate-350 border-slate-200/60 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 border uppercase tracking-wider",
         icon: RefreshCw
       };
     case 'REFURBISHED':
       return {
-        className: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/20 backdrop-blur-md rounded-full px-2.5 py-1 text-[8px] md:text-[10px] font-extrabold flex items-center gap-1.5 border shadow-xs uppercase tracking-wider",
+        className: "bg-blue-50 text-blue-700 dark:text-blue-350 border-blue-200/60 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 border uppercase tracking-wider",
         icon: Wrench
       };
     default:

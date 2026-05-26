@@ -5,8 +5,8 @@ import AuctionCard from "@/components/auction/AuctionCard";
 import { 
   Package, Star, Store,
   MessageSquare, CheckCircle,
-  Heart, RefreshCw, LogOut, Bell,
-  ChevronRight, Trophy, Shield
+  Heart, RefreshCw, Bell,
+  ChevronRight, Trophy, Shield, User
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -19,6 +19,7 @@ import { EscrowService } from "@/services/finance/escrow-service";
 import { CoordinationService } from "@/services/social/coordination-service";
 import { HydratedEscrowTransaction, CoordinationHubItem } from "@/types";
 import { NotificationsList } from "@/components/social/NotificationsList";
+import ProfileSettings from "@/components/dashboard/ProfileSettings";
 import type { Session } from "next-auth";
 
 export const dynamic = "force-dynamic";
@@ -487,11 +488,17 @@ export default async function DashboardPage({
 
               <div className="pt-4 border-t border-slate-100">
                 <Link
-                  href="/profile"
-                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors font-bold text-xs uppercase tracking-wider text-slate-600 hover:bg-slate-50 hover:text-slate-950"
+                  href="/dashboard?tab=profile"
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    currentTab === "profile"
+                      ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 border-transparent"
+                  }`}
                 >
-                  <LogOut className="w-3.5 h-3.5 text-slate-400" />
-                  {t("profileSettings")}
+                  <User className={`w-3.5 h-3.5 transition-colors ${
+                    currentTab === "profile" ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600"
+                  }`} />
+                  <span>{t("profileSettings")}</span>
                 </Link>
               </div>
 
@@ -832,6 +839,10 @@ export default async function DashboardPage({
               <div>
                 <NotificationsList />
               </div>
+            )}
+
+            {currentTab === "profile" && (
+              <ProfileSettings />
             )}
 
           </div>
