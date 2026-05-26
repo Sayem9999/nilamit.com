@@ -1,14 +1,14 @@
 "use client";
 
 import {
-  Users,
   Gavel,
-  CheckCircle,
-  Clock,
-  Shield,
   ShieldCheck,
-  TrendingUp,
   ArrowRight,
+  MapPin,
+  Star,
+  PlusCircle,
+  DollarSign,
+  Lock,
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -17,16 +17,16 @@ export function TrustFeatures() {
   const t = useTranslations("Home");
 
   const steps = [
-    { icon: Users,       title: t("step1Title"), desc: t("step1Desc") },
+    { icon: PlusCircle,  title: t("step1Title"), desc: t("step1Desc") },
     { icon: Gavel,       title: t("step2Title"), desc: t("step2Desc") },
-    { icon: CheckCircle, title: t("step3Title"), desc: t("step3Desc") },
+    { icon: Lock,        title: t("step3Title"), desc: t("step3Desc") },
   ];
 
   const features = [
-    { icon: ShieldCheck, title: t("trust1Title"), desc: t("trust1Desc") },
-    { icon: Clock,       title: t("trust2Title"), desc: t("trust2Desc") },
-    { icon: Shield,      title: t("trust3Title"), desc: t("trust3Desc") },
-    { icon: TrendingUp,  title: t("trust4Title"), desc: t("trust4Desc") },
+    { icon: DollarSign,  title: t("trust1Title"), desc: t("trust1Desc") },
+    { icon: ShieldCheck, title: t("trust2Title"), desc: t("trust2Desc") },
+    { icon: MapPin,      title: t("trust3Title"), desc: t("trust3Desc") },
+    { icon: Star,        title: t("trust4Title"), desc: t("trust4Desc") },
   ];
 
   return (

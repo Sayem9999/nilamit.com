@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { Variants } from "framer-motion";
-import { Megaphone, Star } from "lucide-react";
+import { Megaphone, Star, DollarSign, ShieldCheck, Sparkles } from "lucide-react";
 import { AuctionWithSeller, SystemConfig, LatestActivity } from "@/types";
 import AuctionCard from "@/components/auction/AuctionCard";
 
@@ -98,6 +98,46 @@ export function HomeContent({
           verifiedSellers={stats.verifiedSellers}
         />
       )}
+
+      {/* ৳0 Listing Fee & Escrow Reassurance Banner */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-10">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary-600 via-primary-700 to-blue-800 p-8 sm:p-10 shadow-premium text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_45%)]" />
+          <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-blue-500/20 rounded-full blur-[100px]" />
+          
+          <div className="relative z-10 grid lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1 text-xs font-bold uppercase tracking-widest text-amber-300">
+                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                Community First Marketplace
+              </div>
+              <h3 className="font-heading font-black text-3xl sm:text-4xl tracking-tight leading-none text-white">
+                ৳0 Listing Fee • ৳0 Bidding Fee
+              </h3>
+              <p className="text-primary-100 max-w-xl text-sm sm:text-base leading-relaxed">
+                Nilamit is 100% free to list items and place bids. We only charge a small seller commission if and when your trade successfully completes and the buyer confirms delivery.
+              </p>
+            </div>
+            
+            <div className="lg:col-span-5 grid sm:grid-cols-2 gap-4">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all duration-300">
+                <div className="w-10 h-10 bg-amber-400/20 rounded-xl flex items-center justify-center mb-3">
+                  <DollarSign className="w-5 h-5 text-amber-300" />
+                </div>
+                <h4 className="font-bold text-white text-sm mb-1">0% Upfront Cost</h4>
+                <p className="text-xs text-primary-200">List as many pre-loved gadgets, bikes, or fashion items as you want without paying a single paisa.</p>
+              </div>
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all duration-300">
+                <div className="w-10 h-10 bg-green-400/20 rounded-xl flex items-center justify-center mb-3">
+                  <ShieldCheck className="w-5 h-5 text-green-300" />
+                </div>
+                <h4 className="font-bold text-white text-sm mb-1">Escrow Treasury Guard</h4>
+                <p className="text-xs text-primary-200">Payments are held securely in Nilamit Escrow and only released when the buyer confirms receipt.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Featured Auctions — Premium Curator's Choice */}
       {featuredAuctions.length > 0 && (

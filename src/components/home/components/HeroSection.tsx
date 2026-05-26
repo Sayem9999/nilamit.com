@@ -82,16 +82,16 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
 
             <motion.h1
               variants={itemVariants}
-              className="font-heading font-black text-4xl sm:text-6xl lg:text-7xl text-gray-900 leading-[1.1] tracking-tight text-center lg:text-left"
+              className="font-heading font-black text-4xl sm:text-5xl lg:text-6xl text-gray-900 leading-[1.15] tracking-tight text-center lg:text-left"
             >
               {systemConfig?.heroTitle ? (
                 systemConfig.heroTitle
               ) : (
                 <>
-                  {t("title")}{" "}
+                  Sell What You{" "}
                   <span className="relative inline-block">
-                    <span className="relative z-10 text-primary-600 italic bn">
-                      {t("marketplace")}
+                    <span className="relative z-10 text-primary-600 italic">
+                      Don&apos;t Use.
                     </span>
                     <motion.span
                       initial={{ width: 0 }}
@@ -99,6 +99,11 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                       transition={{ delay: 0.8, duration: 1.2 }}
                       className="absolute bottom-1 sm:bottom-2 left-0 h-2 sm:h-3 bg-primary-100 -z-0 rounded-full"
                     />
+                  </span>
+                  <br className="hidden sm:inline" />
+                  Bid on What You{" "}
+                  <span className="relative inline-block text-blue-600">
+                    Love.
                   </span>
                 </>
               )}
@@ -225,7 +230,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 <Image
                   src={
                     systemConfig?.heroImage ||
-                    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Dhaka_City_at_Night.jpg/1280px-Dhaka_City_at_Night.jpg"
+                    "/hero_c2c.png"
                   }
                   alt="Auction Item"
                   fill
@@ -235,7 +240,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 />
                 {!systemConfig?.heroImage && (
                   <div className="absolute top-4 right-4 glass px-3 py-1 rounded-full text-xs font-bold text-gray-900 shadow-sm border border-white/50">
-                    ৳ 45,000
+                    ৳ 12,500
                   </div>
                 )}
               </div>
