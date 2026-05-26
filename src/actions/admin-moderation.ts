@@ -170,7 +170,7 @@ export async function suspendAuction(auctionId: string, reportId: string, reason
     const afterState = beforeState ? { ...beforeState, ...updateData } : null;
 
     batch.update(aRef, updateData);
-    AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', session.user.id, batch).catch(() => {});
+    await AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', session.user.id, batch);
 
     if (auctionData?.sellerId) {
       batch.update(db.collection('users').doc(auctionData.sellerId), {
@@ -229,7 +229,7 @@ export async function adminTakeDownAuction(auctionId: string, reason: string): P
     const afterState = beforeState ? { ...beforeState, ...updateData } : null;
 
     batch.update(aRef, updateData);
-    AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', session.user.id, batch).catch(() => {});
+    await AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', session.user.id, batch);
 
     if (auctionData?.sellerId) {
       batch.update(db.collection('users').doc(auctionData.sellerId), {
@@ -293,7 +293,7 @@ export async function adminDeleteAuction(auctionId: string, reason: string): Pro
     // 2. Delete the auction itself and log in a final atomic batch
     const batch = db.batch();
     batch.delete(aRef);
-    AuditService.logAuctionChange(auctionId, auctionData || null, null, 'DELETE', session.user.id, batch).catch(() => {});
+    await AuditService.logAuctionChange(auctionId, auctionData || null, null, 'DELETE', session.user.id, batch);
 
     // Mandatory Audit Log
     const logRef = db.collection('admin_logs').doc();

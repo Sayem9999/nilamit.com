@@ -83,7 +83,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       const afterState = { ...beforeState, ...updateData };
 
       tx.update(txRef, updateData);
-      AuditService.logEscrowChange(transactionId, beforeState, afterState, 'UPDATE', session.user.id, tx).catch(() => {});
+      await AuditService.logEscrowChange(transactionId, beforeState, afterState, 'UPDATE', session.user.id, tx);
 
       if (!convSnap.exists) {
         const now = new Date();
@@ -172,7 +172,7 @@ export async function confirmItemReceived(transactionId: string): Promise<Servic
       const afterEscrow = { ...beforeEscrow, ...updateEscrow };
 
       tx.update(txRef, updateEscrow);
-      AuditService.logEscrowChange(transactionId, beforeEscrow, afterEscrow, 'UPDATE', session.user.id, tx).catch(() => {});
+      await AuditService.logEscrowChange(transactionId, beforeEscrow, afterEscrow, 'UPDATE', session.user.id, tx);
 
       const aRef = db.collection('auctions').doc(t.auctionId);
       const aSnap = await tx.get(aRef);
@@ -181,7 +181,7 @@ export async function confirmItemReceived(transactionId: string): Promise<Servic
       const afterAuction = beforeAuction ? { ...beforeAuction, ...updateAuction } : null;
 
       tx.update(aRef, updateAuction);
-      AuditService.logAuctionChange(t.auctionId, beforeAuction, afterAuction, 'UPDATE', session.user.id, tx).catch(() => {});
+      await AuditService.logAuctionChange(t.auctionId, beforeAuction, afterAuction, 'UPDATE', session.user.id, tx);
 
       tx.update(db.collection('users').doc(t.sellerId), {
         salesCount: FieldValue.increment(1),
@@ -251,7 +251,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
       const afterAuction = beforeAuction ? { ...beforeAuction, ...updateAuction } : null;
 
       tx.update(aRef, updateAuction);
-      AuditService.logAuctionChange(t.auctionId, beforeAuction, afterAuction, 'UPDATE', session.user.id, tx).catch(() => {});
+      await AuditService.logAuctionChange(t.auctionId, beforeAuction, afterAuction, 'UPDATE', session.user.id, tx);
 
       return { buyerId: t.buyerId as string, auctionId: t.auctionId as string };
     });

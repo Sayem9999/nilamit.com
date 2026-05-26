@@ -110,7 +110,7 @@ export class AuctionWriter {
         tx.update(aRef, updateData);
 
         // Log audit change atomically within the transaction
-        AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', undefined, tx).catch(() => {});
+        await AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', undefined, tx);
 
         log.info('Second chance offer created', { auctionId, secondBidderId, secondAmount });
         return successResponse(undefined);

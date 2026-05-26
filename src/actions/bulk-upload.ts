@@ -26,7 +26,7 @@ export async function processBulkUpload(fileName: string, rows: BulkAuctionInput
   if (userData?.isBanned) {
     return errorResponse(ErrorType.FORBIDDEN, 'Your account is banned for policy violations.', 'BANNED');
   }
-  if (!userData?.isVerifiedSeller && !userData?.emailVerified) {
+  if (!userData?.isVerifiedSeller) {
     return errorResponse(ErrorType.FORBIDDEN, 'Only verified sellers can bulk upload.');
   }
 

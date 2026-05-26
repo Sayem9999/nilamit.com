@@ -46,7 +46,7 @@ export async function raiseDispute(transactionId: string, reason: string): Promi
       const updateData = { status: 'DISPUTED', updatedAt: now };
       const afterState = { ...beforeState, ...updateData };
       tx.update(escrowRef, updateData);
-      AuditService.logEscrowChange(transactionId, beforeState, afterState, 'UPDATE', session.user.id, tx).catch(() => {});
+      await AuditService.logEscrowChange(transactionId, beforeState, afterState, 'UPDATE', session.user.id, tx);
     });
 
     revalidatePath('/dashboard/escrow');
@@ -94,7 +94,7 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
       const afterState = { ...beforeState, ...updateData };
 
       tx.update(escrowRef, updateData);
-      AuditService.logEscrowChange(dispute.transactionId, beforeState, afterState, 'UPDATE', adminSession.user.id, tx).catch(() => {});
+      await AuditService.logEscrowChange(dispute.transactionId, beforeState, afterState, 'UPDATE', adminSession.user.id, tx);
       tx.update(disputeRef, { status: finalDispute, resolution: trimmedResolution, updatedAt: now });
 
       // Refund mirrors the seller-side accounting from refundEscrow so reputation
@@ -165,7 +165,7 @@ export async function adminRefundEscrow(transactionId: string, reason: string): 
       const afterEscrow = { ...beforeEscrow, ...updateEscrow };
 
       tx.update(escrowRef, updateEscrow);
-      AuditService.logEscrowChange(transactionId, beforeEscrow, afterEscrow, 'UPDATE', adminSession.user.id, tx).catch(() => {});
+      await AuditService.logEscrowChange(transactionId, beforeEscrow, afterEscrow, 'UPDATE', adminSession.user.id, tx);
 
       let seller: string | null = null;
       if (escrow.auctionId) {
@@ -178,7 +178,7 @@ export async function adminRefundEscrow(transactionId: string, reason: string): 
         const afterAuction = beforeAuction ? { ...beforeAuction, ...updateAuction } : null;
 
         tx.update(aRef, updateAuction);
-        AuditService.logAuctionChange(escrow.auctionId, beforeAuction, afterAuction, 'UPDATE', adminSession.user.id, tx).catch(() => {});
+        await AuditService.logAuctionChange(escrow.auctionId, beforeAuction, afterAuction, 'UPDATE', adminSession.user.id, tx);
 
         if (seller) {
           tx.update(db.collection('users').doc(seller), {

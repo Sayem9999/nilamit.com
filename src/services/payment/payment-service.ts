@@ -53,7 +53,7 @@ export class PaymentService {
         const afterEscrow = { ...beforeEscrow, ...updateData };
 
         tx.update(escrowDoc.ref, updateData);
-        AuditService.logEscrowChange(escrowDoc.id, beforeEscrow, afterEscrow, 'UPDATE', 'system', tx).catch(() => {});
+        await AuditService.logEscrowChange(escrowDoc.id, beforeEscrow, afterEscrow, 'UPDATE', 'system', tx);
 
         // 4. Update Auction state to SOLD (if it was AWAITING_PAYMENT)
         const aRef = db.collection('auctions').doc(escrowData.auctionId);
@@ -66,7 +66,7 @@ export class PaymentService {
         const afterAuction = beforeAuction ? { ...beforeAuction, ...updateAuction } : null;
 
         tx.update(aRef, updateAuction);
-        AuditService.logAuctionChange(escrowData.auctionId, beforeAuction, afterAuction, 'UPDATE', 'system', tx).catch(() => {});
+        await AuditService.logAuctionChange(escrowData.auctionId, beforeAuction, afterAuction, 'UPDATE', 'system', tx);
 
         // 5. Notify parties via RTDB
         rtdbPush(RTDB_PATHS.userNotifications(escrowData.buyerId), {

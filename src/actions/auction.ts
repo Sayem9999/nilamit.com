@@ -197,7 +197,7 @@ export async function cancelAuction(auctionId: string): Promise<ServiceResponse<
       const afterState = { ...beforeState, ...updateData };
 
       tx.update(ref, updateData);
-      AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx).catch(() => {});
+      await AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx);
     });
 
     revalidatePath('/auctions');
@@ -248,7 +248,7 @@ export async function editAuction(input: unknown): Promise<ServiceResponse<null>
       const afterState = { ...beforeState, ...patch };
 
       tx.update(ref, patch);
-      AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx).catch(() => {});
+      await AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx);
     });
 
     revalidatePath(`/auctions/${auctionId}`);
@@ -325,7 +325,7 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
         });
       }
 
-      AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx).catch(() => {});
+      await AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx);
 
       return origData;
     });
@@ -366,7 +366,7 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
       const afterState = beforeState ? { ...beforeState, ...updateData } : null;
 
       await docRef.update(updateData);
-      AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId).catch(() => {});
+      await AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId);
 
       return errorResponse(ErrorType.INTERNAL, response.error?.message || 'Failed to relist.');
     }

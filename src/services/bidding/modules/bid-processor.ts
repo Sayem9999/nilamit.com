@@ -116,7 +116,7 @@ export class BidProcessor {
         tx.update(auctionRef, updateData);
 
         // Log audit change atomically within the transaction
-        AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx).catch(() => {});
+        await AuditService.logAuctionChange(auctionId, beforeState, afterState, 'UPDATE', userId, tx);
 
         // 5. Side Effects
         BidSideEffects.handleBidSideEffects(auction, bid, existingProxyBidder, newEndTime).catch(e => 
