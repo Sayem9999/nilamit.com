@@ -18,8 +18,8 @@ export default function RetailerPerksPage() {
 
   if (!session?.user) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] text-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-650" />
       </div>
     );
   }
@@ -39,13 +39,13 @@ export default function RetailerPerksPage() {
       : "Basic Bidder";
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-white pt-28 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 pt-28 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <header className="mb-10">
           <Link
             href="/retailer/dashboard"
-            className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-4 transition-colors focus-visible:outline-none"
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors focus-visible:outline-none font-bold"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Seller Hub
           </Link>
@@ -55,10 +55,10 @@ export default function RetailerPerksPage() {
                 <Gavel className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-white flex items-center gap-3">
+                <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3 font-heading">
                   Seller Tiers & Perks
                 </h1>
-                <p className="text-gray-400 text-sm font-medium mt-1">
+                <p className="text-slate-500 text-sm font-medium mt-1">
                   eBay-style performance levels, platform commission discounts, and custom storefront unlocks.
                 </p>
               </div>
@@ -67,19 +67,19 @@ export default function RetailerPerksPage() {
         </header>
 
         {/* Dynamic Progress Indicator */}
-        <section className="bg-[#141417] border border-white/5 rounded-[2rem] p-8 mb-8">
-          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-indigo-400" />
+        <section className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-8 mb-8">
+          <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2 font-heading">
+            <TrendingUp className="w-5 h-5 text-indigo-650" />
             Your Performance Track
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-[#0a0a0b] border border-white/5 rounded-2xl p-6">
-              <p className="text-[10px] font-black uppercase text-gray-500 tracking-wider mb-1">Current Tier</p>
-              <p className="text-xl font-black text-white flex items-center gap-1.5 mt-1">
+            <div className="bg-slate-50 border border-slate-150 rounded-2xl p-6">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Current Tier</p>
+              <p className="text-xl font-black text-slate-900 flex items-center gap-1.5 mt-1 font-heading">
                 {currentTier}
               </p>
-              <p className="text-[10px] text-gray-400 mt-2 font-medium">
+              <p className="text-[10px] text-slate-500 mt-2 font-medium leading-relaxed">
                 {user.isRetailer 
                   ? "Maximum privileges unlocked: bulk sync, pro templates, and lowest commission rates."
                   : user.isVerifiedSeller 
@@ -88,34 +88,34 @@ export default function RetailerPerksPage() {
               </p>
             </div>
 
-            <div className="bg-[#0a0a0b] border border-white/5 rounded-2xl p-6">
-              <p className="text-[10px] font-black uppercase text-gray-500 tracking-wider mb-1">Total Sales Count</p>
-              <p className="text-2xl font-black text-white mt-1">
-                {salesCount} <span className="text-xs text-gray-500 font-bold">Ended Auctions</span>
+            <div className="bg-slate-50 border border-slate-150 rounded-2xl p-6">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Total Sales Count</p>
+              <p className="text-2xl font-black text-slate-900 mt-1 font-heading">
+                {salesCount} <span className="text-xs text-slate-500 font-bold">Ended Auctions</span>
               </p>
-              <div className="w-full bg-white/5 h-2 rounded-full mt-3 overflow-hidden">
+              <div className="w-full bg-slate-200/80 h-2 rounded-full mt-3 overflow-hidden">
                 <div 
                   className="bg-indigo-500 h-full rounded-full transition-all"
                   style={{ width: `${Math.min(100, (salesCount / 10) * 100)}%` }}
                 />
               </div>
-              <p className="text-[9px] text-gray-400 mt-2 font-medium">
+              <p className="text-[9px] text-slate-500 mt-2 font-medium">
                 {salesCount >= 10 ? "Benchmark satisfied for high-volume sales!" : `${10 - salesCount} more sales to reach Retailer standard.`}
               </p>
             </div>
 
-            <div className="bg-[#0a0a0b] border border-white/5 rounded-2xl p-6">
-              <p className="text-[10px] font-black uppercase text-gray-500 tracking-wider mb-1">Feedback Rating</p>
-              <p className="text-2xl font-black text-white mt-1 flex items-baseline gap-1">
+            <div className="bg-slate-50 border border-slate-150 rounded-2xl p-6">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Feedback Rating</p>
+              <p className="text-2xl font-black text-slate-900 mt-1 flex items-baseline gap-1 font-heading">
                 {rating.toFixed(1)} <span className="text-xs text-amber-500">★</span>
               </p>
-              <div className="w-full bg-white/5 h-2 rounded-full mt-3 overflow-hidden">
+              <div className="w-full bg-slate-200/80 h-2 rounded-full mt-3 overflow-hidden">
                 <div 
                   className="bg-amber-500 h-full rounded-full transition-all"
                   style={{ width: `${Math.min(100, (rating / 5) * 100)}%` }}
                 />
               </div>
-              <p className="text-[9px] text-gray-400 mt-2 font-medium">
+              <p className="text-[9px] text-slate-500 mt-2 font-medium">
                 {rating >= 4.5 ? "Top-rated seller status active!" : "Maintain at least 4.5 rating for Top Seller perks."}
               </p>
             </div>
@@ -123,69 +123,69 @@ export default function RetailerPerksPage() {
         </section>
 
         {/* Benefits Comparison Grid */}
-        <section className="bg-[#141417] border border-white/5 rounded-[2rem] p-8 overflow-x-auto">
-          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
+        <section className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-8 overflow-x-auto">
+          <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2 font-heading">
+            <Sparkles className="w-5 h-5 text-indigo-650" />
             Comparison Table & Privileges
           </h3>
 
           <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
-              <tr className="border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-gray-500">
-                <th className="py-4">Feature / Privilege</th>
+              <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/50">
+                <th className="py-4 px-3">Feature / Privilege</th>
                 <th className="py-4 text-center">Basic Bidder</th>
                 <th className="py-4 text-center">Verified Seller</th>
                 <th className="py-4 text-center">Pro Retailer</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-sm font-medium">
-              <tr className="hover:bg-white/5 transition-colors">
-                <td className="py-4 flex items-center gap-2 font-bold text-white">
-                  <Users className="w-4 h-4 text-gray-400" />
+            <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+              <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
+                <td className="py-4 px-3 flex items-center gap-2 font-bold text-slate-900">
+                  <Users className="w-4 h-4 text-slate-400" />
                   Buying & Bidding
                 </td>
-                <td className="py-4 text-center text-emerald-400">Unlimited</td>
-                <td className="py-4 text-center text-emerald-400">Unlimited</td>
-                <td className="py-4 text-center text-emerald-400">Unlimited</td>
+                <td className="py-4 text-center text-emerald-600 font-bold">Unlimited</td>
+                <td className="py-4 text-center text-emerald-600 font-bold">Unlimited</td>
+                <td className="py-4 text-center text-emerald-600 font-bold">Unlimited</td>
               </tr>
-              <tr className="hover:bg-white/5 transition-colors">
-                <td className="py-4 font-bold text-white">Individual Listings limit</td>
-                <td className="py-4 text-center text-gray-400">3 active</td>
-                <td className="py-4 text-center text-indigo-400 font-bold">Unlimited</td>
-                <td className="py-4 text-center text-indigo-400 font-bold">Unlimited</td>
+              <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
+                <td className="py-4 px-3 font-bold text-slate-900">Individual Listings limit</td>
+                <td className="py-4 text-center text-slate-500">3 active</td>
+                <td className="py-4 text-center text-indigo-600 font-bold">Unlimited</td>
+                <td className="py-4 text-center text-indigo-600 font-bold">Unlimited</td>
               </tr>
-              <tr className="hover:bg-white/5 transition-colors">
-                <td className="py-4 font-bold text-white">Bulk Inventory Sync</td>
+              <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
+                <td className="py-4 px-3 font-bold text-slate-900">Bulk Inventory Sync</td>
                 <td className="py-4 text-center text-red-500"><Lock className="w-3.5 h-3.5 mx-auto" /></td>
                 <td className="py-4 text-center text-red-500"><Lock className="w-3.5 h-3.5 mx-auto" /></td>
-                <td className="py-4 text-center text-emerald-400 font-bold">CSV Enabled</td>
+                <td className="py-4 text-center text-emerald-600 font-bold">CSV Enabled</td>
               </tr>
-              <tr className="hover:bg-white/5 transition-colors">
-                <td className="py-4 flex items-center gap-2 font-bold text-white">
-                  <Percent className="w-4 h-4 text-gray-400" />
+              <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
+                <td className="py-4 px-3 flex items-center gap-2 font-bold text-slate-900">
+                  <Percent className="w-4 h-4 text-slate-400" />
                   Commission Rate
                 </td>
-                <td className="py-4 text-center text-gray-400">5.0%</td>
-                <td className="py-4 text-center text-blue-400 font-bold">0% (Promo active)</td>
-                <td className="py-4 text-center text-indigo-400 font-black">0% (Promo active)</td>
+                <td className="py-4 text-center text-slate-500">5.0%</td>
+                <td className="py-4 text-center text-blue-600 font-bold">0% (Promo active)</td>
+                <td className="py-4 text-center text-indigo-600 font-black">0% (Promo active)</td>
               </tr>
-              <tr className="hover:bg-white/5 transition-colors">
-                <td className="py-4 font-bold text-white">Dynamic Storefront Biography</td>
+              <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
+                <td className="py-4 px-3 font-bold text-slate-900">Dynamic Storefront Biography</td>
                 <td className="py-4 text-center text-red-500"><Lock className="w-3.5 h-3.5 mx-auto" /></td>
-                <td className="py-4 text-center text-emerald-400">Enabled</td>
-                <td className="py-4 text-center text-emerald-400">Enabled</td>
+                <td className="py-4 text-center text-emerald-600 font-bold">Enabled</td>
+                <td className="py-4 text-center text-emerald-600 font-bold">Enabled</td>
               </tr>
-              <tr className="hover:bg-white/5 transition-colors">
-                <td className="py-4 font-bold text-white">Escrow Release Speed</td>
-                <td className="py-4 text-center text-gray-400">Standard (7 days)</td>
-                <td className="py-4 text-center text-gray-400">Standard (7 days)</td>
-                <td className="py-4 text-center text-emerald-400 font-bold">Priority (3 days)</td>
+              <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
+                <td className="py-4 px-3 font-bold text-slate-900">Escrow Release Speed</td>
+                <td className="py-4 text-center text-slate-500">Standard (7 days)</td>
+                <td className="py-4 text-center text-slate-500">Standard (7 days)</td>
+                <td className="py-4 text-center text-emerald-600 font-bold">Priority (3 days)</td>
               </tr>
-              <tr className="hover:bg-white/5 transition-colors">
-                <td className="py-4 font-bold text-white">Support SLA</td>
-                <td className="py-4 text-center text-gray-400">Standard</td>
-                <td className="py-4 text-center text-gray-400">Standard</td>
-                <td className="py-4 text-center text-emerald-400 font-bold">Priority Response</td>
+              <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
+                <td className="py-4 px-3 font-bold text-slate-900">Support SLA</td>
+                <td className="py-4 text-center text-slate-500">Standard</td>
+                <td className="py-4 text-center text-slate-500">Standard</td>
+                <td className="py-4 text-center text-emerald-600 font-bold">Priority Response</td>
               </tr>
             </tbody>
           </table>
@@ -193,16 +193,16 @@ export default function RetailerPerksPage() {
 
         {/* dynamic prompt to upgrade */}
         {!user.isRetailer && (
-          <div className="mt-8 p-6 bg-gradient-to-r from-indigo-900/40 to-indigo-800/10 border border-indigo-500/20 rounded-[2rem] flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="mt-8 p-6 bg-indigo-50 border border-indigo-100 rounded-[2rem] flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <h4 className="text-md font-bold text-white mb-1">Unlock Pro Retailer Privileges Instantly</h4>
-              <p className="text-xs text-gray-400 leading-relaxed font-medium">
+              <h4 className="text-md font-bold text-indigo-950 mb-1 font-heading">Unlock Pro Retailer Privileges Instantly</h4>
+              <p className="text-xs text-indigo-855/80 leading-relaxed font-medium">
                 Want to bulk upload inventory via CSV or unlock priority escrow releases? Perform a self-service upgrade on your settings page now.
               </p>
             </div>
             <Link 
               href="/retailer/settings"
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-500/20 transition-all text-center shrink-0"
+              className="px-6 py-3 bg-indigo-650 hover:bg-indigo-750 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md shadow-indigo-650/10 hover:shadow-lg transition-all text-center shrink-0"
             >
               Go to Tier Settings
             </Link>

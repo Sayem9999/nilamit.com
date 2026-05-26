@@ -161,13 +161,13 @@ export default function BulkUploadPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0b] text-white pt-28 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
+    <main className="min-h-screen bg-slate-50 text-slate-800 pt-28 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-5xl mx-auto">
         <header className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
             <Link
               href="/retailer/dashboard"
-              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-4 transition-colors focus-visible:outline-none"
+              className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors focus-visible:outline-none font-bold"
             >
               <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Back to Seller Hub
             </Link>
@@ -177,10 +177,10 @@ export default function BulkUploadPage() {
                 <Gavel className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-white flex items-center gap-3">
+                <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3 font-heading">
                   Bulk Inventory Sync
                 </h1>
-                <p className="text-gray-400 text-sm font-medium mt-1">
+                <p className="text-slate-500 text-sm font-medium mt-1">
                   Upload and synchronize multiple listings instantly via CSV. Built for Pro Retailers.
                 </p>
               </div>
@@ -190,7 +190,7 @@ export default function BulkUploadPage() {
           <button
             type="button"
             onClick={downloadTemplate}
-            className="inline-flex items-center gap-2 px-5 py-3 bg-white text-black hover:bg-gray-200 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-white/5"
+            className="inline-flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-slate-200 shadow-sm"
           >
             <Download className="w-4 h-4" aria-hidden="true" />
             Download CSV template
@@ -203,15 +203,15 @@ export default function BulkUploadPage() {
               aria-labelledby="upload-step-heading"
               className="lg:col-span-1"
             >
-              <div className="bg-[#141417] border border-white/5 p-8 rounded-[2rem] shadow-xl">
+              <div className="bg-white border border-slate-100 shadow-sm p-8 rounded-[2rem]">
                 <div className="mb-6">
                   <h2
                     id="upload-step-heading"
-                    className="text-lg font-bold text-white mb-2"
+                    className="text-lg font-bold text-slate-900 mb-2 font-heading"
                   >
                     1. Upload CSV
                   </h2>
-                  <p className="text-xs text-gray-400 leading-relaxed font-medium">
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
                     Select your custom inventory spreadsheet. Make sure all headings follow the official template format to enable flawless synchronization.
                   </p>
                 </div>
@@ -227,17 +227,17 @@ export default function BulkUploadPage() {
                     onChange={handleFileUpload}
                     className="sr-only"
                   />
-                  <div className="absolute inset-0 border-2 border-dashed border-white/5 rounded-3xl group-hover:border-indigo-500 transition-all flex flex-col items-center justify-center p-6 text-center bg-[#0a0a0b]/40">
+                  <div className="absolute inset-0 border-2 border-dashed border-slate-200 rounded-3xl group-hover:border-indigo-500 hover:bg-slate-50/50 transition-all flex flex-col items-center justify-center p-6 text-center bg-slate-50/20">
                     <div
-                      className="p-4 bg-white/5 rounded-2xl mb-4 group-hover:scale-110 group-hover:bg-indigo-500/10 transition-all"
+                      className="p-4 bg-slate-50 border border-slate-100 rounded-2xl mb-4 group-hover:scale-110 group-hover:bg-indigo-50 transition-all"
                       aria-hidden="true"
                     >
-                      <Upload className="w-8 h-8 text-gray-500 group-hover:text-indigo-400" />
+                      <Upload className="w-8 h-8 text-slate-400 group-hover:text-indigo-650" />
                     </div>
-                    <span className="text-sm font-bold text-white mb-1">
+                    <span className="text-sm font-bold text-slate-700 mb-1">
                       Click to browse
                     </span>
-                    <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">
+                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest">
                       CSV files only
                     </span>
                   </div>
@@ -246,16 +246,16 @@ export default function BulkUploadPage() {
             </section>
 
             <section aria-labelledby="queue-heading" className="lg:col-span-2">
-              <div className="bg-[#141417] border border-white/5 rounded-[2rem] shadow-xl overflow-hidden flex flex-col h-full">
-                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+              <div className="bg-white border border-slate-100 shadow-sm rounded-[2rem] overflow-hidden flex flex-col h-full">
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/20">
                   <h2
                     id="queue-heading"
-                    className="font-bold text-white flex items-center gap-2"
+                    className="font-bold text-slate-900 flex items-center gap-2 font-heading"
                   >
-                    <FileSpreadsheet className="w-5 h-5 text-indigo-400" aria-hidden="true" />
+                    <FileSpreadsheet className="w-5 h-5 text-indigo-600" aria-hidden="true" />
                     Queue Preview ({rows.length} {rows.length === 1 ? 'row' : 'rows'}
                     {invalidCount > 0 && (
-                      <span className="ml-1 text-red-400 text-xs font-bold">
+                      <span className="ml-1 text-red-655 text-xs font-bold">
                         · {invalidCount} invalid
                       </span>
                     )}
@@ -265,7 +265,7 @@ export default function BulkUploadPage() {
                     <button
                       type="button"
                       onClick={() => setRows([])}
-                      className="text-xs font-bold text-red-400 hover:text-red-500 inline-flex items-center gap-1 focus-visible:outline-none"
+                      className="text-xs font-bold text-red-500 hover:text-red-650 inline-flex items-center gap-1 focus-visible:outline-none"
                     >
                       <Trash2 className="w-3 h-3" aria-hidden="true" /> Clear Queue
                     </button>
@@ -278,7 +278,7 @@ export default function BulkUploadPage() {
                       <caption className="sr-only">
                         Items queued for bulk upload, with per-row validation status
                       </caption>
-                      <thead className="sticky top-0 bg-[#0a0a0b] text-[10px] font-black uppercase tracking-widest text-gray-500 border-b border-white/5">
+                      <thead className="sticky top-0 bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
                         <tr>
                           <th scope="col" className="px-4 py-4 w-10">#</th>
                           <th scope="col" className="px-6 py-4">Title</th>
@@ -287,37 +287,37 @@ export default function BulkUploadPage() {
                           <th scope="col" className="px-6 py-4">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5 text-sm font-medium">
+                      <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
                         {rows.map(({ item, error }, i) => (
                           <tr
                             key={i}
-                            className={`transition-colors ${
-                              error ? 'bg-red-500/5 hover:bg-red-500/10' : 'hover:bg-white/[0.02]'
+                            className={`transition-colors border-b border-slate-100 text-slate-700 ${
+                              error ? 'bg-red-50 hover:bg-red-100/50' : 'hover:bg-slate-50/30'
                             }`}
                           >
-                            <td className="px-4 py-4 text-xs text-gray-500 font-mono">
+                            <td className="px-4 py-4 text-xs text-slate-400 font-mono">
                               {i + 1}
                             </td>
-                            <td className="px-6 py-4 text-sm font-bold text-white truncate max-w-[200px]">
-                              {item.title || <span className="italic text-gray-500">(missing)</span>}
+                            <td className="px-6 py-4 text-sm font-bold text-slate-900 truncate max-w-[200px]">
+                              {item.title || <span className="italic text-slate-400">(missing)</span>}
                             </td>
-                            <td className="px-6 py-4 text-xs font-medium text-gray-400 uppercase tracking-wide">
+                            <td className="px-6 py-4 text-xs font-medium text-slate-400 uppercase tracking-wide">
                               {item.category}
                             </td>
-                            <td className="px-6 py-4 text-sm font-black text-indigo-400">
+                            <td className="px-6 py-4 text-sm font-black text-indigo-650">
                               ৳{item.startingPrice}
                             </td>
                             <td className="px-6 py-4">
                               {error ? (
                                 <span
-                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full"
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full"
                                   title={error}
                                 >
                                   <AlertCircle className="w-3 h-3 shrink-0" aria-hidden="true" />
                                   <span className="truncate max-w-[150px]">{error}</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                                   <CheckCircle2 className="w-3 h-3 shrink-0" aria-hidden="true" />
                                   Valid
                                 </span>
@@ -330,12 +330,12 @@ export default function BulkUploadPage() {
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full p-12 text-center">
                       <div
-                        className="p-4 bg-[#0a0a0b] rounded-full mb-4 border border-white/5"
+                        className="p-4 bg-slate-50 rounded-full mb-4 border border-slate-150"
                         aria-hidden="true"
                       >
-                        <FileSpreadsheet className="w-12 h-12 text-gray-700" />
+                        <FileSpreadsheet className="w-12 h-12 text-slate-400" />
                       </div>
-                      <p className="text-gray-400 text-sm font-medium">
+                      <p className="text-slate-400 text-sm font-medium">
                         Your upload queue is currently empty.
                       </p>
                     </div>
@@ -343,11 +343,11 @@ export default function BulkUploadPage() {
                 </div>
 
                 {rows.length > 0 && (
-                  <div className="p-6 bg-white/[0.01] border-t border-white/5">
+                  <div className="p-6 bg-slate-50/20 border-t border-slate-100">
                     {invalidCount > 0 && (
                       <p
                         role="status"
-                        className="mb-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-3 leading-relaxed font-medium"
+                        className="mb-3 text-xs text-red-650 bg-red-50 border border-red-200 rounded-xl p-3 leading-relaxed font-medium"
                       >
                         <strong>{invalidCount}</strong>{' '}
                         {invalidCount === 1 ? 'row has' : 'rows have'} validation errors and
@@ -358,7 +358,7 @@ export default function BulkUploadPage() {
                       type="button"
                       onClick={handleProcess}
                       disabled={isPending || validRows.length === 0}
-                      className="w-full py-4 bg-white text-black hover:bg-gray-200 disabled:bg-gray-700 disabled:text-gray-400 disabled:cursor-not-allowed rounded-2xl font-bold text-sm transition-all shadow-xl shadow-white/5 flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed rounded-2xl font-bold text-sm transition-all shadow-md shadow-indigo-600/10 hover:shadow-lg flex items-center justify-center gap-2"
                     >
                       {isPending ? (
                         <Loader2
@@ -374,7 +374,7 @@ export default function BulkUploadPage() {
                           ? 'No valid rows to sync'
                           : `Sync ${validRows.length} ${validRows.length === 1 ? 'item' : 'items'} to marketplace`}
                     </button>
-                    <p className="text-[10px] text-gray-500 text-center mt-3 font-medium">
+                    <p className="text-[10px] text-slate-500 text-center mt-3 font-medium">
                       By proceeding, you agree to our Professional Retailer Policy. All listings will
                       be publicly active immediately.
                     </p>
@@ -388,47 +388,47 @@ export default function BulkUploadPage() {
             aria-labelledby="sync-result-heading"
             className="max-w-2xl mx-auto"
           >
-            <div className="bg-[#141417] border border-white/5 rounded-[2rem] shadow-2xl p-10 text-center">
+            <div className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-10 text-center text-slate-800">
               <div
-                className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/5"
+                className="w-20 h-20 bg-emerald-50 border border-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm"
                 aria-hidden="true"
               >
-                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                <CheckCircle2 className="w-10 h-10 text-emerald-600" />
               </div>
               <h2
                 id="sync-result-heading"
-                className="text-3xl font-black text-white mb-2"
+                className="text-3xl font-black text-slate-900 mb-2 font-heading"
               >
                 Sync Complete
               </h2>
-              <p className="text-gray-400 mb-8 font-medium">
+              <p className="text-slate-500 mb-8 font-medium">
                 The spreadsheet has been synchronized with the active Nilamit ledger:
               </p>
 
               <dl className="grid grid-cols-2 gap-4 mb-8">
-                <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl">
-                  <dd className="text-3xl font-black text-emerald-400 mb-1">
+                <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-3xl">
+                  <dd className="text-3xl font-black text-emerald-600 mb-1 font-heading">
                     {results.success}
                   </dd>
-                  <dt className="text-[10px] font-black uppercase tracking-widest text-emerald-500/80">
+                  <dt className="text-[10px] font-black uppercase tracking-widest text-emerald-700/80">
                     Successful
                   </dt>
                 </div>
                 <div
                   className={`p-6 border rounded-3xl ${
                     results.failures > 0
-                      ? 'bg-red-500/5 border-red-500/20'
-                      : 'bg-white/5 border-white/5'
+                      ? 'bg-red-50 border-red-200 text-red-700'
+                      : 'bg-slate-50 border-slate-150 text-slate-700'
                   }`}
                 >
                   <dd
-                    className={`text-3xl font-black ${
-                      results.failures > 0 ? 'text-red-400' : 'text-gray-500'
+                    className={`text-3xl font-black font-heading ${
+                      results.failures > 0 ? 'text-red-600' : 'text-slate-500'
                     }`}
                   >
                     {results.failures}
                   </dd>
-                  <dt className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                  <dt className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                     Failed
                   </dt>
                 </div>
@@ -438,11 +438,11 @@ export default function BulkUploadPage() {
                 <div
                   role="region"
                   aria-labelledby="error-log-heading"
-                  className="text-left mb-8 max-h-48 overflow-auto bg-red-500/5 rounded-2xl border border-red-500/20 p-4"
+                  className="text-left mb-8 max-h-48 overflow-auto bg-red-50 rounded-2xl border border-red-150 p-4"
                 >
                   <h3
                     id="error-log-heading"
-                    className="text-[10px] font-black uppercase tracking-widest text-red-400/80 mb-2"
+                    className="text-[10px] font-black uppercase tracking-widest text-red-600/80 mb-2"
                   >
                     Error log
                   </h3>
@@ -450,7 +450,7 @@ export default function BulkUploadPage() {
                     {results.errors.map((err, i) => (
                       <li
                         key={i}
-                        className="text-[11px] text-red-400 flex gap-2 font-medium"
+                        className="text-[11px] text-red-655 flex gap-2 font-medium"
                       >
                         <AlertCircle
                           className="w-3.5 h-3.5 mt-0.5 flex-shrink-0"
@@ -468,7 +468,7 @@ export default function BulkUploadPage() {
               <div className="flex flex-col gap-3">
                 <Link
                   href="/retailer/dashboard"
-                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-indigo-500/20"
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-sm transition-all shadow-md shadow-indigo-600/10 hover:shadow-lg"
                 >
                   Return to Seller Hub
                 </Link>
@@ -478,7 +478,7 @@ export default function BulkUploadPage() {
                     setResults(null);
                     setRows([]);
                   }}
-                  className="w-full py-4 text-gray-400 hover:text-white font-bold text-sm transition-all"
+                  className="w-full py-4 text-slate-400 hover:text-slate-800 font-bold text-sm transition-all"
                 >
                   Upload another file
                 </button>
