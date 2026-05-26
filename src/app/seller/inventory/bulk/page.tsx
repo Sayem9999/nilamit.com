@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  ArrowLeft,
   Download,
   Trash2,
   Gavel,
@@ -161,17 +160,10 @@ export default function BulkUploadPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 pt-28 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
+    <main className="min-h-screen bg-slate-50 text-slate-800 pt-36 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-5xl mx-auto">
         <header className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <Link
-              href="/retailer/dashboard"
-              className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-4 transition-colors focus-visible:outline-none font-bold"
-            >
-              <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Back to Seller Hub
-            </Link>
-            
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/10 shrink-0">
                 <Gavel className="w-6 h-6 text-white" />

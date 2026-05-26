@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers/Providers";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { MerchantSubNav } from "@/components/layout/MerchantSubNav";
 import { env, validateEnv } from "@/lib/env";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
@@ -186,6 +187,7 @@ export default async function RootLayout({
               }}
             />
             <Navbar />
+            <MerchantSubNav />
             <main className="min-h-screen bg-gray-50/50">{children}</main>
             <Footer />
           </Providers>
