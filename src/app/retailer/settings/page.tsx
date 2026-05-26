@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { updateRetailerSettings, toggleRetailerUpgrade } from "@/actions/retailer-settings";
+import { updateProfile } from "@/actions/user";
 import {
   Gavel,
   ShieldCheck,
@@ -13,6 +14,8 @@ import {
   Sparkles,
   Loader2,
   CheckCircle,
+  Camera,
+  Trash2
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -28,9 +31,14 @@ export default function RetailerSettingsPage() {
   const [nagadNumber, setNagadNumber] = useState("");
   const [bio, setBio] = useState("");
 
+  // Storefront Banner Photo Upload State
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isRemovingBanner, setIsRemovingBanner] = useState(false);
+  const bannerFileInputRef = useRef<HTMLInputElement>(null);
+
   // Hydrate form once session loads
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect */
+     
     if (session?.user) {
       /* eslint-disable @typescript-eslint/no-explicit-any */
       const u = session.user as any;
@@ -41,13 +49,13 @@ export default function RetailerSettingsPage() {
       setBio(u.bio || "");
       /* eslint-enable @typescript-eslint/no-explicit-any */
     }
-    /* eslint-enable react-hooks/set-state-in-effect */
+     
   }, [session]);
 
   if (!session?.user) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] text-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
       </div>
     );
   }
@@ -93,6 +101,57 @@ export default function RetailerSettingsPage() {
     });
   };
 
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const rawFile = files[0];
+      setIsUploadingBanner(true);
+
+      const { compressImage } = await import("@/lib/image-optimization");
+      const { uploadFile } = await import("@/lib/uploadthing");
+
+      const file = await compressImage(rawFile, { maxWidth: 1200, maxHeight: 400, quality: 0.85 });
+      const publicUrl = await uploadFile(file, 'auction');
+
+      const res = await updateProfile({ banner: publicUrl });
+      if (res.success) {
+        await update();
+        toast.success("Storefront banner cover updated!");
+      } else {
+        toast.error(res.error?.message || "Failed to update banner");
+      }
+    } catch (error) {
+      console.error("[Storefront Banner] Upload failed:", error);
+      toast.error("Failed to upload banner. Please try again.");
+    } finally {
+      setIsUploadingBanner(false);
+      if (bannerFileInputRef.current) {
+        bannerFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveBanner = async () => {
+    if (!session?.user?.banner) return;
+    try {
+      setIsRemovingBanner(true);
+      const res = await updateProfile({ banner: null });
+      if (res.success) {
+        await update();
+        toast.success("Storefront banner cover removed.");
+      } else {
+        toast.error(res.error?.message || "Failed to remove banner");
+      }
+    } catch (error) {
+      console.error("[Storefront Banner] Remove failed:", error);
+      toast.error("Failed to remove storefront banner.");
+    } finally {
+      setIsRemovingBanner(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 pt-36 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-4xl mx-auto">
@@ -133,6 +192,80 @@ export default function RetailerSettingsPage() {
           {/* Main Forms */}
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Storefront Cover Banner Card */}
+              <div className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-8 space-y-6">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-slate-900 font-heading">
+                  <Camera className="w-5 h-5 text-indigo-550" />
+                  Billboard Cover Banner
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Upload a high-density storefront billboard banner. Resizes perfectly across web & mobile views.
+                </p>
+
+                <div 
+                  onClick={() => !isUploadingBanner && !isRemovingBanner && bannerFileInputRef.current?.click()}
+                  className="group relative w-full h-32 md:h-44 rounded-2xl bg-slate-50 border border-dashed border-slate-200 overflow-hidden flex items-center justify-center cursor-pointer transition-all hover:border-indigo-500"
+                >
+                  <input
+                    type="file"
+                    ref={bannerFileInputRef}
+                    onChange={handleBannerUpload}
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isUploadingBanner || isRemovingBanner}
+                  />
+
+                  {user.banner ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={user.banner}
+                      alt="Storefront Banner"
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-indigo-700 opacity-90 flex flex-col items-center justify-center p-4 text-center text-white">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-2">
+                        <Camera className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-widest text-white">No Banner Uploaded</span>
+                      <span className="text-[10px] text-white/80 mt-1">Click to upload custom cover photo (1200 x 400 suggested)</span>
+                    </div>
+                  )}
+
+                  {/* Change photo hover overlay */}
+                  {!isUploadingBanner && !isRemovingBanner && user.banner && (
+                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Camera className="w-6 h-6 text-white" />
+                      <span className="text-xs font-black uppercase tracking-widest">Change Banner Image</span>
+                    </div>
+                  )}
+
+                  {/* Uploading loading overlay */}
+                  {(isUploadingBanner || isRemovingBanner) && (
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 text-white z-40">
+                      <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-indigo-200">
+                        {isRemovingBanner ? "Removing..." : "Uploading Banner..."}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {user.banner && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleRemoveBanner}
+                      disabled={isRemovingBanner || isUploadingBanner}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 text-[10px] font-black uppercase tracking-widest rounded-full transition-all border border-red-200"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Remove Banner
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Profile Details Card */}
               <div className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-8 space-y-6">
                 <h3 className="text-lg font-bold flex items-center gap-2 text-slate-900 font-heading">
