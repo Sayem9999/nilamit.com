@@ -89,6 +89,26 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  async redirects() {
+    return [
+      {
+        source: '/seller/inventory/:path*',
+        destination: '/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/seller/performance/:path*',
+        destination: '/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/retailer/:path*',
+        destination: '/dashboard',
+        permanent: false,
+      },
+    ];
+  },
+
   async rewrites() {
     return [
       {

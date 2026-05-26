@@ -435,16 +435,6 @@ export default async function DashboardPage({
                       </span>
                     )}
                   </Link>
-
-                  {session.user.isRetailer && (
-                    <Link
-                      href="/seller/inventory/bulk"
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900 group"
-                    >
-                      <Package className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
-                      <span>Bulk Upload</span>
-                    </Link>
-                  )}
                 </div>
               </div>
 
