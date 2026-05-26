@@ -27,6 +27,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AuctionDetailTabs } from "@/components/auction/AuctionDetailTabs";
 import { canReviewAuction } from "@/actions/review";
 import { getAuctionQuestions } from "@/actions/qa";
+import { getSystemConfig } from "@/actions/admin-content";
 import { QnaSection } from "@/components/auction/QnaSection";
 // Static imports — `dynamic({ ssr: false })` is no longer permitted from
 // Server Components in Next.js 16, and these are all client components so
@@ -119,13 +120,14 @@ export default async function AuctionDetailPage({ params }: Props) {
   const t = await getTranslations("Auction");
   if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
 
-  const [bidsRes, watchedRes, chatRes, reviewRes, questionsRes, relatedRes] = await Promise.all([
+  const [bidsRes, watchedRes, chatRes, reviewRes, questionsRes, relatedRes, configRes] = await Promise.all([
     getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     isWatched(id).catch((e) => { log.error('[AuctionDetail] isWatched failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed') as unknown as Awaited<ReturnType<typeof isWatched>>; }),
     getAuctionChat(id).catch((e) => { log.error('[AuctionDetail] getAuctionChat failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     canReviewAuction(id).catch((e) => { log.error('[AuctionDetail] canReviewAuction failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     getAuctionQuestions(id).catch((e) => { log.error('[AuctionDetail] getAuctionQuestions failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
     getAuctions({ category: auction.category, status: AuctionStatus.ACTIVE, limit: 5 }).catch((e) => { log.error('[AuctionDetail] getRelatedAuctions failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
+    getSystemConfig().catch((e) => { log.error('[AuctionDetail] getSystemConfig failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
   ]);
 
   const bids = (bidsRes.success && bidsRes.data ? bidsRes.data : []) as (Bid & { bidder: { id: string, name: string, image: string | null } })[];
@@ -136,6 +138,7 @@ export default async function AuctionDetailPage({ params }: Props) {
   const relatedAuctions = (relatedRes.success && relatedRes.data?.auctions 
     ? relatedRes.data.auctions.filter(a => a.id !== id) 
     : []).slice(0, 3) as AuctionWithSeller[];
+  const systemConfig = (configRes.success && configRes.data) ? configRes.data : null;
   const tLoc = await getTranslations("Locations");
 
   const bids24h = bids.filter((b) => {
@@ -249,22 +252,31 @@ export default async function AuctionDetailPage({ params }: Props) {
           </div>
 
           {/* eBay Multi-Tab Details Switcher */}
-          <AuctionDetailTabs
-            description={auction.description}
-            location={auction.location || undefined}
-            seller={{
-              id: auction.sellerId,
-              name: auction.seller?.name,
-              image: auction.seller?.image,
-              rating: auction.seller?.rating,
-              ratingCount: auction.seller?.ratingCount,
-              userLevel: auction.seller?.userLevel,
-              winningStreak: auction.seller?.winningStreak,
-              isVerifiedSeller: !!auction.seller?.isVerifiedSeller,
-              isTopRated: !!auction.seller?.isTopRated,
-            }}
-            commissionRate={auction.commissionRate}
-          />
+          {(() => {
+            const resolvedCommissionRate = (auction.commissionRate !== undefined && auction.commissionRate !== null)
+              ? auction.commissionRate
+              : (systemConfig
+                ? (systemConfig.commissionPercentageEnabled !== false ? (systemConfig.commissionPercentage ?? 5) : 0)
+                : 5);
+            return (
+              <AuctionDetailTabs
+                description={auction.description}
+                location={auction.location || undefined}
+                seller={{
+                  id: auction.sellerId,
+                  name: auction.seller?.name,
+                  image: auction.seller?.image,
+                  rating: auction.seller?.rating,
+                  ratingCount: auction.seller?.ratingCount,
+                  userLevel: auction.seller?.userLevel,
+                  winningStreak: auction.seller?.winningStreak,
+                  isVerifiedSeller: !!auction.seller?.isVerifiedSeller,
+                  isTopRated: !!auction.seller?.isTopRated,
+                }}
+                commissionRate={resolvedCommissionRate}
+              />
+            );
+          })()}
 
           {/* Bid History */}
           <BidHistory
@@ -429,19 +441,20 @@ export default async function AuctionDetailPage({ params }: Props) {
           </div>
 
           {/* Seller Info */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-6">
-            <h3 className="font-heading font-semibold text-sm text-gray-700 mb-4">
+          <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4">
+            <h3 className="font-heading font-semibold text-sm text-gray-700 mb-2">
               {t("seller")}
             </h3>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+            
+            <Link href={`/seller/${auction.sellerId}`} className="group flex items-center gap-3 hover:opacity-95">
+              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center shrink-0">
                 {auction.seller?.image ? (
                   <Image
                     src={getProxiedAvatarUrl(auction.seller.image) || ""}
                     alt={auction.seller.name || t("sellerFallback")}
                     width={48}
                     height={48}
-                    className="w-12 h-12 rounded-full object-cover"
+                    className="w-12 h-12 rounded-full object-cover transition-transform group-hover:scale-105"
                     referrerPolicy="no-referrer"
                     unoptimized
                   />
@@ -450,79 +463,85 @@ export default async function AuctionDetailPage({ params }: Props) {
                 )}
               </div>
               <div>
-                <p className="font-bold text-gray-900 flex items-center gap-1.5">
+                <p className="font-bold text-gray-900 flex items-center gap-1.5 group-hover:text-indigo-650 transition-colors">
                   {auction.seller?.name || t("sellerFallback")}
                   {auction.seller?.isVerifiedSeller && (
                     <Shield className="w-4 h-4 text-blue-500 fill-blue-500/10" />
                   )}
                   {auction.seller?.isTopRated && (
-                    <div className="flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
+                    <span className="flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 shrink-0">
                       <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                       <span className="text-[10px] font-bold text-amber-700">TOP RATED</span>
-                    </div>
+                    </span>
                   )}
                 </p>
-                
-                {/* Contact Gating Logic */}
-                {auction.status === AuctionStatus.SOLD && (session?.user?.id === auction.winnerId || session?.user?.id === auction.sellerId) && (
-                  <div className="mt-3 space-y-2">
-                    {session?.user?.id === auction.sellerId && (
-                      <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                        <p className="text-[10px] font-bold text-amber-800 uppercase mb-2">Buyer not responding?</p>
-                        <SecondChanceOfferButton auctionId={id} />
-                      </div>
-                    )}
-                    <GatedContactInfo 
-                      status={auction.escrowTransaction?.status}
-                      transactionId={auction.escrowTransaction?.id}
-                      label={t("pickupLocation")}
-                      value={auction.location || "N/A"}
-                      type="address"
-                      isVerified={auction.seller?.isVerifiedSeller}
-                    />
-
-                    {/* Coordination Chat */}
-                    {chat ? (
-                      <div className="mt-6 space-y-4">
-                        <ChatInterface 
-                          auctionId={id}
-                          conversationId={chat.id}
-                          initialMessages={chat.messages}
-                          recipientName={
-                            session?.user?.id === chat.buyerId 
-                              ? chat.auction.seller.name || t("sellerFallback")
-                              : chat.auction.winner?.name || t("buyerFallback")
-                          }
-                          recipientImage={
-                            session?.user?.id === chat.buyerId 
-                              ? chat.auction.seller.image
-                              : chat.auction.winner?.image
-                          }
-                        />
-                        <Link
-                          href={`/dashboard/coordination/${id}`}
-                          className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition text-xs text-center shadow-md shadow-blue-500/10"
-                        >
-                          Open Full Coordination Page
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="mt-6">
-                        <StartChatButton auctionId={id} />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex flex-col gap-2 mt-2">
-                  <UserBadge
-                    level={auction.seller?.userLevel || 1}
-                    streak={auction.seller?.winningStreak || 0}
-                    reputation={auction.seller?.rating || 0}
-                    ratingCount={auction.seller?.ratingCount || 0}
-                  />
-                </div>
+                <span className="text-[10px] text-indigo-600 font-black tracking-wide block mt-0.5">
+                  View Storefront →
+                </span>
               </div>
+            </Link>
+
+            {/* Seller Badges & Gating */}
+            <div className="space-y-3">
+              <div className="flex flex-col gap-2">
+                <UserBadge
+                  level={auction.seller?.userLevel || 1}
+                  streak={auction.seller?.winningStreak || 0}
+                  reputation={auction.seller?.rating || 0}
+                  ratingCount={auction.seller?.ratingCount || 0}
+                />
+              </div>
+
+              {/* Contact Gating Logic */}
+              {auction.status === AuctionStatus.SOLD && (session?.user?.id === auction.winnerId || session?.user?.id === auction.sellerId) && (
+                <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                  {session?.user?.id === auction.sellerId && (
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
+                      <p className="text-[10px] font-bold text-amber-800 uppercase mb-2">Buyer not responding?</p>
+                      <SecondChanceOfferButton auctionId={id} />
+                    </div>
+                  )}
+                  <GatedContactInfo 
+                    status={auction.escrowTransaction?.status}
+                    transactionId={auction.escrowTransaction?.id}
+                    label={t("pickupLocation")}
+                    value={auction.location || "N/A"}
+                    type="address"
+                    isVerified={auction.seller?.isVerifiedSeller}
+                  />
+
+                  {/* Coordination Chat */}
+                  {chat ? (
+                    <div className="mt-6 space-y-4">
+                      <ChatInterface 
+                        auctionId={id}
+                        conversationId={chat.id}
+                        initialMessages={chat.messages}
+                        recipientName={
+                          session?.user?.id === chat.buyerId 
+                            ? chat.auction.seller.name || t("sellerFallback")
+                            : chat.auction.winner?.name || t("buyerFallback")
+                        }
+                        recipientImage={
+                          session?.user?.id === chat.buyerId 
+                            ? chat.auction.seller.image
+                            : chat.auction.winner?.image
+                        }
+                      />
+                      <Link
+                        href={`/dashboard/coordination/${id}`}
+                        className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition text-xs text-center shadow-md shadow-blue-500/10"
+                      >
+                        Open Full Coordination Page
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="mt-6">
+                      <StartChatButton auctionId={id} />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

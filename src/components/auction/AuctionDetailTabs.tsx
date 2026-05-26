@@ -41,9 +41,10 @@ export function AuctionDetailTabs({
   const [activeTab, setActiveTab] = useState<"description" | "shipping" | "seller">("description");
 
   // Calculate positive feedback percentage based on rating (out of 5)
-  const feedbackPercentage = seller.rating 
+  const hasReviews = typeof seller.ratingCount === 'number' && seller.ratingCount > 0;
+  const feedbackPercentage = hasReviews && seller.rating 
     ? Math.min(100, Math.round((seller.rating / 5) * 100)) 
-    : 100;
+    : null;
 
   return (
     <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-premium">
@@ -198,7 +199,7 @@ export function AuctionDetailTabs({
               <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm text-center space-y-1">
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Positive Feedback</span>
                 <span className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight block">
-                  {feedbackPercentage}%
+                  {feedbackPercentage !== null ? `${feedbackPercentage}%` : "—"}
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold block">
                   {seller.ratingCount || 0} reviews
@@ -253,7 +254,9 @@ export function AuctionDetailTabs({
                 <div>
                   <h4 className="font-bold text-gray-900 text-sm">Trusted Shop Standing</h4>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    This seller satisfies all platform response time guidelines and dispute handling measures.
+                    {hasReviews
+                      ? "This seller satisfies all platform response time guidelines and dispute handling measures."
+                      : "New seller: This merchant has not received any reviews yet. Secure trade guaranteed via Nilamit Escrow."}
                   </p>
                 </div>
               </div>
@@ -263,14 +266,14 @@ export function AuctionDetailTabs({
                   <Star 
                     key={star} 
                     className={`w-5 h-5 ${
-                      star <= (seller.rating || 5) 
+                      hasReviews && star <= (seller.rating || 5) 
                         ? "text-amber-400 fill-amber-400" 
                         : "text-gray-200"
                     }`} 
                   />
                 ))}
                 <span className="text-xs font-bold text-gray-800 ml-1.5">
-                  ({seller.rating || 5.0})
+                  ({hasReviews ? (seller.rating || 5.0).toFixed(1) : "0.0"})
                 </span>
               </div>
             </div>
