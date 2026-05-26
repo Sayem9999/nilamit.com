@@ -13,7 +13,11 @@ const BAYESIAN_CONFIDENCE   = 5;
  */
 export async function recalculateUserRating(userId: string): Promise<{ rating: number; count: number }> {
   try {
-    const reviewsSnap = await db.collection('reviews').where('toId', '==', userId).get();
+    const reviewsSnap = await db.collection('reviews')
+      .where('toId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .get();
 
     const ratings = reviewsSnap.docs
       .map(d => d.data().rating)
