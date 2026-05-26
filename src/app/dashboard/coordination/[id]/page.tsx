@@ -41,10 +41,44 @@ export default async function CoordinationPage({
   const auction = auctionRes.data;
 
   const escrowSnap = await db.collection('escrowTransactions').doc(convData.auctionId).get();
-  const escrow = (escrowSnap.exists ? escrowSnap.data() : null) as EscrowTransaction | null;
+  let escrow: EscrowTransaction | null = null;
+  if (escrowSnap.exists) {
+    const rawEscrow = escrowSnap.data() as { createdAt?: unknown; updatedAt?: unknown; [key: string]: unknown };
+    escrow = {
+      ...rawEscrow,
+      id: escrowSnap.id,
+      createdAt: rawEscrow.createdAt
+        ? (typeof (rawEscrow.createdAt as unknown as { toDate?: () => Date }).toDate === 'function'
+            ? (rawEscrow.createdAt as unknown as { toDate: () => Date }).toDate()
+            : new Date(rawEscrow.createdAt as unknown as string | number | Date))
+        : new Date(),
+      updatedAt: rawEscrow.updatedAt
+        ? (typeof (rawEscrow.updatedAt as unknown as { toDate?: () => Date }).toDate === 'function'
+            ? (rawEscrow.updatedAt as unknown as { toDate: () => Date }).toDate()
+            : new Date(rawEscrow.updatedAt as unknown as string | number | Date))
+        : new Date(),
+    } as EscrowTransaction;
+  }
 
   const disputeSnap = await db.collection('disputes').where('transactionId', '==', escrowSnap.id).get();
-  const dispute = (disputeSnap.empty ? null : disputeSnap.docs[0].data()) as Dispute | null;
+  let dispute: Dispute | null = null;
+  if (!disputeSnap.empty) {
+    const rawDispute = disputeSnap.docs[0].data() as { createdAt?: unknown; updatedAt?: unknown; [key: string]: unknown };
+    dispute = {
+      ...rawDispute,
+      id: disputeSnap.docs[0].id,
+      createdAt: rawDispute.createdAt
+        ? (typeof (rawDispute.createdAt as unknown as { toDate?: () => Date }).toDate === 'function'
+            ? (rawDispute.createdAt as unknown as { toDate: () => Date }).toDate()
+            : new Date(rawDispute.createdAt as unknown as string | number | Date))
+        : new Date(),
+      updatedAt: rawDispute.updatedAt
+        ? (typeof (rawDispute.updatedAt as unknown as { toDate?: () => Date }).toDate === 'function'
+            ? (rawDispute.updatedAt as unknown as { toDate: () => Date }).toDate()
+            : new Date(rawDispute.updatedAt as unknown as string | number | Date))
+        : new Date(),
+    } as Dispute;
+  }
 
   const messagesSnap = await db.collection('messages').where('conversationId', '==', id).orderBy('createdAt', 'asc').get();
   const messages = messagesSnap.docs.map(d => toMessage(d.id, d.data()));

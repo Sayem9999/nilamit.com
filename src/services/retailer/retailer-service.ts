@@ -13,6 +13,8 @@ export interface RetailerStats {
   disputeRate: number;
   shillReports: number;
   dailyRevenue: { date: string; amount: number }[];
+  awaitingPayment: number;
+  openDisputes: number;
 }
 
 export class RetailerService {
@@ -70,6 +72,8 @@ export class RetailerService {
         disputeRate: soldAuctions.length > 0 ? (disputes / soldAuctions.length) * 100 : 0,
         shillReports: shillSnap.size,
         dailyRevenue,
+        awaitingPayment: escrows.filter(e => e.status === 'PENDING').length,
+        openDisputes: disputes,
       });
     } catch (_error) {
       return errorResponse(ErrorType.INTERNAL, 'Failed to fetch retailer stats');

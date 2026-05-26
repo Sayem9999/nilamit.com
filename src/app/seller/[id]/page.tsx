@@ -52,11 +52,19 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
     image: sellerData.image,
     isVerifiedSeller: sellerData.isVerifiedSeller,
     reputationScore: sellerData.rating,
-    createdAt: sellerData.createdAt,
+    createdAt: sellerData.createdAt
+      ? (typeof (sellerData.createdAt as unknown as { toDate?: () => Date }).toDate === 'function'
+          ? (sellerData.createdAt as unknown as { toDate: () => Date }).toDate()
+          : new Date(sellerData.createdAt as unknown as string | number | Date))
+      : new Date(),
     winningStreak: sellerData.winningStreak,
     userLevel: sellerData.userLevel,
     ratingCount: sellerData.ratingCount,
-    emailVerified: sellerData.emailVerified,
+    emailVerified: sellerData.emailVerified
+      ? (typeof (sellerData.emailVerified as unknown as { toDate?: () => Date }).toDate === 'function'
+          ? (sellerData.emailVerified as unknown as { toDate: () => Date }).toDate()
+          : new Date(sellerData.emailVerified as unknown as string | number | Date))
+      : null,
     isBanned: sellerData.isBanned,
     isTopRated: sellerData.isTopRated,
     isRetailer: !!sellerData.isRetailer,
@@ -102,7 +110,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
         userLevel: sellerData.userLevel,
         rating: seller.reputationScore,
         ratingCount: seller.ratingCount,
-        emailVerified: sellerData.emailVerified,
+        emailVerified: seller.emailVerified,
         isBanned: sellerData.isBanned,
         salesCount: seller.salesCount,
         defectCount: seller.defectCount,

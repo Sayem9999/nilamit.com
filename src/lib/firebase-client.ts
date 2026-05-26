@@ -132,6 +132,7 @@ export async function ensureFirebaseAuth(): Promise<void> {
 
       if (!res.ok) {
         log.warn('[Firebase Client] Could not get custom token — private RTDB access unavailable.');
+        _authPromise = null; // Clear cache on failure to allow future retries
         return;
       }
       const { token } = await res.json() as { token: string };
@@ -142,6 +143,7 @@ export async function ensureFirebaseAuth(): Promise<void> {
       log.warn('[Firebase Client] Custom token authentication failed. Client auth not fully configured or enabled.', {
         error: err instanceof Error ? err.message : String(err)
       });
+      _authPromise = null; // Clear cache on failure to allow future retries
     }
   })();
 
