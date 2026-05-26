@@ -56,6 +56,40 @@ export function HomeContent({
 }: HomeContentProps) {
   const t = useTranslations("Home");
 
+  const commissionEnabled = systemConfig?.commissionPercentageEnabled ?? true;
+  const customPercentage = systemConfig?.commissionPercentage;
+  const escrowRequired = systemConfig?.escrowRequired ?? true;
+
+  let dynamicCommissionText = "a small seller commission";
+  let dynamicUpfrontCostTitle = "0% Upfront Cost";
+  let dynamicUpfrontCostDesc = "List as many pre-loved gadgets, bikes, or fashion items as you want without paying a single paisa.";
+
+  if (!commissionEnabled || customPercentage === 0) {
+    dynamicCommissionText = "0% seller commission";
+    dynamicUpfrontCostTitle = "৳0 Successful Sale Fee";
+    dynamicUpfrontCostDesc = "Enjoy completely free trading with 0% listing, 0% bidding, and 0% successful sale commission fees.";
+  } else if (customPercentage !== undefined && customPercentage !== null) {
+    dynamicCommissionText = `a small ${customPercentage}% seller commission`;
+    dynamicUpfrontCostTitle = `${customPercentage}% Seller Fee`;
+    dynamicUpfrontCostDesc = `No listing or bidding fees. Only pay a tiny ${customPercentage}% commission when your trade successfully completes.`;
+  } else {
+    // Standard tiers
+    dynamicCommissionText = "a low 1% - 2.5% seller commission";
+    dynamicUpfrontCostTitle = "Low Commission";
+    dynamicUpfrontCostDesc = "No upfront fees. Standard seller commission starts from 1% to 2.5% only on successful auction endings.";
+  }
+
+  const dynamicDeliveryConfirmText = escrowRequired 
+    ? "and the buyer confirms delivery" 
+    : "upon successful handover coordination";
+
+  const dynamicEscrowTitle = escrowRequired 
+    ? "Escrow Treasury Guard" 
+    : "Direct Neighborhood Trade";
+  const dynamicEscrowDesc = escrowRequired 
+    ? "Payments are held securely in Nilamit Escrow and only released when the buyer confirms receipt." 
+    : "Escrow is disabled. Coordinate local pickups and handovers directly with buyers and sellers near you.";
+
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -77,7 +111,7 @@ export function HomeContent({
     <>
       {/* Announcement Bar */}
       {systemConfig?.showAnnouncement && systemConfig?.announcement && (
-        <aside aria-label="Site announcement" className="bg-indigo-600 text-white px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300">
+        <aside aria-label="Site announcement" className="bg-indigo-650 text-white px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300">
           <Megaphone className="w-4 h-4 animate-bounce motion-reduce:animate-none" aria-hidden="true" />
           {systemConfig.announcement}
         </aside>
@@ -115,7 +149,7 @@ export function HomeContent({
                 ৳0 Listing Fee • ৳0 Bidding Fee
               </h3>
               <p className="text-primary-100 max-w-xl text-sm sm:text-base leading-relaxed">
-                Nilamit is 100% free to list items and place bids. We only charge a small seller commission if and when your trade successfully completes and the buyer confirms delivery.
+                Nilamit is 100% free to list items and place bids. We only charge {dynamicCommissionText} if and when your trade successfully completes {dynamicDeliveryConfirmText}.
               </p>
             </div>
             
@@ -124,15 +158,15 @@ export function HomeContent({
                 <div className="w-10 h-10 bg-amber-400/20 rounded-xl flex items-center justify-center mb-3">
                   <DollarSign className="w-5 h-5 text-amber-300" />
                 </div>
-                <h4 className="font-bold text-white text-sm mb-1">0% Upfront Cost</h4>
-                <p className="text-xs text-primary-200">List as many pre-loved gadgets, bikes, or fashion items as you want without paying a single paisa.</p>
+                <h4 className="font-bold text-white text-sm mb-1">{dynamicUpfrontCostTitle}</h4>
+                <p className="text-xs text-primary-200">{dynamicUpfrontCostDesc}</p>
               </div>
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all duration-300">
                 <div className="w-10 h-10 bg-green-400/20 rounded-xl flex items-center justify-center mb-3">
                   <ShieldCheck className="w-5 h-5 text-green-300" />
                 </div>
-                <h4 className="font-bold text-white text-sm mb-1">Escrow Treasury Guard</h4>
-                <p className="text-xs text-primary-200">Payments are held securely in Nilamit Escrow and only released when the buyer confirms receipt.</p>
+                <h4 className="font-bold text-white text-sm mb-1">{dynamicEscrowTitle}</h4>
+                <p className="text-xs text-primary-200">{dynamicEscrowDesc}</p>
               </div>
             </div>
           </div>
@@ -210,7 +244,7 @@ export function HomeContent({
       </div>
 
       {/* Trust & How It Works */}
-      <TrustFeatures />
+      <TrustFeatures systemConfig={systemConfig} />
     </>
   );
 }

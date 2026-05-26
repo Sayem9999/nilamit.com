@@ -52,7 +52,7 @@ export default function RetailerPerksPage() {
                   Seller Tiers & Perks
                 </h1>
                 <p className="text-slate-500 text-sm font-medium mt-1">
-                  eBay-style performance levels, platform commission discounts, and custom storefront unlocks.
+                  Professional performance levels, platform commission discounts, and custom storefront unlocks.
                 </p>
               </div>
             </div>

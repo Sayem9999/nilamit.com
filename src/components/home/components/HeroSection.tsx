@@ -113,7 +113,13 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
               variants={itemVariants}
               className="mt-6 text-base sm:text-lg text-gray-500 max-w-xl leading-relaxed font-medium text-center lg:text-left mx-auto lg:mx-0"
             >
-              {systemConfig?.heroSubtitle || t("subtitle")}
+              {systemConfig?.heroSubtitle || (
+                (systemConfig?.escrowRequired ?? true) ? (
+                  t("subtitle")
+                ) : (
+                  "Bangladesh's first trust-focused C2C auction marketplace. List pre-loved items in seconds, place live bids in real-time, and coordinate secure handovers with local cash-on-delivery."
+                )
+              )}
             </motion.p>
 
             <motion.form

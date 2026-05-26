@@ -429,7 +429,7 @@ export default function RetailerSettingsPage() {
               <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto text-indigo-600 border border-indigo-100">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-heading">eBay-Style Seller Protections</h4>
+              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-heading">Standard Seller Protections</h4>
               <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
                 Our dynamic escrow system automatically protects sellers from fraudulent bids while maintaining a 100% transparency standard.
               </p>

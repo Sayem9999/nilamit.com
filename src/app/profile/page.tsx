@@ -27,6 +27,8 @@ import {
   Camera,
   Loader2,
   Trash2,
+  MapPin,
+  Check,
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
@@ -46,6 +48,78 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
   const [msg, setMsg] = useState("");
+
+  // BDT C2C localized Address Book and payout disbursement states
+  const [addressStreet, setAddressStreet] = useState("");
+  const [addressArea, setAddressArea] = useState("");
+  const [addressDistrict, setAddressDistrict] = useState("");
+  const [addressZip, setAddressZip] = useState("");
+  const [defaultPayout, setDefaultPayout] = useState<"bkash" | "nagad" | "">("");
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
+  const [isSavingPayout, setIsSavingPayout] = useState(false);
+
+  useEffect(() => {
+    if (session?.user) {
+      const u = session.user as {
+        addressStreet?: string | null;
+        addressArea?: string | null;
+        addressDistrict?: string | null;
+        addressZip?: string | null;
+        defaultPayout?: string | null;
+      };
+      setAddressStreet(u.addressStreet || "");
+      setAddressArea(u.addressArea || "");
+      setAddressDistrict(u.addressDistrict || "");
+      setAddressZip(u.addressZip || "");
+      setDefaultPayout((u.defaultPayout as "bkash" | "nagad") || "");
+    }
+  }, [session]);
+
+  const handleSaveAddress = async () => {
+    setIsSavingAddress(true);
+    try {
+      const res = await updateProfile({
+        addressStreet: addressStreet.trim() || null,
+        addressArea: addressArea.trim() || null,
+        addressDistrict: addressDistrict.trim() || null,
+        addressZip: addressZip.trim() || null,
+      });
+      if (res.success) {
+        await update();
+        setEditingAddress(false);
+        toast.success("Delivery Address Book updated successfully!");
+      } else {
+        toast.error(res.error?.message || "Failed to update address.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to update address.");
+    } finally {
+      setIsSavingAddress(false);
+    }
+  };
+
+  const handleSavePayout = async (payout: "bkash" | "nagad" | "") => {
+    setIsSavingPayout(true);
+    try {
+      const res = await updateProfile({
+        defaultPayout: payout || null,
+      });
+      if (res.success) {
+        await update();
+        setDefaultPayout(payout);
+        toast.success("Preferred payout channel updated successfully!");
+      } else {
+        toast.error(res.error?.message || "Failed to update payout channel.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to update payout channel.");
+    } finally {
+      setIsSavingPayout(false);
+    }
+  };
   
   // Profile Photo Upload State
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -201,6 +275,11 @@ export default function ProfilePage() {
     winningStreak: number;
     salesCount?: number;
     defectCount?: number;
+    addressStreet?: string | null;
+    addressArea?: string | null;
+    addressDistrict?: string | null;
+    addressZip?: string | null;
+    defaultPayout?: string | null;
   };
 
   const handleSaveName = () => {
@@ -675,6 +754,212 @@ export default function ProfilePage() {
                 {isUpgrading && <Loader2 size={16} className="animate-spin" />}
                 {user.isRetailer ? "Switch to Standard User (Seller / Bidder)" : "Switch to Professional Retailer"}
               </button>
+            </motion.div>
+
+            {/* Address Book Card & Default Disbursement Channel Selector Card */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Address Book Card */}
+              <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                      <MapPin size={20} className="text-primary-600" /> C2C Address Book
+                    </h3>
+                    {!editingAddress && (
+                      <button 
+                        onClick={() => setEditingAddress(true)}
+                        className="text-[10px] font-black uppercase tracking-widest text-primary-650 hover:text-primary-800"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+
+                  {editingAddress ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="address-street" className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Street Address</label>
+                        <input 
+                          id="address-street"
+                          type="text"
+                          placeholder="e.g., Road 11, House 24"
+                          value={addressStreet}
+                          onChange={(e) => setAddressStreet(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="col-span-2">
+                          <label htmlFor="address-area" className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Area / Neighborhood</label>
+                          <input 
+                            id="address-area"
+                            type="text"
+                            placeholder="e.g., Dhanmondi"
+                            value={addressArea}
+                            onChange={(e) => setAddressArea(e.target.value)}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="address-zip" className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Zip Code</label>
+                          <input 
+                            id="address-zip"
+                            type="text"
+                            placeholder="1209"
+                            value={addressZip}
+                            onChange={(e) => setAddressZip(e.target.value)}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label htmlFor="address-district" className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">District / City</label>
+                        <select
+                          id="address-district"
+                          value={addressDistrict}
+                          onChange={(e) => setAddressDistrict(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-500"
+                        >
+                          <option value="">Select District</option>
+                          <option value="Dhaka">Dhaka</option>
+                          <option value="Chattogram">Chattogram</option>
+                          <option value="Sylhet">Sylhet</option>
+                          <option value="Khulna">Khulna</option>
+                          <option value="Rajshahi">Rajshahi</option>
+                          <option value="Barishal">Barishal</option>
+                          <option value="Rangpur">Rangpur</option>
+                          <option value="Mymensingh">Mymensingh</option>
+                        </select>
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={handleSaveAddress}
+                          disabled={isSavingAddress}
+                          className="flex-1 bg-primary-650 hover:bg-primary-700 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-40"
+                        >
+                          {isSavingAddress ? "Saving..." : "Save Address"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingAddress(false);
+                            // Reset
+                            if (session?.user) {
+                              const u = session.user as {
+                                addressStreet?: string | null;
+                                addressArea?: string | null;
+                                addressDistrict?: string | null;
+                                addressZip?: string | null;
+                              };
+                              setAddressStreet(u.addressStreet || "");
+                              setAddressArea(u.addressArea || "");
+                              setAddressDistrict(u.addressDistrict || "");
+                              setAddressZip(u.addressZip || "");
+                            }
+                          }}
+                          disabled={isSavingAddress}
+                          className="px-4 bg-gray-100 text-gray-700 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 py-1.5">
+                      {addressStreet || addressArea || addressDistrict ? (
+                        <div className="space-y-1 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 text-xs font-bold text-slate-800">
+                          <p className="font-semibold text-[10px] text-slate-400 uppercase tracking-wider">Default Destination</p>
+                          <p className="text-sm font-black">{addressStreet}</p>
+                          <p>{addressArea}, {addressDistrict} {addressZip && ` - ${addressZip}`}</p>
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 text-center">
+                          <p className="text-slate-400 text-xs font-medium leading-relaxed mx-auto max-w-[200px]">
+                            No default address configured. Set an address for fast buyer shipping coordination!
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Default Payout Channel Selector Card */}
+              <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                      <Wallet size={20} className="text-primary-600" /> Default Payout Channel
+                    </h3>
+                  </div>
+
+                  <p className="text-xs text-gray-500 mb-6 font-medium leading-relaxed">
+                    Select your preferred mobile wallet for secure automated sales commission payouts and escrow releases.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => handleSavePayout(defaultPayout === 'bkash' ? '' : 'bkash')}
+                      disabled={isSavingPayout}
+                      className={`relative p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all ${
+                        defaultPayout === 'bkash'
+                          ? 'border-[#E2125D] bg-[#E2125D]/5 ring-2 ring-[#E2125D]/20'
+                          : 'border-slate-150 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      {defaultPayout === 'bkash' && (
+                        <div className="absolute top-2 right-2 w-4 h-4 bg-[#E2125D] text-white rounded-full flex items-center justify-center p-0.5 shadow-sm">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      )}
+                      <Image 
+                        src={BKASH_LOGO_PRIMARY} 
+                        alt="bKash" 
+                        width={36} 
+                        height={36} 
+                        className="object-contain mb-1 h-8" 
+                      />
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">bKash Payout</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSavePayout(defaultPayout === 'nagad' ? '' : 'nagad')}
+                      disabled={isSavingPayout}
+                      className={`relative p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all ${
+                        defaultPayout === 'nagad'
+                          ? 'border-[#F69320] bg-[#F69320]/5 ring-2 ring-[#F69320]/20'
+                          : 'border-slate-150 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      {defaultPayout === 'nagad' && (
+                        <div className="absolute top-2 right-2 w-4 h-4 bg-[#F69320] text-white rounded-full flex items-center justify-center p-0.5 shadow-sm">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      )}
+                      <Image 
+                        src={NAGAD_LOGO_PRIMARY} 
+                        alt="Nagad" 
+                        width={36} 
+                        height={36} 
+                        className="object-contain mb-1 h-8" 
+                      />
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">Nagad Payout</span>
+                    </button>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                    <p className="text-[9px] text-slate-400 font-semibold leading-normal uppercase">
+                      Platforms payouts are audited and secured via secure multi-party escrow holding.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
 
             {/* MFS Linkage - Mobile First Cards */}

@@ -30,6 +30,13 @@ export async function updateProfile(data: unknown): Promise<ServiceResponse<{ us
   if (parsed.data.image  !== undefined) update.image  = parsed.data.image ?? null;
   if (parsed.data.banner !== undefined) update.banner = parsed.data.banner ?? null;
 
+  // Persist C2C localized delivery addresses and preferred disbursements
+  if (parsed.data.addressStreet   !== undefined) update.addressStreet   = parsed.data.addressStreet ?? null;
+  if (parsed.data.addressArea     !== undefined) update.addressArea     = parsed.data.addressArea ?? null;
+  if (parsed.data.addressDistrict !== undefined) update.addressDistrict = parsed.data.addressDistrict ?? null;
+  if (parsed.data.addressZip      !== undefined) update.addressZip      = parsed.data.addressZip ?? null;
+  if (parsed.data.defaultPayout   !== undefined) update.defaultPayout   = parsed.data.defaultPayout ?? null;
+
   await db.collection('users').doc(session.user.id).update(update);
   
   // Return only safe fields to the client

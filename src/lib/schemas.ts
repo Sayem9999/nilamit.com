@@ -235,7 +235,12 @@ export const updateProfileSchema = z.object({
   image:  z.union([z.string().url('Invalid image URL').max(2048), z.null()]).optional(),
   bio:    z.union([z.string().max(1000, 'Bio too long'), z.null()]).optional(),
   banner: z.union([z.string().url('Invalid banner URL').max(2048), z.null()]).optional(),
-}).refine(d => d.name !== undefined || d.image !== undefined || d.bio !== undefined || d.banner !== undefined, {
+  addressStreet:   z.union([z.string().max(250), z.null()]).optional(),
+  addressArea:     z.union([z.string().max(100), z.null()]).optional(),
+  addressDistrict: z.union([z.string().max(100), z.null()]).optional(),
+  addressZip:      z.union([z.string().max(20), z.null()]).optional(),
+  defaultPayout:   z.union([z.enum(['bkash', 'nagad']), z.null()]).optional(),
+}).refine(d => d.name !== undefined || d.image !== undefined || d.bio !== undefined || d.banner !== undefined || d.addressStreet !== undefined || d.addressArea !== undefined || d.addressDistrict !== undefined || d.addressZip !== undefined || d.defaultPayout !== undefined, {
   message: 'Provide at least one field to update',
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

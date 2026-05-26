@@ -12,19 +12,33 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { SystemConfig } from "@/types";
 
-export function TrustFeatures() {
+interface TrustFeaturesProps {
+  systemConfig?: SystemConfig;
+}
+
+export function TrustFeatures({ systemConfig }: TrustFeaturesProps) {
   const t = useTranslations("Home");
+  const escrowRequired = systemConfig?.escrowRequired ?? true;
 
   const steps = [
     { icon: PlusCircle,  title: t("step1Title"), desc: t("step1Desc") },
     { icon: Gavel,       title: t("step2Title"), desc: t("step2Desc") },
-    { icon: Lock,        title: t("step3Title"), desc: t("step3Desc") },
+    { 
+      icon: Lock,        
+      title: escrowRequired ? t("step3Title") : "Direct Negotiation & Handover", 
+      desc: escrowRequired ? t("step3Desc") : "Coordinate local handovers (e.g. Dhanmondi, Gulshan) or home shipping via direct buyer-seller agreements." 
+    },
   ];
 
   const features = [
     { icon: DollarSign,  title: t("trust1Title"), desc: t("trust1Desc") },
-    { icon: ShieldCheck, title: t("trust2Title"), desc: t("trust2Desc") },
+    { 
+      icon: ShieldCheck, 
+      title: escrowRequired ? t("trust2Title") : "Direct Handover Safeguards", 
+      desc: escrowRequired ? t("trust2Desc") : "Filter items near your neighborhood so you can physically inspect them and pay cash on delivery." 
+    },
     { icon: MapPin,      title: t("trust3Title"), desc: t("trust3Desc") },
     { icon: Star,        title: t("trust4Title"), desc: t("trust4Desc") },
   ];

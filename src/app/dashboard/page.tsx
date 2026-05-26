@@ -85,12 +85,26 @@ export default async function DashboardPage({
   const userId = session.user.id;
 
   // Pre-fetch count stats for the sidebar to provide high-fidelity UX badges
-  const [listingsCountSnap, watchlistCountSnap] = await Promise.all([
+  const [
+    listingsCountSnap,
+    watchlistCountSnap,
+    bidsCountSnap,
+    escrowCountSnap,
+    buyerConvCountSnap,
+    sellerConvCountSnap,
+  ] = await Promise.all([
     db.collection("auctions").where("sellerId", "==", userId).count().get(),
     db.collection("watchlist").where("userId", "==", userId).count().get(),
+    db.collection("bids").where("bidderId", "==", userId).count().get(),
+    db.collection("escrowTransactions").where("buyerId", "==", userId).count().get(),
+    db.collection("conversations").where("buyerId", "==", userId).count().get(),
+    db.collection("conversations").where("sellerId", "==", userId).count().get(),
   ]);
   const totalListingsCount = listingsCountSnap.data().count;
   const watchlistCount = watchlistCountSnap.data().count;
+  const bidsCount = bidsCountSnap.data().count;
+  const escrowCount = escrowCountSnap.data().count;
+  const chatsCount = buyerConvCountSnap.data().count + sellerConvCountSnap.data().count;
 
   const configRes = await getSystemConfig();
   const configFromDb = configRes.success ? configRes.data : null;
@@ -446,6 +460,15 @@ export default async function DashboardPage({
                 </h3>
 
                 <div className="space-y-4">
+                  {(seller.defectCount > 0 || (seller.defectCount / (seller.salesCount + seller.defectCount || 1)) > 0.03) && (
+                    <AlertItem 
+                      title="Seller Defect Alert" 
+                      desc={`Your transaction defect rate is currently ${((seller.defectCount / (seller.salesCount + seller.defectCount || 1)) * 100).toFixed(1)}% (${seller.defectCount} defect(s)). Keep it below 5% to avoid account suspension.`}
+                      type="danger"
+                      href="/profile"
+                    />
+                  )}
+
                   {stats.pendingDeliveries > 0 ? (
                     <AlertItem 
                       title="Orders Awaiting Shipment" 
@@ -699,52 +722,6 @@ export default async function DashboardPage({
     <div className="min-h-screen bg-gray-50 pt-28 pb-12 animate-in fade-in duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Large Premium C2C Marketplace Banner */}
-        <div className="relative mb-8 rounded-[2rem] overflow-hidden bg-gradient-to-r from-primary-900 via-indigo-950 to-slate-900 shadow-xl text-white">
-          <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] opacity-5 [background-size:16px_16px]" />
-          <div className="absolute -right-16 -top-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl" />
-          
-          <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-0.5 bg-primary-500/20 border border-primary-500/30 rounded-full text-[9px] font-black uppercase tracking-widest text-primary-300">
-                  Bangladesh C2C Hub
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">
-                  Live Market Active
-                </span>
-              </div>
-              
-              <h1 className="text-2xl md:text-3xl font-black font-heading tracking-tight mb-2">
-                Shagoto, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-indigo-300">{session.user.name}</span>!
-              </h1>
-              
-              <p className="text-slate-300 text-xs font-medium max-w-xl leading-relaxed">
-                Welcome to Bangladesh&apos;s premium trust-focused auction marketplace. Secure trade is active via secure escrow accounts.
-              </p>
-            </div>
-            
-            <div className="flex gap-4 md:gap-6 flex-wrap">
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 md:p-4 text-center min-w-[100px]">
-                <p className="text-[9px] text-indigo-300 font-black uppercase tracking-wider mb-1">Escrow Guard</p>
-                <p className="text-base md:text-lg font-black text-white">100% SAFE</p>
-                <p className="text-[8px] text-slate-400 font-bold">TREASURY ACTIVE</p>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 md:p-4 text-center min-w-[100px]">
-                <p className="text-[9px] text-indigo-300 font-black uppercase tracking-wider mb-1">C2C Level</p>
-                <p className="text-base md:text-lg font-black text-amber-400">LVL {session.user.userLevel || 1}</p>
-                <p className="text-[8px] text-slate-400 font-bold">XP TRACKING</p>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 md:p-4 text-center min-w-[100px]">
-                <p className="text-[9px] text-indigo-300 font-black uppercase tracking-wider mb-1">Trades</p>
-                <p className="text-base md:text-lg font-black text-white">{session.user.ratingCount || 0}</p>
-                <p className="text-[8px] text-slate-400 font-bold">COMPLETED</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Mode Switcher Bar */}
         {(session.user.isVerifiedSeller || session.user.isRetailer || session.user.emailVerified) && (
           <div className="mb-6 bg-white border border-slate-200/80 rounded-[1.5rem] p-3.5 shadow-sm flex items-center justify-between gap-4 animate-in fade-in duration-300">
@@ -753,7 +730,7 @@ export default async function DashboardPage({
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Dashboard</p>
                 <p className="text-xs font-bold text-slate-800">
-                  Personal C2C Dashboard (My eBay)
+                  Personal C2C Dashboard
                 </p>
               </div>
             </div>
@@ -812,30 +789,56 @@ export default async function DashboardPage({
 
                   <Link
                     href="/dashboard?tab=bids"
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
                       currentTab === "bids"
                         ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                     }`}
                   >
-                    <RefreshCw className={`w-3.5 h-3.5 ${
-                      currentTab === "bids" ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600"
-                    }`} />
-                    {t("activeBids")}
+                    <div className="flex items-center gap-2.5">
+                      <RefreshCw className={`w-3.5 h-3.5 transition-colors ${
+                        currentTab === "bids" ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600"
+                      }`} />
+                      <span>{t("activeBids")}</span>
+                    </div>
+                    {bidsCount > 0 ? (
+                      <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                        currentTab === "bids" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
+                      }`}>
+                        {bidsCount}
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                        0
+                      </span>
+                    )}
                   </Link>
 
                   <Link
                     href="/dashboard?tab=escrow"
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
                       currentTab === "escrow"
                         ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                     }`}
                   >
-                    <CheckCircle className={`w-3.5 h-3.5 ${
-                      currentTab === "escrow" ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600"
-                    }`} />
-                    {t("wonEscrow")}
+                    <div className="flex items-center gap-2.5">
+                      <CheckCircle className={`w-3.5 h-3.5 transition-colors ${
+                        currentTab === "escrow" ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600"
+                      }`} />
+                      <span>{t("wonEscrow")}</span>
+                    </div>
+                    {escrowCount > 0 ? (
+                      <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                        currentTab === "escrow" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
+                      }`}>
+                        {escrowCount}
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                        0
+                      </span>
+                    )}
                   </Link>
                 </div>
               </div>
@@ -902,16 +905,29 @@ export default async function DashboardPage({
                 <div className="space-y-1">
                   <Link
                     href="/dashboard?tab=coordination"
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
                       currentTab === "coordination"
                         ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                     }`}
                   >
-                    <MessageSquare className={`w-3.5 h-3.5 ${
-                      currentTab === "coordination" ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600"
-                    }`} />
-                    {t("chat")}
+                    <div className="flex items-center gap-2.5">
+                      <MessageSquare className={`w-3.5 h-3.5 transition-colors ${
+                        currentTab === "coordination" ? "text-primary-600" : "text-slate-400 group-hover:text-slate-600"
+                      }`} />
+                      <span>{t("chat")}</span>
+                    </div>
+                    {chatsCount > 0 ? (
+                      <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                        currentTab === "coordination" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
+                      }`}>
+                        {chatsCount}
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                        0
+                      </span>
+                    )}
                   </Link>
 
                   <Link
