@@ -3,7 +3,7 @@ import { db, toMessage } from "@/lib/db";
 import { AuctionService } from "@/services/auction/auction-service";
 import { notFound, redirect } from "next/navigation";
 import ChatInterface from "@/components/social/ChatInterface";
-import { ChevronLeft, ShieldCheck, Info } from "lucide-react";
+import { ChevronLeft, Info } from "lucide-react";
 import Link from "next/link";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 import { getTranslations } from "next-intl/server";
@@ -154,27 +154,21 @@ export default async function CoordinationPage({
 
           {/* Sidebar Tools */}
           <div className="space-y-6">
-            <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
-              <div className="flex items-center gap-2 mb-4 text-emerald-600">
-                <ShieldCheck className="w-5 h-5" />
-                <h3 className="font-bold text-sm uppercase tracking-wider">{t("shieldActive")}</h3>
-              </div>
-              
-              <EscrowActionCard 
-                transaction={{
-                  ...conversation.auction.escrowTransaction!,
-                  auction: {
-                    title: conversation.auction.title,
-                    seller: { name: conversation.auction.seller.name, image: conversation.auction.seller.image },
-                    endTime: conversation.auction.endTime
-                  }
-                }} 
-                treasuryNumbers={{
-                  bkash: systemConfig?.treasuryBkash || "017XXXXXXXX",
-                  nagad: systemConfig?.treasuryNagad || "018XXXXXXXX"
-                }}
-              />
-            </div>
+            <EscrowActionCard 
+              transaction={{
+                ...conversation.auction.escrowTransaction!,
+                auction: {
+                  title: conversation.auction.title,
+                  seller: { name: conversation.auction.seller.name, image: conversation.auction.seller.image },
+                  endTime: conversation.auction.endTime
+                }
+              }} 
+              treasuryNumbers={{
+                bkash: systemConfig?.treasuryBkash || "017XXXXXXXX",
+                nagad: systemConfig?.treasuryNagad || "018XXXXXXXX"
+              }}
+              layout="vertical"
+            />
 
             <div className="bg-primary-900 text-white p-6 rounded-[32px] shadow-xl overflow-hidden relative">
                <div className="relative z-10">

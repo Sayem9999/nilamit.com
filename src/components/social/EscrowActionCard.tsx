@@ -14,6 +14,7 @@ import { formatBDT } from "@/lib/format";
 import dynamic from "next/dynamic";
 const MockPaymentGateway = dynamic(() => import("@/components/payment/MockPaymentGateway").then(mod => mod.MockPaymentGateway), { ssr: false });
 import DisputeModal from "./DisputeModal";
+import { cn } from "@/lib/utils";
 
 import { useSession } from "next-auth/react";
 
@@ -23,11 +24,13 @@ interface EscrowActionCardProps {
     bkash: string;
     nagad: string;
   };
+  layout?: "horizontal" | "vertical";
 }
 
 export function EscrowActionCard({
   transaction,
   treasuryNumbers,
+  layout,
 }: EscrowActionCardProps) {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
@@ -170,7 +173,10 @@ export function EscrowActionCard({
         {/* Visual Escrow Progress Tracker */}
         <div className="relative mb-8 p-6 bg-slate-50/50 dark:bg-slate-900/10 rounded-2xl border border-slate-100 dark:border-slate-800/80">
           {/* Desktop connecting progress lines */}
-          <div className="absolute top-[44px] left-[52px] right-[52px] h-[2px] bg-slate-200 dark:bg-slate-800 hidden md:block -z-10">
+          <div className={cn(
+            "absolute top-[44px] left-[52px] right-[52px] h-[2px] bg-slate-200 dark:bg-slate-800 -z-10",
+            layout === 'vertical' ? "hidden" : "hidden md:block"
+          )}>
             <div 
               className="h-full bg-gradient-to-r from-emerald-500 to-primary-600 transition-all duration-500 ease-in-out" 
               style={{ width: `${activeStep === 0 ? 0 : activeStep === 1 ? 33.33 : activeStep === 2 ? 66.66 : 100}%` }}
@@ -178,14 +184,20 @@ export function EscrowActionCard({
           </div>
 
           {/* Mobile connecting progress lines */}
-          <div className="absolute left-[44px] top-[44px] bottom-[44px] w-[2px] bg-slate-200 dark:bg-slate-800 md:hidden -z-10">
+          <div className={cn(
+            "absolute left-[44px] top-[44px] bottom-[44px] w-[2px] bg-slate-200 dark:bg-slate-800 -z-10",
+            layout === 'vertical' ? "block" : "md:hidden"
+          )}>
             <div 
               className="w-full bg-gradient-to-b from-emerald-500 to-primary-600 transition-all duration-500 ease-in-out" 
               style={{ height: `${activeStep === 0 ? 0 : activeStep === 1 ? 33.33 : activeStep === 2 ? 66.66 : 100}%` }}
             />
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-0">
+          <div className={cn(
+            "flex flex-col justify-between gap-6",
+            layout !== 'vertical' && "md:flex-row md:gap-0"
+          )}>
             {steps.map((step, index) => {
               const isCompleted = index < activeStep;
               const isActive = index === activeStep;
@@ -211,7 +223,10 @@ export function EscrowActionCard({
               }
 
               return (
-                <div key={index} className="flex md:flex-col items-center flex-1 text-left md:text-center gap-4 md:gap-2 z-10">
+                <div key={index} className={cn(
+                  "flex items-center flex-1 text-left z-10 gap-4",
+                  layout !== 'vertical' && "md:flex-col md:text-center md:gap-2"
+                )}>
                   {/* Step Circle */}
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 ease-in-out ${circleStyles} ${shadowStyles}`}>
                     {isCompleted ? (
@@ -236,9 +251,12 @@ export function EscrowActionCard({
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex-1">
-            <h4 className="font-semibold text-lg text-slate-800 dark:text-slate-100 mb-1 bn">
+        <div className={cn(
+          "flex flex-col justify-between gap-6",
+          layout !== 'vertical' && "md:flex-row md:items-center"
+        )}>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-lg text-slate-800 dark:text-slate-100 mb-1 bn truncate">
               {transaction.auction.title}
             </h4>
             <p className="text-sm text-slate-500 dark:text-slate-400 bn">
@@ -246,8 +264,11 @@ export function EscrowActionCard({
             </p>
 
             {/* Logistics Protection Badge */}
-            <div className="mt-3 flex items-center gap-2">
-              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+            <div className={cn(
+              "mt-3 flex gap-2",
+              layout === 'vertical' ? "flex-col items-start gap-1.5" : "items-center"
+            )}>
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900 px-2.5 py-1 rounded-lg flex items-center gap-1.5 flex-shrink-0">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                 <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest bn">{t("logisticsProtected")}</span>
               </div>
@@ -296,7 +317,10 @@ export function EscrowActionCard({
             </div>
           </div>
 
-          <div className="md:w-64 flex-shrink-0">
+          <div className={cn(
+            "w-full flex-shrink-0",
+            layout !== 'vertical' && "md:w-64"
+          )}>
             {isPending && (
               <div className="space-y-3">
                  {!hasMFS && (
