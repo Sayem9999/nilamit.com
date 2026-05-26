@@ -1,6 +1,8 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import algoliasearch, { SearchIndex } from 'algoliasearch';
 
 // Initialize Firebase Admin SDK inside the Cloud Functions environment
 admin.initializeApp();
@@ -94,4 +96,63 @@ export const gcUploadsCron = onSchedule({
     return;
   }
   await triggerEndpoint('/api/cron/gc-uploads', cronSecret);
+});
+
+// --- Algolia search index configuration keys ---
+const ALGOLIA_APP_ID = process.env.ALGOLIA_APP_ID || '';
+const ALGOLIA_API_KEY = process.env.ALGOLIA_API_KEY || '';
+
+// Initialize Algolia client lazily so that it does not crash if keys are missing in local emulation
+let algoliaIndex: SearchIndex | null = null;
+function getAlgoliaIndex() {
+  if (!algoliaIndex && ALGOLIA_APP_ID && ALGOLIA_API_KEY) {
+    const client = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
+    algoliaIndex = client.initIndex('nilamit_auctions');
+  }
+  return algoliaIndex;
+}
+
+/**
+ * 5. syncAuctionToAlgolia: Realtime Firestore trigger for search sync
+ */
+export const syncAuctionToAlgolia = onDocumentWritten('auctions/{auctionId}', async (event) => {
+  const auctionId = event.params.auctionId;
+  const index = getAlgoliaIndex();
+  
+  if (!index) {
+    logger.warn('Algolia is not configured. Skipping search index synchronization.', { auctionId });
+    return;
+  }
+
+  // Handle document deletion
+  if (!event.data?.after.exists) {
+    await index.deleteObject(auctionId);
+    logger.info('Deleted Algolia index object', { auctionId });
+    return;
+  }
+
+  const auctionData = event.data.after.data()!;
+  
+  // Only index active, searchable listings
+  if (auctionData.status !== 'ACTIVE') {
+    await index.deleteObject(auctionId);
+    logger.info('Removed inactive Algolia index object', { auctionId, status: auctionData.status });
+    return;
+  }
+
+  const payload = {
+    objectID:      auctionId,
+    title:          auctionData.title,
+    description:    auctionData.description,
+    category:       auctionData.category,
+    currentPrice:   auctionData.currentPrice,
+    startingPrice:  auctionData.startingPrice,
+    condition:      auctionData.condition,
+    location:       auctionData.location,
+    endTime:        auctionData.endTime?.toDate ? auctionData.endTime.toDate().getTime() : new Date(auctionData.endTime).getTime(),
+    createdAt:      auctionData.createdAt?.toDate ? auctionData.createdAt.toDate().getTime() : new Date(auctionData.createdAt).getTime(),
+  };
+
+  await index.saveObject(payload);
+  logger.info('Synchronized Algolia index object', { auctionId });
 });
