@@ -23,6 +23,7 @@ import {
   Camera,
   Loader2,
   MapPin,
+  Trash2,
 } from "lucide-react";
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
@@ -519,6 +520,37 @@ export default function ProfileSettings() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-2.5 relative z-20">
+            {/* Photo controls */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingPhoto || isRemovingPhoto || isUploadingBanner || isRemovingBanner}
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/25 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40 flex items-center gap-1.5"
+            >
+              {isUploadingPhoto ? (
+                <Loader2 size={12} className="animate-spin text-white" />
+              ) : (
+                <Camera size={12} className="text-white" />
+              )}
+              {session.user?.image ? "Change Photo" : "Upload Photo"}
+            </button>
+
+            {session.user?.image && (
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                disabled={isRemovingPhoto || isUploadingPhoto || isUploadingBanner || isRemovingBanner}
+                className="px-4 py-2.5 bg-white/10 hover:bg-red-500/25 border border-white/10 hover:border-transparent text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40 flex items-center gap-1.5"
+              >
+                {isRemovingPhoto ? (
+                  <Loader2 size={12} className="animate-spin text-white" />
+                ) : (
+                  <Trash2 size={12} className="text-white" />
+                )}
+                Remove Photo
+              </button>
+            )}
+
             {/* Banner controls */}
             <input
               type="file"
@@ -547,20 +579,14 @@ export default function ProfileSettings() {
                 type="button"
                 onClick={handleRemoveBanner}
                 disabled={isRemovingBanner || isUploadingBanner || isUploadingPhoto || isRemovingPhoto}
-                className="px-4 py-2.5 bg-white/10 hover:bg-red-500/25 border border-white/10 hover:border-transparent text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40"
+                className="px-4 py-2.5 bg-white/10 hover:bg-red-500/25 border border-white/10 hover:border-transparent text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40 flex items-center gap-1.5"
               >
-                {isRemovingBanner ? "Removing..." : "Remove Banner"}
-              </button>
-            )}
-
-            {session.user?.image && (
-              <button
-                type="button"
-                onClick={handleRemovePhoto}
-                disabled={isRemovingPhoto || isUploadingPhoto || isUploadingBanner || isRemovingBanner}
-                className="px-4 py-2.5 bg-white/10 hover:bg-red-500/25 border border-white/10 hover:border-transparent text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40"
-              >
-                {isRemovingPhoto ? "Removing..." : "Remove Photo"}
+                {isRemovingBanner ? (
+                  <Loader2 size={12} className="animate-spin text-white" />
+                ) : (
+                  <Trash2 size={12} className="text-white" />
+                )}
+                Remove Banner
               </button>
             )}
             
