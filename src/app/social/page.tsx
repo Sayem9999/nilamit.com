@@ -50,7 +50,7 @@ export default async function SocialDashboardPage() {
                 <UserBadge
                   level={reputation.userLevel}
                   streak={reputation.winningStreak}
-                  reputation={reputation.rating ?? reputation.reputationScore}
+                  rating={reputation.rating}
                   ratingCount={reputation.ratingCount}
                 />
               </div>

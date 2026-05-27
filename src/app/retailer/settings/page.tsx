@@ -91,10 +91,11 @@ export default function RetailerSettingsPage() {
       if (res.success) {
         toast.success(
           nextStatus 
-            ? "Upgraded to Professional Retailer! Bulk upload is now unlocked."
+            ? "Upgraded to Professional Retailer! Advanced features are now unlocked."
             : "Downgraded to Verified Seller."
         );
         await update(); // Sync JWT session
+        window.location.reload(); // Force page reload to ensure state syncs instantly
       } else {
         toast.error(res.error?.message || "Failed to toggle tier.");
       }
@@ -394,7 +395,7 @@ export default function RetailerSettingsPage() {
                   </p>
                   <p className="text-[10px] text-slate-500 mt-1 leading-relaxed font-medium">
                     {user.isRetailer 
-                      ? "Full access to high-volume bulk inventory sync, pro badges, and 0% escrow promotional fees."
+                      ? "Full access to pro badges and 0% escrow promotional fees."
                       : "Access to the standard Seller Hub, unlimited single listings, and standard buyer coordination tools."}
                   </p>
                 </div>

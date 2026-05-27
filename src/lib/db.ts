@@ -36,6 +36,7 @@ export function toSellerPublic(id: string, data: unknown): SellerPublic | null {
     image: (d.image as string) ?? null,
     rating: (d.rating as number) ?? 0,
     ratingCount: (d.ratingCount as number) ?? 0,
+    reputationScore: (d.reputationScore as number) ?? 0,
     emailVerified: d.emailVerified instanceof Timestamp ? d.emailVerified.toDate() : (d.emailVerified ? new Date(d.emailVerified as string) : null),
     isVerifiedSeller: !!d.isVerifiedSeller,
     isRetailer: !!d.isRetailer,

@@ -137,7 +137,7 @@ export default function RegisterPage() {
                       </div>
                       <div>
                         <h4 className="font-bold text-gray-900">Professional Retailer</h4>
-                        <p className="text-xs text-gray-500 font-medium">For verified businesses, shops, and bulk inventory tools.</p>
+                        <p className="text-xs text-gray-500 font-medium">For verified businesses, shops, and professional tools.</p>
                       </div>
                     </div>
                     <ArrowRight className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-200 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />

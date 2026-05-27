@@ -8,6 +8,7 @@ export interface User {
   isVerifiedSeller: boolean;
   rating: number;
   ratingCount: number;
+  reputationScore: number;
   isBanned: boolean;
   isMinor: boolean;
   isAdmin: boolean;
@@ -35,6 +36,7 @@ export interface SellerPublic {
   image: string | null;
   rating: number;
   ratingCount: number;
+  reputationScore: number;
   emailVerified: Date | null;
   isVerifiedSeller: boolean;
   isRetailer: boolean;

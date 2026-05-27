@@ -36,7 +36,7 @@ export class AdminService {
         isVerifiedSeller: Boolean(user.isVerifiedSeller),
         rating: Number(user.rating ?? 0),
         ratingCount: Number(user.ratingCount ?? 0),
-        reputationScore: Number(user.rating ?? 0), // Aliased for UI compatibility
+        reputationScore: Number(user.reputationScore ?? 0),
         createdAt: user.createdAt,
       }));
 
