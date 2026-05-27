@@ -1,6 +1,21 @@
 # Session Handoff & Architecture Memory
 
-## Current Session (2026-05-25)
+## Current Session (2026-05-27)
+### What we did
+* **Unified Public Profile Storefront (B2C & C2C)** ([page.tsx (Dynamic Profile)](file:///c:/nilamit.com/src/app/profile/%5Bid%5D/page.tsx), [Navbar.tsx](file:///c:/nilamit.com/src/components/layout/Navbar.tsx), [ProfileSettings.tsx](file:///c:/nilamit.com/src/components/dashboard/ProfileSettings.tsx)):
+  - Successfully unified the dynamic public profile page `/profile/[id]` to act as a dual C2C **Trader Profile** and B2C **Retailer Storefront**.
+  - **Dynamic Theme Accents**: Standardized the view with Emerald/Teal accents for C2C Traders and Indigo/Violet accents for B2C Retailers.
+  - **Fulfillment Trust Indicator**: Enabled a computed trust rate based on `salesCount` and `defectCount` metrics for Business Retailers.
+  - **Social Gamification Widget**: Created a community-focused card for peer-to-peer traders presenting dynamic XP progress bars, level ranks (Bronze, Silver, Gold, Platinum), and hot winning streaks via fiery Trophy icons.
+  - **Isomorphic Server-Side Listing Tabs**: Separated user listings into `Active Auctions` and `Completed Sales` tabs, utilizing server-side query parameters (`?view=active` and `?view=completed`) for seamless SEO-indexing, zero bundle-bloat, and lightweight client load. Added dynamic tab badges detailing current count parameters.
+  - **Cleaned Visual Radii & Buttons**: Standardized over-rounded card borders to eBay-like sturdy `rounded-2xl` and `rounded-3xl` containers. Fixed the invisible "Sign Out" button text and icon colors by correcting invalid `text-red-650` selectors to `text-red-600`.
+  - **Navbar Link Mapping**: Synchronized root layout navigation links to route "Profile" clicks directly to the user's dynamic dynamic storefront `/profile/[id]`, rendering a secure, high-visibility "Edit Profile / Settings" shortcut for the owner.
+* **Type-Safety, Lint & Build Purity**:
+  - `npx tsc --noEmit` and `npm run lint` execute cleanly with **zero compilation warnings or styling debts** across all newly created server actions and page components.
+  - Executed all **109 out of 109 unit tests** with a **100% pass rate** via Vitest.
+  - Pushed to `main`, auto-deploying Firebase Firestore Security Rules and compound composite indexes successfully to `nilamit-52073`.
+
+## Previous Session (2026-05-25)
 ### What we did
 * **COD-Escrow Hybrid Transaction Model (Option A) & Adjustable Configurations** ([auction-logic.ts](file:///c:/nilamit.com/src/lib/auction-logic.ts), [SystemTab.tsx](file:///c:/nilamit.com/src/app/admin/tabs/SystemTab.tsx), [EscrowActionCard.tsx](file:///c:/nilamit.com/src/components/social/EscrowActionCard.tsx), [escrow.ts](file:///c:/nilamit.com/src/actions/escrow.ts), [logistics.ts](file:///c:/nilamit.com/src/lib/logistics.ts)):
   - Re-architected Nilamit's transaction engine to support the **COD-Escrow Hybrid Model (Option A)**. Buyers pay a partial online advance deposit (Delivery Charge + commitment deposit) to cover logistics and secure trades, and the remaining 98% is paid at the doorstep as Cash on Delivery (COD) to the courier.
