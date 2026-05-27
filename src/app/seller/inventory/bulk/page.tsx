@@ -247,7 +247,7 @@ export default function BulkUploadPage() {
                     <FileSpreadsheet className="w-5 h-5 text-indigo-600" aria-hidden="true" />
                     Queue Preview ({rows.length} {rows.length === 1 ? 'row' : 'rows'}
                     {invalidCount > 0 && (
-                      <span className="ml-1 text-red-655 text-xs font-bold">
+                      <span className="ml-1 text-red-600 text-xs font-bold">
                         · {invalidCount} invalid
                       </span>
                     )}
@@ -257,7 +257,7 @@ export default function BulkUploadPage() {
                     <button
                       type="button"
                       onClick={() => setRows([])}
-                      className="text-xs font-bold text-red-500 hover:text-red-650 inline-flex items-center gap-1 focus-visible:outline-none"
+                      className="text-xs font-bold text-red-500 hover:text-red-600 inline-flex items-center gap-1 focus-visible:outline-none"
                     >
                       <Trash2 className="w-3 h-3" aria-hidden="true" /> Clear Queue
                     </button>
@@ -339,7 +339,7 @@ export default function BulkUploadPage() {
                     {invalidCount > 0 && (
                       <p
                         role="status"
-                        className="mb-3 text-xs text-red-650 bg-red-50 border border-red-200 rounded-xl p-3 leading-relaxed font-medium"
+                        className="mb-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl p-3 leading-relaxed font-medium"
                       >
                         <strong>{invalidCount}</strong>{' '}
                         {invalidCount === 1 ? 'row has' : 'rows have'} validation errors and

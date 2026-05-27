@@ -185,8 +185,8 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
           <div className="flex flex-col md:flex-row gap-8 items-center md:items-end pb-4">
             {/* Seller Avatar */}
             <div className="relative group">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-white p-2 shadow-2xl shadow-primary-200/40 relative z-10 ring-4 ring-white">
-                <div className="w-full h-full rounded-[2rem] overflow-hidden bg-gray-100 flex items-center justify-center relative">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-white p-2 shadow-2xl shadow-primary-200/40 relative z-10 ring-4 ring-white">
+                <div className="w-full h-full rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center relative">
                   {seller.image ? (
                     <Image src={getProxiedAvatarUrl(seller.image) || ""} alt={seller.name || ""} fill sizes="(max-width: 768px) 128px, 160px" className="object-cover" referrerPolicy="no-referrer" unoptimized />
                   ) : (
@@ -268,19 +268,19 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
       {/* Trust Dashboard Grid */}
       <div className="max-w-7xl mx-auto px-4 mt-16 mb-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Items Sold</p>
             <p className="text-3xl font-black text-gray-900 font-heading">{seller.salesCount}</p>
           </div>
-          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Positive Feedback</p>
             <p className="text-3xl font-black text-emerald-500 font-heading">{feedbackPercentage}%</p>
           </div>
-          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Feedback Score</p>
             <p className="text-3xl font-black text-primary-600 font-heading">{seller.reputationScore}</p>
           </div>
-          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Bids</p>
             <p className="text-3xl font-black text-indigo-500 font-heading">{seller._count.bids}</p>
           </div>
@@ -322,7 +322,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-[2rem] border border-dashed border-gray-200 p-12 text-center">
+              <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center">
                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Package className="w-8 h-8 text-gray-300" />
                 </div>
@@ -334,7 +334,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
 
           {/* Sidebar / Reviews & Info */}
           <div className="space-y-8">
-            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-8">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
               <h2 className="text-xl font-black text-gray-900 font-heading mb-6 flex items-center gap-2">
                 <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
                 Feedback Profile Feed
@@ -369,7 +369,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
               )}
             </div>
 
-            <div className="bg-indigo-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
+            <div className="bg-indigo-900 rounded-3xl p-8 text-white relative overflow-hidden group">
               <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
               <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
               

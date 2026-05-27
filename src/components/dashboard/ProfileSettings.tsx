@@ -372,7 +372,7 @@ export default function ProfileSettings() {
   return (
     <div className="animate-in fade-in duration-300">
       {/* Premium Compact Header Card */}
-      <div className="relative p-8 rounded-[2.5rem] bg-gradient-to-br from-primary-700 via-primary-600 to-indigo-800 text-white overflow-hidden shadow-xl mb-8">
+      <div className="relative p-8 rounded-3xl bg-gradient-to-br from-primary-700 via-primary-600 to-indigo-800 text-white overflow-hidden shadow-xl mb-8">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-[80px] -mr-32 -mt-32" />
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 justify-between">
           <div className="flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
@@ -466,7 +466,7 @@ export default function ProfileSettings() {
                   }
                 }
               }}
-              className="flex items-center gap-1.5 px-5 py-2.5 bg-white text-red-650 hover:bg-red-50 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95"
+              className="flex items-center gap-1.5 px-5 py-2.5 bg-white text-red-600 hover:bg-red-50 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95"
             >
               <LogOut size={12} /> 
               {t_nav("signout")}
@@ -483,28 +483,28 @@ export default function ProfileSettings() {
       >
         {/* Stats Grid */}
         <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("reputation") || "Feedback"}</p>
               <p className="text-xl font-black text-gray-900 leading-tight">
                 {((user?.rating as number) || 3.5).toFixed(1)} <span className="text-[10px] text-gray-400 font-medium">/ 5.0</span>
               </p>
            </div>
 
-            <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Tier</p>
               <p className="text-xl font-black text-gray-900 leading-tight truncate">
                 {user.isRetailer ? "Pro Retailer" : user.isVerifiedSeller ? "Verified Seller" : "Standard User"}
               </p>
            </div>
 
-           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">XP Level</p>
               <p className="text-xl font-black text-gray-900 leading-tight">
                 Tier {user.userLevel || 1}
               </p>
            </div>
 
-           <div className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
               <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Completed Deals</p>
               <p className="text-xl font-black text-gray-900 leading-tight">
                 {user.salesCount || 0} Trades
@@ -522,7 +522,7 @@ export default function ProfileSettings() {
             {!isEmailVerifiedLocal && (
               <motion.div 
                 variants={itemVariants}
-                className="bg-blue-50 border border-blue-200 rounded-[2rem] p-6 shadow-sm relative overflow-hidden"
+                className="bg-blue-50 border border-blue-200 rounded-2xl p-6 shadow-sm relative overflow-hidden"
               >
                 <div className="relative z-10 flex items-start gap-4">
                   <div className="p-2 bg-white rounded-xl text-blue-600">
@@ -548,7 +548,7 @@ export default function ProfileSettings() {
             )}
 
             {/* Profile Info Details */}
-            <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm space-y-5">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-5">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-black text-gray-900 flex items-center gap-2">
                   <User size={18} className="text-primary-600" /> Account Identity
@@ -610,7 +610,7 @@ export default function ProfileSettings() {
             </div>
 
             {/* Account Upgrade/Switcher Card */}
-            <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm space-y-4">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-black text-gray-900 flex items-center gap-2">
                   <ShieldCheck size={18} className="text-primary-600" /> Account Class
@@ -647,7 +647,7 @@ export default function ProfileSettings() {
           <div className="space-y-6">
 
             {/* Address Book Card */}
-            <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm space-y-4">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-black text-gray-900 flex items-center gap-2">
                   <MapPin size={18} className="text-primary-600" /> Shipping Address
@@ -772,7 +772,7 @@ export default function ProfileSettings() {
             </div>
 
             {/* MFS Verification Card */}
-            <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm space-y-4">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
               <h3 className="text-base font-black text-gray-900 flex items-center gap-2">
                 <Wallet size={18} className="text-primary-600" /> Wallet Verification
               </h3>
@@ -954,7 +954,7 @@ export default function ProfileSettings() {
         </div>
 
         {/* Dynamic Reviews Section */}
-        <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm space-y-4">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
           <h3 className="text-base font-black text-gray-900 flex items-center gap-2">
             <MessageSquare size={18} className="text-primary-600" /> Community Feedback Ledger
           </h3>

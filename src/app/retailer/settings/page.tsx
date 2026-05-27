@@ -257,7 +257,7 @@ export default function RetailerSettingsPage() {
                       type="button"
                       onClick={handleRemoveBanner}
                       disabled={isRemovingBanner || isUploadingBanner}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-650 text-[10px] font-black uppercase tracking-widest rounded-full transition-all border border-red-200"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full transition-all border border-red-200"
                     >
                       <Trash2 className="w-3 h-3" />
                       Remove Banner
@@ -413,7 +413,7 @@ export default function RetailerSettingsPage() {
                     disabled={isUpgrading}
                     className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
                       user.isRetailer
-                        ? "bg-red-50 border border-red-200 text-red-650 hover:bg-red-100"
+                        ? "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
                         : "bg-indigo-650 hover:bg-indigo-750 text-white shadow-md shadow-indigo-650/10 hover:shadow-lg"
                     }`}
                   >

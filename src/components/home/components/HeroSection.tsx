@@ -227,7 +227,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                     </span>
                   </div>
                 </div>
-                <div className="bg-red-50 text-red-650 border border-red-150 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter animate-pulse shadow-sm">
+                <div className="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter animate-pulse shadow-sm">
                   {t("hotDeal")}
                 </div>
               </div>
