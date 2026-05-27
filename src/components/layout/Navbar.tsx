@@ -296,7 +296,7 @@ export const Navbar = memo(function Navbar() {
                           <p className="text-xs font-bold text-gray-900 truncate">{session.user?.email}</p>
                         </div>
                       <Link
-                        href="/profile"
+                        href={userId ? `/profile/${userId}` : "/dashboard?tab=profile"}
                         className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-xl transition-all"
                       >
                         <div className="flex items-center gap-2.5">
@@ -341,7 +341,7 @@ export const Navbar = memo(function Navbar() {
             <div className="flex items-center gap-3.5 md:hidden">
               {session?.user && (
                 <Link
-                  href="/profile"
+                  href={userId ? `/profile/${userId}` : "/dashboard?tab=profile"}
                   className="relative group shrink-0"
                 >
                   <div className="relative">
@@ -478,7 +478,7 @@ export const Navbar = memo(function Navbar() {
                       {t("chat")}
                     </Link>
                     <Link
-                      href="/profile"
+                      href={userId ? `/profile/${userId}` : "/dashboard?tab=profile"}
                       className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl"
                       onClick={() => setMobileMenuOpen(false)}
                     >
