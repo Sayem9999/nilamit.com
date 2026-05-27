@@ -95,6 +95,11 @@ export default function ProfileSettings() {
   const [isRemovingPhoto, setIsRemovingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Profile Banner Upload State
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isRemovingBanner, setIsRemovingBanner] = useState(false);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const files = e.target.files;
@@ -149,6 +154,62 @@ export default function ProfileSettings() {
       toast.error("Failed to remove profile photo.");
     } finally {
       setIsRemovingPhoto(false);
+    }
+  };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const rawFile = files[0];
+      setIsUploadingBanner(true);
+
+      // Dynamically load image optimization and upload utilities
+      const { compressImage } = await import("@/lib/image-optimization");
+      const { uploadFile } = await import("@/lib/uploadthing");
+
+      // Compress client-side for maximum bandwidth efficiency (landscape aspect ratio)
+      const file = await compressImage(rawFile, { maxWidth: 1200, maxHeight: 400, quality: 0.85 });
+      
+      // Upload using secure server-side upload endpoint
+      const publicUrl = await uploadFile(file, 'auction');
+
+      // Update database profile
+      const res = await updateProfile({ banner: publicUrl });
+      if (res.success) {
+        await update();
+        toast.success("Profile banner updated!");
+      } else {
+        toast.error(res.error?.message || "Failed to update profile banner");
+      }
+    } catch (error) {
+      console.error("[Profile Banner] Upload failed:", error);
+      toast.error("Failed to upload profile banner. Please try again.");
+    } finally {
+      setIsUploadingBanner(false);
+      if (bannerInputRef.current) {
+        bannerInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveBanner = async () => {
+    if (!session?.user?.banner) return;
+    try {
+      setIsRemovingBanner(true);
+      const res = await updateProfile({ banner: null });
+      if (res.success) {
+        await update();
+        toast.success("Profile banner removed.");
+      } else {
+        toast.error(res.error?.message || "Failed to remove banner");
+      }
+    } catch (error) {
+      console.error("[Profile Banner] Remove failed:", error);
+      toast.error("Failed to remove profile banner.");
+    } finally {
+      setIsRemovingBanner(false);
     }
   };
   
@@ -372,9 +433,24 @@ export default function ProfileSettings() {
   return (
     <div className="animate-in fade-in duration-300">
       {/* Premium Compact Header Card */}
-      <div className="relative p-8 rounded-3xl bg-gradient-to-br from-primary-700 via-primary-600 to-indigo-800 text-white overflow-hidden shadow-xl mb-8">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-[80px] -mr-32 -mt-32" />
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 justify-between">
+      <div className="relative p-8 rounded-3xl text-white overflow-hidden shadow-xl mb-8 min-h-[160px] flex items-center">
+        {session.user?.banner ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={session.user.banner}
+              alt="Profile Banner"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-[1px] bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent" />
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-700 via-primary-600 to-indigo-800" />
+            <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-[80px] -mr-32 -mt-32" />
+          </>
+        )}
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 justify-between w-full">
           <div className="flex flex-col md:flex-row items-center gap-5 text-center md:text-left">
             <div className="relative group cursor-pointer" onClick={() => !isUploadingPhoto && !isRemovingPhoto && fileInputRef.current?.click()}>
               <input
@@ -440,15 +516,49 @@ export default function ProfileSettings() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2.5 relative z-20">
+            {/* Banner controls */}
+            <input
+              type="file"
+              ref={bannerInputRef}
+              onChange={handleBannerUpload}
+              accept="image/*"
+              className="hidden"
+              disabled={isUploadingBanner || isRemovingBanner}
+            />
+            <button
+              type="button"
+              onClick={() => bannerInputRef.current?.click()}
+              disabled={isUploadingBanner || isRemovingBanner || isUploadingPhoto || isRemovingPhoto}
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/25 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40 flex items-center gap-1.5"
+            >
+              {isUploadingBanner ? (
+                <Loader2 size={12} className="animate-spin text-white" />
+              ) : (
+                <Camera size={12} className="text-white" />
+              )}
+              {session.user?.banner ? "Change Banner" : "Upload Banner"}
+            </button>
+
+            {session.user?.banner && (
+              <button
+                type="button"
+                onClick={handleRemoveBanner}
+                disabled={isRemovingBanner || isUploadingBanner || isUploadingPhoto || isRemovingPhoto}
+                className="px-4 py-2.5 bg-white/10 hover:bg-red-500/25 border border-white/10 hover:border-transparent text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40"
+              >
+                {isRemovingBanner ? "Removing..." : "Remove Banner"}
+              </button>
+            )}
+
             {session.user?.image && (
               <button
                 type="button"
                 onClick={handleRemovePhoto}
-                disabled={isRemovingPhoto || isUploadingPhoto}
-                className="px-4 py-2.5 bg-white/10 hover:bg-red-500/20 border border-white/10 hover:border-transparent text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+                disabled={isRemovingPhoto || isUploadingPhoto || isUploadingBanner || isRemovingBanner}
+                className="px-4 py-2.5 bg-white/10 hover:bg-red-500/25 border border-white/10 hover:border-transparent text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40"
               >
-                Remove Photo
+                {isRemovingPhoto ? "Removing..." : "Remove Photo"}
               </button>
             )}
             
