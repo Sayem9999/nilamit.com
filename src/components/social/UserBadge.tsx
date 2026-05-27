@@ -3,7 +3,7 @@ import { Trophy, Star, ChevronUp, ShieldCheck } from "lucide-react";
 interface UserBadgeProps {
   level: number;
   streak: number;
-  reputation: number; // rating
+  rating: number;
   ratingCount?: number;
   isVerified?: boolean;
   className?: string;
@@ -12,7 +12,7 @@ interface UserBadgeProps {
 export default function UserBadge({
   level,
   streak,
-  reputation,
+  rating,
   ratingCount = 0,
   isVerified = false,
   className = "",
@@ -51,10 +51,10 @@ export default function UserBadge({
         </div>
       )}
 
-      {/* Reputation / Rating */}
+      {/* Feedback Rating */}
       <div className="flex items-center gap-1 px-2 py-0.5 bg-primary-50 text-primary-600 border border-primary-100 rounded-full text-[10px] font-bold uppercase tracking-tight">
         <Star className="w-2.5 h-2.5 fill-primary-600/10 text-amber-500 fill-amber-500/20 border-amber-300" />
-        {ratingCount > 0 ? `${reputation.toFixed(1)} ★ (${ratingCount})` : 'No reviews'}
+        {ratingCount > 0 ? `${rating.toFixed(1)} ★ (${ratingCount})` : 'No reviews'}
       </div>
     </div>
   );

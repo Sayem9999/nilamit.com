@@ -56,7 +56,8 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
     name: sellerData.name,
     image: sellerData.image,
     isVerifiedSeller: sellerData.isVerifiedSeller,
-    reputationScore: sellerData.rating,
+    reputationScore: sellerData.reputationScore ?? 0,
+    rating: sellerData.rating ?? 0,
     createdAt: sellerData.createdAt
       ? (typeof (sellerData.createdAt as unknown as { toDate?: () => Date }).toDate === 'function'
           ? (sellerData.createdAt as unknown as { toDate: () => Date }).toDate()
@@ -114,8 +115,9 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
         isTopRated: sellerData.isTopRated,
         winningStreak: sellerData.winningStreak,
         userLevel: sellerData.userLevel,
-        rating: seller.reputationScore,
+        rating: seller.rating,
         ratingCount: seller.ratingCount,
+        reputationScore: seller.reputationScore,
         emailVerified: seller.emailVerified,
         isBanned: sellerData.isBanned,
         salesCount: seller.salesCount,

@@ -8,7 +8,6 @@ import {
   Sparkles,
   TrendingUp,
   Loader2,
-  Lock,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -72,7 +71,7 @@ export default function RetailerPerksPage() {
               </p>
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-relaxed">
                 {user.isRetailer 
-                  ? "Maximum privileges unlocked: bulk sync, pro templates, and lowest commission rates."
+                  ? "Maximum privileges unlocked: pro templates and lowest commission rates."
                   : user.isVerifiedSeller 
                     ? "Verified for individual listings and core seller features."
                     : "Upgrade by verifying email in profile settings."}
@@ -142,11 +141,7 @@ export default function RetailerPerksPage() {
                 <td className="py-4 text-center text-indigo-600 font-bold">Unlimited</td>
                 <td className="py-4 text-center text-indigo-600 font-bold">Unlimited</td>
               </tr>
-              <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
-                <td className="py-4 px-3 font-bold text-slate-900">Bulk Inventory Sync</td>
-                <td className="py-4 text-center text-red-500"><Lock className="w-3.5 h-3.5 mx-auto" /></td>
-                <td className="py-4 text-center text-emerald-600 font-bold">CSV Enabled</td>
-              </tr>
+
               <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
                 <td className="py-4 px-3 flex items-center gap-2 font-bold text-slate-900">
                   <Percent className="w-4 h-4 text-slate-400" />
@@ -180,7 +175,7 @@ export default function RetailerPerksPage() {
             <div>
               <h4 className="text-md font-bold text-indigo-950 mb-1 font-heading">Unlock Pro Retailer Privileges Instantly</h4>
               <p className="text-xs text-indigo-855/80 leading-relaxed font-medium">
-                Want to bulk upload inventory via CSV or unlock priority escrow releases? Perform a self-service upgrade on your settings page now.
+                Want to unlock priority escrow releases or premium store badges? Perform a self-service upgrade on your settings page now.
               </p>
             </div>
             <Link 

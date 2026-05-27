@@ -293,6 +293,7 @@ export default function ProfileSettings() {
     isRetailer: boolean;
     rating: number; 
     ratingCount: number;
+    reputationScore: number;
     email?: string;
     emailVerified?: Date | string | null;
     bkashNumber?: string;
@@ -327,10 +328,11 @@ export default function ProfileSettings() {
       if (res.success) {
         toast.success(
           nextStatus 
-            ? "Switched to Professional Retailer! Bulk upload and advanced tools are now unlocked."
+            ? "Switched to Professional Retailer! Advanced tools are now unlocked."
             : "Switched to standard Seller / Bidder."
         );
         await update(); // Sync NextAuth session
+        window.location.reload(); // Force page reload to ensure state syncs instantly
       } else {
         toast.error(res.error?.message || "Failed to switch role category.");
       }
@@ -594,30 +596,30 @@ export default function ProfileSettings() {
         {/* Stats Grid */}
         <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{t_prof("reputation") || "Feedback"}</p>
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Trades Done</p>
               <p className="text-xl font-black text-gray-900 leading-tight">
-                {((user?.rating as number) || 3.5).toFixed(1)} <span className="text-[10px] text-gray-400 font-medium">/ 5.0</span>
-              </p>
-           </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Tier</p>
-              <p className="text-xl font-black text-gray-900 leading-tight truncate">
-                {user.isRetailer ? "Pro Retailer" : user.isVerifiedSeller ? "Verified Seller" : "Standard User"}
+                {user.salesCount || 0} <span className="text-[10px] text-gray-400 font-medium">Trades</span>
               </p>
            </div>
 
            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">XP Level</p>
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Feedback Score</p>
               <p className="text-xl font-black text-gray-900 leading-tight">
-                Tier {user.userLevel || 1}
+                {Number(user.rating || 0).toFixed(1)} <span className="text-[10px] text-gray-400 font-medium">/ 5.0</span>
               </p>
            </div>
 
            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Completed Deals</p>
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Reputation Score</p>
               <p className="text-xl font-black text-gray-900 leading-tight">
-                {user.salesCount || 0} Trades
+                {user.reputationScore || 0}
+              </p>
+           </div>
+
+           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Trader Level</p>
+              <p className="text-xl font-black text-gray-900 leading-tight">
+                Lv. {user.userLevel || 1}
               </p>
            </div>
         </motion.div>
@@ -734,7 +736,7 @@ export default function ProfileSettings() {
                 </span>
               </div>
               <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
-                Standard accounts can list and bid freely. **Professional Retailer** accounts unlock CSV bulk uploads, discounted commission rates, and premium merchant profiles.
+                Standard accounts can list and bid freely. **Professional Retailer** accounts unlock discounted commission rates and premium merchant profiles.
               </p>
               <button
                 type="button"

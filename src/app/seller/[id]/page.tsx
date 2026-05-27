@@ -51,7 +51,8 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
     name: sellerData.name,
     image: sellerData.image,
     isVerifiedSeller: sellerData.isVerifiedSeller,
-    reputationScore: sellerData.rating,
+    reputationScore: sellerData.reputationScore ?? 0,
+    rating: sellerData.rating ?? 0,
     createdAt: sellerData.createdAt
       ? (typeof (sellerData.createdAt as unknown as { toDate?: () => Date }).toDate === 'function'
           ? (sellerData.createdAt as unknown as { toDate: () => Date }).toDate()
@@ -108,8 +109,9 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
         isTopRated: sellerData.isTopRated,
         winningStreak: sellerData.winningStreak,
         userLevel: sellerData.userLevel,
-        rating: seller.reputationScore,
+        rating: seller.rating,
         ratingCount: seller.ratingCount,
+        reputationScore: seller.reputationScore,
         emailVerified: seller.emailVerified,
         isBanned: sellerData.isBanned,
         salesCount: seller.salesCount,
@@ -270,20 +272,24 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
       <div className="max-w-7xl mx-auto px-4 mt-16 mb-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Items Sold</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Trades Done</p>
             <p className="text-3xl font-black text-gray-900 font-heading">{seller.salesCount}</p>
           </div>
           <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Positive Feedback</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Positive Rating</p>
             <p className="text-3xl font-black text-emerald-500 font-heading">{feedbackPercentage}%</p>
           </div>
           <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Feedback Score</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Reputation Score</p>
             <p className="text-3xl font-black text-primary-600 font-heading">{seller.reputationScore}</p>
           </div>
           <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm text-center">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Bids</p>
-            <p className="text-3xl font-black text-indigo-500 font-heading">{seller._count.bids}</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+              {seller.winningStreak > 0 ? "Winning Streak" : "Total Bids"}
+            </p>
+            <p className="text-3xl font-black text-indigo-500 font-heading">
+              {seller.winningStreak > 0 ? `${seller.winningStreak} wins🔥` : seller._count.bids}
+            </p>
           </div>
         </div>
       </div>

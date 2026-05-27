@@ -21,7 +21,7 @@ export async function getUserReputation(userId?: string) {
     id: targetId,
     name: u.name ?? null,
     image: u.image ?? null,
-    reputationScore: u.rating ?? u.reputationScore ?? 0,
+    reputationScore: u.reputationScore ?? 0,
     rating: u.rating ?? 0,
     ratingCount: u.ratingCount ?? 0,
     winningStreak: u.winningStreak ?? 0,

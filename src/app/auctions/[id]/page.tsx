@@ -487,7 +487,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                 <UserBadge
                   level={auction.seller?.userLevel || 1}
                   streak={auction.seller?.winningStreak || 0}
-                  reputation={auction.seller?.rating || 0}
+                  rating={auction.seller?.rating || 0}
                   ratingCount={auction.seller?.ratingCount || 0}
                 />
               </div>
