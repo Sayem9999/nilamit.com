@@ -2,7 +2,14 @@
 
 ## Current Session (2026-05-27)
 ### What we did
-* **Unified Public Profile Storefront (B2C & C2C)** ([page.tsx (Dynamic Profile)](file:///c:/nilamit.com/src/app/profile/%5Bid%5D/page.tsx), [Navbar.tsx](file:///c:/nilamit.com/src/components/layout/Navbar.tsx), [ProfileSettings.tsx](file:///c:/nilamit.com/src/components/dashboard/ProfileSettings.tsx)):
+* **Unified & Synchronized Trust Stats (Decoupled Reputation & Rating)** ([ProfileSettings.tsx](file:///c:/nilamit.com/src/components/dashboard/ProfileSettings.tsx), [page.tsx (Dynamic Profile)](file:///c:/nilamit.com/src/app/profile/%5Bid%5D/page.tsx), [page.tsx (Seller Profile)](file:///c:/nilamit.com/src/app/seller/%5Bid%5D/page.tsx), [db.ts](file:///c:/nilamit.com/src/lib/db.ts), [UserBadge.tsx](file:///c:/nilamit.com/src/components/social/UserBadge.tsx)):
+  - **Reputation Discrepancy Fix**: Fixed a data-mapping bug where dynamic public profiles mapped `reputationScore` to `sellerData.rating`. For unrated users, this caused the reputation card to appear blank. Connected `reputationScore` directly to the correct Firestore field.
+  - **Component Refactoring**: Decoupled 5-star ratings from reputation scores inside the `UserBadge` component. Renamed the prop from `reputation` to `rating` to strictly reflect the 5-star feedback rating scale.
+  - **Symmetric Stats Layout**: Aligned stats cards across all three screens (Profile, Storefront, Dashboard Settings) to display identical ordering and data mappings (Trades Done, Feedback Rating, Reputation Score, User Level).
+* **Fixed Profile Photo & Banner UI/UX** ([ProfileSettings.tsx](file:///c:/nilamit.com/src/components/dashboard/ProfileSettings.tsx)):
+  - **Explicit Customization Actions**: Added always-visible, explicit **Upload Photo** / **Change Photo** buttons to settings. Previously, photo customization required clicking the round avatar directly, which was unintuitive on mobile viewports.
+  - **Symmetrical Actions Layout**: Structured the photo controls symmetrically alongside the banner controls with explicit, standard Lucide `Trash2` action buttons for removing photos and banners.
+* **Unified Public Profile Storefront (B2C & C2C)** ([page.tsx (Dynamic Profile)](file:///c:/nilamit.com/src/app/profile/%5Bid%5D/page.tsx), [Navbar.tsx](file:///c:/nilamit.com/src/components/layout/Navbar.tsx)):
   - Successfully unified the dynamic public profile page `/profile/[id]` to act as a dual C2C **Trader Profile** and B2C **Retailer Storefront**.
   - **Dynamic Theme Accents**: Standardized the view with Emerald/Teal accents for C2C Traders and Indigo/Violet accents for B2C Retailers.
   - **Fulfillment Trust Indicator**: Enabled a computed trust rate based on `salesCount` and `defectCount` metrics for Business Retailers.
