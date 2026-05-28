@@ -40,81 +40,118 @@ export default function ChatList({ conversations }: ChatListProps) {
 
   if (!conversations || conversations.length === 0) {
     return (
-      <div className="bg-white border border-gray-100 rounded-[40px] p-12 text-center h-full flex flex-col items-center justify-center">
-        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-          <MessageSquare className="w-8 h-8 text-gray-300" />
+      <div className="bg-white border border-gray-200 rounded-md p-10 text-center h-full flex flex-col items-center justify-center shadow-sm">
+        <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+          <MessageSquare className="w-7 h-7 text-gray-300" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">{t('noChats')}</h3>
-        <p className="text-sm text-gray-400 max-w-xs">{t('advanceGated')}</p>
+        <h3 className="text-base font-bold text-gray-900 mb-1.5">{t('noChats')}</h3>
+        <p className="text-sm text-gray-500 max-w-xs">{t('advanceGated')}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-[40px] p-6 shadow-premium overflow-hidden">
-      <div className="flex items-center justify-between mb-8 px-2">
+    <div className="bg-white border border-gray-200 rounded-md p-5 shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between mb-5 px-1">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{t('activeChats')}</h2>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Transaction Coordination</p>
+          <h2 className="text-xl font-bold text-gray-900 leading-none">{t('activeChats')}</h2>
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mt-1.5">
+            Transaction Coordination
+          </p>
         </div>
-        <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center">
-           <MessageSquare className="w-5 h-5 text-primary-500" />
+        <div className="w-9 h-9 bg-primary-50 rounded-md flex items-center justify-center">
+          <MessageSquare className="w-4.5 h-4.5 text-primary-600" />
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-1">
         {conversations.map((convo) => {
           const recipient = convo.otherUser;
           const lastMsg = convo.lastMessage;
+          // Unread = there's a last message AND it's not from current user AND not read.
+          // We don't have currentUserId here, but lastMessage.isRead from the server
+          // already encodes "did the viewer read this" — if false, highlight.
+          const unread = lastMsg ? lastMsg.isRead === false : false;
 
           return (
-            <Link 
-              key={convo.id} 
-              href={`/auctions/${convo.auctionId}`}
-              className="flex items-start gap-4 p-4 rounded-md hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100 group"
+            // Fix: link to the chat page, not the auction page.
+            // Conversations doc-id === auctionId (per data model), so we route
+            // there to keep the URL stable across renames.
+            <Link
+              key={convo.id}
+              href={`/dashboard/coordination/${convo.auctionId}`}
+              className={`flex items-start gap-3 p-3 rounded-md transition-colors border group ${
+                unread
+                  ? 'bg-primary-50/50 border-primary-100 hover:bg-primary-50'
+                  : 'border-transparent hover:bg-gray-50'
+              }`}
             >
-              <div className="w-14 h-14 rounded-md bg-gray-100 relative overflow-hidden flex-shrink-0">
+              <div className="w-12 h-12 rounded-md bg-gray-100 relative overflow-hidden flex-shrink-0">
                 {convo.auction?.images?.[0] ? (
-                  <Image src={convo.auction.images[0]} alt={convo.auction.title} fill sizes="56px" className="object-cover" />
+                  <Image
+                    src={convo.auction.images[0]}
+                    alt={convo.auction.title}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
                 ) : (
-                  <ShoppingBag className="w-6 h-6 text-gray-300 m-auto mt-4" />
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ShoppingBag className="w-5 h-5 text-gray-300" />
+                  </div>
                 )}
               </div>
-              
+
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="text-sm font-bold text-gray-900 truncate pr-4">
-                    {convo.auction?.title || "Auction Coordination"}
+                <div className="flex items-center justify-between mb-0.5 gap-2">
+                  <h4 className="text-sm font-bold text-gray-900 truncate">
+                    {convo.auction?.title || 'Auction Coordination'}
                   </h4>
                   {lastMsg && (
-                    <span className="text-[10px] text-gray-400 font-medium">
+                    <span className="text-[10px] text-gray-500 font-medium shrink-0">
                       {formatRelativeTime(new Date(lastMsg.createdAt))}
                     </span>
                   )}
                 </div>
-                
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-4 h-4 rounded-full bg-gray-200 relative overflow-hidden">
+
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="w-3.5 h-3.5 rounded-full bg-gray-200 relative overflow-hidden shrink-0">
                     {recipient?.image ? (
-                        <Image src={getProxiedAvatarUrl(recipient.image) || ""} alt={recipient.name || ""} fill sizes="16px" className="object-cover" referrerPolicy="no-referrer" unoptimized />
+                      <Image
+                        src={getProxiedAvatarUrl(recipient.image) || ''}
+                        alt={recipient.name || ''}
+                        fill
+                        sizes="14px"
+                        className="object-cover"
+                        referrerPolicy="no-referrer"
+                        unoptimized
+                      />
                     ) : (
-                        <User className="w-3 h-3 text-gray-400 m-auto" />
+                      <User className="w-2.5 h-2.5 text-gray-400 m-auto" />
                     )}
                   </div>
-                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                    {recipient?.name || "Anonymous User"}
+                  <span className="text-[11px] font-semibold text-gray-600 truncate">
+                    {recipient?.name || 'Anonymous User'}
                   </span>
                 </div>
 
-                <p className="text-xs text-gray-500 truncate italic">
-                  {lastMsg ? lastMsg.content : "No messages yet"}
+                <p
+                  className={`text-xs truncate ${
+                    unread ? 'text-gray-900 font-semibold' : 'text-gray-500'
+                  }`}
+                >
+                  {lastMsg ? lastMsg.content : 'No messages yet'}
                 </p>
               </div>
 
-              <div className="self-center">
-                <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                  <ArrowRight className="w-4 h-4 text-gray-900" />
-                </div>
+              <div className="self-center flex items-center gap-2 shrink-0">
+                {unread && (
+                  <span
+                    aria-label="Unread"
+                    className="w-2 h-2 rounded-full bg-primary-600"
+                  />
+                )}
+                <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-900 transition-colors" />
               </div>
             </Link>
           );

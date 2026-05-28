@@ -435,7 +435,10 @@
     "verif_Unverified": "Unverified",
     "verif_Unverified_Desc": "This user has not verified their contact details yet.",
     "uploadFailed": "Upload failed",
-    "typeMessage": "Type a message..."
+    "typeMessage": "Type a message...",
+    "coordinationChat": "Deal coordination",
+    "sendFailed": "Couldn't send your message. Please try again.",
+    "failedToSend": "Failed — tap to retry"
   },
   "FAQ": {
     "title": "Frequently Asked Questions",

@@ -127,7 +127,7 @@ export default async function HowItWorksPage() {
             {t("ctaDesc")}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/search">
+            <Link href="/auctions">
               <Button
                 size="lg"
                 className="h-14 px-10 rounded-md bg-gray-900 hover:bg-black text-white font-bold text-lg pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
