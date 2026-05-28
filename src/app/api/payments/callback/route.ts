@@ -89,6 +89,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Signature mismatch' }, { status: 400 });
     }
 
+    // ─── Featured-listing purchase branch ──────────────────────────────
+    // Featured purchases use tran_id format `feat-{auctionId}-{ts}` (see
+    // quoteFeaturedPurchase in src/actions/featured.ts). Route them to
+    // activateFeatured instead of the escrow pipeline.
+    if (tran_id.startsWith('feat-')) {
+      const match = tran_id.match(/^feat-(.+)-(\d+)$/);
+      if (!match) {
+        log.warn('[PaymentCallback] Unparseable feat- tran_id', { tran_id });
+        return NextResponse.json({ status: 'OK' });
+      }
+      const auctionId = match[1];
+
+      // Look up the purchase quote to find duration + buyer (the quote
+      // doesn't persist server-side yet, so we infer days from amount.
+      // TODO: persist quoteId → {days, sellerId, priceBdt} when we have
+      // a transient purchases collection. For now, look up auction +
+      // assume days from the amount paid).
+      const amt = Number(amount);
+      const days = amt >= 250 ? 7 : amt >= 120 ? 3 : 1;
+
+      const aSnap = await (await import('@/lib/db')).db
+        .collection('auctions')
+        .doc(auctionId)
+        .get();
+      const sellerId = (aSnap.data() as { sellerId?: string } | undefined)?.sellerId;
+      if (!sellerId) {
+        log.warn('[PaymentCallback] feat- auction missing or sellerId', { auctionId });
+        return NextResponse.json({ status: 'OK' });
+      }
+
+      const { activateFeatured } = await import('@/actions/featured');
+      const featResult = await activateFeatured(auctionId, days, sellerId, tran_id);
+      if (featResult.success) {
+        log.info('[PaymentCallback] Featured-listing activated', { auctionId, days, tran_id, amt });
+        return NextResponse.json({ status: 'OK', kind: 'featured' });
+      } else {
+        log.error('[PaymentCallback] Featured activation failed', featResult.error?.message, { auctionId });
+        return NextResponse.json({ error: featResult.error?.message }, { status: 500 });
+      }
+    }
+
+    // ─── Escrow branch (default for non-feat- tranIds) ─────────────────
     // Release escrow atomically using the payment service
     const res = await PaymentService.verifyAndReleaseEscrow(
       tran_id, // using transactional ID as the automation token target

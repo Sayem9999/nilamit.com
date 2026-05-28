@@ -6,6 +6,7 @@ import { NotificationProvider } from "./NotificationProvider";
 import { QueryProvider } from "./QueryProvider";
 import { WebVitalsReporter } from "@/components/rum/WebVitalsReporter";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryProvider>
         <SettingsProvider>
           <NotificationProvider>
+            {/* Offline banner — fixed across top whenever navigator.onLine is false. */}
+            <OfflineIndicator />
             {children}
             {/* RUM (web-vitals → /api/rum → BigQuery). Renders null. */}
             <WebVitalsReporter />
