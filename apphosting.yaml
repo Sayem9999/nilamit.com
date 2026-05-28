@@ -94,3 +94,39 @@ env:
   - variable: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
     value: "6Leg4fUsAAAAAIITIGqtUG5pzOqB5WX7F3tbD5be"
 
+  # ─── BigQuery analytics sink ────────────────────────────────────────
+  # Dataset + table are provisioned in nilamit-52073. The shipper
+  # auto-uses the App Hosting service account (ADC) — no key file needed.
+  # Grant the SA the role at deploy time:
+  #   gcloud projects add-iam-policy-binding nilamit-52073 \
+  #     --member="serviceAccount:firebase-app-hosting-compute@nilamit-52073.iam.gserviceaccount.com" \
+  #     --role="roles/bigquery.dataEditor"
+  - variable: BIGQUERY_DATASET
+    value: nilamit_events
+  - variable: BIGQUERY_TABLE
+    value: events
+
+  # ─── SSLCommerz gateway ─────────────────────────────────────────────
+  # Set SSLCOMMERZ_STORE_ID + SSLCOMMERZ_STORE_PASSWORD in Secret Manager
+  # to activate the /api/payments/sslcommerz/* routes. Until then the init
+  # endpoint returns 503 and bKash/Nagad keep working. Set to "true" while
+  # using sandbox merchant credentials; remove or set to "false" for prod.
+  - variable: SSLCOMMERZ_SANDBOX
+    value: "true"
+
+  # ─── Pending — uncomment AFTER setting each secret in Secret Manager ──
+  # (Adding a secret ref before the secret exists will fail the build.)
+  #
+  # - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY
+  #   secret: NEXT_PUBLIC_FIREBASE_VAPID_KEY
+  #
+  # - variable: ALGOLIA_APP_ID
+  #   secret: ALGOLIA_APP_ID
+  # - variable: ALGOLIA_SEARCH_KEY
+  #   secret: ALGOLIA_SEARCH_KEY
+  #
+  # - variable: SSLCOMMERZ_STORE_ID
+  #   secret: SSLCOMMERZ_STORE_ID
+  # - variable: SSLCOMMERZ_STORE_PASSWORD
+  #   secret: SSLCOMMERZ_STORE_PASSWORD
+
