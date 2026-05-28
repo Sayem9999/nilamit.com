@@ -18,6 +18,8 @@ import {
   Trash2
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { KycSubmissionForm } from "@/components/dashboard/KycSubmissionForm";
+import type { KycStatus } from "@/types";
 
 export default function RetailerSettingsPage() {
   const { data: session, update } = useSession();
@@ -192,6 +194,12 @@ export default function RetailerSettingsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Forms */}
           <div className="lg:col-span-2 space-y-6">
+            {/* KYC submission — only required for the verified-seller badge. */}
+            <KycSubmissionForm
+              status={(user.kycStatus as KycStatus | undefined) ?? "NONE"}
+              rejectReason={user.kycRejectReason as string | null | undefined}
+            />
+
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Storefront Cover Banner Card */}
               <div className="bg-white border border-slate-100 shadow-sm rounded-md p-8 space-y-6">

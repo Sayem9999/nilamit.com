@@ -12,6 +12,7 @@ import { UsersTab } from "./tabs/UsersTab";
 import { MetricsTab } from "./tabs/MetricsTab";
 import { DisputesTab } from "./tabs/DisputesTab";
 import { TreasuryTab } from "./tabs/TreasuryTab";
+import { KycTab } from "./tabs/KycTab";
 import { Users, Package, TrendingUp, DollarSign } from "lucide-react";
 import { SystemConfig } from "@/types";
 import AdminLiveFeed from "./live/AdminLiveFeed";
@@ -204,6 +205,7 @@ export default async function AdminPage() {
       metrics={<MetricsTab />}
       treasury={<TreasuryTab />}
       disputes={<DisputesTab />}
+      kyc={<KycTab />}
       live={<AdminLiveFeed />}
     />
   );

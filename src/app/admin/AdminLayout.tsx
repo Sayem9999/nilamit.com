@@ -24,6 +24,7 @@ type Tab =
   | "users"
   | "treasury"
   | "disputes"
+  | "kyc"
   | "live";
 
 interface AdminLayoutProps {
@@ -35,6 +36,7 @@ interface AdminLayoutProps {
   users?: React.ReactNode;
   treasury?: React.ReactNode;
   disputes?: React.ReactNode;
+  kyc?: React.ReactNode;
   live?: React.ReactNode;
 }
 
@@ -47,6 +49,7 @@ export function AdminLayout({
   users,
   treasury,
   disputes,
+  kyc,
   live,
 }: AdminLayoutProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -57,6 +60,7 @@ export function AdminLayout({
     { id: "live", label: "Live Activity", icon: TrendingUp },
     { id: "moderation", label: "Moderation", icon: ShieldAlert },
     { id: "users", label: "Users", icon: Users },
+    { id: "kyc", label: "KYC Queue", icon: ShieldCheck },
     { id: "metrics", label: "Metrics", icon: Banknote },
     { id: "content", label: "Content", icon: PenTool },
     { id: "treasury", label: "Treasury", icon: ShieldCheck },
@@ -134,6 +138,7 @@ export function AdminLayout({
           {activeTab === "users" && users}
           {activeTab === "treasury" && treasury}
           {activeTab === "disputes" && disputes}
+          {activeTab === "kyc" && kyc}
           {activeTab === "system" && system}
         </div>
       </main>

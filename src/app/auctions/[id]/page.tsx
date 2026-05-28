@@ -9,6 +9,7 @@ import { CountdownTimer } from "@/components/auction/CountdownTimer";
 import BidPanelWrapper from "@/components/auction/BidPanelWrapper";
 import { StickyBidBar } from "@/components/auction/StickyBidBar";
 import { ImageGallery } from "@/components/auction/ImageGallery";
+import { AuctionViewTracker } from "@/components/auction/AuctionViewTracker";
 import Image from "next/image";
 import {
   Eye,
@@ -355,6 +356,9 @@ export default async function AuctionDetailPage({ params }: Props) {
               </div>
             )}
           </div>
+
+          {/* Fire-and-forget viewCount increment (rate-limited per IP). */}
+          <AuctionViewTracker auctionId={id} />
 
           {/* Bid Panel */}
           <BidPanelWrapper
