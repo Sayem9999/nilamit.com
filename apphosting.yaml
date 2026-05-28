@@ -121,14 +121,17 @@ env:
     secret: NEXT_PUBLIC_FIREBASE_VAPID_KEY
 
   # ─── SSLCommerz card/net-banking gateway — pending creds ───────────
-  # Uncomment after running:
-  #   firebase apphosting:secrets:set SSLCOMMERZ_STORE_ID       --project nilamit-52073 --data-file -
-  #   firebase apphosting:secrets:set SSLCOMMERZ_STORE_PASSWORD --project nilamit-52073 --data-file -
-  #   firebase apphosting:secrets:grantaccess SSLCOMMERZ_STORE_ID       --project nilamit-52073 --backend nilamit
-  #   firebase apphosting:secrets:grantaccess SSLCOMMERZ_STORE_PASSWORD --project nilamit-52073 --backend nilamit
+  # The existing /api/payments/callback handles both production SSLCommerz
+  # form-POSTs (with hash verification) and developer test JSON triggers.
+  # No separate /api/payments/sslcommerz/* routes exist — the redundant
+  # scaffolding was removed.
   #
-  # - variable: SSLCOMMERZ_STORE_ID
-  #   secret: SSLCOMMERZ_STORE_ID
+  # To activate production card payments, set SSLCOMMERZ_STORE_PASSWORD
+  # (the callback uses it to verify the hash signature). The dev-test
+  # path requires PAYMENT_WEBHOOK_SECRET instead.
+  #
   # - variable: SSLCOMMERZ_STORE_PASSWORD
   #   secret: SSLCOMMERZ_STORE_PASSWORD
+  # - variable: PAYMENT_WEBHOOK_SECRET
+  #   secret: PAYMENT_WEBHOOK_SECRET
 

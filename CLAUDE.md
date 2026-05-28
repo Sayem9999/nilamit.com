@@ -104,13 +104,11 @@ Browser (React 19)
 | `src/actions/auction.ts` | Server actions for auction management |
 | `src/middleware.ts` | Security headers (CSP, HSTS), Auth check, Ban redirect |
 | `src/lib/logger.ts` | `log.info/warn/error/debug` → Sentry; `log.event(type, fields)` → BigQuery sink (no-op without env). |
-| `src/actions/search.ts` | Firestore-only search — scans up to 200 active auctions, filters + ranks in memory. No external service. Good for catalogs up to ~10k active listings; add a `searchTokens` denormalized array + `array-contains-any` when you outgrow it. |
 | `src/lib/firebase-remote-config.ts` | Runtime feature flags. Priority order: Remote Config > SystemConfig (Firestore) > hard-coded default. Defaults defined in `RemoteConfigDefaults`. |
 | `src/lib/fcm.ts` | Browser FCM client — `enablePushNotifications()` from a user gesture; `onForegroundPush()` for in-tab toasts. No-ops without `NEXT_PUBLIC_FIREBASE_VAPID_KEY`. |
 | `src/lib/fcm-sender.ts` | Server `pushToUser(userId, payload)` via `firebase-admin/messaging`. Auto-prunes invalid tokens. Wired into `BidSideEffects.notifyOutbid` and `notifySeller`. |
 | `public/firebase-messaging-sw.js` | SW for background push display + click-through deep-link. Hard-codes the public Firebase config (SW can't read `process.env`). |
-| `src/lib/sslcommerz.ts` | `initSession` + `validatePayment` + `verifyIPN`. Env-gated. |
-| `src/app/api/payments/sslcommerz/{init,ipn}/route.ts` | Init redirects user to SSLCommerz gateway; IPN verifies hash + re-validates against server, then transactionally flips escrow PENDING → VERIFICATION_PENDING. |
+| `src/app/api/payments/callback/route.ts` | Single payment webhook for all gateways — verifies SSLCommerz hash for production form-POSTs, or accepts a dev-test JSON body with `PAYMENT_WEBHOOK_SECRET`. Delegates to `PaymentService.verifyAndReleaseEscrow` which transactionally flips escrow PENDING → HELD. **Do NOT add a separate sslcommerz/* route** — that's the dead code we removed. |
 | `src/lib/bigquery-shipper.ts` | Streaming insert. Schema documented inline. |
 | `src/stores/ui-store.ts` | Zustand store (theme/locale/lightweightMode/sidebar/tipsSeen) persisted to localStorage. |
 | `src/components/providers/QueryProvider.tsx` | TanStack Query client — 30s stale, 1 retry, refetchOnWindowFocus on. |

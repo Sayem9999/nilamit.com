@@ -210,8 +210,18 @@ export const Navbar = memo(function Navbar() {
             </button>
           </form>
 
-          {/* Right cluster: notifications, chat, account */}
-          <div className="hidden md:flex items-center gap-1 shrink-0">
+          {/* Right cluster: prominent Sell CTA + chat + notifications + account */}
+          <div className="hidden md:flex items-center gap-2 shrink-0">
+            {/* Big blue Sell CTA — always visible (signed in or out), since
+                conversion to seller is the main marketplace funnel. */}
+            <Link
+              href="/auctions/create"
+              className="inline-flex items-center gap-1.5 h-10 px-4 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-md shadow-sm hover:shadow-md transition-all active:scale-[0.98] whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>{t("sell")}</span>
+            </Link>
+
             {session ? (
               <>
                 <Link
