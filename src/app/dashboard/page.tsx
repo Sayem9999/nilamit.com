@@ -301,14 +301,14 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-28 pb-12 animate-in fade-in duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 pt-6 pb-10 animate-in fade-in duration-200">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         
 
 
         {/* System Announcement Sync */}
         {systemConfig.showAnnouncement && systemConfig.announcement && (
-          <div className="mb-8 p-4 bg-primary-50 border border-primary-100 rounded-2xl flex items-center gap-3 text-primary-900 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="mb-8 p-4 bg-primary-50 border border-primary-200 rounded-md flex items-center gap-3 text-primary-900 animate-in fade-in slide-in-from-top-4 duration-500">
             <CheckCircle className="w-5 h-5 text-primary-600" />
             <p className="font-semibold text-sm">{systemConfig.announcement}</p>
           </div>
@@ -317,17 +317,17 @@ export default async function DashboardPage({
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
           {/* Sidebar */}
           <div className="lg:col-span-1 w-full">
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 space-y-6">
+            <div className="bg-white rounded-md shadow-sm border border-gray-200 p-4 space-y-5 sticky top-[140px]">
               
               {/* Buying Activities */}
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 mb-2">Buying</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1.5">Buying</p>
                 <div className="space-y-1">
                   <Link
                     href="/dashboard?tab=watchlist"
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    className={`flex items-center justify-between px-3 py-2 rounded transition-colors font-semibold text-[13px] border group ${
                       currentTab === "watchlist"
-                        ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
+                        ? "bg-primary-50 text-primary-700 border-primary-200 border-l-2 border-l-primary-600"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                     }`}
                   >
@@ -338,7 +338,7 @@ export default async function DashboardPage({
                       <span>{t("watchlist")}</span>
                     </div>
                     {watchlistCount > 0 ? (
-                      <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "watchlist" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {watchlistCount}
@@ -352,9 +352,9 @@ export default async function DashboardPage({
 
                   <Link
                     href="/dashboard?tab=bids"
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    className={`flex items-center justify-between px-3 py-2 rounded transition-colors font-semibold text-[13px] border group ${
                       currentTab === "bids"
-                        ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
+                        ? "bg-primary-50 text-primary-700 border-primary-200 border-l-2 border-l-primary-600"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                     }`}
                   >
@@ -365,7 +365,7 @@ export default async function DashboardPage({
                       <span>{t("activeBids")}</span>
                     </div>
                     {bidsCount > 0 ? (
-                      <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "bids" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {bidsCount}
@@ -379,9 +379,9 @@ export default async function DashboardPage({
 
                   <Link
                     href="/dashboard?tab=escrow"
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    className={`flex items-center justify-between px-3 py-2 rounded transition-colors font-semibold text-[13px] border group ${
                       currentTab === "escrow"
-                        ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
+                        ? "bg-primary-50 text-primary-700 border-primary-200 border-l-2 border-l-primary-600"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                     }`}
                   >
@@ -392,7 +392,7 @@ export default async function DashboardPage({
                       <span>{t("wonEscrow")}</span>
                     </div>
                     {escrowCount > 0 ? (
-                      <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "escrow" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {escrowCount}
@@ -408,13 +408,13 @@ export default async function DashboardPage({
 
               {/* Selling Activities */}
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 mb-2">Selling</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1.5">Selling</p>
                 <div className="space-y-1">
                   <Link
                     href="/dashboard?tab=listings"
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    className={`flex items-center justify-between px-3 py-2 rounded transition-colors font-semibold text-[13px] border group ${
                       currentTab === "listings"
-                        ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
+                        ? "bg-primary-50 text-primary-700 border-primary-200 border-l-2 border-l-primary-600"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                     }`}
                   >
@@ -425,7 +425,7 @@ export default async function DashboardPage({
                       <span>{t("myListings")}</span>
                     </div>
                     {totalListingsCount > 0 ? (
-                      <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "listings" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {totalListingsCount}
@@ -441,13 +441,13 @@ export default async function DashboardPage({
 
               {/* Account & Inbox */}
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 mb-2">My Account</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1.5">My Account</p>
                 <div className="space-y-1">
                   <Link
                     href="/dashboard?tab=coordination"
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    className={`flex items-center justify-between px-3 py-2 rounded transition-colors font-semibold text-[13px] border group ${
                       currentTab === "coordination"
-                        ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
+                        ? "bg-primary-50 text-primary-700 border-primary-200 border-l-2 border-l-primary-600"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                     }`}
                   >
@@ -458,7 +458,7 @@ export default async function DashboardPage({
                       <span>{t("chat")}</span>
                     </div>
                     {chatsCount > 0 ? (
-                      <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full transition-colors ${
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "coordination" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {chatsCount}
@@ -474,7 +474,7 @@ export default async function DashboardPage({
                     href="/dashboard?tab=notifications"
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
                       currentTab === "notifications"
-                        ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
+                        ? "bg-primary-50 text-primary-700 border-primary-200 border-l-2 border-l-primary-600"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                     }`}
                   >
@@ -491,7 +491,7 @@ export default async function DashboardPage({
                   href="/dashboard?tab=profile"
                   className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
                     currentTab === "profile"
-                      ? "bg-primary-50/80 text-primary-700 border-primary-200/50 pl-3 border-l-4 border-l-primary-600 scale-[1.01]"
+                      ? "bg-primary-50 text-primary-700 border-primary-200 border-l-2 border-l-primary-600"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 border-transparent"
                   }`}
                 >
@@ -503,9 +503,9 @@ export default async function DashboardPage({
               </div>
 
               {/* Trust Fabric Sidebar Card */}
-              <div className="mt-6 p-5 rounded-2xl bg-gray-50 border border-gray-100">
+              <div className="mt-6 p-5 rounded-md bg-gray-50 border border-gray-100">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("nilamitScore")}</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{t("nilamitScore")}</span>
                   <Trophy className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex items-baseline gap-1 mb-1">
@@ -526,7 +526,7 @@ export default async function DashboardPage({
                 {/* Seller Performance Sync */}
                 <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Account Type</span>
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Account Type</span>
                     {session.user.isTopRated ? (
                       <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 animate-pulse">
                         <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
@@ -588,7 +588,7 @@ export default async function DashboardPage({
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white p-12 text-center rounded-2xl border border-gray-100 flex flex-col items-center justify-center">
+                  <div className="bg-white p-12 text-center rounded-md border border-gray-200 flex flex-col items-center justify-center">
                     <Heart className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 mb-6 font-medium">{t("emptyWatchlist")}</p>
                     <Link
@@ -614,7 +614,7 @@ export default async function DashboardPage({
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white p-12 text-center rounded-2xl border border-gray-100 flex flex-col items-center justify-center">
+                  <div className="bg-white p-12 text-center rounded-md border border-gray-200 flex flex-col items-center justify-center">
                     <RefreshCw className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 mb-6 font-medium">
                       {t("noActiveBids")}
@@ -649,7 +649,7 @@ export default async function DashboardPage({
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
+                  <div className="bg-white p-12 text-center rounded-md border border-gray-200">
                     <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">
                       {t("noWonItems")}
@@ -677,23 +677,23 @@ export default async function DashboardPage({
                   <>
                     {/* Earnings + counts header */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{tStats("netEarnings")}</p>
+                      <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("netEarnings")}</p>
                         <p className="text-lg font-black text-emerald-600 truncate">{formatBDT(listingStats.netEarnings)}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{tStats("afterCommission", { amount: formatBDT(listingStats.totalCommission) })}</p>
                       </div>
-                      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{tStats("grossSales")}</p>
+                      <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("grossSales")}</p>
                         <p className="text-lg font-black text-gray-900 truncate">{formatBDT(listingStats.grossSales)}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{tStats("soldSuffix", { count: listingStats.sold })}</p>
                       </div>
-                      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{tStats("liveNow")}</p>
+                      <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("liveNow")}</p>
                         <p className="text-lg font-black text-primary-600">{listingStats.active}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{tStats("activeAuctions")}</p>
                       </div>
-                      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{tStats("closedNoSale")}</p>
+                      <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("closedNoSale")}</p>
                         <p className="text-lg font-black text-gray-700">{listingStats.expired + listingStats.cancelled}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{tStats("closedDetail", { expired: listingStats.expired, cancelled: listingStats.cancelled })}</p>
                       </div>
@@ -738,7 +738,7 @@ export default async function DashboardPage({
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
+                  <div className="bg-white p-12 text-center rounded-md border border-gray-200">
                     <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 mb-4">
                       {listingStats.totalListings === 0
@@ -778,7 +778,7 @@ export default async function DashboardPage({
                       <Link 
                         key={conv.id} 
                         href={`/dashboard/coordination/${conv.id}`}
-                        className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group flex items-center gap-4"
+                        className="bg-white p-5 rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-all group flex items-center gap-4"
                       >
                          <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
                             {conv.auction.images?.[0] ? (
@@ -825,7 +825,7 @@ export default async function DashboardPage({
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white p-12 text-center rounded-2xl border border-gray-100">
+                  <div className="bg-white p-12 text-center rounded-md border border-gray-200">
                     <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">
                       {t("noCoordination")}

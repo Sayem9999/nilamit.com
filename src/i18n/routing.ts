@@ -1,11 +1,14 @@
 import {defineRouting} from 'next-intl/routing';
 import {createNavigation} from 'next-intl/navigation';
 
-// English-only deployment. next-intl is retained as the message-loading
-// layer (every component uses useTranslations) but no locale switching
-// happens. To re-introduce a locale, add it here AND in src/i18n.ts.
+// Supported locales. Locale selection is cookie-driven (NEXT_LOCALE), not URL
+// path prefix — keeps existing /auctions URLs unchanged for SEO.
+// Add a new locale here, in src/i18n.ts, AND ship messages/<locale>.json.
+export const locales = ['en', 'bn'] as const;
+export type Locale = (typeof locales)[number];
+
 export const routing = defineRouting({
-  locales: ['en'],
+  locales: [...locales],
   defaultLocale: 'en'
 });
 

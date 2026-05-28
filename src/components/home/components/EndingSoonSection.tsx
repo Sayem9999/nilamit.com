@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
+import Link from "next/link";
+import { Clock, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { AuctionWithSeller } from "@/types";
@@ -15,28 +15,35 @@ export function EndingSoonSection({ endingSoon }: EndingSoonSectionProps) {
   if (endingSoon.length === 0) return null;
 
   return (
-    <section className="py-16 sm:py-24 bg-white" aria-labelledby="ending-soon-heading">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="flex items-center gap-3 mb-10"
-        >
-          <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 motion-reduce:animate-none" aria-hidden="true">
-            <Clock className="w-6 h-6 animate-pulse motion-reduce:animate-none" />
+    <section
+      aria-labelledby="ending-soon-heading"
+      className="py-8 sm:py-10 bg-gray-50/60 border-y border-gray-100"
+    >
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between gap-4 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-red-100 rounded-md flex items-center justify-center text-red-600" aria-hidden="true">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <h2
+                id="ending-soon-heading"
+                className="font-heading font-black text-xl sm:text-2xl text-gray-900 tracking-tight leading-none"
+              >
+                {t("endingSoon")}
+              </h2>
+              <p className="text-[12px] text-gray-500 mt-1">{t("endingSoonDesc")}</p>
+            </div>
           </div>
-          <div>
-            <h2 id="ending-soon-heading" className="font-heading font-black text-3xl sm:text-4xl text-gray-900 tracking-tight">
-              {t("endingSoon")}
-            </h2>
-            <p className="mt-1 text-gray-500 font-medium">
-              {t("endingSoonDesc")}
-            </p>
-          </div>
-        </motion.div>
+          <Link
+            href="/auctions?sortBy=endTime&sortOrder=asc"
+            className="hidden sm:inline-flex items-center gap-1 text-sm font-bold text-primary-600 hover:text-primary-700 hover:gap-2 transition-all"
+          >
+            {t("seeAll")} <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
           {endingSoon.map((auction) => (
             <AuctionCard key={auction.id} auction={auction} />
           ))}

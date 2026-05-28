@@ -1,360 +1,122 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
-import { motion, Variants } from "framer-motion";
-import {
-  Search,
-  Sparkles,
-  MapPin,
-  Bell,
-  Zap,
-  TrendingUp,
-  Shield,
-  Gavel,
-  Users,
-} from "lucide-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { SystemConfig } from "@/types";
+import { ArrowRight, ShieldCheck, Gavel, Clock, Tag } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { CATEGORIES } from "@/types";
+import { SystemConfig } from "@/types";
 
 interface HeroSectionProps {
   systemConfig?: SystemConfig;
   totalUsers?: number;
 }
 
+/**
+ * Slim eBay-style promo strip. Replaces the previous full-page hero pitch.
+ * Three side-by-side promo cards: Sell-now, Verified-escrow trust, Daily-deals teaser.
+ * Total height ~200–240px — leaves the categories grid and product rails to
+ * dominate the actual fold, which is how real marketplaces order things.
+ */
 export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
   const t = useTranslations("Home");
-  const tCat = useTranslations("Categories");
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchCategory, setSearchCategory] = useState("");
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim() || searchCategory) {
-      const url = `/auctions?`;
-      const params = [];
-      if (searchQuery.trim()) params.push(`search=${encodeURIComponent(searchQuery)}`);
-      if (searchCategory) params.push(`category=${encodeURIComponent(searchCategory)}`);
-      router.push(url + params.join("&"));
-    }
-  };
+  const escrowEnabled = systemConfig?.escrowRequired ?? true;
+  const heroImage = systemConfig?.heroImage || "/hero_c2c.png";
 
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.2 },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" as const },
-    },
-  };
+  const formattedUsers = totalUsers
+    ? totalUsers >= 1000
+      ? `${(totalUsers / 1000).toFixed(1)}k+`
+      : `${totalUsers}+`
+    : null;
 
   return (
-    <section className="relative overflow-hidden bg-white border-b border-gray-100">
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary-50/50 rounded-full blur-[120px] -mr-96 -mt-96 opacity-60" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-50/50 rounded-full blur-[100px] -ml-40 -mb-40 opacity-40" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 sm:pt-24 sm:pb-36">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="relative z-10"
-            >
-            <motion.div
-              variants={itemVariants}
-              className="inline-flex items-center gap-2 bg-primary-50 text-primary-700 border border-primary-100 rounded-full px-4 py-1.5 text-sm font-semibold mb-6 shadow-sm"
-            >
-              <Sparkles className="w-4 h-4 text-primary-500 animate-pulse" />
-              {t("title")}
-            </motion.div>
-
-            <motion.h1
-              variants={itemVariants}
-              className="font-heading font-black text-4xl sm:text-5xl lg:text-6xl text-gray-900 leading-[1.15] tracking-tight text-center lg:text-left"
-            >
-              {systemConfig?.heroTitle ? (
-                systemConfig.heroTitle
-              ) : (
-                <>
-                  Sell What You{" "}
-                  <span className="relative inline-block">
-                    <span className="relative z-10 text-primary-600 italic">
-                      Don&apos;t Use.
-                    </span>
-                    <motion.span
-                      initial={{ width: 0 }}
-                      whileInView={{ width: "100%" }}
-                      transition={{ delay: 0.8, duration: 1.2 }}
-                      className="absolute bottom-1 sm:bottom-2 left-0 h-2 sm:h-3 bg-primary-100 -z-0 rounded-full"
-                    />
-                  </span>
-                  <br className="hidden sm:inline" />
-                  Bid on What You{" "}
-                  <span className="relative inline-block text-blue-600">
-                    Love.
-                  </span>
-                </>
-              )}
-            </motion.h1>
-
-            <motion.p
-              variants={itemVariants}
-              className="mt-6 text-base sm:text-lg text-gray-500 max-w-xl leading-relaxed font-medium text-center lg:text-left mx-auto lg:mx-0"
-            >
-              {systemConfig?.heroSubtitle || (
-                (systemConfig?.escrowRequired ?? true) ? (
-                  t("subtitle")
-                ) : (
-                  "Bangladesh's first trust-focused peer-to-peer auction marketplace. List pre-loved items in seconds, place live bids in real-time, and coordinate secure handovers with local cash-on-delivery."
-                )
-              )}
-            </motion.p>
-
-            <motion.form
-              variants={itemVariants}
-              onSubmit={handleSearch}
-              role="search"
-              className="mt-10 relative max-w-xl bg-white rounded-xl shadow-lg border border-gray-300 p-2 flex items-center gap-2 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100 transition-all"
-            >
-              <label htmlFor="hero-search" className="sr-only">{t("searchPlaceholder")}</label>
-              <div className="flex-1 px-4 flex items-center gap-3">
-                <Search className="w-5 h-5 text-gray-400 shrink-0" aria-hidden="true" />
-                <input
-                  id="hero-search"
-                  type="search"
-                  placeholder={t("searchPlaceholder")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-full bg-transparent focus:outline-none text-gray-900 font-medium placeholder:text-gray-400 text-sm"
-                />
-              </div>
-              <div className="h-6 w-px bg-gray-200 shrink-0" />
-              <select
-                value={searchCategory}
-                onChange={(e) => setSearchCategory(e.target.value)}
-                className="bg-transparent text-xs font-bold text-gray-500 hover:text-gray-800 focus:outline-none px-3 cursor-pointer shrink-0 max-w-[130px]"
-              >
-                <option value="">All Categories</option>
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.slug} value={cat.slug}>
-                    {tCat(cat.slug)}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 shrink-0 text-sm"
-              >
-                {t("searchBtn")}
-              </button>
-            </motion.form>
-
-            <motion.div
-              variants={itemVariants}
-              className="mt-8 flex flex-wrap gap-4 text-[13px] font-bold"
-            >
-              <div className="flex items-center gap-1.5 text-gray-500 glass px-3 py-1.5 rounded-lg border border-gray-100/50 shadow-sm">
-                <MapPin className="w-4 h-4 text-primary-500" /> {t("areaFilters")}
-              </div>
-              <div className="flex items-center gap-1.5 text-gray-500 glass px-3 py-1.5 rounded-lg border border-gray-100/50 shadow-sm">
-                <Bell className="w-4 h-4 text-orange-500" /> {t("realTimeAlerts")}
-              </div>
-              <div className="flex items-center gap-1.5 text-gray-500 glass px-3 py-1.5 rounded-lg border border-gray-100/50 shadow-sm">
-                <Zap className="w-4 h-4 text-yellow-500" /> {t("antiSnipe")}
-              </div>
-            </motion.div>
-
-            <motion.div
-              variants={itemVariants}
-              className="mt-12 flex items-center gap-6 text-gray-400"
-            >
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="relative w-10 h-10 rounded-full border-2 border-white bg-gray-100 overflow-hidden ring-2 ring-primary-50"
-                  >
-                    <Image
-                      src={`https://i.pravatar.cc/100?u=${i + 10}`}
-                      alt="User"
-                      fill
-                      sizes="40px"
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="text-sm font-medium">
-                <span className="text-gray-900 font-bold">
-                  {totalUsers ? (totalUsers >= 1000 ? `${(totalUsers / 1000).toFixed(1)}k+` : `${totalUsers}+`) : "2.4k+"}
-                </span>{" "}
-                {t("activeMembers")}
-              </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Right Visual Composition */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, x: 50 }}
-            whileInView={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ duration: 1, ease: "easeOut" as const }}
-            className="hidden lg:block relative"
+    <section
+      aria-label={t("promoStripLabel")}
+      className="bg-gray-50 border-b border-gray-200"
+    >
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+          {/* Primary banner — Sell now */}
+          <Link
+            href="/auctions/create"
+            className="md:col-span-7 group relative overflow-hidden rounded-md bg-gradient-to-br from-primary-600 via-primary-700 to-blue-700 text-white p-5 sm:p-6 flex items-center gap-4 sm:gap-6 hover:shadow-md transition-shadow"
           >
-            <div className="relative z-20 bg-white rounded-[2.5rem] shadow-premium p-6 border border-gray-100/50 rotate-2">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center border border-green-100/50">
-                    <TrendingUp className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-gray-900 leading-none">
-                      {t("liveBidding")}
-                    </h4>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                      {t("endingIn")} 02:45:12
-                    </span>
-                  </div>
-                </div>
-                <div className="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter animate-pulse shadow-sm">
-                  {t("hotDeal")}
-                </div>
+            <div className="relative flex-1 min-w-0 z-10">
+              <div className="inline-flex items-center gap-1.5 bg-white/15 text-amber-300 backdrop-blur-sm rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest mb-2">
+                <Tag className="w-3 h-3" /> {t("promoTagFree")}
               </div>
-
-              <div className="aspect-[4/3] bg-gray-50 rounded-xl mb-6 overflow-hidden relative group border border-gray-200">
-                <Image
-                  src={
-                    systemConfig?.heroImage ||
-                    "/hero_c2c.png"
-                  }
-                  alt="Auction Item"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                {!systemConfig?.heroImage && (
-                  <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded border border-gray-200 text-xs font-bold text-gray-900 shadow-sm">
-                    ৳ 12,500
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500 font-medium">{t("currentPrice")}</span>
-                  <span className="font-bold text-primary-600 text-xl tracking-tight">
-                    ৳ 45,800
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs pb-4 border-b border-gray-100/60">
-                  <span className="text-gray-400">{t("totalBidders")}</span>
-                  <span className="font-bold text-gray-700 flex items-center gap-1">
-                    <Users className="w-3 h-3 text-primary-500" /> 24 {t("people")}
-                  </span>
-                </div>
-                <button
-                  onClick={() => router.push("/auctions")}
-                  className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-all shadow-lg hover:shadow-black/20"
-                >
-                  {t("placeYourBid")}
-                </button>
-              </div>
+              <h2 className="font-heading font-black text-xl sm:text-2xl leading-tight tracking-tight">
+                {t("promoSellTitle")}
+              </h2>
+              <p className="mt-1 text-primary-100 text-xs sm:text-sm max-w-md">
+                {t("promoSellSubtitle")}
+              </p>
+              <span className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-white group-hover:gap-2 transition-all">
+                {t("promoSellCta")} <ArrowRight className="w-4 h-4" />
+              </span>
             </div>
+            <div className="relative hidden sm:block w-28 h-28 sm:w-32 sm:h-32 shrink-0">
+              <Image
+                src={heroImage}
+                alt=""
+                fill
+                priority
+                sizes="160px"
+                className="object-cover rounded-md ring-2 ring-white/20"
+              />
+            </div>
+            <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          </Link>
 
-            <motion.div
-              animate={{ y: [0, -20, 0] }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut" as const,
-              }}
-              className="absolute -top-12 -left-12 z-30 bg-white border border-gray-200 rounded-xl p-4 shadow-xl -rotate-6"
-            >
-              <div className="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center mb-2 border border-primary-100">
-                <Gavel className="w-5 h-5 text-primary-600" />
-              </div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
-                {t("newBid")}
-              </div>
-              <div className="font-bold text-gray-900 leading-none">
-                + ৳ 1,000
-              </div>
-            </motion.div>
+          {/* Trust card */}
+          <Link
+            href="/safety"
+            className="md:col-span-3 group bg-white border border-gray-200 hover:border-primary-300 rounded-md p-4 sm:p-5 flex flex-col justify-center hover:shadow-sm transition-all"
+          >
+            <div className="w-9 h-9 bg-blue-50 rounded-md flex items-center justify-center mb-2">
+              <ShieldCheck className="w-5 h-5 text-blue-600" />
+            </div>
+            <h3 className="font-heading font-bold text-sm text-gray-900 leading-tight">
+              {escrowEnabled ? t("promoEscrowTitle") : t("promoLocalTitle")}
+            </h3>
+            <p className="text-[11px] text-gray-500 mt-1 leading-snug">
+              {escrowEnabled ? t("promoEscrowSubtitle") : t("promoLocalSubtitle")}
+            </p>
+            <span className="mt-2 text-[11px] font-bold text-primary-600 group-hover:underline">
+              {t("learnMore")} →
+            </span>
+          </Link>
 
-            <motion.div
-              animate={{ x: [0, 20, 0] }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: "easeInOut" as const,
-                delay: 0.5,
-              }}
-              className="absolute top-1/4 -right-16 z-30 bg-white border border-gray-200 rounded-xl p-4 shadow-xl"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-orange-50 rounded-full flex items-center justify-center border border-orange-100">
-                  <Bell className="w-4 h-4 text-orange-600" />
-                </div>
-                <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
-                  {t("instantNotify")}
-                </div>
-              </div>
-            </motion.div>
+          {/* Ending soon teaser */}
+          <Link
+            href="/auctions?sortBy=endTime&sortOrder=asc"
+            className="md:col-span-2 group bg-white border border-gray-200 hover:border-orange-300 rounded-md p-4 sm:p-5 flex flex-col justify-center hover:shadow-sm transition-all"
+          >
+            <div className="w-9 h-9 bg-orange-50 rounded-md flex items-center justify-center mb-2">
+              <Clock className="w-5 h-5 text-orange-600" />
+            </div>
+            <h3 className="font-heading font-bold text-sm text-gray-900 leading-tight">
+              {t("promoEndingTitle")}
+            </h3>
+            <span className="mt-2 text-[11px] font-bold text-orange-600 group-hover:underline">
+              {t("promoEndingCta")} →
+            </span>
+          </Link>
+        </div>
 
-            <motion.div
-              animate={{ y: [0, 20, 0] }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut" as const,
-                delay: 1,
-              }}
-              className="absolute -bottom-10 -right-8 z-30 bg-white border border-gray-200 rounded-xl p-4 shadow-xl rotate-6"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center border border-blue-100">
-                  <Shield className="w-4 h-4 text-blue-600" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    {t("sellerStatus")}
-                  </div>
-                  <div className="text-xs font-bold text-gray-900">
-                    {t("verifiedSeller")}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              animate={{ scale: [1, 1.05, 1], rotate: [-2, 2, -2] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              className="absolute -left-20 bottom-12 z-30 bg-white border border-gray-200 rounded-xl p-4 shadow-xl"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary-50 rounded-full flex items-center justify-center border border-primary-100">
-                  <MapPin className="w-4 h-4 text-primary-600" />
-                </div>
-                <div className="text-xs font-bold text-gray-900">
-                  {t("areaFilters")}
-                </div>
-              </div>
-            </motion.div>
-
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary-100/30 rounded-full blur-[80px] -z-10" />
-          </motion.div>
+        {/* Tiny trust strip beneath promo cards */}
+        <div className="mt-3 hidden sm:flex items-center justify-center gap-6 text-[11px] text-gray-500">
+          <span className="inline-flex items-center gap-1.5">
+            <Gavel className="w-3.5 h-3.5 text-primary-500" /> {t("trustStripLive")}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-500" /> {t("trustStripVerified")}
+          </span>
+          {formattedUsers && (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="font-bold text-gray-900">{formattedUsers}</span> {t("trustStripMembers")}
+            </span>
+          )}
         </div>
       </div>
     </section>

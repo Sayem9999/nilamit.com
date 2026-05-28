@@ -251,8 +251,8 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
           <div className="flex flex-col md:flex-row gap-8 items-center md:items-end pb-4">
             {/* Seller Avatar */}
             <div className="relative group">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-white p-2 shadow-2xl shadow-primary-200/40 relative z-10 ring-4 ring-white">
-                <div className="w-full h-full rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center relative">
+              <div className="w-28 h-28 md:w-36 md:h-36 rounded-md bg-white p-1.5 shadow-md relative z-10 ring-2 ring-white">
+                <div className="w-full h-full rounded overflow-hidden bg-gray-100 flex items-center justify-center relative">
                   {seller.image ? (
                     <Image src={getProxiedAvatarUrl(seller.image) || ""} alt={seller.name || ""} fill sizes="(max-width: 768px) 128px, 160px" className="object-cover" referrerPolicy="no-referrer" unoptimized />
                   ) : (
@@ -262,7 +262,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
               </div>
               {seller.isTopRated && (
                 <div className="absolute -top-4 -right-4 z-20 animate-bounce-subtle">
-                  <div className="bg-amber-400 text-white p-3 rounded-2xl shadow-lg border-2 border-white">
+                  <div className="bg-amber-400 text-white p-2 rounded-md shadow-md border-2 border-white">
                     <Award className="w-6 h-6" />
                   </div>
                 </div>
@@ -346,7 +346,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
       <div className="max-w-7xl mx-auto px-4 mt-16 mb-12">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1: Sales / Trades */}
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+          <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
             <div className={`p-4 rounded-xl ${theme.bgLight} ${theme.textPrimary}`}>
               <Package className="w-6 h-6" />
             </div>
@@ -361,7 +361,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
           </div>
 
           {/* Card 2: Positive Feedback */}
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+          <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
             <div className={`p-4 rounded-xl ${theme.bgLight} ${theme.textPrimary}`}>
               <Star className="w-6 h-6 fill-current" />
             </div>
@@ -374,7 +374,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
           </div>
 
           {/* Card 3: Reputation Score */}
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+          <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
             <div className={`p-4 rounded-xl ${theme.bgLight} ${theme.textPrimary}`}>
               <Award className="w-6 h-6" />
             </div>
@@ -388,7 +388,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
 
           {/* Card 4: Dynamic Gamified Widget */}
           {seller.isRetailer ? (
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
               <div className="p-4 rounded-xl bg-indigo-50 text-indigo-600">
                 <ShieldCheck className="w-6 h-6" />
               </div>
@@ -400,7 +400,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
               </div>
             </div>
           ) : (
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
               <div className="p-4 rounded-xl bg-orange-50 text-orange-600">
                 <Trophy className="w-6 h-6" />
               </div>
@@ -475,7 +475,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                     name="search"
                     placeholder={currentView === "active" ? "Search active listings..." : "Search past sales..."}
                     defaultValue={search || ""}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-xs font-bold text-gray-700 shadow-sm transition-all"
+                    className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 text-sm text-gray-700 shadow-sm transition-all"
                   />
                   <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 </div>
@@ -490,7 +490,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
               </div>
             ) : (
               currentView === "active" ? (
-                <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center shadow-sm">
+                <div className="bg-white rounded-md border border-dashed border-gray-300 p-10 text-center shadow-sm">
                   <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Package className="w-8 h-8 text-gray-300" />
                   </div>
@@ -498,7 +498,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                   <p className="text-gray-500 text-sm mt-1">This seller doesn&apos;t have any active auctions right now.</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-12 text-center shadow-sm">
+                <div className="bg-white rounded-md border border-dashed border-gray-300 p-10 text-center shadow-sm">
                   <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="w-8 h-8 text-gray-300" />
                   </div>
@@ -513,7 +513,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
           <div className="space-y-8">
             {/* Gamification / Policies Side Panel */}
             {seller.isRetailer ? (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 space-y-6">
+              <div className="bg-white rounded-md border border-gray-200 shadow-sm p-8 space-y-6">
                 <h2 className="text-xl font-black text-gray-900 font-heading flex items-center gap-2">
                   <Store className="w-5 h-5 text-indigo-600" />
                   Store Policies
@@ -553,7 +553,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
               </div>
             ) : (
               /* Gamified C2C Trader Stats Widget */
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 space-y-6">
+              <div className="bg-white rounded-md border border-gray-200 shadow-sm p-8 space-y-6">
                 <h2 className="text-xl font-black text-gray-900 font-heading flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-emerald-600" />
                   Trader Status
@@ -587,7 +587,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
             )}
 
             {/* Feedback Profile Feed */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+            <div className="bg-white rounded-md border border-gray-200 shadow-sm p-8">
               <h2 className="text-xl font-black text-gray-900 font-heading mb-6 flex items-center gap-2">
                 <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
                 Feedback Profile Feed
@@ -622,7 +622,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
               )}
             </div>
 
-            <div className="bg-indigo-900 rounded-3xl p-8 text-white relative overflow-hidden group">
+            <div className="bg-indigo-900 rounded-md p-6 text-white relative overflow-hidden group">
               <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
               <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
               

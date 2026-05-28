@@ -2,6 +2,32 @@ import * as Sentry from '@sentry/nextjs';
 import type { SentryArea, SentrySeverity } from './sentry-tags';
 
 /**
+ * Marketplace event types — duplicated from src/lib/bigquery-shipper.ts so the
+ * logger module never has to import the shipper at type-checking time.
+ * Why: the shipper has `import "server-only"`, which Turbopack flags as an
+ * error whenever ANY client component transitively imports the logger.
+ * Keeping the type local lets the runtime call (a dynamic import) stay
+ * server-only without polluting client bundles.
+ *
+ * Keep this in sync with `MarketplaceEventType` in bigquery-shipper.ts.
+ */
+export type MarketplaceEventType =
+  | 'auction_created'
+  | 'auction_cancelled'
+  | 'auction_sold'
+  | 'auction_expired'
+  | 'bid_placed'
+  | 'bid_outbid'
+  | 'escrow_pending'
+  | 'escrow_held'
+  | 'escrow_released'
+  | 'escrow_refunded'
+  | 'dispute_opened'
+  | 'dispute_resolved'
+  | 'user_signup'
+  | 'user_verified';
+
+/**
  * Structured Production Logger
  * Provides categorized logging with automatic Sentry integration for errors.
  *
@@ -88,5 +114,29 @@ export const log = {
       log.error(`${label} - Failed`, error, { ...context, durationMs: duration });
       throw error;
     }
-  }
+  },
+
+  /**
+   * Marketplace event — fire-and-forget ship to BigQuery for long-term
+   * analytics (auction_created, bid_placed, escrow_*, etc.). Server-only.
+   * No-ops if BigQuery env vars aren't set, so calling this from any code
+   * path is safe.
+   *
+   * Use for *interesting things that happened*, not errors (use log.error
+   * for those — they already feed Sentry).
+   */
+  event: (
+    type: MarketplaceEventType,
+    fields?: { userId?: string; auctionId?: string; amountBdt?: number; metadata?: Record<string, unknown> },
+  ): void => {
+    // Lazy-load to keep @google-cloud/bigquery + "server-only" out of client
+    // bundles. The dynamic import is server-side only because window check
+    // short-circuits before the import statement executes.
+    if (typeof window !== 'undefined') return;
+    void import('./bigquery-shipper').then(({ shipEvent }) => {
+      void shipEvent({ type, ...(fields ?? {}) });
+    }).catch((err) => {
+      console.warn('[logger.event] shipper import failed', err);
+    });
+  },
 };

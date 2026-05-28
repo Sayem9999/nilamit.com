@@ -63,19 +63,19 @@ export default async function AuctionsPage({ searchParams }: Props) {
   const hasActiveFilter = !!(params.category || params.location || params.search);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Header */}
-      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="font-heading font-bold text-3xl sm:text-4xl text-gray-900 tracking-tight">
+          <h1 className="font-heading font-bold text-xl sm:text-2xl text-gray-900 tracking-tight">
             {params.category
               ? tCat(params.category)
               : params.search
                 ? t("resultsFor", { query: params.search })
                 : t("title")}
           </h1>
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-1.5">
-            <p className="text-sm text-gray-500 font-semibold">
+          <div className="flex flex-wrap items-center gap-3 mt-2">
+            <p className="text-sm text-gray-500">
               {t("found", { count: total })}
             </p>
             {/* eBay Grid/List Toggle Switcher */}
@@ -117,38 +117,38 @@ export default async function AuctionsPage({ searchParams }: Props) {
         )}
       </header>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar Filters */}
-        <aside className="lg:w-56 flex-shrink-0" aria-label={t("filters")}>
+        <aside className="lg:w-52 flex-shrink-0" aria-label={t("filters")}>
           {/* Search */}
-          <form className="mb-6" role="search" action="/auctions">
+          <form className="mb-5" role="search" action="/auctions">
             <label htmlFor="auctions-search" className="sr-only">{t("searchPlaceholder")}</label>
             <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+              <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
               <input
                 id="auctions-search"
                 type="search"
                 name="search"
                 defaultValue={params.search}
                 placeholder={t("searchPlaceholder")}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                className="w-full bg-white border border-gray-300 rounded pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 outline-none"
               />
             </div>
           </form>
 
           {/* Categories */}
-          <nav className="mb-6" aria-labelledby="filter-category-heading">
-            <h2 id="filter-category-heading" className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4" aria-hidden="true" /> {t("category")}
+          <nav className="mb-5 pb-5 border-b border-gray-200" aria-labelledby="filter-category-heading">
+            <h2 id="filter-category-heading" className="font-bold text-[11px] uppercase tracking-widest text-gray-500 mb-2 flex items-center gap-1.5">
+              <SlidersHorizontal className="w-3 h-3" aria-hidden="true" /> {t("category")}
             </h2>
-            <ul className="space-y-1">
+            <ul className="space-y-0.5">
               <li>
                 <Link
                   href={buildQs(params, { category: undefined })}
                   aria-current={!params.category ? "page" : undefined}
-                  className={`block px-3 py-2 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                  className={`block px-2 py-1.5 rounded text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                     !params.category
-                      ? "bg-primary-50 text-primary-700 font-medium"
+                      ? "bg-primary-50 text-primary-700 font-semibold"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -160,9 +160,9 @@ export default async function AuctionsPage({ searchParams }: Props) {
                   <Link
                     href={buildQs(params, { category: cat.slug })}
                     aria-current={params.category === cat.slug ? "page" : undefined}
-                    className={`block px-3 py-2 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                    className={`block px-2 py-1.5 rounded text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                       params.category === cat.slug
-                        ? "bg-primary-50 text-primary-700 font-medium"
+                        ? "bg-primary-50 text-primary-700 font-semibold"
                         : "text-gray-600 hover:bg-gray-50"
                     }`}
                   >
@@ -175,17 +175,17 @@ export default async function AuctionsPage({ searchParams }: Props) {
 
           {/* Location */}
           <nav aria-labelledby="filter-location-heading">
-            <h2 id="filter-location-heading" className="font-heading font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
-              <MapPin className="w-4 h-4" aria-hidden="true" /> {t("location")}
+            <h2 id="filter-location-heading" className="font-bold text-[11px] uppercase tracking-widest text-gray-500 mb-2 flex items-center gap-1.5">
+              <MapPin className="w-3 h-3" aria-hidden="true" /> {t("location")}
             </h2>
-            <ul className="space-y-1">
+            <ul className="space-y-0.5">
               <li>
                 <Link
                   href={buildQs(params, { location: undefined })}
                   aria-current={!params.location ? "page" : undefined}
-                  className={`block px-3 py-2 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                  className={`block px-2 py-1.5 rounded text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                     !params.location
-                      ? "bg-primary-50 text-primary-700 font-medium"
+                      ? "bg-primary-50 text-primary-700 font-semibold"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -197,9 +197,9 @@ export default async function AuctionsPage({ searchParams }: Props) {
                   <Link
                     href={buildQs(params, { location: loc.id })}
                     aria-current={params.location === loc.id ? "page" : undefined}
-                    className={`block px-3 py-2 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                    className={`block px-2 py-1.5 rounded text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                       params.location === loc.id
-                        ? "bg-primary-50 text-primary-700 font-medium"
+                        ? "bg-primary-50 text-primary-700 font-semibold"
                         : "text-gray-600 hover:bg-gray-50"
                     }`}
                   >

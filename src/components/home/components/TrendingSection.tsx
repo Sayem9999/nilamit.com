@@ -20,49 +20,49 @@ export function TrendingSection({
 }: TrendingSectionProps) {
   const t = useTranslations("Home");
   return (
-    <section className="pb-24 pt-12 bg-white relative" aria-labelledby="trending-heading">
-      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-gray-50 to-transparent pointer-events-none" aria-hidden="true" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="flex items-end justify-between mb-12"
-        >
-          <div>
-            <div className="inline-flex items-center gap-2 text-primary-600 bg-primary-50 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
-              <TrendingUp className="w-4 h-4" aria-hidden="true" /> {t("trendingTag")}
+    <section
+      aria-labelledby="trending-heading"
+      className="py-8 sm:py-10 bg-white"
+    >
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between gap-4 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-rose-100 rounded-md flex items-center justify-center text-rose-600" aria-hidden="true">
+              <TrendingUp className="w-5 h-5" />
             </div>
-            <h2 id="trending-heading" className="font-heading font-black text-4xl sm:text-5xl text-gray-900 tracking-tight">
-              {t("trendingTitle")}
-            </h2>
+            <div>
+              <h2
+                id="trending-heading"
+                className="font-heading font-black text-xl sm:text-2xl text-gray-900 tracking-tight leading-none"
+              >
+                {t("trendingTitle")}
+              </h2>
+              <p className="text-[12px] text-gray-500 mt-1 uppercase tracking-widest font-bold">
+                {t("trendingTag")}
+              </p>
+            </div>
           </div>
           <Link
             href="/auctions?sortBy=bids&sortOrder=desc"
             aria-label={`${t("viewMore")} — most active auctions`}
-            className="group flex items-center gap-2 bg-gray-50 hover:bg-primary-50 text-gray-900 hover:text-primary-700 px-6 py-3 rounded-2xl font-bold transition-all border border-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+            className="hidden sm:inline-flex items-center gap-1 text-sm font-bold text-primary-600 hover:text-primary-700 hover:gap-2 transition-all"
           >
-            {t("viewMore")}{" "}
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+            {t("viewMore")} <ArrowRight className="w-4 h-4" />
           </Link>
-        </motion.div>
+        </div>
 
         {trendingAuctions.length === 0 ? (
-          <div className="bg-gray-50/50 rounded-[2.5rem] p-12 text-center border-2 border-dashed border-gray-100">
-            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4" aria-hidden="true">
-              <Zap className="w-8 h-8 text-gray-300" />
-            </div>
-            <p className="text-gray-500 font-medium">
-              {t("noTrending")}
-            </p>
+          <div className="bg-gray-50 rounded-md p-10 text-center border border-dashed border-gray-200">
+            <Zap className="w-8 h-8 text-gray-300 mx-auto mb-3" aria-hidden="true" />
+            <p className="text-gray-500 text-sm font-medium">{t("noTrending")}</p>
           </div>
         ) : (
           <motion.div
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8"
+            viewport={{ once: true, margin: "-50px" }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5"
           >
             {trendingAuctions.slice(0, 4).map((auction, idx) => (
               <motion.div key={auction.id} variants={itemVariants}>

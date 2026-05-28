@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { CATEGORIES } from "@/types";
-import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
 export function CategoryGrid() {
@@ -10,34 +9,38 @@ export function CategoryGrid() {
   const tCat = useTranslations("Categories");
 
   return (
-    <section className="py-16 sm:py-24 bg-white relative overflow-hidden" aria-labelledby="home-categories-heading">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 id="home-categories-heading" className="font-heading font-black text-4xl sm:text-5xl text-gray-900 tracking-tight mb-4">
+    <section
+      aria-labelledby="home-categories-heading"
+      className="py-8 sm:py-10 bg-white"
+    >
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-baseline justify-between mb-4 sm:mb-6">
+          <h2
+            id="home-categories-heading"
+            className="font-heading font-black text-xl sm:text-2xl text-gray-900 tracking-tight"
+          >
             {t("categoriesTitle")}
           </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto font-medium">
-            {t("categoriesSubtitle")}
-          </p>
-        </motion.div>
+          <Link
+            href="/auctions"
+            className="text-sm font-bold text-primary-600 hover:underline"
+          >
+            {t("seeAll")}
+          </Link>
+        </div>
 
-        <ul className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1 sm:gap-6">
+        <ul className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-7 gap-2 sm:gap-3">
           {CATEGORIES.filter((c) => c.slug !== "other").map((cat) => (
             <li key={cat.slug}>
               <Link
                 href={`/auctions?category=${cat.slug}`}
                 aria-label={`Browse ${tCat(cat.slug)} auctions`}
-                className="group flex flex-col items-center bg-gray-50/50 hover:bg-white p-6 rounded-3xl transition-all border border-transparent hover:border-primary-100 hover:shadow-xl hover:shadow-primary-600/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                className="group flex flex-col items-center bg-white border border-gray-200 hover:border-primary-400 hover:shadow-sm rounded-md p-3 sm:p-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               >
-                <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-2xl group-hover:scale-110 transition-transform mb-4" aria-hidden="true">
+                <div className="text-2xl sm:text-3xl mb-1.5 group-hover:scale-110 transition-transform" aria-hidden="true">
                   {cat.icon}
                 </div>
-                <p className="text-sm font-bold text-gray-700 group-hover:text-primary-700">
+                <p className="text-[11px] sm:text-xs font-semibold text-gray-700 group-hover:text-primary-700 text-center leading-tight">
                   {tCat(cat.slug)}
                 </p>
               </Link>

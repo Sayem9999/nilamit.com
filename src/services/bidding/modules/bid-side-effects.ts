@@ -5,6 +5,8 @@ import { Auction, Bid } from '@/types';
 import { log } from '@/lib/logger';
 import { db } from '@/lib/db';
 import { scheduleAuctionClosure } from '@/lib/cloud-tasks';
+import { pushToUser } from '@/lib/fcm-sender';
+import { formatBDT } from '@/lib/format';
 
 export class BidSideEffects {
   /**
@@ -64,10 +66,18 @@ export class BidSideEffects {
     // 4. Cloud Task Rescheduling (Event-driven closure)
     // If the end time has been extended (e.g. anti-sniping), we must schedule a new task.
     if (newEndTime && newEndTime.getTime() !== auction.endTime.getTime()) {
-      tasks.push(scheduleAuctionClosure(auction.id, newEndTime).catch(e => 
+      tasks.push(scheduleAuctionClosure(auction.id, newEndTime).catch(e =>
         log.error('[BidSideEffects] Failed to reschedule closure task', e, { auctionId: auction.id })
       ));
     }
+
+    // 5. Long-term analytics — fire-and-forget BigQuery row.
+    log.event('bid_placed', {
+      userId: bid.bidderId,
+      auctionId: auction.id,
+      amountBdt: bidAmount,
+      metadata: { antiSnipeExtended: !!(newEndTime && newEndTime.getTime() !== auction.endTime.getTime()) },
+    });
 
     await Promise.allSettled(tasks);
   }
@@ -80,6 +90,14 @@ export class BidSideEffects {
         auctionTitle: auction.title,
         newAmount,
         timestamp: Date.now()
+      });
+      // Browser push (no-op if FCM not configured). Fire-and-forget so it
+      // never blocks bid commit acknowledgement.
+      void pushToUser(userId, {
+        title: `You've been outbid on ${auction.title}`,
+        body: `The new bid is ${formatBDT(newAmount)}. Place a higher bid to stay in the lead.`,
+        clickAction: `/auctions/${auction.id}`,
+        data: { event: 'OUTBID', auctionId: auction.id },
       });
     } catch (e) {
       log.error('[BidSideEffects] Outbid notification failed', e, { userId, auctionId: auction.id });
@@ -94,6 +112,14 @@ export class BidSideEffects {
         auctionTitle: auction.title,
         amount,
         timestamp: Date.now()
+      });
+      // Browser push for the seller too — they want to know about activity
+      // on their listing without keeping a tab open.
+      void pushToUser(sellerId, {
+        title: `New bid on ${auction.title}`,
+        body: `Current high bid: ${formatBDT(amount)}.`,
+        clickAction: `/auctions/${auction.id}`,
+        data: { event: 'NEW_BID', auctionId: auction.id },
       });
     } catch (e) {
       log.error('[BidSideEffects] Seller notification failed', e, { sellerId, auctionId: auction.id });

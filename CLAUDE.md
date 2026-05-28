@@ -6,9 +6,9 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 ## What This Project Is
 
-**nilamit.app** is a live production C2C auction marketplace for Bangladesh. Users list items, others bid in real-time, and the winner pays through an escrow system backed by bKash/Nagad mobile money. English-only (Bengali was dropped — `next-intl` is still wired as the message-loading layer but only `en.json` ships).
+**nilamit.app** is a live production C2C auction marketplace for Bangladesh. Users list items, others bid in real-time, and the winner pays through an escrow system backed by bKash/Nagad mobile money (with SSLCommerz card/net-banking as an additional gateway when configured).
 
-**Stack:** Next.js 16 App Router, Firebase (Firestore + RTDB + Storage + Auth), Auth.js v5, Upstash Redis, Sentry (EU region), Tailwind CSS 4.
+**Stack:** Next.js 16 App Router, Firebase (Firestore + RTDB + Storage + Auth + FCM + Remote Config), Auth.js v5, Upstash Redis, Sentry (EU region), Tailwind CSS 4, Zustand (UI store), TanStack Query (client fetches), Algolia (typo-tolerant search, env-gated), BigQuery (analytics sink, env-gated), SSLCommerz (gateway, env-gated).
 
 **Deployed:** Firebase App Hosting (`nilamit` backend, project `nilamit-52073`). Push to `main` → auto-deploy via Cloud Build.
 
@@ -18,7 +18,7 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **Cron:** GitHub Actions workflow in [.github/workflows/cron.yml](.github/workflows/cron.yml) hits the `/api/cron/*` POST endpoints with `Bearer ${CRON_SECRET}`. There is **no** Cloud Scheduler. Five jobs scheduled: `close-auctions` + `process-alerts` (every 5 min), `closing-soon` (every 15 min), `enforce-policies` (hourly), `gc-uploads` (weekly Sun 04:00 UTC).
 
-**i18n:** English-only. `next-intl` is wired as the message-loading layer for future expansion but only `messages/en.json` ships. Adding a locale = update `src/i18n/routing.ts` + `src/i18n.ts` + add `messages/<locale>.json`.
+**i18n:** English + Bengali. Cookie-driven (`NEXT_LOCALE`); no URL prefix to keep SEO stable. Switch via `<LocaleSwitcher />` in the navbar utility row — it calls `setLocale` Server Action which sets the cookie + revalidates the layout. The Navigation namespace in `messages/bn.json` is fully translated; remaining namespaces are seeded from `en.json` (drop-in translations as you go — no MISSING_MESSAGE crashes). Add another locale = update `src/i18n/routing.ts` + `src/i18n.ts` + ship `messages/<locale>.json` + extend `LocaleSwitcher`.
 
 ## Documentation
 
@@ -103,7 +103,20 @@ Browser (React 19)
 | `src/actions/bid.ts` | Server actions for bidding — entry points |
 | `src/actions/auction.ts` | Server actions for auction management |
 | `src/middleware.ts` | Security headers (CSP, HSTS), Auth check, Ban redirect |
-| `src/lib/logger.ts` | `log.info/warn/error/debug` — auto-capture to Sentry with area tags |
+| `src/lib/logger.ts` | `log.info/warn/error/debug` → Sentry; `log.event(type, fields)` → BigQuery sink (no-op without env). |
+| `src/lib/algolia-search.ts` | Server-side Algolia read client. Env-gated by `ALGOLIA_APP_ID` + `ALGOLIA_SEARCH_KEY`. `src/actions/search.ts` calls it when configured, falls back to Firestore otherwise. Cloud Functions handle the write-sync (`functions/src/index.ts`). |
+| `src/lib/firebase-remote-config.ts` | Runtime feature flags. Priority order: Remote Config > SystemConfig (Firestore) > hard-coded default. Defaults defined in `RemoteConfigDefaults`. |
+| `src/lib/fcm.ts` | Browser FCM client — `enablePushNotifications()` from a user gesture; `onForegroundPush()` for in-tab toasts. No-ops without `NEXT_PUBLIC_FIREBASE_VAPID_KEY`. |
+| `src/lib/fcm-sender.ts` | Server `pushToUser(userId, payload)` via `firebase-admin/messaging`. Auto-prunes invalid tokens. Wired into `BidSideEffects.notifyOutbid` and `notifySeller`. |
+| `public/firebase-messaging-sw.js` | SW for background push display + click-through deep-link. Hard-codes the public Firebase config (SW can't read `process.env`). |
+| `src/lib/sslcommerz.ts` | `initSession` + `validatePayment` + `verifyIPN`. Env-gated. |
+| `src/app/api/payments/sslcommerz/{init,ipn}/route.ts` | Init redirects user to SSLCommerz gateway; IPN verifies hash + re-validates against server, then transactionally flips escrow PENDING → VERIFICATION_PENDING. |
+| `src/lib/bigquery-shipper.ts` | Streaming insert. Schema documented inline. |
+| `src/stores/ui-store.ts` | Zustand store (theme/locale/lightweightMode/sidebar/tipsSeen) persisted to localStorage. |
+| `src/components/providers/QueryProvider.tsx` | TanStack Query client — 30s stale, 1 retry, refetchOnWindowFocus on. |
+| `src/components/layout/LocaleSwitcher.tsx` | EN \| বাং toggle in the navbar utility row. |
+| `src/actions/locale.ts` | Server Action: writes `NEXT_LOCALE` cookie + `revalidatePath('/', 'layout')`. |
+| `src/app/api/fcm/register/route.ts` | POST endpoint to persist a FCM token onto `users/{uid}.fcmTokens[]`. |
 
 ---
 
@@ -166,6 +179,15 @@ DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (ad
 | `UPSTASH_REDIS_REST_URL` | ✓ Real | `https://safe-stallion-50421.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | ✓ Real | Real Upstash token |
 | `IMAGE_MODERATION` | env var | Set to `enabled` (May 2026); disable here to bypass Cloud Vision SafeSearch |
+| `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | env var (public) | Enables FCM browser push. Get from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → generate key pair. Without it the FCM client no-ops; RTDB notifications keep working. |
+| `ALGOLIA_APP_ID` | secret | Enables typo-tolerant search. Index name `auctions` by default (override with `ALGOLIA_INDEX_NAME`). Without these, `getSmartSearchResults` uses the existing Firestore path. |
+| `ALGOLIA_SEARCH_KEY` | secret | **Search-only** Algolia key — NOT the admin key. The admin key is used by Cloud Functions for write-sync; only the search key should ever be in the Next.js runtime. |
+| `SSLCOMMERZ_STORE_ID` | secret | Enables the SSLCommerz gateway alongside bKash/Nagad. Without it `/api/payments/sslcommerz/init` returns 503; other gateways unaffected. |
+| `SSLCOMMERZ_STORE_PASSWORD` | secret | Signs init requests and verifies IPN hashes. |
+| `SSLCOMMERZ_SANDBOX` | env var | `"true"` for sandbox; otherwise production. |
+| `BIGQUERY_DATASET` | env var | Dataset name (e.g. `nilamit_events`). Without it `log.event()` no-ops, so callers don't need null-checks. |
+| `BIGQUERY_TABLE` | env var | Defaults to `events`. Schema: `event_id STRING REQUIRED, event_type STRING REQUIRED, ts TIMESTAMP REQUIRED, user_id STRING, auction_id STRING, amount_bdt INT64, metadata JSON`. |
+| `GCP_PROJECT_ID` | env var | Falls back to `FIREBASE_PROJECT_ID`. Used by BigQuery client. |
 
 ---
 

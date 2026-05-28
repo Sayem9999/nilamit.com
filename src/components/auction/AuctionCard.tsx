@@ -169,8 +169,8 @@ export const AuctionCard = memo(({
   // CLASSIC HORIZONTAL EBAY LIST LAYOUT
   if (viewMode === "list") {
     return (
-      <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl ${className}`} aria-label={cardLabel}>
-        <div className="bg-white rounded-2xl border border-gray-100/60 group-hover:border-primary-500/30 shadow-premium hover:shadow-[0_15px_30px_rgba(13,110,253,0.06)] transition-all duration-300 overflow-hidden flex flex-col sm:flex-row h-full">
+      <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-md ${className}`} aria-label={cardLabel}>
+        <div className="bg-white rounded-md border border-gray-200 group-hover:border-primary-400 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col sm:flex-row h-full">
           {/* Image Area */}
           <div className="relative w-full sm:w-56 aspect-[16/10] sm:aspect-[4/3] bg-gray-50 overflow-hidden flex-shrink-0">
             {lightweightMode ? (
@@ -314,10 +314,10 @@ export const AuctionCard = memo(({
   }
 
   return (
-    <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl ${className}`} aria-label={cardLabel}>
-      <div className="bg-white rounded-2xl border border-gray-100/60 group-hover:border-primary-500/30 shadow-premium hover:shadow-[0_20px_45px_rgba(13,110,253,0.08)] transition-all duration-500 overflow-hidden group-hover:-translate-y-1.5 flex flex-col h-full group-[.featured]:bg-white/5 group-[.featured]:border-white/10 group-[.featured]:shadow-none group-[.featured]:hover:bg-white/10 group-[.featured]:hover:border-white/20">
+    <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-md ${className}`} aria-label={cardLabel}>
+      <div className="bg-white rounded-md border border-gray-200 group-hover:border-primary-400 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full">
         {/* Image Area */}
-        <div className="relative aspect-[16/10] bg-gray-50 overflow-hidden">
+        <div className="relative aspect-square bg-gray-50 overflow-hidden">
           {lightweightMode ? (
             <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center gap-2 p-4 text-center">
               <Zap className="w-8 h-8 text-amber-500 animate-pulse" aria-hidden="true" />
@@ -334,7 +334,7 @@ export const AuctionCard = memo(({
                   fill
                   priority={priority}
                   sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                  className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                  className="object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
                   onError={() => setImageError(true)}
                 />
               ) : (
@@ -343,7 +343,6 @@ export const AuctionCard = memo(({
                   <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400/60">{t("noImage")}</span>
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" aria-hidden="true" />
             </div>
           )}
 
@@ -375,11 +374,11 @@ export const AuctionCard = memo(({
             />
           </div>
 
-          {/* Location & Quick Meta */}
-          <div className="absolute bottom-2 inset-x-2 md:bottom-4 md:inset-x-4 flex items-center justify-between gap-1.5 md:gap-2 z-10">
-            <div className="glass px-1.5 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl text-[9px] md:text-[11px] flex items-center gap-1 md:gap-2 backdrop-blur-md border border-white/20 shadow-lg">
-              <div className="flex items-center gap-1 md:gap-1.5 text-gray-500 font-bold">
-                <MapPin className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary-500" aria-hidden="true" />
+          {/* Location pill (bottom-left of image) */}
+          <div className="absolute bottom-2 left-2 z-10">
+            <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] flex items-center gap-1 border border-white/40 shadow-sm">
+              <div className="flex items-center gap-1 text-gray-700 font-semibold">
+                <MapPin className="w-2.5 h-2.5 text-primary-500" aria-hidden="true" />
                 {auction.location ? tLoc(auction.location) : tLoc("mirpur")}
               </div>
             </div>
@@ -387,8 +386,8 @@ export const AuctionCard = memo(({
         </div>
 
         {/* Content */}
-        <div className="p-3 md:p-4 flex flex-col flex-1">
-          <h3 className="font-heading font-bold text-gray-900 text-xs sm:text-sm md:text-base line-clamp-1 group-hover:text-primary-600 transition-colors duration-300 group-[.featured]:text-white group-[.featured]:group-hover:text-primary-400">
+        <div className="p-3 flex flex-col flex-1">
+          <h3 className="font-heading font-semibold text-gray-900 text-[13px] sm:text-sm line-clamp-2 min-h-[2.5rem] group-hover:text-primary-600 transition-colors leading-tight">
             {auction.title}
           </h3>
 
@@ -434,7 +433,7 @@ export const AuctionCard = memo(({
               aria-label={`View ${auction.seller.name || t("seller")}'s profile`}
               className="flex items-center gap-1 min-w-0 hover:text-primary-600 transition-colors relative z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded"
             >
-              <span className="text-[10px] md:text-xs font-semibold text-gray-600 truncate group-[.featured]:text-slate-400 group-[.featured]:group-hover:text-primary-400">
+              <span className="text-[11px] font-medium text-gray-500 truncate">
                 {auction.seller.name || t("seller")}
               </span>
               <VerificationBadge
@@ -456,28 +455,26 @@ export const AuctionCard = memo(({
           </div>
 
           {/* Price & Bid Count */}
-          <div className="mt-2 pt-2 md:mt-3 md:pt-3 border-t border-gray-100/60 group-[.featured]:border-white/10 flex flex-col gap-0.5">
+          <div className="mt-2 pt-2 border-t border-gray-100 flex flex-col gap-0.5">
             <div className="flex items-center justify-between">
-              <span className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none group-[.featured]:text-slate-400">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-none">
                 {displayStatus === "ACTIVE"
-                  ? t("currentPrice") 
-                  : displayStatus === "SOLD" 
-                    ? t("finalPrice") 
-                    : displayStatus === "PROCESSING"
-                      ? t("auctionEnded") // Or "Processing..."
-                      : t("auctionEnded")}
+                  ? t("currentPrice")
+                  : displayStatus === "SOLD"
+                    ? t("finalPrice")
+                    : t("auctionEnded")}
               </span>
-              <span className="flex items-center gap-0.5 md:gap-1 text-[8px] md:text-[10px] font-bold text-primary-600 bg-primary-50 group-[.featured]:bg-primary-500/10 group-[.featured]:text-primary-400 px-1.5 py-0.5 rounded-md">
-                <Users className="w-2.5 h-2.5 md:w-3 md:h-3" aria-hidden="true" />
+              <span className="flex items-center gap-1 text-[10px] font-bold text-primary-700 bg-primary-50 px-1.5 py-0.5 rounded">
+                <Users className="w-2.5 h-2.5" aria-hidden="true" />
                 {bidCount} {bidCount === 1 ? t("bid") : t("bids")}
               </span>
             </div>
-            <div className="flex flex-wrap items-baseline gap-1 md:gap-2 mt-1">
-              <span className="price text-sm sm:text-base md:text-lg lg:text-xl text-gray-900 font-black tracking-tighter group-[.featured]:text-white">
+            <div className="flex flex-wrap items-baseline gap-1.5 mt-1">
+              <span className="price text-lg sm:text-xl text-gray-900 font-black tracking-tight">
                 {formatBDT(currentPrice)}
               </span>
               {auction.currentPrice > auction.startingPrice && (
-                <span className="text-[10px] md:text-xs text-gray-400 group-[.featured]:text-slate-500 line-through font-medium">
+                <span className="text-[11px] text-gray-400 line-through font-medium">
                   {formatBDT(auction.startingPrice)}
                 </span>
               )}
@@ -503,11 +500,11 @@ export const AuctionCard = memo(({
           )}
 
           {/* Footer Timer */}
-          <div className="mt-auto pt-2 md:pt-3 flex items-center justify-between">
+          <div className="mt-auto pt-2 flex items-center justify-between">
             <CountdownTimer
               endTime={auction.endTime}
               variant="card-footer"
-              className="py-1.5 px-2 text-[10px] md:py-2 md:px-3 md:text-xs rounded-xl md:rounded-2xl"
+              className="py-1 px-2 text-[10px] rounded"
             />
           </div>
 

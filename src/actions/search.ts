@@ -2,6 +2,7 @@
 
 import { db, snapDocs, toSellerPublic } from '@/lib/db';
 import { Auction } from '@/types';
+import { isAlgoliaConfigured, searchAuctions as algoliaSearch } from '@/lib/algolia-search';
 
 interface AuctionWithScore extends Auction {
   _score: number;
@@ -10,11 +11,48 @@ interface AuctionWithScore extends Auction {
 export async function getSmartSearchResults(query: string, filters: { category?: string, location?: string, condition?: string } = {}) {
   if (!query?.trim() && !filters.category && !filters.location && !filters.condition) return [];
 
+  // ─── Algolia fast-path (typo tolerance, ranked search) ──────────────────
+  // Only when ALGOLIA_APP_ID + ALGOLIA_SEARCH_KEY are set. Falls through to
+  // the Firestore path below on any failure so search never breaks.
+  if (isAlgoliaConfigured() && query?.trim()) {
+    const hits = await algoliaSearch({
+      query: query.trim(),
+      category: filters.category,
+      location: filters.location,
+      condition: filters.condition,
+      hitsPerPage: 20,
+    });
+    if (hits && hits.hits.length > 0) {
+      const sellerIds = [...new Set(hits.hits.map((h) => h.sellerId))];
+      const sellerSnaps = await Promise.all(sellerIds.map((id) => db.collection('users').doc(id).get()));
+      const sellersMap = new Map(sellerSnaps.map((s) => [s.id, s.data()]));
+      return hits.hits.map((h) => ({
+        id: h.objectID,
+        title: h.title,
+        description: h.description ?? '',
+        category: h.category,
+        location: h.location,
+        condition: h.condition,
+        currentPrice: h.currentPrice,
+        startingPrice: h.startingPrice,
+        bidCount: h.bidCount ?? 0,
+        status: h.status,
+        sellerId: h.sellerId,
+        endTime: new Date(h.endTime),
+        images: h.images ?? [],
+        isFeatured: !!h.isFeatured,
+        seller: toSellerPublic(h.sellerId, sellersMap.get(h.sellerId)),
+        _count: { bids: h.bidCount ?? 0 },
+      }));
+    }
+  }
+
+  // ─── Firestore fallback (existing prefix-match path) ────────────────────
   const q = query.toLowerCase();
 
   let auctionsQuery = db.collection('auctions')
     .where('status', '==', 'ACTIVE');
-  
+
   if (filters.category && filters.category !== 'all') {
     auctionsQuery = auctionsQuery.where('category', '==', filters.category);
   }
