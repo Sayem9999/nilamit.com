@@ -197,7 +197,7 @@ export default function CreateAuctionPage() {
                 value={form.title}
                 onChange={(e) => updateForm("title", e.target.value)}
                 placeholder={t("itemTitlePlaceholder")}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
@@ -210,7 +210,7 @@ export default function CreateAuctionPage() {
                 onChange={(e) => updateForm("description", e.target.value)}
                 placeholder={t("itemDescPlaceholder")}
                 rows={4}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
               />
             </div>
             <div>
@@ -221,7 +221,7 @@ export default function CreateAuctionPage() {
                 name="category"
                 value={form.category}
                 onChange={(e) => updateForm("category", e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat.slug} value={cat.slug}>
@@ -239,7 +239,7 @@ export default function CreateAuctionPage() {
                 <select
                   value={form.location}
                   onChange={(e) => updateForm("location", e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none appearance-none"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-md pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none appearance-none"
                 >
                   {LOCATIONS.map((loc) => (
                     <option key={loc.id} value={loc.id}>
@@ -299,7 +299,7 @@ export default function CreateAuctionPage() {
             {step === "pricing" && (
               <div className="mb-6">
                 {loadingSuggestion ? (
-                  <div className="flex items-center gap-2 text-xs text-primary-600 bg-primary-50 p-3 rounded-xl animate-pulse">
+                  <div className="flex items-center gap-2 text-xs text-primary-600 bg-primary-50 p-3 rounded-md animate-pulse">
                     <span className="w-4 h-4 rounded-full border-2 border-primary-300 border-t-primary-600 animate-spin" />
                     Analyzing market trends...
                   </div>
@@ -348,7 +348,7 @@ export default function CreateAuctionPage() {
                       <button
                         type="button"
                         onClick={() => updateForm("startingPrice", suggestion.suggestedStart)}
-                        className="group relative text-left bg-white p-3.5 rounded-xl border border-gray-100 hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                        className="group relative text-left bg-white p-3.5 rounded-md border border-gray-100 hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                       >
                         <div className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-wider">Suggested Start Price</div>
                         <div className="text-lg font-extrabold text-primary-600 group-hover:text-primary-700 flex items-baseline gap-0.5">
@@ -362,7 +362,7 @@ export default function CreateAuctionPage() {
                       <button
                         type="button"
                         onClick={() => updateForm("buyItNowPrice", suggestion.suggestedBuyNow)}
-                        className="group relative text-left bg-white p-3.5 rounded-xl border border-gray-100 hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                        className="group relative text-left bg-white p-3.5 rounded-md border border-gray-100 hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                       >
                         <div className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-wider">Suggested Buy-Now</div>
                         <div className="text-lg font-extrabold text-primary-600 group-hover:text-primary-700 flex items-baseline gap-0.5">
@@ -400,7 +400,7 @@ export default function CreateAuctionPage() {
                   updateForm("startingPrice", Number(e.target.value))
                 }
                 min={1}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm price focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm price focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
@@ -415,7 +415,7 @@ export default function CreateAuctionPage() {
                   updateForm("minBidIncrement", Number(e.target.value))
                 }
                 min={1}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm price focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm price focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
               <p className="text-xs text-gray-400 mt-1">
                 {t("minIncrementDesc") || "Each new bid must be at least this much higher than the current price."}
@@ -443,7 +443,7 @@ export default function CreateAuctionPage() {
                       )
                     }
                     placeholder={t("reservePricePlaceholder")}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                   />
                   <p className="text-[10px] text-gray-400 mt-1">
                     {t("reservePriceDesc") || "Item won't sell unless bidding reaches this amount."}
@@ -465,7 +465,7 @@ export default function CreateAuctionPage() {
                       )
                     }
                     placeholder={t("buyNowPricePlaceholder")}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                   />
                   <p className="text-[10px] text-gray-400 mt-1">
                     {t("buyNowPriceDesc") || "Allow buyers to skip bidding and buy instantly."}
@@ -494,13 +494,13 @@ export default function CreateAuctionPage() {
                     type="date"
                     value={startDate}
                     onChange={(e) => updateForm("startTime", combineDateTime(e.target.value, startTimeVal))}
-                    className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   />
                   <input
                     type="time"
                     value={startTimeVal}
                     onChange={(e) => updateForm("startTime", combineDateTime(startDate, e.target.value))}
-                    className="w-32 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none font-mono"
+                    className="w-32 bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none font-mono"
                   />
                 </div>
               </div>
@@ -513,13 +513,13 @@ export default function CreateAuctionPage() {
                     type="date"
                     value={endDate}
                     onChange={(e) => updateForm("endTime", combineDateTime(e.target.value, endTimeVal))}
-                    className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                   />
                   <input
                     type="time"
                     value={endTimeVal}
                     onChange={(e) => updateForm("endTime", combineDateTime(endDate, e.target.value))}
-                    className="w-32 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none font-mono"
+                    className="w-32 bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none font-mono"
                   />
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
@@ -536,7 +536,7 @@ export default function CreateAuctionPage() {
             <h2 className="font-heading font-semibold text-lg text-gray-900 mb-4">
               {t("reviewTitle")}
             </h2>
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
+            <div className="bg-gray-50 rounded-md p-4 space-y-3 text-sm">
               <div>
                 <strong className="text-gray-700">{t("itemTitle")}:</strong>{" "}
                 <span className="text-gray-600">{form.title}</span>
@@ -598,14 +598,14 @@ export default function CreateAuctionPage() {
                 </span>
               </div>
             </div>
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700">
+            <div className="bg-blue-50 border border-blue-100 rounded-md p-4 text-xs text-blue-700">
               {t("publishNote")}
             </div>
           </div>
         )}
 
         {error && (
-          <div className="mt-4 flex items-start gap-2 bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl">
+          <div className="mt-4 flex items-start gap-2 bg-red-50 text-red-600 text-sm px-4 py-3 rounded-md">
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             {error}
           </div>
@@ -626,7 +626,7 @@ export default function CreateAuctionPage() {
               <button
                 onClick={handleSubmit}
                 disabled={isPending}
-                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold px-6 py-2.5 rounded-xl transition-all flex items-center gap-2"
+                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold px-6 py-2.5 rounded-md transition-all flex items-center gap-2"
               >
                 {isPending ? (
                   <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
@@ -638,7 +638,7 @@ export default function CreateAuctionPage() {
           ) : (
             <button
               onClick={() => setStep(steps[stepIndex + 1])}
-              className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all flex items-center gap-1"
+              className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2.5 rounded-md transition-all flex items-center gap-1"
             >
               {t("nextBtn")} <ArrowRight className="w-4 h-4" />
             </button>

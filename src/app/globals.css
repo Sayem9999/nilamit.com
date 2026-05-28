@@ -78,10 +78,14 @@ html {
   animation: bid-success 0.4s ease-out;
 }
 
-/* Price text with mono font */
+/* Price text with mono font.
+   Weight 800 (extrabold). Centralizing here means every .price
+   callsite renders heavy enough without per-element font-* classes.
+   The earlier bulk swap (font-black → font-bold) made some prices
+   look anemic; bumping at the utility level catches them all. */
 .price {
   font-family: var(--font-mono);
-  font-weight: 600;
+  font-weight: 800;
   letter-spacing: -0.02em;
 }
 
