@@ -396,7 +396,12 @@ export function BidPanel({
           )}
 
           <div className="mb-3">
-            <label htmlFor="bid-amount-input" className="text-xs font-medium text-gray-500 mb-1 block">{t("yourBid")}</label>
+            <label htmlFor="bid-amount-input" className="text-xs font-medium text-gray-500 mb-1 block">
+              {t("yourBid")}
+              <span className="ml-1 text-[10px] font-bold text-primary-600 uppercase tracking-wide">
+                · {t("maxProxyHint")}
+              </span>
+            </label>
             <input
               id="bid-amount-input"
               type="number"
@@ -404,9 +409,11 @@ export function BidPanel({
               onChange={(e) => { userTouchedRef.current = true; setBidAmount(Number(e.target.value)); }}
               min={minBid}
               step={minBidIncrement}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 price text-lg focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 price text-lg focus:ring-2 focus:ring-primary-500 outline-none"
             />
-            <p className="text-xs text-gray-400 mt-1">{t("minimumBid")} {formatBDT(minBid)}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {t("minimumBid")} {formatBDT(minBid)} · <span className="text-gray-600">{t("proxyExplain")}</span>
+            </p>
           </div>
 
           <div className="flex gap-2 mb-4">

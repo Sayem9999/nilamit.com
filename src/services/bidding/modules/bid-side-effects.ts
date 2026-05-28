@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import { scheduleAuctionClosure } from '@/lib/cloud-tasks';
 import { pushToUser } from '@/lib/fcm-sender';
 import { formatBDT } from '@/lib/format';
+import { publish, isPubSubConfigured } from '@/lib/pubsub';
 
 export class BidSideEffects {
   /**
@@ -78,6 +79,21 @@ export class BidSideEffects {
       amountBdt: bidAmount,
       metadata: { antiSnipeExtended: !!(newEndTime && newEndTime.getTime() !== auction.endTime.getTime()) },
     });
+
+    // 6. Pub/Sub publish — when configured, downstream subscribers handle
+    // notifications with retry+DLQ semantics. Inline path above keeps
+    // working until Pub/Sub topics are provisioned.
+    if (isPubSubConfigured()) {
+      void publish('bid.placed', {
+        auctionId: auction.id,
+        bidId: bid.id,
+        bidderId: bid.bidderId,
+        amount: bidAmount,
+        prevBidderId,
+        sellerId: auction.sellerId,
+        newEndTime: newEndTime?.toISOString(),
+      });
+    }
 
     await Promise.allSettled(tasks);
   }

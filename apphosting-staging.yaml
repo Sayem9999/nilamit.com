@@ -1,0 +1,112 @@
+## Staging App Hosting backend config.
+##
+## Mirrors apphosting.yaml but points at the `nilamit-staging` Firebase
+## project so every PR / branch can deploy without touching production.
+##
+## SETUP (one-time, per docs/STAGING.md):
+##   firebase projects:create nilamit-staging --display-name "Nilamit Staging"
+##   firebase apphosting:backends:create nilamit-staging \
+##     --project nilamit-staging --location asia-southeast1
+##   firebase use --add nilamit-staging   # add to .firebaserc
+##   # Clone secrets from prod → staging (one-time):
+##   for s in AUTH_SECRET FIREBASE_PRIVATE_KEY UPSTASH_REDIS_REST_URL \
+##            UPSTASH_REDIS_REST_TOKEN SENTRY_DSN RESEND_API_KEY; do
+##     PRODVAL=$(firebase apphosting:secrets:access "$s" --project nilamit-52073)
+##     printf '%s' "$PRODVAL" | firebase apphosting:secrets:set "$s" \
+##       --project nilamit-staging --data-file -
+##     firebase apphosting:secrets:grantaccess "$s" \
+##       --project nilamit-staging --backend nilamit-staging
+##   done
+##
+## Branch-based auto-deploy is wired via .github/workflows/staging-deploy.yml
+## which pushes on every PR open/sync. Main branch still auto-deploys prod.
+
+runConfig:
+  # Smaller footprint than prod — staging traffic is light.
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+  timeoutSeconds: 60
+
+env:
+  - variable: NODE_ENV
+    value: production
+  - variable: AUTH_TRUST_HOST
+    value: "true"
+
+  # Staging-only flag so we can show a top banner / block real payments.
+  - variable: NEXT_PUBLIC_IS_STAGING
+    value: "true"
+
+  - variable: AUTH_SECRET
+    secret: AUTH_SECRET
+  - variable: AUTH_URL
+    secret: APP_URL
+  - variable: GOOGLE_CLIENT_ID
+    secret: GOOGLE_CLIENT_ID
+  - variable: GOOGLE_CLIENT_SECRET
+    secret: GOOGLE_CLIENT_SECRET
+  - variable: ADMIN_EMAILS
+    secret: ADMIN_EMAILS
+  - variable: CRON_SECRET
+    secret: CRON_SECRET
+
+  # Firebase Admin SDK creds (staging project SA, not prod)
+  - variable: FIREBASE_PROJECT_ID
+    value: nilamit-staging
+  - variable: FIREBASE_CLIENT_EMAIL
+    secret: FIREBASE_CLIENT_EMAIL
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: FIREBASE_PRIVATE_KEY
+  - variable: FIREBASE_DATABASE_URL
+    secret: FIREBASE_DATABASE_URL
+  - variable: FIREBASE_STORAGE_BUCKET
+    secret: FIREBASE_STORAGE_BUCKET
+
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    secret: FIREBASE_WEB_API_KEY
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: nilamit-staging
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    secret: FIREBASE_MESSAGING_SENDER_ID
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    secret: FIREBASE_APP_ID
+  - variable: NEXT_PUBLIC_FIREBASE_DATABASE_URL
+    secret: FIREBASE_DATABASE_URL
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    secret: FIREBASE_STORAGE_BUCKET
+  - variable: NEXT_PUBLIC_APP_URL
+    secret: APP_URL
+
+  - variable: UPSTASH_REDIS_REST_URL
+    secret: UPSTASH_REDIS_REST_URL
+  - variable: UPSTASH_REDIS_REST_TOKEN
+    secret: UPSTASH_REDIS_REST_TOKEN
+
+  - variable: SENTRY_DSN
+    secret: SENTRY_DSN
+  - variable: NEXT_PUBLIC_SENTRY_DSN
+    secret: SENTRY_DSN
+  - variable: SENTRY_AUTH_TOKEN
+    secret: SENTRY_AUTH_TOKEN
+
+  - variable: RESEND_API_KEY
+    secret: RESEND_API_KEY
+
+  # Image moderation: same as prod — Cloud Vision SafeSearch enabled.
+  - variable: IMAGE_MODERATION
+    value: enabled
+
+  - variable: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+    value: "6Leg4fUsAAAAAIITIGqtUG5pzOqB5WX7F3tbD5be"
+
+  # Analytics — point to a staging dataset so staging traffic doesn't
+  # poison prod metrics. Create with:
+  #   bq --project_id=nilamit-staging --location=asia-southeast1 \
+  #      mk --dataset nilamit_events_staging
+  - variable: BIGQUERY_DATASET
+    value: nilamit_events_staging
+  - variable: BIGQUERY_TABLE
+    value: events

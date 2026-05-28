@@ -22,6 +22,12 @@ export interface Auction {
   endTime: Date;
   status: AuctionStatus;
   isFeatured?: boolean;
+  /** Auto-expires the feature promotion. Cron flips isFeatured=false when past. */
+  featuredUntil?: Date | null;
+  /** Set by a seller's featured-listing purchase (so admin can audit refunds). */
+  featuredPurchasedBy?: string | null;
+  /** Denormalized view counter — incremented on auction-detail page hit (rate-limited). */
+  viewCount?: number;
   wasExtended?: boolean;
   commissionRate?: number;
   commissionEarned?: number | null;
@@ -51,6 +57,12 @@ export interface Bid {
   auctionId: string;
   bidderId: string;
   status?: 'ACTIVE' | 'CANCELLED';
+  /**
+   * Client-generated UUID for idempotency. The server stores `idempotencyKey`
+   * in a dedicated index so a network retry sending the same key gets the
+   * original bid back instead of placing a second bid.
+   */
+  idempotencyKey?: string;
   createdAt: Date;
   ip?: string;
   userAgent?: string;

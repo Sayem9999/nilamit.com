@@ -272,6 +272,8 @@
     "yourBid": "Your Bid Amount",
     "minimumBid": "Min Bid:",
     "bidBtnPrefix": "Confirm Bid of",
+    "maxProxyHint": "max",
+    "proxyExplain": "We auto-bid for you up to this amount.",
     "success": "Bid placed successfully!",
     "antiSnipe": "Anti-snipe triggered! Auction extended.",
     "phoneNotVerified": "Email verification required to bid.",
