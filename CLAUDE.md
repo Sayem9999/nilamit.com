@@ -8,7 +8,7 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **nilamit.app** is a live production C2C auction marketplace for Bangladesh. Users list items, others bid in real-time, and the winner pays through an escrow system backed by bKash/Nagad mobile money (with SSLCommerz card/net-banking as an additional gateway when configured).
 
-**Stack:** Next.js 16 App Router, Firebase (Firestore + RTDB + Storage + Auth + FCM + Remote Config), Auth.js v5, Upstash Redis, Sentry (EU region), Tailwind CSS 4, Zustand (UI store), TanStack Query (client fetches), Algolia (typo-tolerant search, env-gated), BigQuery (analytics sink, env-gated), SSLCommerz (gateway, env-gated).
+**Stack:** Next.js 16 App Router, Firebase (Firestore + RTDB + Storage + Auth + FCM + Remote Config), Auth.js v5, Upstash Redis, Sentry (EU region), Tailwind CSS 4, Zustand (UI store), TanStack Query (client fetches), BigQuery (analytics sink), SSLCommerz (card/net-banking gateway, env-gated). **No third-party search service** — Firestore-only search via `src/actions/search.ts`.
 
 **Deployed:** Firebase App Hosting (`nilamit` backend, project `nilamit-52073`). Push to `main` → auto-deploy via Cloud Build.
 
@@ -104,7 +104,7 @@ Browser (React 19)
 | `src/actions/auction.ts` | Server actions for auction management |
 | `src/middleware.ts` | Security headers (CSP, HSTS), Auth check, Ban redirect |
 | `src/lib/logger.ts` | `log.info/warn/error/debug` → Sentry; `log.event(type, fields)` → BigQuery sink (no-op without env). |
-| `src/lib/algolia-search.ts` | Server-side Algolia read client. Env-gated by `ALGOLIA_APP_ID` + `ALGOLIA_SEARCH_KEY`. `src/actions/search.ts` calls it when configured, falls back to Firestore otherwise. Cloud Functions handle the write-sync (`functions/src/index.ts`). |
+| `src/actions/search.ts` | Firestore-only search — scans up to 200 active auctions, filters + ranks in memory. No external service. Good for catalogs up to ~10k active listings; add a `searchTokens` denormalized array + `array-contains-any` when you outgrow it. |
 | `src/lib/firebase-remote-config.ts` | Runtime feature flags. Priority order: Remote Config > SystemConfig (Firestore) > hard-coded default. Defaults defined in `RemoteConfigDefaults`. |
 | `src/lib/fcm.ts` | Browser FCM client — `enablePushNotifications()` from a user gesture; `onForegroundPush()` for in-tab toasts. No-ops without `NEXT_PUBLIC_FIREBASE_VAPID_KEY`. |
 | `src/lib/fcm-sender.ts` | Server `pushToUser(userId, payload)` via `firebase-admin/messaging`. Auto-prunes invalid tokens. Wired into `BidSideEffects.notifyOutbid` and `notifySeller`. |
@@ -179,9 +179,7 @@ DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (ad
 | `UPSTASH_REDIS_REST_URL` | ✓ Real | `https://safe-stallion-50421.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | ✓ Real | Real Upstash token |
 | `IMAGE_MODERATION` | env var | Set to `enabled` (May 2026); disable here to bypass Cloud Vision SafeSearch |
-| `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | env var (public) | Enables FCM browser push. Get from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → generate key pair. Without it the FCM client no-ops; RTDB notifications keep working. |
-| `ALGOLIA_APP_ID` | secret | Enables typo-tolerant search. Index name `auctions` by default (override with `ALGOLIA_INDEX_NAME`). Without these, `getSmartSearchResults` uses the existing Firestore path. |
-| `ALGOLIA_SEARCH_KEY` | secret | **Search-only** Algolia key — NOT the admin key. The admin key is used by Cloud Functions for write-sync; only the search key should ever be in the Next.js runtime. |
+| `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | ✓ Real | Activated. Public Web Push certificate from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates. Powers FCM browser push in `src/lib/fcm.ts`. |
 | `SSLCOMMERZ_STORE_ID` | secret | Enables the SSLCommerz gateway alongside bKash/Nagad. Without it `/api/payments/sslcommerz/init` returns 503; other gateways unaffected. |
 | `SSLCOMMERZ_STORE_PASSWORD` | secret | Signs init requests and verifies IPN hashes. |
 | `SSLCOMMERZ_SANDBOX` | env var | `"true"` for sandbox; otherwise production. |

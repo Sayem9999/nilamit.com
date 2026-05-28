@@ -29,7 +29,6 @@
     "@uploadthing/react": "^7.3.3",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
-    "algoliasearch": "^5.52.1",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",

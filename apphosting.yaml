@@ -114,16 +114,18 @@ env:
   - variable: SSLCOMMERZ_SANDBOX
     value: "true"
 
-  # ─── Pending — uncomment AFTER setting each secret in Secret Manager ──
-  # (Adding a secret ref before the secret exists will fail the build.)
-  #
-  # - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY
-  #   secret: NEXT_PUBLIC_FIREBASE_VAPID_KEY
-  #
-  # - variable: ALGOLIA_APP_ID
-  #   secret: ALGOLIA_APP_ID
-  # - variable: ALGOLIA_SEARCH_KEY
-  #   secret: ALGOLIA_SEARCH_KEY
+  # ─── FCM browser push (active) ──────────────────────────────────────
+  # Public VAPID key — ships in the client bundle by design. Stored in
+  # Secret Manager mainly for centralized rotation, not confidentiality.
+  - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY
+    secret: NEXT_PUBLIC_FIREBASE_VAPID_KEY
+
+  # ─── SSLCommerz card/net-banking gateway — pending creds ───────────
+  # Uncomment after running:
+  #   firebase apphosting:secrets:set SSLCOMMERZ_STORE_ID       --project nilamit-52073 --data-file -
+  #   firebase apphosting:secrets:set SSLCOMMERZ_STORE_PASSWORD --project nilamit-52073 --data-file -
+  #   firebase apphosting:secrets:grantaccess SSLCOMMERZ_STORE_ID       --project nilamit-52073 --backend nilamit
+  #   firebase apphosting:secrets:grantaccess SSLCOMMERZ_STORE_PASSWORD --project nilamit-52073 --backend nilamit
   #
   # - variable: SSLCOMMERZ_STORE_ID
   #   secret: SSLCOMMERZ_STORE_ID
