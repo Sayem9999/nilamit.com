@@ -6,6 +6,7 @@ import LoadMore from "@/components/auction/LoadMore";
 import SortSelector from "@/components/auction/SortSelector";
 import Link from "next/link";
 import { Search as SearchIcon, SlidersHorizontal, MapPin, LayoutGrid, Rows3 } from "lucide-react";
+import { SaveSearchButton } from "@/components/auction/SaveSearchButton";
 import { CATEGORIES, LOCATIONS, AuctionWithSeller, AuctionStatus } from "@/types";
 import { getTranslations } from "next-intl/server";
 
@@ -107,14 +108,25 @@ export default async function AuctionsPage({ searchParams }: Props) {
             />
           </div>
         </div>
-        {hasActiveFilter && (
-          <Link
-            href="/auctions"
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-primary-600 transition-colors uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
-          >
-            {t("clearFilters")}
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          {hasActiveFilter && (
+            <>
+              <SaveSearchButton
+                filters={{
+                  search: params.search,
+                  category: params.category,
+                  location: params.location,
+                }}
+              />
+              <Link
+                href="/auctions"
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-gray-600 hover:text-primary-600 transition-colors uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+              >
+                {t("clearFilters")}
+              </Link>
+            </>
+          )}
+        </div>
       </header>
 
       <div className="flex flex-col lg:flex-row gap-6">

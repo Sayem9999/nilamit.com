@@ -12,6 +12,8 @@ import {
   Scale,
   ShieldCheck,
   TrendingUp,
+  Wrench,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +27,8 @@ type Tab =
   | "treasury"
   | "disputes"
   | "kyc"
+  | "operations"
+  | "audit"
   | "live";
 
 interface AdminLayoutProps {
@@ -37,6 +41,8 @@ interface AdminLayoutProps {
   treasury?: React.ReactNode;
   disputes?: React.ReactNode;
   kyc?: React.ReactNode;
+  operations?: React.ReactNode;
+  audit?: React.ReactNode;
   live?: React.ReactNode;
 }
 
@@ -50,6 +56,8 @@ export function AdminLayout({
   treasury,
   disputes,
   kyc,
+  operations,
+  audit,
   live,
 }: AdminLayoutProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -58,6 +66,7 @@ export function AdminLayout({
   const tabs = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "live", label: "Live Activity", icon: TrendingUp },
+    { id: "operations", label: "Operations", icon: Wrench, danger: true },
     { id: "moderation", label: "Moderation", icon: ShieldAlert },
     { id: "users", label: "Users", icon: Users },
     { id: "kyc", label: "KYC Queue", icon: ShieldCheck },
@@ -65,6 +74,7 @@ export function AdminLayout({
     { id: "content", label: "Content", icon: PenTool },
     { id: "treasury", label: "Treasury", icon: ShieldCheck },
     { id: "disputes", label: "Disputes", icon: Scale },
+    { id: "audit", label: "Audit Log", icon: FileText },
     { id: "system", label: "System", icon: Trash2, danger: true },
   ];
 
@@ -139,6 +149,8 @@ export function AdminLayout({
           {activeTab === "treasury" && treasury}
           {activeTab === "disputes" && disputes}
           {activeTab === "kyc" && kyc}
+          {activeTab === "operations" && operations}
+          {activeTab === "audit" && audit}
           {activeTab === "system" && system}
         </div>
       </main>

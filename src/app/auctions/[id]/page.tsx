@@ -10,6 +10,7 @@ import BidPanelWrapper from "@/components/auction/BidPanelWrapper";
 import { StickyBidBar } from "@/components/auction/StickyBidBar";
 import { ImageGallery } from "@/components/auction/ImageGallery";
 import { AuctionViewTracker } from "@/components/auction/AuctionViewTracker";
+import { FeatureListingButton } from "@/components/auction/FeatureListingButton";
 import Image from "next/image";
 import {
   Eye,
@@ -359,6 +360,18 @@ export default async function AuctionDetailPage({ params }: Props) {
 
           {/* Fire-and-forget viewCount increment (rate-limited per IP). */}
           <AuctionViewTracker auctionId={id} />
+
+          {/* Seller-only: promote this listing to Featured. Renders nothing
+              for non-owners; renders a "Featured until …" pill if already
+              featured. */}
+          <div className="mb-3">
+            <FeatureListingButton
+              auctionId={id}
+              isOwner={session?.user?.id === auction.sellerId}
+              isFeatured={auction.isFeatured}
+              featuredUntil={auction.featuredUntil ?? null}
+            />
+          </div>
 
           {/* Bid Panel */}
           <BidPanelWrapper

@@ -26,6 +26,8 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link href="/auctions/create" className="text-gray-600 hover:text-primary-600 hover:underline">{t("sell")}</Link></li>
               <li><Link href="/dashboard?tab=listings" className="text-gray-600 hover:text-primary-600 hover:underline">{t("myListings")}</Link></li>
+              <li><Link href="/dashboard/analytics" className="text-gray-600 hover:text-primary-600 hover:underline">Seller Analytics</Link></li>
+              <li><Link href="/dashboard/saved-searches" className="text-gray-600 hover:text-primary-600 hover:underline">Saved Searches</Link></li>
               <li><Link href="/dashboard" className="text-gray-600 hover:text-primary-600 hover:underline">{t("dashboard")}</Link></li>
               <li><Link href="/leaderboard" className="text-gray-600 hover:text-primary-600 hover:underline">{t("leaderboard")}</Link></li>
             </ul>
