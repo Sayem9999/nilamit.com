@@ -62,7 +62,7 @@ export default async function SearchPage({
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="w-full lg:w-64 flex-shrink-0 space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-28">
+            <div className="bg-white p-6 rounded-md shadow-sm border border-gray-100 sticky top-28">
               <div className="flex items-center gap-2 font-semibold text-gray-900 mb-4 pb-4 border-b border-gray-100">
                 <SlidersHorizontal className="w-5 h-5 text-primary-600" />
                 {t("filters")}
@@ -221,7 +221,7 @@ export default async function SearchPage({
                 />
               </div>
             ) : (
-              <div className="bg-white p-12 text-center rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center">
+              <div className="bg-white p-12 text-center rounded-md border border-gray-100 shadow-sm flex flex-col items-center justify-center">
                 <SearchIcon className="w-12 h-12 text-gray-300 mb-4" />
                 <h3 className="text-xl font-heading font-semibold text-gray-900 mb-2">
                   {t("noResults")}

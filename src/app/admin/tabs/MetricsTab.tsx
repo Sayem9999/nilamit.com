@@ -29,7 +29,7 @@ function MetricCard({
   color: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-md border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <div
           className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}
@@ -185,7 +185,7 @@ export function MetricsTab() {
 
       {/* Trend Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-md border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-heading font-semibold text-gray-900">
@@ -207,7 +207,7 @@ export function MetricsTab() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-md border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-heading font-semibold text-gray-900">
@@ -231,7 +231,7 @@ export function MetricsTab() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:col-span-2">
+        <div className="bg-white rounded-md border border-gray-100 shadow-sm p-6 md:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-heading font-semibold text-gray-900">
@@ -270,7 +270,7 @@ export function MetricsTab() {
 
       {/* Category Breakdown */}
       {metrics.topCategories.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-md border border-gray-100 shadow-sm p-6">
           <h3 className="font-heading font-semibold text-gray-900 mb-4">
             Top Categories
           </h3>

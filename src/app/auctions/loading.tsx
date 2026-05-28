@@ -24,7 +24,7 @@ export default function AuctionsLoading() {
         <div className="flex-1">
           <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 space-y-4 shadow-sm">
+              <div key={i} className="bg-white rounded-md border border-gray-100 p-4 space-y-4 shadow-sm">
                 <Skeleton className="aspect-square w-full rounded-xl" />
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-3/4" />

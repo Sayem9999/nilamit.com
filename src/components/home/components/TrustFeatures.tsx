@@ -57,7 +57,7 @@ export function TrustFeatures({ systemConfig }: TrustFeaturesProps) {
           <ol className="grid sm:grid-cols-3 gap-8 list-none p-0">
             {steps.map((step, i) => (
               <li key={i} className="text-center">
-                <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                <div className="w-14 h-14 bg-primary-100 rounded-md flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                   <step.icon className="w-7 h-7 text-primary-600" />
                 </div>
                 <div className="inline-flex items-center justify-center w-6 h-6 bg-primary-600 text-white rounded-full text-xs font-bold mb-3" aria-hidden="true">
@@ -88,7 +88,7 @@ export function TrustFeatures({ systemConfig }: TrustFeaturesProps) {
             {features.map((feature, i) => (
               <li
                 key={i}
-                className="bg-primary-50/50 border border-primary-100 rounded-2xl p-6"
+                className="bg-primary-50/50 border border-primary-100 rounded-md p-6"
               >
                 <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mb-4" aria-hidden="true">
                   <feature.icon className="w-5 h-5 text-primary-600" />

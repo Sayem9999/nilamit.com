@@ -11,7 +11,7 @@ export default async function LeaderboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <header
           aria-labelledby="leaderboard-heading"
-          className="mb-12 p-10 bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 rounded-[3rem] shadow-2xl text-white relative overflow-hidden"
+          className="mb-12 p-10 bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 rounded-[3rem] shadow-md text-white relative overflow-hidden"
         >
           <div
             className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 blur-[100px]"

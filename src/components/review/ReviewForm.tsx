@@ -36,7 +36,7 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
 
   if (success) {
     return (
-      <div className="bg-green-50 border border-green-100 rounded-2xl p-8 text-center">
+      <div className="bg-green-50 border border-green-100 rounded-md p-8 text-center">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Star className="w-8 h-8 text-green-600 fill-green-600" />
         </div>
@@ -47,9 +47,9 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-xl p-8">
+    <div className="bg-white rounded-md border border-gray-100 shadow-xl p-8">
       <div className="mb-6">
-        <h3 className="text-2xl font-black text-gray-900 leading-tight">
+        <h3 className="text-2xl font-bold text-gray-900 leading-tight">
           How was your experience with <span className="text-primary-600">{recipientName}</span>?
         </h3>
         <p className="text-gray-500 mt-2 font-medium">Your rating directly affects their reputation score.</p>
@@ -57,7 +57,7 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Rating</label>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Rating</label>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -88,14 +88,14 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
         </div>
 
         <div>
-          <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Comment (Optional)</label>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Comment (Optional)</label>
           <div className="relative">
             <MessageSquare className="absolute top-4 left-4 w-5 h-5 text-gray-300" />
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Tell us about the transaction, communication, or item quality..."
-              className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-12 pr-4 py-4 min-h-[120px] focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all outline-none text-gray-900 font-medium"
+              className="w-full bg-gray-50 border border-gray-100 rounded-md pl-12 pr-4 py-4 min-h-[120px] focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all outline-none text-gray-900 font-medium"
             />
           </div>
         </div>
@@ -110,7 +110,7 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
         <button
           type="submit"
           disabled={isPending}
-          className="w-full bg-gray-900 hover:bg-black text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 group"
+          className="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-md flex items-center justify-center gap-2 transition-all disabled:opacity-50 group"
         >
           {isPending ? (
             <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />

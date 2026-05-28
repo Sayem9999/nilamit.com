@@ -174,16 +174,16 @@ export function UsersTab() {
                             </p>
                             {user.isVerifiedSeller ? (
                               user.isTopRated ? (
-                                <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5">
+                                <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-bold uppercase tracking-wider flex items-center gap-0.5">
                                   ★ Top Seller
                                 </span>
                               ) : (
-                                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 text-[9px] font-black uppercase tracking-wider">
+                                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 text-[9px] font-bold uppercase tracking-wider">
                                   Seller
                                 </span>
                               )
                             ) : (
-                              <span className="px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200/50 text-[9px] font-black uppercase tracking-wider">
+                              <span className="px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200/50 text-[9px] font-bold uppercase tracking-wider">
                                 Bidder
                               </span>
                             )}

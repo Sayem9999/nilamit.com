@@ -23,7 +23,7 @@ export default async function FAQPage() {
           {faqs.map((faq, index) => (
             <li
               key={index}
-              className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow motion-reduce:transition-none"
+              className="bg-white p-8 rounded-md border border-gray-100 shadow-sm hover:shadow-md transition-shadow motion-reduce:transition-none"
             >
               <h2 className="text-lg font-bold text-gray-900 mb-3">{faq.q}</h2>
               <p className="text-gray-600 leading-relaxed">{faq.a}</p>

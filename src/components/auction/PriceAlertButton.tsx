@@ -42,7 +42,7 @@ export default function PriceAlertButton({
 
   if (isSetting) {
     return (
-      <div className="flex flex-col gap-4 p-5 bg-white rounded-3xl border border-gray-100 shadow-premium animate-in fade-in slide-in-from-top-2">
+      <div className="flex flex-col gap-4 p-5 bg-white rounded-md border border-gray-100 shadow-premium animate-in fade-in slide-in-from-top-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold text-gray-900 flex items-center gap-2">
             <Bell className="w-4 h-4 text-primary-600" />
@@ -56,7 +56,7 @@ export default function PriceAlertButton({
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 p-1 bg-gray-50 rounded-2xl">
+        <div className="grid grid-cols-2 gap-2 p-1 bg-gray-50 rounded-md">
           <button
             onClick={() => setMode("TARGET_REACHED")}
             className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
@@ -89,7 +89,7 @@ export default function PriceAlertButton({
                 type="number"
                 value={threshold}
                 onChange={(e) => setThreshold(Number(e.target.value))}
-                className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-transparent rounded-2xl text-base font-bold focus:bg-white focus:border-primary-500 outline-none transition-all"
+                className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-transparent rounded-md text-base font-bold focus:bg-white focus:border-primary-500 outline-none transition-all"
                 placeholder="Target price..."
               />
             </div>
@@ -106,7 +106,7 @@ export default function PriceAlertButton({
         <button
           onClick={handleSetAlert}
           disabled={isLoading || (mode === "TARGET_REACHED" && threshold <= currentPrice)}
-          className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 disabled:opacity-50 disabled:bg-gray-400 transition-all flex items-center justify-center gap-2"
+          className="w-full py-4 bg-gray-900 text-white rounded-md font-bold hover:bg-gray-800 disabled:opacity-50 disabled:bg-gray-400 transition-all flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -121,7 +121,7 @@ export default function PriceAlertButton({
   return (
     <button
       onClick={() => setIsSetting(true)}
-      className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-700 hover:bg-gray-50 hover:shadow-sm transition-all"
+      className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-md text-sm font-bold text-gray-700 hover:bg-gray-50 hover:shadow-sm transition-all"
     >
       <Bell className="w-4 h-4 text-primary-500" />
       <span>Track Auction</span>

@@ -72,7 +72,7 @@ export function ReportModal({ auctionId }: ReportModalProps) {
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100"
+              className="bg-white rounded-md shadow-md w-full max-w-md overflow-hidden border border-gray-100"
             >
               <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">

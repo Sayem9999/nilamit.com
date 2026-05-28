@@ -172,7 +172,7 @@ export default function ChatInterface({
             if (isSystem) {
               return (
                 <div key={msg.id} className="flex justify-center my-4">
-                  <span className="px-3 py-1 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-widest">
+                  <span className="px-3 py-1 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-wide">
                     {msg.content}
                   </span>
                 </div>
@@ -187,7 +187,7 @@ export default function ChatInterface({
                 className={cn('flex flex-col max-w-[80%]', isMe ? 'ml-auto items-end' : 'mr-auto items-start')}
               >
                 <div className={cn(
-                  'px-4 py-3 rounded-2xl text-sm shadow-sm',
+                  'px-4 py-3 rounded-md text-sm shadow-sm',
                   isMe ? 'bg-gray-900 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none',
                 )}>
                   {msg.imageUrl && (
@@ -223,7 +223,7 @@ export default function ChatInterface({
       {/* Footer / Input */}
       <div className="p-4 border-t border-gray-100 bg-white">
         <VerificationGuard>
-          <form onSubmit={handleSend} className="flex items-center gap-2 bg-gray-50 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all">
+          <form onSubmit={handleSend} className="flex items-center gap-2 bg-gray-50 rounded-md p-2 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all">
             {/* Hidden file input */}
             <input
               ref={fileInputRef}

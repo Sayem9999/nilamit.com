@@ -139,7 +139,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
     <div className="space-y-8">
       
       {/* 1. Hero Section Manager */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
         <h3 className="font-heading font-semibold text-lg text-gray-900 mb-4 flex items-center gap-2">
           <ImageIcon className="w-5 h-5 text-indigo-600" />
           Homepage Banner
@@ -185,7 +185,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
       </div>
 
       {/* 1.5 Treasury Configuration */}
-      <div className="bg-white rounded-2xl border border-emerald-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div className="bg-white rounded-md border border-emerald-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
         <h3 className="font-heading font-semibold text-lg text-emerald-900 mb-4 flex items-center gap-2">
           <Save className="w-5 h-5 text-emerald-600" />
           Official Treasury Accounts
@@ -193,7 +193,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
         <p className="text-sm text-gray-500 mb-6">These numbers will be displayed in the Automated Checkout Gateway.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
           <div>
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">bKash Merchant/Personal</label>
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wide">bKash Merchant/Personal</label>
             <input 
               type="text" 
               value={config.treasuryBkash || ''} 
@@ -203,7 +203,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Nagad Merchant/Personal</label>
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wide">Nagad Merchant/Personal</label>
             <input 
               type="text" 
               value={config.treasuryNagad || ''} 
@@ -226,7 +226,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
       </div>
 
       {/* 2. Featured Auctions */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
         <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2 flex items-center gap-2">
           <Star className="w-5 h-5 text-amber-500 fill-amber-400" />
           Featured Auctions
@@ -242,14 +242,14 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
             {/* List of Featured */}
             <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
               {auctions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-center">
+                <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-md border border-dashed border-gray-200 text-center">
                   <Star className="w-8 h-8 text-gray-300 mb-2" />
                   <p className="text-sm font-medium text-gray-500">No auctions featured yet.</p>
                   <p className="text-xs text-gray-400 mt-1">Select from the directory or paste an ID below.</p>
                 </div>
               ) : (
                 auctions.map((auction) => (
-                  <div key={auction.id} className="flex items-center justify-between p-3.5 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100 transition-all group">
+                  <div key={auction.id} className="flex items-center justify-between p-3.5 bg-gray-50/50 hover:bg-gray-50 rounded-md border border-gray-100 transition-all group">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-12 h-12 relative rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                         {auction.images?.[0] ? (
@@ -313,7 +313,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
           </div>
 
           {/* Right Side: Active Listings Directory */}
-          <div className="bg-gray-50/40 rounded-2xl border border-gray-100 p-5 flex flex-col h-full min-h-[450px]">
+          <div className="bg-gray-50/40 rounded-md border border-gray-100 p-5 flex flex-col h-full min-h-[450px]">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h4 className="font-semibold text-sm text-gray-800 uppercase tracking-wider">Active Listings Directory</h4>
@@ -364,7 +364,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
                         <div className="min-w-0">
                           <p className="font-semibold text-xs text-gray-900 truncate leading-snug">{auction.title}</p>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] font-black text-primary-600">৳{auction.currentPrice.toLocaleString()}</span>
+                            <span className="text-[10px] font-bold text-primary-600">৳{auction.currentPrice.toLocaleString()}</span>
                             <span className="text-gray-300 text-[8px]">•</span>
                             <button
                               onClick={() => handleCopyId(auction.id)}

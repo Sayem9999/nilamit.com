@@ -50,7 +50,7 @@ export function ReviewList({ userId }: ReviewListProps) {
     return (
       <div className="space-y-4">
         {[1, 2].map((i) => (
-          <div key={i} className="bg-gray-50 h-32 rounded-2xl animate-pulse" />
+          <div key={i} className="bg-gray-50 h-32 rounded-md animate-pulse" />
         ))}
       </div>
     );
@@ -58,7 +58,7 @@ export function ReviewList({ userId }: ReviewListProps) {
 
   if (reviews.length === 0) {
     return (
-      <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-100">
+      <div className="bg-gray-50 rounded-md p-8 text-center border-2 border-dashed border-gray-100">
         <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
           <Star className="w-6 h-6 text-gray-300" />
         </div>
@@ -75,7 +75,7 @@ export function ReviewList({ userId }: ReviewListProps) {
       {reviews.map((review) => (
         <div
           key={review.id}
-          className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm"
+          className="bg-white border border-gray-100 rounded-md p-5 shadow-sm"
         >
           <div className="flex justify-between items-start mb-3">
             <div className="flex items-center gap-3">

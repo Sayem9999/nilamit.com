@@ -39,7 +39,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
 
   if (!images || images.length === 0) {
     return (
-      <div className="relative aspect-[4/3] sm:aspect-video rounded-3xl overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-100/50 shadow-sm">
+      <div className="relative aspect-[4/3] sm:aspect-video rounded-md overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-100/50 shadow-sm">
         <Image
           src={FALLBACK_IMAGE}
           alt={title}
@@ -63,7 +63,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
   return (
     <div className="space-y-4">
       {/* Main Image Container */}
-      <div className="relative aspect-[4/3] sm:aspect-[4/3] lg:aspect-square rounded-3xl overflow-hidden bg-gray-100 group shadow-sm border border-gray-100/50">
+      <div className="relative aspect-[4/3] sm:aspect-[4/3] lg:aspect-square rounded-md overflow-hidden bg-gray-100 group shadow-sm border border-gray-100/50">
         <Image
           key={`${currentIndex}-${isMainImageBroken ? "broken" : "ok"}`}
           src={mainImageSrc}

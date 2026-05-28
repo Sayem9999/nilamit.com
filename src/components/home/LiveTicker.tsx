@@ -52,7 +52,7 @@ export default function LiveTicker() {
     <aside aria-label="Live activity ticker" className="bg-gray-900 text-white overflow-hidden h-10 flex items-center border-b border-white/5">
       <div className="flex-shrink-0 px-4 bg-primary-600 h-full flex items-center gap-2 relative z-10 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
         <Zap className="w-4 h-4 fill-white text-white animate-pulse motion-reduce:animate-none" aria-hidden="true" />
-        <span className="text-[10px] font-black uppercase tracking-tighter whitespace-nowrap">Live Ticker</span>
+        <span className="text-[10px] font-bold uppercase tracking-tighter whitespace-nowrap">Live Ticker</span>
       </div>
 
       <div className="flex-1 overflow-hidden relative h-full flex items-center gap-2">
@@ -74,7 +74,7 @@ export default function LiveTicker() {
                 <Trophy className="w-3 h-3 text-amber-500" aria-hidden="true" />
                 <span className="font-bold text-gray-200">{item.bidderName}</span>
                 <span className="text-gray-500">placed</span>
-                <span className="font-black text-primary-400">{item.amount} BDT</span>
+                <span className="font-bold text-primary-400">{item.amount} BDT</span>
                 <span className="text-gray-500">on</span>
                 <span className="truncate max-w-[200px] font-medium text-white underline decoration-gray-700 underline-offset-4">{item.auctionTitle}</span>
               </Link>

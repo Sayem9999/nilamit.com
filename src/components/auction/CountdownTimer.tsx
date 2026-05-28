@@ -72,7 +72,7 @@ export const CountdownTimer = memo(({
     const hasWidth = className.includes("w-");
     return (
       <div
-        className={`${hasWidth ? "" : "w-full"} flex items-center justify-center gap-2 py-2 px-3 rounded-2xl border transition-all duration-500 font-mono tracking-tight text-xs font-bold ${
+        className={`${hasWidth ? "" : "w-full"} flex items-center justify-center gap-2 py-2 px-3 rounded-md border transition-all duration-500 font-mono tracking-tight text-xs font-bold ${
           state.isExpired
             ? "bg-gray-100/60 border-gray-200 text-gray-400"
             : state.isUrgent
@@ -103,7 +103,7 @@ export const CountdownTimer = memo(({
           state.isExpired
             ? "bg-gray-100/80 border-gray-200 text-gray-400"
             : state.isUrgent
-            ? "bg-gradient-to-r from-red-500/10 to-orange-500/10 border-red-500/30 text-red-600 shadow-[0_0_15px_rgba(239,68,68,0.08)] animate-pulse font-black"
+            ? "bg-gradient-to-r from-red-500/10 to-orange-500/10 border-red-500/30 text-red-600 shadow-[0_0_15px_rgba(239,68,68,0.08)] animate-pulse font-bold"
             : "bg-slate-50/80 border-slate-200/60 text-slate-700 font-bold"
         } ${className}`}
       >

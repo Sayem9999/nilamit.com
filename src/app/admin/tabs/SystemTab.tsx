@@ -230,7 +230,7 @@ export function SystemTab() {
     <div className="space-y-6">
 
       {/* Operational Bootstrap & Growth Modes */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
         <div className="flex items-start gap-4">
           <div className="bg-primary-50 p-3 rounded-xl">
             <Sparkles className="w-8 h-8 text-primary-600 animate-pulse" />
@@ -255,7 +255,7 @@ export function SystemTab() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {/* Toggle: Posting Requirements */}
-                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-md border border-gray-100/80 transition-all duration-200">
                     <div className="space-y-1 pr-4">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-indigo-500" />
@@ -280,7 +280,7 @@ export function SystemTab() {
                   </div>
 
                   {/* Toggle: Bidding Requirements */}
-                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-md border border-gray-100/80 transition-all duration-200">
                     <div className="space-y-1 pr-4">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-indigo-500" />
@@ -305,7 +305,7 @@ export function SystemTab() {
                   </div>
 
                   {/* Toggle: MFS Linkage */}
-                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-md border border-gray-100/80 transition-all duration-200">
                     <div className="space-y-1 pr-4">
                       <div className="flex items-center gap-2">
                         <Wallet className="w-4 h-4 text-pink-500" />
@@ -330,7 +330,7 @@ export function SystemTab() {
                   </div>
 
                   {/* Toggle: Escrow Requirements */}
-                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-md border border-gray-100/80 transition-all duration-200">
                     <div className="space-y-1 pr-4">
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-emerald-500" />
@@ -355,7 +355,7 @@ export function SystemTab() {
                   </div>
 
                   {/* Toggle: COD-Escrow Hybrid Model */}
-                  <div className="flex flex-col gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200 col-span-1 md:col-span-2">
+                  <div className="flex flex-col gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-md border border-gray-100/80 transition-all duration-200 col-span-1 md:col-span-2">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 pr-4">
                         <div className="flex items-center gap-2">
@@ -420,7 +420,7 @@ export function SystemTab() {
                   </div>
 
                   {/* Toggle: Platform Commission */}
-                  <div className="flex flex-col gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200 col-span-1 md:col-span-2">
+                  <div className="flex flex-col gap-4 p-4 bg-gray-50/50 hover:bg-gray-50 rounded-md border border-gray-100/80 transition-all duration-200 col-span-1 md:col-span-2">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 pr-4">
                         <div className="flex items-center gap-2">
@@ -516,7 +516,7 @@ export function SystemTab() {
       </div>
 
       {/* Global Announcement */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
+      <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
         <div className="flex items-start gap-4">
           <div className="bg-orange-50 p-3 rounded-xl">
             <Megaphone className="w-8 h-8 text-orange-600" />
@@ -535,7 +535,7 @@ export function SystemTab() {
             ) : !config ? null : (
               <div className="mt-8 space-y-6 border-t border-gray-50 pt-6">
                 <div className="flex flex-col gap-4">
-                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-2xl border border-gray-100/80 transition-all duration-200">
+                  <div className="flex items-start justify-between p-4 bg-gray-50/50 hover:bg-gray-50 rounded-md border border-gray-100/80 transition-all duration-200">
                     <div className="space-y-1 pr-4">
                       <span className="font-semibold text-gray-900 text-sm">Enable Announcement</span>
                       <p className="text-xs text-gray-500 leading-relaxed">
@@ -576,7 +576,7 @@ export function SystemTab() {
 
 
       {/* Treasury Configuration */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
+      <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
         <div className="flex items-start gap-4">
           <div className="bg-emerald-50 p-3 rounded-xl">
             <Landmark className="w-8 h-8 text-emerald-600" />
@@ -628,7 +628,7 @@ export function SystemTab() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+      <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="bg-primary-50 p-3 rounded-xl">
             <FileText className="w-8 h-8 text-primary-600" />
@@ -665,7 +665,7 @@ export function SystemTab() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+      <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="bg-primary-50 p-3 rounded-xl">
             <Database className="w-8 h-8 text-primary-600" />
@@ -758,7 +758,7 @@ export function SystemTab() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-red-100 p-6 shadow-sm">
+      <div className="bg-white rounded-md border border-red-100 p-6 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="bg-red-50 p-3 rounded-xl">
             <AlertTriangle className="w-8 h-8 text-red-600" />
@@ -801,7 +801,7 @@ export function SystemTab() {
       {/* Confirmation Modal */}
       {isConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-md shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center gap-4 text-red-600 mb-4">
               <AlertTriangle className="w-8 h-8" />
               <h3 className="text-lg font-bold">Confirm Data Wipe</h3>
@@ -832,7 +832,7 @@ export function SystemTab() {
       {/* Restore Confirmation Modal */}
       {isRestoreConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-md shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center gap-4 text-primary-600 mb-4">
               <AlertTriangle className="w-8 h-8 text-amber-500" />
               <h3 className="text-lg font-bold">Confirm Database Restore</h3>

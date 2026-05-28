@@ -54,9 +54,9 @@ export function StickyBidBar({ currentPrice, endTime, serverTime, targetId }: St
           aria-label="Quick bid bar"
           className="fixed bottom-0 left-0 right-0 z-40 lg:hidden p-4"
         >
-          <div className="bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div className="bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] rounded-md p-4 flex items-center justify-between gap-4">
             <div className="flex flex-col">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary-600 uppercase tracking-widest mb-0.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary-600 uppercase tracking-wide mb-0.5">
                 <TrendingUp className="w-3 h-3" aria-hidden="true" /> Current Bid
               </div>
               <div className="flex items-center gap-2">

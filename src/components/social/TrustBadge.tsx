@@ -86,7 +86,7 @@ const TrustBadge = memo(({
             {showText && <span className="bn">{rating.toFixed(1)} ★</span>}
           </div>
         </TooltipTrigger>
-        <TooltipContent className="p-3 bg-white/95 backdrop-blur-md border-slate-100 rounded-2xl shadow-premium max-w-[200px]">
+        <TooltipContent className="p-3 bg-white/95 backdrop-blur-md border-slate-100 rounded-md shadow-premium max-w-[200px]">
           <div className="space-y-2">
             <p className="font-bold text-slate-900 border-b border-slate-50 pb-1 flex items-center gap-2 bn">
               <Info className="w-3.5 h-3.5 text-blue-500" /> {tier.label}

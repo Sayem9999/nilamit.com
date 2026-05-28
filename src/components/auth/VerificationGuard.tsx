@@ -78,7 +78,7 @@ function VerificationGuardComponent({ children }: VerificationGuardProps) {
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-md w-full max-w-md overflow-hidden shadow-md animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="relative h-32 bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center shadow-none">
               <div className="absolute top-4 right-4 shadow-none">
@@ -89,7 +89,7 @@ function VerificationGuardComponent({ children }: VerificationGuardProps) {
                   <X className="w-5 h-5 shadow-none" />
                 </button>
               </div>
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg transform -rotate-6">
+              <div className="w-16 h-16 bg-white rounded-md flex items-center justify-center shadow-lg transform -rotate-6">
                 <ShieldAlert className="w-8 h-8 text-primary-600 shadow-none" />
               </div>
             </div>
@@ -104,7 +104,7 @@ function VerificationGuardComponent({ children }: VerificationGuardProps) {
               </p>
 
               <div className="space-y-4 mb-8 shadow-none">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-left shadow-none">
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-md border border-gray-100 text-left shadow-none">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-none ${session?.user?.emailVerified ? 'bg-green-100 text-green-600' : 'bg-accent-100 text-accent-600'}`}>
                     {session?.user?.emailVerified ? <CheckCircle className="w-6 h-6 shadow-none" /> : <Mail className="w-6 h-6 shadow-none" />}
                   </div>
@@ -119,7 +119,7 @@ function VerificationGuardComponent({ children }: VerificationGuardProps) {
                 <Link
                   href="/profile"
                   onClick={() => setShowModal(false)}
-                  className="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-2xl font-bold shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-bold shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-2"
                 >
                   {t("verifyNow")}
                 </Link>

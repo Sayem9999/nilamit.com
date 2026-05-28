@@ -284,7 +284,7 @@ export function BidPanel({
   const isOwnAuction = useMemo(() => session?.user?.id === sellerId, [session?.user?.id, sellerId]);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+    <div className="bg-white rounded-md border border-gray-100 shadow-sm p-6">
       <BidPanelHeader 
         auctionId={auctionId}
         t={t}
@@ -314,7 +314,7 @@ export function BidPanel({
             `}} />
             <div className="bg-gradient-to-r from-primary-600 via-indigo-600 to-purple-600 text-white rounded-xl p-4 shadow-lg border border-white/10 relative overflow-hidden">
               <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center justify-end pr-4 pointer-events-none select-none">
-                <span className="text-7xl font-black italic">BID</span>
+                <span className="text-7xl font-bold italic">BID</span>
               </div>
               <div className="flex items-center gap-3 relative z-10">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/25 backdrop-blur-sm animate-pulse">
@@ -322,7 +322,7 @@ export function BidPanel({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-black tracking-widest text-primary-200">Live Bid Alert</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wide text-primary-200">Live Bid Alert</span>
                     {liveBidAlert.isAntiSnipe && (
                       <span className="text-[9px] bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-bounce">
                         Anti-Snipe Extended
@@ -465,7 +465,7 @@ export function BidPanel({
 
       {showBinConfirm && buyItNowPrice && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowBinConfirm(false)}>
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-md shadow-md max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-heading font-bold text-gray-900 mb-1">Confirm Buy It Now</h2>
             <p className="text-sm text-gray-600 mb-2">You are about to purchase this item instantly for:</p>
             <p className="price text-2xl text-primary-700 mb-4">{formatBDT(buyItNowPrice)}</p>

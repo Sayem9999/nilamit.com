@@ -80,19 +80,19 @@ export default function RetailerOrdersPage() {
     switch (status) {
       case "PENDING_SHIPMENT":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter bg-amber-50 border border-amber-200 text-amber-600">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter bg-amber-50 border border-amber-200 text-amber-600">
             <Clock className="w-3 h-3" /> Pending Shipment
           </span>
         );
       case "SHIPPED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter bg-blue-50 border border-blue-200 text-blue-600">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter bg-blue-50 border border-blue-200 text-blue-600">
             <Truck className="w-3 h-3" /> Shipped
           </span>
         );
       case "DELIVERED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter bg-emerald-50 border border-emerald-200 text-emerald-600">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter bg-emerald-50 border border-emerald-200 text-emerald-600">
             <CheckCircle className="w-3 h-3" /> Delivered
           </span>
         );
@@ -112,7 +112,7 @@ export default function RetailerOrdersPage() {
                 <Gavel className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3 font-heading">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3 font-heading">
                   Order Fulfillment
                 </h1>
                 <p className="text-slate-500 text-sm font-medium mt-1">
@@ -135,7 +135,7 @@ export default function RetailerOrdersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[750px]">
               <thead>
-                <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/50">
+                <tr className="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-slate-50/50">
                   <th className="px-6 py-4">Order ID & Date</th>
                   <th className="px-6 py-4">Item Details</th>
                   <th className="px-6 py-4">Buyer & Location</th>
@@ -167,7 +167,7 @@ export default function RetailerOrdersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-black text-indigo-650">{formatBDT(order.amount)}</span>
+                      <span className="font-bold text-indigo-650">{formatBDT(order.amount)}</span>
                     </td>
                     <td className="px-6 py-4">{getStatusBadge(order.status)}</td>
                     <td className="px-6 py-4 text-right">
@@ -175,7 +175,7 @@ export default function RetailerOrdersPage() {
                         {order.status !== "DELIVERED" && (
                           <button
                             onClick={() => handleUpdateStatus(order.id, order.status)}
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md shadow-indigo-600/10 hover:shadow-lg"
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/10 hover:shadow-lg"
                             title="Progress Fulfillment State"
                           >
                             {order.status === "PENDING_SHIPMENT" ? "Ship Item" : "Mark Delivered"}

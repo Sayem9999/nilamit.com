@@ -48,17 +48,17 @@ export default function DisputeModal({ transactionId, isOpen, onClose }: Dispute
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] animate-in fade-in duration-300" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-[2rem] shadow-2xl z-[101] p-8 animate-in zoom-in-95 duration-300">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-[2rem] shadow-md z-[101] p-8 animate-in zoom-in-95 duration-300">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-red-50 rounded-2xl">
+              <div className="p-3 bg-red-50 rounded-md">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
                 <Dialog.Title className="text-xl font-bold text-gray-900 leading-tight">
                   Raise Dispute
                 </Dialog.Title>
-                <Dialog.Description className="text-xs text-gray-500 font-medium uppercase tracking-widest">
+                <Dialog.Description className="text-xs text-gray-500 font-medium uppercase tracking-wide">
                   Escrow Protection
                 </Dialog.Description>
               </div>
@@ -71,21 +71,21 @@ export default function DisputeModal({ transactionId, isOpen, onClose }: Dispute
           </div>
 
           <div className="space-y-6">
-            <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+            <div className="p-4 bg-amber-50 border border-amber-100 rounded-md">
               <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
                 Raising a dispute will freeze the escrow funds. Both parties will be contacted for evidence. False disputes may result in account suspension.
               </p>
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
+              <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2">
                 Reason for Dispute
               </label>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Explain the issue in detail (e.g., item not as described, shipping delay, etc.)"
-                className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-sm resize-none transition-all"
+                className="w-full h-32 p-4 bg-gray-50 border border-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-sm resize-none transition-all"
               />
             </div>
 
@@ -93,7 +93,7 @@ export default function DisputeModal({ transactionId, isOpen, onClose }: Dispute
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting || reason.length < 10}
-                className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:bg-gray-200 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:bg-gray-200 text-white rounded-md font-bold text-sm transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

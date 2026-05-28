@@ -48,7 +48,7 @@ export default async function HowItWorksPage() {
     <main className="pt-28 pb-20 min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <header className="text-center mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 motion-reduce:animate-none">
-          <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-6 tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 tracking-tight">
             {t("title")}
           </h1>
           <p className="text-xl text-gray-500 max-w-3xl mx-auto font-medium leading-relaxed">
@@ -63,15 +63,15 @@ export default async function HowItWorksPage() {
               className="relative group p-8 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
               <div
-                className={`w-14 h-14 ${step.color} ${step.shadow} rounded-2xl flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform motion-reduce:transition-none motion-reduce:group-hover:scale-100 shadow-lg`}
+                className={`w-14 h-14 ${step.color} ${step.shadow} rounded-md flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform motion-reduce:transition-none motion-reduce:group-hover:scale-100 shadow-lg`}
                 aria-hidden="true"
               >
                 <step.icon size={28} />
               </div>
-              <h2 className="text-xl font-black text-gray-900 mb-3">{step.title}</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h2>
               <p className="text-gray-500 text-sm leading-relaxed font-medium">{step.desc}</p>
               <div
-                className="absolute top-8 right-8 text-4xl font-black text-gray-100/50 group-hover:text-gray-100 transition-colors motion-reduce:transition-none"
+                className="absolute top-8 right-8 text-4xl font-bold text-gray-100/50 group-hover:text-gray-100 transition-colors motion-reduce:transition-none"
                 aria-hidden="true"
               >
                 0{idx + 1}
@@ -92,11 +92,11 @@ export default async function HowItWorksPage() {
             <div className="flex-1 text-center md:text-left">
               <div className="flex items-center gap-2 mb-4 justify-center md:justify-start">
                 <Shield className="text-indigo-400 w-6 h-6" aria-hidden="true" />
-                <span className="text-indigo-400 font-black uppercase tracking-[0.2em] text-xs">
+                <span className="text-indigo-400 font-bold uppercase tracking-[0.2em] text-xs">
                   {t("securityMeta")}
                 </span>
               </div>
-              <h2 id="shield-heading" className="text-3xl md:text-5xl font-black mb-6 leading-tight">
+              <h2 id="shield-heading" className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
                 {t("shieldTitle")}
               </h2>
               <p className="text-indigo-100/70 text-lg font-medium leading-relaxed mb-8">
@@ -120,7 +120,7 @@ export default async function HowItWorksPage() {
         </section>
 
         <section aria-labelledby="how-cta-heading" className="text-center">
-          <h2 id="how-cta-heading" className="text-3xl font-black text-gray-900 mb-6">
+          <h2 id="how-cta-heading" className="text-3xl font-bold text-gray-900 mb-6">
             {t("ctaTitle")}
           </h2>
           <p className="text-gray-500 mb-10 max-w-xl mx-auto font-medium">
@@ -130,7 +130,7 @@ export default async function HowItWorksPage() {
             <Link href="/search">
               <Button
                 size="lg"
-                className="h-14 px-10 rounded-2xl bg-gray-900 hover:bg-black text-white font-bold text-lg pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
+                className="h-14 px-10 rounded-md bg-gray-900 hover:bg-black text-white font-bold text-lg pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
               >
                 {t("browseBtn")}
               </Button>
@@ -139,7 +139,7 @@ export default async function HowItWorksPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="h-14 px-10 rounded-2xl border-2 border-gray-900 text-gray-900 font-bold text-lg hover:bg-gray-50 pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
+                className="h-14 px-10 rounded-md border-2 border-gray-900 text-gray-900 font-bold text-lg hover:bg-gray-50 pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
               >
                 {t("sellBtn")}
               </Button>

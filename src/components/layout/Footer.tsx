@@ -11,7 +11,7 @@ export function Footer() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-sm">
           {/* Buy */}
           <div>
-            <h4 className="font-bold text-[11px] uppercase tracking-widest text-gray-500 mb-3">{t("buy")}</h4>
+            <h4 className="font-bold text-[11px] uppercase tracking-wide text-gray-500 mb-3">{t("buy")}</h4>
             <ul className="space-y-2">
               <li><Link href="/auctions" className="text-gray-600 hover:text-primary-600 hover:underline">{t("browse")}</Link></li>
               <li><Link href="/auctions?sortBy=endTime&sortOrder=asc" className="text-gray-600 hover:text-primary-600 hover:underline">{t("endingSoon")}</Link></li>
@@ -22,7 +22,7 @@ export function Footer() {
 
           {/* Sell */}
           <div>
-            <h4 className="font-bold text-[11px] uppercase tracking-widest text-gray-500 mb-3">{t("sellHeading")}</h4>
+            <h4 className="font-bold text-[11px] uppercase tracking-wide text-gray-500 mb-3">{t("sellHeading")}</h4>
             <ul className="space-y-2">
               <li><Link href="/auctions/create" className="text-gray-600 hover:text-primary-600 hover:underline">{t("sell")}</Link></li>
               <li><Link href="/dashboard?tab=listings" className="text-gray-600 hover:text-primary-600 hover:underline">{t("myListings")}</Link></li>
@@ -33,7 +33,7 @@ export function Footer() {
 
           {/* Help */}
           <div>
-            <h4 className="font-bold text-[11px] uppercase tracking-widest text-gray-500 mb-3">{t("support")}</h4>
+            <h4 className="font-bold text-[11px] uppercase tracking-wide text-gray-500 mb-3">{t("support")}</h4>
             <ul className="space-y-2">
               <li><Link href="/how-it-works" className="text-gray-600 hover:text-primary-600 hover:underline">{t("howItWorks")}</Link></li>
               <li><Link href="/safety" className="text-gray-600 hover:text-primary-600 hover:underline">{t("safety")}</Link></li>
@@ -44,7 +44,7 @@ export function Footer() {
 
           {/* About */}
           <div>
-            <h4 className="font-bold text-[11px] uppercase tracking-widest text-gray-500 mb-3">{t("about")}</h4>
+            <h4 className="font-bold text-[11px] uppercase tracking-wide text-gray-500 mb-3">{t("about")}</h4>
             <ul className="space-y-2">
               <li><Link href="/policy" className="text-gray-600 hover:text-primary-600 hover:underline">{t("policies")}</Link></li>
               <li><Link href="/privacy" className="text-gray-600 hover:text-primary-600 hover:underline">{t("privacy")}</Link></li>
@@ -54,7 +54,7 @@ export function Footer() {
 
           {/* Connect */}
           <div>
-            <h4 className="font-bold text-[11px] uppercase tracking-widest text-gray-500 mb-3">{t("contactTitle")}</h4>
+            <h4 className="font-bold text-[11px] uppercase tracking-wide text-gray-500 mb-3">{t("contactTitle")}</h4>
             <ul className="space-y-2 text-gray-600">
               <li className="flex items-start gap-2">
                 <MapPin className="w-3.5 h-3.5 mt-0.5 text-gray-400 shrink-0" />
@@ -73,7 +73,7 @@ export function Footer() {
               <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded flex items-center justify-center shrink-0">
                 <Gavel className="w-4 h-4 text-white" />
               </div>
-              <span className="font-heading font-black text-lg text-gray-900 tracking-tight">
+              <span className="font-heading font-bold text-lg text-gray-900 tracking-tight">
                 nilam<span className="text-primary-600">it</span>
               </span>
             </div>

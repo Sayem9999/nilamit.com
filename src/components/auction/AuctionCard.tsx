@@ -280,11 +280,11 @@ export const AuctionCard = memo(({
             {/* Bottom pricing section */}
             <div className="mt-4 pt-3 border-t border-gray-100/60 flex flex-wrap items-end justify-between gap-4">
               <div className="space-y-0.5">
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block leading-none">
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block leading-none">
                   {t("currentPrice")}
                 </span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-base sm:text-lg font-black text-gray-900 tracking-tight">
+                  <span className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
                     {formatBDT(currentPrice)}
                   </span>
                   {auction.currentPrice > auction.startingPrice && (
@@ -417,7 +417,7 @@ export const AuctionCard = memo(({
             })()}
 
             {auction.isFeatured && (
-              <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
+              <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
                 <Star className="w-2.5 h-2.5 fill-white text-white" aria-hidden="true" />
                 Featured
               </span>
@@ -470,7 +470,7 @@ export const AuctionCard = memo(({
               </span>
             </div>
             <div className="flex flex-wrap items-baseline gap-1.5 mt-1">
-              <span className="price text-lg sm:text-xl text-gray-900 font-black tracking-tight">
+              <span className="price text-lg sm:text-xl text-gray-900 font-bold tracking-tight">
                 {formatBDT(currentPrice)}
               </span>
               {auction.currentPrice > auction.startingPrice && (
@@ -483,7 +483,7 @@ export const AuctionCard = memo(({
 
           {/* Seller Protection View */}
           {session?.user?.id === auction.sellerId && (displayStatus === "SOLD" || displayStatus === "AWAITING_PAYMENT" || displayStatus === "OFFER_PENDING") && auction.commissionEarned && (
-            <div className="mt-4 p-4 bg-primary-50/30 rounded-2xl border border-primary-100/50 space-y-2">
+            <div className="mt-4 p-4 bg-primary-50/30 rounded-md border border-primary-100/50 space-y-2">
               <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 <span>{t("finalPrice")}</span>
                 <span className="text-gray-900">{formatBDT(auction.currentPrice)}</span>
@@ -493,8 +493,8 @@ export const AuctionCard = memo(({
                 <span className="text-red-500">- {formatBDT(auction.commissionEarned)}</span>
               </div>
               <div className="pt-2 border-t border-primary-100 flex justify-between items-center mt-2">
-                <span className="text-xs font-black text-primary-900 uppercase">{t("netToYou")}</span>
-                <span className="text-lg font-black text-primary-700">{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</span>
+                <span className="text-xs font-bold text-primary-900 uppercase">{t("netToYou")}</span>
+                <span className="text-lg font-bold text-primary-700">{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</span>
               </div>
             </div>
           )}
@@ -566,7 +566,7 @@ export const AuctionCard = memo(({
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCancelConfirm(false); }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6"
+            className="bg-white rounded-md shadow-md max-w-md w-full p-6"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
           >
             <h2 className="text-lg font-heading font-bold text-gray-900 mb-1">{tOwner("cancelTitle")}</h2>

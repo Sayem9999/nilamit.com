@@ -509,7 +509,7 @@ export default async function DashboardPage({
                   <Trophy className="w-4 h-4 text-amber-500" />
                 </div>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-3xl font-black text-gray-900">
+                  <span className="text-3xl font-bold text-gray-900">
                     {(Number(session.user.rating) || 3.5).toFixed(1)}
                   </span>
                   <span className="text-xs text-gray-400 font-bold ml-1">★</span>
@@ -530,17 +530,17 @@ export default async function DashboardPage({
                     {session.user.isTopRated ? (
                       <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 animate-pulse">
                         <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                        <span className="text-[9px] font-black text-amber-700">TOP RATED</span>
+                        <span className="text-[9px] font-bold text-amber-700">TOP RATED</span>
                       </div>
                     ) : session.user.isRetailer ? (
                       <div className="flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                         <Shield className="w-2.5 h-2.5 text-indigo-500 fill-indigo-500/10" />
-                        <span className="text-[9px] font-black text-indigo-700">RETAILER</span>
+                        <span className="text-[9px] font-bold text-indigo-700">RETAILER</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                         <Shield className="w-2.5 h-2.5 text-blue-550 fill-blue-550/10" />
-                        <span className="text-[9px] font-black text-blue-700">SELLER / BIDDER</span>
+                        <span className="text-[9px] font-bold text-blue-700">SELLER / BIDDER</span>
                       </div>
                     )}
                   </div>
@@ -548,11 +548,11 @@ export default async function DashboardPage({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-white p-2 rounded-xl border border-gray-50">
                       <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Sales</p>
-                      <p className="text-sm font-black text-gray-900">{session.user.salesCount || 0}</p>
+                      <p className="text-sm font-bold text-gray-900">{session.user.salesCount || 0}</p>
                     </div>
                     <div className="bg-white p-2 rounded-xl border border-gray-50">
                       <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Defect Rate</p>
-                      <p className={`text-sm font-black ${
+                      <p className={`text-sm font-bold ${
                         (session.user.defectCount / (session.user.salesCount + session.user.defectCount || 1)) > 0.03 
                           ? "text-red-600" 
                           : "text-emerald-600"
@@ -593,7 +593,7 @@ export default async function DashboardPage({
                     <p className="text-gray-500 mb-6 font-medium">{t("emptyWatchlist")}</p>
                     <Link
                       href="/auctions"
-                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-black uppercase tracking-wider px-6 py-3 rounded-xl shadow-md shadow-primary-600/10 hover:shadow-lg transition-all"
+                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-xl shadow-md shadow-primary-600/10 hover:shadow-lg transition-all"
                     >
                       Explore Trending Deals
                     </Link>
@@ -621,7 +621,7 @@ export default async function DashboardPage({
                     </p>
                     <Link
                       href="/auctions"
-                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-black uppercase tracking-wider px-6 py-3 rounded-xl shadow-md shadow-primary-600/10 hover:shadow-lg transition-all"
+                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-xl shadow-md shadow-primary-600/10 hover:shadow-lg transition-all"
                     >
                       Find Items to Bid On
                     </Link>
@@ -679,22 +679,22 @@ export default async function DashboardPage({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                       <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("netEarnings")}</p>
-                        <p className="text-lg font-black text-emerald-600 truncate">{formatBDT(listingStats.netEarnings)}</p>
+                        <p className="text-lg font-bold text-emerald-600 truncate">{formatBDT(listingStats.netEarnings)}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{tStats("afterCommission", { amount: formatBDT(listingStats.totalCommission) })}</p>
                       </div>
                       <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("grossSales")}</p>
-                        <p className="text-lg font-black text-gray-900 truncate">{formatBDT(listingStats.grossSales)}</p>
+                        <p className="text-lg font-bold text-gray-900 truncate">{formatBDT(listingStats.grossSales)}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{tStats("soldSuffix", { count: listingStats.sold })}</p>
                       </div>
                       <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("liveNow")}</p>
-                        <p className="text-lg font-black text-primary-600">{listingStats.active}</p>
+                        <p className="text-lg font-bold text-primary-600">{listingStats.active}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{tStats("activeAuctions")}</p>
                       </div>
                       <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("closedNoSale")}</p>
-                        <p className="text-lg font-black text-gray-700">{listingStats.expired + listingStats.cancelled}</p>
+                        <p className="text-lg font-bold text-gray-700">{listingStats.expired + listingStats.cancelled}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{tStats("closedDetail", { expired: listingStats.expired, cancelled: listingStats.cancelled })}</p>
                       </div>
                     </div>
@@ -810,7 +810,7 @@ export default async function DashboardPage({
                             {conv.auction.logistics?.status ? (
                               <div className="flex items-center gap-2 mt-2 bg-blue-50 px-2 py-0.5 rounded-lg w-fit">
                                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                                <span className="text-[10px] font-black text-blue-700 uppercase tracking-tight">
+                                <span className="text-[10px] font-bold text-blue-700 uppercase tracking-tight">
                                   {conv.auction.logistics?.status.replace(/_/g, ' ')}
                                 </span>
                               </div>

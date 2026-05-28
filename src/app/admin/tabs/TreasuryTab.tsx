@@ -164,27 +164,27 @@ export function TreasuryTab() {
       {verificationQueue.length > 0 && (
         <div className="bg-amber-50 border border-amber-100 rounded-[2rem] p-6 mb-8">
            <div className="flex items-center justify-between mb-6">
-              <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest flex items-center gap-2">
+              <h4 className="text-sm font-bold text-amber-900 uppercase tracking-wide flex items-center gap-2">
                 <Clock className="w-4 h-4" /> 
                 Verification Queue ({verificationQueue.length})
               </h4>
            </div>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {verificationQueue.map((item) => (
-                <div key={item.id} className="bg-white border border-amber-200/50 rounded-3xl p-5 shadow-sm flex items-center justify-between">
+                <div key={item.id} className="bg-white border border-amber-200/50 rounded-md p-5 shadow-sm flex items-center justify-between">
                    <div className="flex-1">
-                      <p className="text-[9px] font-black text-amber-600 uppercase mb-1">Pending #{item.id.slice(-6)}</p>
+                      <p className="text-[9px] font-bold text-amber-600 uppercase mb-1">Pending #{item.id.slice(-6)}</p>
                       <h5 className="font-bold text-gray-900 text-sm truncate">{item.auction.title}</h5>
                       <p className="text-[10px] text-gray-500 mt-0.5">
                         <span className="font-bold">{item.buyer.name}</span> | {item.providerRef || 'No Reference'}
                       </p>
                    </div>
                    <div className="text-right">
-                      <p className="text-sm font-black text-gray-900 mb-2">{formatBDT(item.amount)}</p>
+                      <p className="text-sm font-bold text-gray-900 mb-2">{formatBDT(item.amount)}</p>
                       <button 
                         onClick={() => handleApprovePayment(item.id)}
                         disabled={!!approving}
-                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase rounded-lg shadow-md shadow-emerald-500/20 transition-all flex items-center gap-2"
+                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase rounded-lg shadow-md shadow-emerald-500/20 transition-all flex items-center gap-2"
                       >
                         {approving === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
                         Approve
@@ -201,15 +201,15 @@ export function TreasuryTab() {
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-100 border-t-emerald-600"></div>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-md border border-gray-100 overflow-hidden shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Transaction ID</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Buyer</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Amount</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">Verification</th>
-                <th className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wide">Transaction ID</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wide">Buyer</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wide">Amount</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wide">Verification</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wide text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -229,10 +229,10 @@ export function TreasuryTab() {
                       <p className="text-[10px] text-gray-500">{log.buyer.email}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-black text-gray-900">{formatBDT(log.amount)}</span>
+                      <span className="text-sm font-bold text-gray-900">{formatBDT(log.amount)}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border ${
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter shadow-sm border ${
                         log.status === 'VERIFICATION_PENDING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                         log.verificationType === 'AUTOMATIC' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-500 border-gray-100'
                       }`}>
@@ -267,36 +267,36 @@ export function TreasuryTab() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-emerald-600 rounded-[2rem] p-6 text-white shadow-xl shadow-emerald-500/20">
              <Scale className="w-8 h-8 opacity-50 mb-4" />
-             <h4 className="text-sm font-bold opacity-80 uppercase tracking-widest mb-1 text-emerald-100">Treasury Velocity</h4>
-             <p className="text-3xl font-black">{logs.length} <span className="text-xs font-bold uppercase opacity-50 tracking-tighter">Verified</span></p>
+             <h4 className="text-sm font-bold opacity-80 uppercase tracking-wide mb-1 text-emerald-100">Treasury Velocity</h4>
+             <p className="text-3xl font-bold">{logs.length} <span className="text-xs font-bold uppercase opacity-50 tracking-tighter">Verified</span></p>
           </div>
           <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
              <ShieldCheck className="w-8 h-8 text-blue-600 opacity-50 mb-4" />
-             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Protection Coverage</h4>
-             <p className="text-3xl font-black text-gray-900">100% <span className="text-xs font-bold uppercase text-blue-600 tracking-tighter">Automated</span></p>
+             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-1">Protection Coverage</h4>
+             <p className="text-3xl font-bold text-gray-900">100% <span className="text-xs font-bold uppercase text-blue-600 tracking-tighter">Automated</span></p>
           </div>
           <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
              <Clock className="w-8 h-8 text-amber-600 opacity-50 mb-4" />
-             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Avg. Verification</h4>
-             <p className="text-3xl font-black text-gray-900">2.4s <span className="text-xs font-bold uppercase text-amber-600 tracking-tighter">Response</span></p>
+             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-1">Avg. Verification</h4>
+             <p className="text-3xl font-bold text-gray-900">2.4s <span className="text-xs font-bold uppercase text-amber-600 tracking-tighter">Response</span></p>
           </div>
       </div>
 
       {/* Active Escrow Resolution Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
-            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest">Active Escrow Control (HELD Status)</h4>
-            <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded uppercase">Manual Override</span>
+            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wide">Active Escrow Control (HELD Status)</h4>
+            <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Manual Override</span>
         </div>
         
         {activeEscrows.length === 0 ? (
-            <div className="bg-gray-50/50 border border-dashed border-gray-200 rounded-3xl p-8 text-center">
+            <div className="bg-gray-50/50 border border-dashed border-gray-200 rounded-md p-8 text-center">
                 <p className="text-sm text-gray-400 italic">No funds currently held in escrow.</p>
             </div>
         ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 {activeEscrows.map((escrow) => (
-                    <div key={escrow.id} className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-center justify-between gap-4">
+                    <div key={escrow.id} className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex items-center justify-between gap-4">
                         <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">ID: {escrow.id.slice(-8)}</p>
                             <h5 className="font-bold text-gray-900 truncate">{escrow.auction.title}</h5>
@@ -307,7 +307,7 @@ export function TreasuryTab() {
                             </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                            <p className="text-lg font-black text-emerald-600 mb-2">{formatBDT(escrow.amount)}</p>
+                            <p className="text-lg font-bold text-emerald-600 mb-2">{formatBDT(escrow.amount)}</p>
                             <div className="flex items-center gap-2">
                                 <button 
                                     onClick={() => handleManualResolve(escrow.id, 'RELEASE')}

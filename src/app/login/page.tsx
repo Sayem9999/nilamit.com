@@ -76,7 +76,7 @@ function LoginContent() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-primary-600 rounded-full shadow-xl shadow-primary-500/20 mb-6" aria-hidden="true">
              <Gavel className="w-10 h-10 text-white" aria-hidden="true" />
           </div>
-          <p className="text-4xl font-black text-gray-900 tracking-tight mb-2">
+          <p className="text-4xl font-bold text-gray-900 tracking-tight mb-2">
             nilam<span className="text-primary-600 font-bold">it</span>
           </p>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -90,7 +90,7 @@ function LoginContent() {
         <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100">
           <form className="space-y-6" onSubmit={handleSubmit} aria-label="Sign in form">
             <div className="space-y-1">
-              <label htmlFor="login-email" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">
+              <label htmlFor="login-email" className="text-xs font-bold text-gray-400 uppercase tracking-wide pl-1 mb-1 block">
                 {t("emailLabel")}
               </label>
               <div className="relative group">
@@ -105,7 +105,7 @@ function LoginContent() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-lg font-medium"
+                  className="pl-12 h-14 bg-gray-50 border-gray-100 rounded-md focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-lg font-medium"
                   placeholder="name@example.com"
                 />
               </div>
@@ -113,12 +113,12 @@ function LoginContent() {
 
             <div className="space-y-1">
               <div className="flex justify-between items-center pl-1 mb-1">
-                <label htmlFor="login-password" className="text-xs font-bold text-gray-400 uppercase tracking-widest block">
+                <label htmlFor="login-password" className="text-xs font-bold text-gray-400 uppercase tracking-wide block">
                   {t("passwordLabel")}
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+                  className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
                 >
                   {t("forgotPassword")}
                 </Link>
@@ -135,7 +135,7 @@ function LoginContent() {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 h-14 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-lg font-medium"
+                  className="pl-12 h-14 bg-gray-50 border-gray-100 rounded-md focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-lg font-medium"
                   placeholder="••••••••"
                 />
               </div>
@@ -145,7 +145,7 @@ function LoginContent() {
               type="submit"
               disabled={loading}
               aria-label={loading ? "Signing in" : t("signInBtn")}
-              className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-2xl transition-all shadow-lg hover:shadow-xl font-bold text-lg group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+              className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-md transition-all shadow-lg hover:shadow-xl font-bold text-lg group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             >
               {loading ? (
                 <Loader2 className="w-6 h-6 animate-spin" aria-hidden="true" />
@@ -162,7 +162,7 @@ function LoginContent() {
                 <div className="w-full border-t border-gray-100" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-widest text-[10px]">
+                <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-wide text-[10px]">
                   OR
                 </span>
               </div>
@@ -172,7 +172,7 @@ function LoginContent() {
               type="button"
               onClick={() => signIn("google", { callbackUrl })}
               aria-label="Sign in with Google"
-              className="w-full h-14 bg-white border-2 border-gray-100 hover:border-primary-500 hover:bg-primary-50/30 text-gray-700 rounded-2xl transition-all font-bold text-lg flex items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+              className="w-full h-14 bg-white border-2 border-gray-100 hover:border-primary-500 hover:bg-primary-50/30 text-gray-700 rounded-md transition-all font-bold text-lg flex items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             >
               <svg className="w-6 h-6" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -187,7 +187,7 @@ function LoginContent() {
               type="button"
               onClick={() => signIn("facebook", { callbackUrl })}
               aria-label="Sign in with Facebook"
-              className="w-full h-14 mt-3 bg-white border-2 border-gray-100 hover:border-[#1877F2] hover:bg-[#1877F2]/5 text-gray-700 rounded-2xl transition-all font-bold text-lg flex items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2] focus-visible:ring-offset-2"
+              className="w-full h-14 mt-3 bg-white border-2 border-gray-100 hover:border-[#1877F2] hover:bg-[#1877F2]/5 text-gray-700 rounded-md transition-all font-bold text-lg flex items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2] focus-visible:ring-offset-2"
             >
               <svg className="w-6 h-6 fill-[#1877F2]" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -201,7 +201,7 @@ function LoginContent() {
               {t("noAccount")}{" "}
               <Link
                 href="/register"
-                className="text-primary-600 font-black hover:text-primary-700 transition-colors underline decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+                className="text-primary-600 font-bold hover:text-primary-700 transition-colors underline decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
               >
                 {t("signUpBtn")}
               </Link>

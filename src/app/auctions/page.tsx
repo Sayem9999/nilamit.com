@@ -138,7 +138,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
 
           {/* Categories */}
           <nav className="mb-5 pb-5 border-b border-gray-200" aria-labelledby="filter-category-heading">
-            <h2 id="filter-category-heading" className="font-bold text-[11px] uppercase tracking-widest text-gray-500 mb-2 flex items-center gap-1.5">
+            <h2 id="filter-category-heading" className="font-bold text-[11px] uppercase tracking-wide text-gray-500 mb-2 flex items-center gap-1.5">
               <SlidersHorizontal className="w-3 h-3" aria-hidden="true" /> {t("category")}
             </h2>
             <ul className="space-y-0.5">
@@ -175,7 +175,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
 
           {/* Location */}
           <nav aria-labelledby="filter-location-heading">
-            <h2 id="filter-location-heading" className="font-bold text-[11px] uppercase tracking-widest text-gray-500 mb-2 flex items-center gap-1.5">
+            <h2 id="filter-location-heading" className="font-bold text-[11px] uppercase tracking-wide text-gray-500 mb-2 flex items-center gap-1.5">
               <MapPin className="w-3 h-3" aria-hidden="true" /> {t("location")}
             </h2>
             <ul className="space-y-0.5">
@@ -214,7 +214,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
         {/* Results Grid */}
         <section className="flex-1" aria-label="Auction results">
           {initialAuctions.length === 0 ? (
-            <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+            <div className="text-center py-20 bg-gray-50 rounded-md border border-dashed border-gray-200">
               <SearchIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" aria-hidden="true" />
               <h2 className="text-lg font-semibold text-gray-900">
                 {t("noResults")}

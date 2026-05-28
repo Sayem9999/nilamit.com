@@ -44,7 +44,7 @@ export function AreaQuickLinks({ locale: _locale }: { locale?: string } = {}) {
               <Link
                 href={`/auctions?location=${loc.id}`}
                 aria-label={`Browse auctions in ${label}, Dhaka`}
-                className="group p-6 bg-white rounded-2xl border border-gray-100 hover:border-primary-100 hover:bg-primary-50/30 transition-all duration-300 text-center flex flex-col items-center gap-3 shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                className="group p-6 bg-white rounded-md border border-gray-100 hover:border-primary-100 hover:bg-primary-50/30 transition-all duration-300 text-center flex flex-col items-center gap-3 shadow-sm hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
               >
                 <div className="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-colors" aria-hidden="true">
                   <MapPin className="w-6 h-6" />
@@ -52,7 +52,7 @@ export function AreaQuickLinks({ locale: _locale }: { locale?: string } = {}) {
                 <span className="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">
                   {label}
                 </span>
-                <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+                <span className="text-[10px] text-gray-400 uppercase tracking-wide font-bold">
                   {t("dhaka")}
                 </span>
               </Link>

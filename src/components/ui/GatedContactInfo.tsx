@@ -94,12 +94,12 @@ export function GatedContactInfo({
         </div>
         <div>
           <p className="text-[10px] uppercase font-bold tracking-wider">{label}</p>
-          <p className="text-sm font-mono tracking-widest">XXXXXXXXXX</p>
+          <p className="text-sm font-mono tracking-wide">XXXXXXXXXX</p>
         </div>
       </div>
 
       <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-slate-100/10 dark:bg-black/20 backdrop-blur-[1px] transition-all group-hover:backdrop-blur-none">
-        <div className="bg-white/95 dark:bg-slate-900/95 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 scale-95 transition-transform group-hover:scale-100">
+        <div className="bg-white/95 dark:bg-slate-900/95 p-4 rounded-md shadow-xl border border-slate-200 dark:border-slate-800 scale-95 transition-transform group-hover:scale-100">
              <div className="flex items-center justify-center gap-2 mb-2">
                <div className="p-1 px-3 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-bold flex items-center gap-1 uppercase tracking-wide">
                  <Lock className="w-3 h-3" /> {t("securedInfo")}

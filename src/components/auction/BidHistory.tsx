@@ -46,7 +46,7 @@ export function BidHistory({ auctionId, initialBids = [] }: BidHistoryProps) {
 
   if (allBids.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
+      <div className="bg-white rounded-md border border-gray-100 shadow-sm p-6 text-center">
         <Gavel className="w-8 h-8 text-gray-300 mx-auto mb-2" />
         <p className="text-sm text-gray-500">No bids yet. Be the first!</p>
       </div>
@@ -54,7 +54,7 @@ export function BidHistory({ auctionId, initialBids = [] }: BidHistoryProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden">
       <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between gap-4">
         <div className="space-y-0.5">
           <h3 className="font-heading font-semibold text-gray-900 text-sm flex items-center gap-2">

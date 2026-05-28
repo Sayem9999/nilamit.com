@@ -135,7 +135,7 @@ export function EditListingModal({
       <div
         ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-md shadow-md max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-3 border-b border-gray-100">

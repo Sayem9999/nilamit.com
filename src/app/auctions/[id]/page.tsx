@@ -118,7 +118,7 @@ export default async function AuctionDetailPage({ params }: Props) {
   const response = await getAuction(id);
   const auction = (response.success && response.data) ? response.data as AuctionWithBids : null;
   const t = await getTranslations("Auction");
-  if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-widest">{t("notFound")}</div>;
+  if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-wide">{t("notFound")}</div>;
 
   const [bidsRes, watchedRes, chatRes, reviewRes, questionsRes, relatedRes, configRes] = await Promise.all([
     getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),
@@ -317,7 +317,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                   />
                 </div>
               ) : (
-                <div className="bg-gray-50 rounded-2xl p-6 flex items-center gap-4 text-gray-500">
+                <div className="bg-gray-50 rounded-md p-6 flex items-center gap-4 text-gray-500">
                   <CheckCircle className="w-6 h-6 text-green-500" aria-hidden="true" />
                   <p className="font-bold uppercase tracking-tight text-xs">
                     {t("feedbackRecorded")}
@@ -331,7 +331,7 @@ export default async function AuctionDetailPage({ params }: Props) {
         {/* Right: Bid Panel + Seller Info */}
         <div id="mobile-bid-anchor" className="lg:w-96 flex-shrink-0 space-y-6">
           {/* eBay Urgency Signals */}
-          <div className="flex flex-col gap-2 p-4 bg-orange-50/50 border border-orange-100/60 rounded-2xl shadow-xs">
+          <div className="flex flex-col gap-2 p-4 bg-orange-50/50 border border-orange-100/60 rounded-md shadow-xs">
             {bids24h > 0 ? (
               <div className="flex items-center gap-2 text-xs font-semibold text-orange-850">
                 <Flame className="w-4 h-4 text-orange-500 fill-orange-500/20 animate-pulse" />
@@ -384,7 +384,7 @@ export default async function AuctionDetailPage({ params }: Props) {
           />
 
           {/* eBay Specifications Table */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 space-y-4 shadow-sm">
+          <div className="bg-white border border-gray-100 rounded-md p-5 space-y-4 shadow-sm">
             <h3 className="font-heading font-bold text-xs uppercase tracking-wider text-gray-400 border-b border-gray-100 pb-2">
               Item Specifications
             </h3>
@@ -404,7 +404,7 @@ export default async function AuctionDetailPage({ params }: Props) {
               <div className="text-gray-400 font-medium">Verified Seller</div>
               <div className="text-gray-900 font-bold flex items-center gap-1">
                 {auction.seller?.isVerifiedSeller ? (
-                  <span className="text-blue-600 font-black flex items-center gap-1">
+                  <span className="text-blue-600 font-bold flex items-center gap-1">
                     <Shield className="w-3.5 h-3.5 fill-blue-500/15" /> Yes
                   </span>
                 ) : (
@@ -441,7 +441,7 @@ export default async function AuctionDetailPage({ params }: Props) {
           </div>
 
           {/* Seller Info */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4">
+          <div className="bg-white border border-gray-100 rounded-md p-6 space-y-4">
             <h3 className="font-heading font-semibold text-sm text-gray-700 mb-2">
               {t("seller")}
             </h3>
@@ -475,7 +475,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                     </span>
                   )}
                 </p>
-                <span className="text-[10px] text-indigo-600 font-black tracking-wide block mt-0.5">
+                <span className="text-[10px] text-indigo-600 font-bold tracking-wide block mt-0.5">
                   View Storefront →
                 </span>
               </div>
@@ -581,8 +581,8 @@ export default async function AuctionDetailPage({ params }: Props) {
 
                 <div className="p-4 border-t border-primary-100 flex flex-col gap-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-primary-900 uppercase">{t("netToYou")}</span>
-                    <span className="text-xl font-black text-primary-700">{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</span>
+                    <span className="text-[10px] font-bold text-primary-900 uppercase">{t("netToYou")}</span>
+                    <span className="text-xl font-bold text-primary-700">{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</span>
                   </div>
 
                   {/* Second Chance Offer Action */}
@@ -608,7 +608,7 @@ export default async function AuctionDetailPage({ params }: Props) {
       {/* Related Listings Section */}
       {relatedAuctions.length > 0 && (
         <section className="mt-16 pt-12 border-t border-gray-100" aria-labelledby="related-heading">
-          <h2 id="related-heading" className="font-heading font-black text-2xl text-gray-900 tracking-tight mb-8">
+          <h2 id="related-heading" className="font-heading font-bold text-2xl text-gray-900 tracking-tight mb-8">
             People Who Viewed This Item Also Viewed
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">

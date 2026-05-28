@@ -80,7 +80,7 @@ export default function AdminLiveFeed() {
       <div className="max-w-6xl mx-auto">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
               <span
                 className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20"
                 aria-hidden="true"
@@ -128,11 +128,11 @@ export default function AdminLiveFeed() {
           <aside aria-label="Platform summary" className="lg:col-span-1 space-y-6">
             <section
               aria-labelledby="quick-stats-heading"
-              className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm"
+              className="bg-white p-6 rounded-md border border-gray-100 shadow-sm"
             >
               <h2
                 id="quick-stats-heading"
-                className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4"
+                className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-4"
               >
                 Quick stats
               </h2>
@@ -160,7 +160,7 @@ export default function AdminLiveFeed() {
 
             <section
               aria-labelledby="moderation-mode-heading"
-              className="bg-primary-900 p-6 rounded-3xl text-white shadow-xl shadow-primary-900/20"
+              className="bg-primary-900 p-6 rounded-md text-white shadow-xl shadow-primary-900/20"
             >
               <ShieldAlert className="w-8 h-8 text-primary-400 mb-4" aria-hidden="true" />
               <h2 id="moderation-mode-heading" className="text-lg font-bold mb-2">
@@ -172,7 +172,7 @@ export default function AdminLiveFeed() {
               </p>
               <Link
                 href="/admin/disputes"
-                className="block w-full text-center py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold uppercase tracking-widest transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="block w-full text-center py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold uppercase tracking-wide transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 Open dispute queue
               </Link>
@@ -190,7 +190,7 @@ export default function AdminLiveFeed() {
                   <Zap className="w-4 h-4 text-primary-600" aria-hidden="true" />
                   Recent activity
                 </h2>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
                   Showing last {bids.length} events
                 </span>
               </div>
@@ -215,7 +215,7 @@ export default function AdminLiveFeed() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 20 }}
-                          className="group bg-gray-50/50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 border border-transparent hover:border-gray-100 p-5 rounded-2xl transition-all duration-300 motion-reduce:transition-none flex items-center gap-4"
+                          className="group bg-gray-50/50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 border border-transparent hover:border-gray-100 p-5 rounded-md transition-all duration-300 motion-reduce:transition-none flex items-center gap-4"
                         >
                           <div
                             className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-600 group-hover:border-primary-600 transition-colors motion-reduce:transition-none"
@@ -226,7 +226,7 @@ export default function AdminLiveFeed() {
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-black text-gray-900 tracking-tight uppercase text-xs">
+                              <span className="font-bold text-gray-900 tracking-tight uppercase text-xs">
                                 {bid.bidderName}
                               </span>
                               <span className="text-[10px] text-gray-400 font-bold" aria-hidden="true">
@@ -234,7 +234,7 @@ export default function AdminLiveFeed() {
                               </span>
                               <time
                                 dateTime={new Date(bid.timestamp).toISOString()}
-                                className="text-[10px] text-gray-400 font-bold uppercase tracking-widest"
+                                className="text-[10px] text-gray-400 font-bold uppercase tracking-wide"
                               >
                                 {new Date(bid.timestamp).toLocaleTimeString()}
                               </time>
@@ -246,13 +246,13 @@ export default function AdminLiveFeed() {
                           </div>
 
                           <div className="text-right">
-                            <div className="text-lg font-black text-primary-600 tracking-tight">
+                            <div className="text-lg font-bold text-primary-600 tracking-tight">
                               {formatBDT(bid.amount)}
                             </div>
                             <Link
                               href={`/auctions/${bid.auctionId}`}
                               aria-label={`View details for ${bid.auctionTitle}`}
-                              className="inline-flex items-center gap-1 text-[10px] font-black text-gray-400 hover:text-primary-600 uppercase tracking-widest transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+                              className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-primary-600 uppercase tracking-wide transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
                             >
                               Details <ExternalLink className="w-2.5 h-2.5" aria-hidden="true" />
                             </Link>

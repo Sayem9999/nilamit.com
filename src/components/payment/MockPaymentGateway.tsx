@@ -65,7 +65,7 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="bg-white rounded-[2rem] shadow-2xl overflow-hidden max-w-md w-full relative"
+            className="bg-white rounded-[2rem] shadow-md overflow-hidden max-w-md w-full relative"
           >
             {/* Header */}
             <div className={`${currentColors.primary} p-6 flex items-center justify-between text-white`}>
@@ -74,10 +74,10 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
                   <Shield className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-black text-lg tracking-tight uppercase">
+                  <h3 className="font-heading font-bold text-lg tracking-tight uppercase">
                     {provider} PG CHECKOUT
                   </h3>
-                  <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">Secure Automatic Gateway</p>
+                  <p className="text-[10px] font-bold opacity-80 uppercase tracking-wide">Secure Automatic Gateway</p>
                 </div>
               </div>
               <button 
@@ -94,8 +94,8 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
               {step === 'details' && (
                 <div className="space-y-6">
                   <div className="text-center mb-8">
-                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Payable Amount</p>
-                    <h2 className="text-4xl font-black text-gray-900">৳{amount}</h2>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-1">Payable Amount</p>
+                    <h2 className="text-4xl font-bold text-gray-900">৳{amount}</h2>
                     <p className="text-[10px] text-gray-400 font-bold mt-2 uppercase tracking-tighter">
                       Paying to Merchant: <span className="text-gray-900">{merchantNumber || '01XXXXXXXXX'}</span>
                     </p>
@@ -103,7 +103,7 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
 
                   <div className="space-y-4">
                     <label className="block">
-                      <span className="text-xs font-black text-gray-400 uppercase tracking-wider ml-1">Your {provider} Number</span>
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Your {provider} Number</span>
                       <div className="mt-2 relative">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                           <Smartphone className="w-5 h-5" />
@@ -113,12 +113,12 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
                           placeholder="01XXXXXXXXX"
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-red-500 focus:outline-none transition-all font-bold text-lg"
+                          className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-md focus:border-red-500 focus:outline-none transition-all font-bold text-lg"
                         />
                       </div>
                     </label>
 
-                    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-md border border-gray-100">
                       <input 
                         type="checkbox" 
                         id="policy-consent"
@@ -135,7 +135,7 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
                     <button
                       onClick={handlePay}
                       disabled={phoneNumber.length < 11 || !hasConsented}
-                      className={`w-full py-4 ${currentColors.primary} ${currentColors.hover} text-white rounded-2xl font-black text-lg shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale`}
+                      className={`w-full py-4 ${currentColors.primary} ${currentColors.hover} text-white rounded-md font-bold text-lg shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale`}
                     >
                       PAY NOW
                     </button>
@@ -150,7 +150,7 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
                     transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
                     className={`w-16 h-16 border-4 border-gray-100 border-t-${provider === 'bkash' ? '[#D12053]' : '[#F7941D]'} rounded-full mb-8`}
                   />
-                  <h3 className="text-xl font-heading font-black text-gray-900 mb-2">Verifying with {provider}</h3>
+                  <h3 className="text-xl font-heading font-bold text-gray-900 mb-2">Verifying with {provider}</h3>
                   <p className="text-sm text-gray-500 max-w-[250px]">Please do not close this window or refresh the page.</p>
                 </div>
               )}
@@ -164,10 +164,10 @@ export function MockPaymentGateway({ amount, isOpen, onClose, onSuccess, provide
                   >
                     <CheckCircle2 className="w-12 h-12" />
                   </motion.div>
-                  <h3 className="text-2xl font-heading font-black text-gray-900 mb-2">Payment Successful!</h3>
+                  <h3 className="text-2xl font-heading font-bold text-gray-900 mb-2">Payment Successful!</h3>
                   <p className="text-sm text-emerald-600 font-bold mb-4">Transaction Verified via Automated Proxy</p>
-                  <div className="bg-gray-50 p-4 rounded-2xl w-full">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Receipt Reference</p>
+                  <div className="bg-gray-50 p-4 rounded-md w-full">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Receipt Reference</p>
                     <p className="font-mono font-bold text-gray-700">{receiptRef}</p>
                   </div>
                   <p className="text-xs text-gray-400 mt-8 animate-pulse italic">Automatically redirecting back to Nilamit...</p>

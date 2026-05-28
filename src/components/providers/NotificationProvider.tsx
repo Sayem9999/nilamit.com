@@ -69,7 +69,7 @@ function handleNotification(data: Record<string, unknown>) {
       showNotification(title, { body });
       toast.custom(
         (t) => (
-          <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-sm w-full bg-white shadow-lg rounded-2xl pointer-events-auto border border-amber-200 flex items-start gap-3 p-4`}>
+          <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-sm w-full bg-white shadow-lg rounded-md pointer-events-auto border border-amber-200 flex items-start gap-3 p-4`}>
             <div className="text-2xl leading-none">⏰</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-gray-900">Closing Soon!</p>
@@ -94,7 +94,7 @@ function handleNotification(data: Record<string, unknown>) {
       showNotification(title, { body });
       toast.custom(
         (t) => (
-          <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-sm w-full bg-white shadow-2xl rounded-2xl pointer-events-auto border-2 ${isTarget ? "border-primary-500" : "border-red-500"} flex items-start gap-3 p-5`}>
+          <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-sm w-full bg-white shadow-md rounded-md pointer-events-auto border-2 ${isTarget ? "border-primary-500" : "border-red-500"} flex items-start gap-3 p-5`}>
             <div className="text-2xl leading-none">{isTarget ? "🎯" : "🚨"}</div>
             <div className="flex-1 min-w-0">
               <p className={`text-sm font-bold ${isTarget ? "text-primary-600" : "text-red-600"}`}>{isTarget ? "Target Hit!" : "Outbid!"}</p>
@@ -144,7 +144,7 @@ function handleNotification(data: Record<string, unknown>) {
       showNotification(title, { body });
       toast.custom(
         (t) => (
-          <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-sm w-full bg-white shadow-lg rounded-2xl pointer-events-auto border border-primary-100 flex items-start gap-3 p-4`}>
+          <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-sm w-full bg-white shadow-lg rounded-md pointer-events-auto border border-primary-100 flex items-start gap-3 p-4`}>
             <div className="text-2xl leading-none">🛍️</div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-gray-900">New listing</p>

@@ -100,7 +100,7 @@ const VerificationBadge = memo(({
             {showText && <span className="bn">{config.label}</span>}
           </div>
         </TooltipTrigger>
-        <TooltipContent className="p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-slate-100 dark:border-slate-800 rounded-2xl shadow-premium max-w-[220px]">
+        <TooltipContent className="p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-slate-100 dark:border-slate-800 rounded-md shadow-premium max-w-[220px]">
           <div className="space-y-3">
             <p className="font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-2 bn">
               {config.icon} <span className="w-4 h-4" /> {config.label}

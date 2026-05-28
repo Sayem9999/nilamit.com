@@ -14,7 +14,7 @@ export default function Loading() {
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+            className="bg-white rounded-md border border-gray-100 overflow-hidden"
           >
             <div className="aspect-[4/3] bg-gray-200 animate-pulse" />
             <div className="p-4 space-y-3">

@@ -41,10 +41,11 @@ interface NotificationItem {
 }
 
 export function NotificationsList() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const t = useTranslations("Dashboard");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
 
   const userId = session?.user?.id;
@@ -57,18 +58,44 @@ export function NotificationsList() {
   }, []);
 
   useEffect(() => {
-    if (!userId) return;
+    // ─── Loader lifecycle ──────────────────────────────────────────────
+    // Three cases must clear the spinner:
+    //  1. Session loaded but unauthenticated → no notifications possible
+    //  2. RTDB subscription returns (data or null) → render the list
+    //  3. RTDB subscription fails or times out → fall through to empty
+    //
+    // Previously, case (1) was unhandled — when sessionStatus stayed
+    // "loading" or the session never resolved, isLoading was never reset
+    // and the spinner stuck forever. We now clear immediately for any
+    // non-authenticated session state.
+
+    if (sessionStatus === "loading") {
+      // Wait for session to resolve. Show spinner up to 2s, then give up
+      // and render empty state.
+      const sessionTimeout = setTimeout(() => setIsLoading(false), 2000);
+      return () => clearTimeout(sessionTimeout);
+    }
+
+    if (!userId) {
+      // Unauthenticated — no inbox to load.
+      setIsLoading(false);
+      return;
+    }
 
     let unsub: (() => void) | null = null;
-    const loadingTimer = setTimeout(() => {
-      setIsLoading(true);
-    }, 0);
-
-    // Bulletproof UX safeguard: if real-time data takes longer than 5 seconds (e.g. database offline or WS blocked),
-    // cancel the loading spinner and fallback to the placeholder screen.
-    const fallbackTimer = setTimeout(() => {
+    let resolved = false;
+    const resolveOnce = () => {
+      if (resolved) return;
+      resolved = true;
       setIsLoading(false);
-    }, 5000);
+    };
+
+    // Hard cap: 3s. If RTDB is wedged or unreachable, show empty state
+    // (or whatever's cached) rather than an infinite spinner.
+    const fallbackTimer = setTimeout(() => {
+      resolveOnce();
+      setLoadError("Notifications service is slow to respond. Try refreshing.");
+    }, 3000);
 
     void (async () => {
       try {
@@ -76,60 +103,68 @@ export function NotificationsList() {
         const db = getClientDB();
         const notifRef = ref(db, `notifications/user/${userId}`);
 
-        unsub = onValue(notifRef, (snapshot) => {
-          clearTimeout(fallbackTimer);
-          try {
-            const data = snapshot.val();
-            if (data && typeof data === 'object') {
-              const list: NotificationItem[] = [];
-              for (const [key, val] of Object.entries(data)) {
-                if (val && typeof val === 'object') {
-                  const typedVal = val as Record<string, unknown>;
-                  list.push({
-                    id: key,
-                    event: typeof typedVal.event === 'string' ? typedVal.event : "",
-                    amount: typeof typedVal.amount === 'number' ? typedVal.amount : undefined,
-                    auctionId: typeof typedVal.auctionId === 'string' ? typedVal.auctionId : undefined,
-                    auctionTitle: typeof typedVal.auctionTitle === 'string' ? typedVal.auctionTitle : undefined,
-                    message: typeof typedVal.message === 'string' ? typedVal.message : undefined,
-                    title: typeof typedVal.title === 'string' ? typedVal.title : undefined,
-                    badge: typedVal.badge && typeof typedVal.badge === 'object' ? (typedVal.badge as { label?: string; icon?: string }) : undefined,
-                    senderName: typeof typedVal.senderName === 'string' ? typedVal.senderName : undefined,
-                    preview: typeof typedVal.preview === 'string' ? typedVal.preview : undefined,
-                    _ts: typeof typedVal._ts === 'number' ? typedVal._ts : Date.now(),
-                  });
+        unsub = onValue(
+          notifRef,
+          (snapshot) => {
+            try {
+              const data = snapshot.val();
+              if (data && typeof data === "object") {
+                const list: NotificationItem[] = [];
+                for (const [key, val] of Object.entries(data)) {
+                  if (val && typeof val === "object") {
+                    const typedVal = val as Record<string, unknown>;
+                    list.push({
+                      id: key,
+                      event: typeof typedVal.event === "string" ? typedVal.event : "",
+                      amount: typeof typedVal.amount === "number" ? typedVal.amount : undefined,
+                      auctionId: typeof typedVal.auctionId === "string" ? typedVal.auctionId : undefined,
+                      auctionTitle: typeof typedVal.auctionTitle === "string" ? typedVal.auctionTitle : undefined,
+                      message: typeof typedVal.message === "string" ? typedVal.message : undefined,
+                      title: typeof typedVal.title === "string" ? typedVal.title : undefined,
+                      badge:
+                        typedVal.badge && typeof typedVal.badge === "object"
+                          ? (typedVal.badge as { label?: string; icon?: string })
+                          : undefined,
+                      senderName: typeof typedVal.senderName === "string" ? typedVal.senderName : undefined,
+                      preview: typeof typedVal.preview === "string" ? typedVal.preview : undefined,
+                      _ts: typeof typedVal._ts === "number" ? typedVal._ts : Date.now(),
+                    });
+                  }
                 }
+                list.sort((a, b) => b._ts - a._ts);
+                setNotifications(list);
+              } else {
+                setNotifications([]);
               }
-              // Sort by timestamp descending
-              list.sort((a, b) => b._ts - a._ts);
-              setNotifications(list);
-            } else {
+              setLoadError(null);
+            } catch (parseErr) {
+              console.error("Failed to parse notifications data:", parseErr);
               setNotifications([]);
+            } finally {
+              clearTimeout(fallbackTimer);
+              resolveOnce();
             }
-          } catch (parseErr) {
-            console.error("Failed to parse notifications data:", parseErr);
-            setNotifications([]);
-          } finally {
-            setIsLoading(false);
-          }
-        }, (error) => {
-          clearTimeout(fallbackTimer);
-          console.error("Failed to subscribe to notifications:", error);
-          setIsLoading(false);
-        });
+          },
+          (error) => {
+            console.error("Failed to subscribe to notifications:", error);
+            clearTimeout(fallbackTimer);
+            setLoadError("Could not load notifications. Check your connection.");
+            resolveOnce();
+          },
+        );
       } catch (err) {
-        clearTimeout(fallbackTimer);
         console.error("Failed to subscribe to notifications", err);
-        setIsLoading(false);
+        clearTimeout(fallbackTimer);
+        setLoadError("Notifications unavailable right now.");
+        resolveOnce();
       }
     })();
 
     return () => {
       unsub?.();
-      clearTimeout(loadingTimer);
       clearTimeout(fallbackTimer);
     };
-  }, [userId]);
+  }, [userId, sessionStatus]);
 
   const handleClearAll = async () => {
     if (!userId) return;
@@ -345,15 +380,21 @@ export function NotificationsList() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800">
-        <Loader2 className="w-10 h-10 text-primary-600 animate-spin" />
-        <p className="text-sm text-gray-500 dark:text-slate-400 mt-4 font-semibold">Loading your inbox...</p>
+      <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-md border border-gray-200 dark:border-slate-800">
+        <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-3 font-medium">Loading your inbox…</p>
       </div>
     );
   }
 
   return (
     <div>
+      {loadError && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{loadError}</span>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-heading font-semibold text-gray-900 dark:text-white">
           {t("notifications")} ({notifications.length})
@@ -376,7 +417,7 @@ export function NotificationsList() {
             return (
               <div
                 key={item.id}
-                className={`p-4 border rounded-2xl flex items-start justify-between gap-4 transition-all duration-300 ${config.bgColor} ${config.borderColor} hover:shadow-sm`}
+                className={`p-4 border rounded-md flex items-start justify-between gap-4 transition-all duration-300 ${config.bgColor} ${config.borderColor} hover:shadow-sm`}
               >
                 <div className="flex items-start gap-4 flex-1">
                   <div className="p-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100/50 dark:border-slate-800 flex-shrink-0">
@@ -417,7 +458,7 @@ export function NotificationsList() {
           })}
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 p-12 text-center rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 p-12 text-center rounded-md border border-gray-100 dark:border-slate-800 shadow-sm">
           <div className="w-12 h-12 bg-gray-50 dark:bg-slate-850 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100 dark:border-slate-800">
             <Bell className="w-6 h-6 text-gray-300 dark:text-slate-600" />
           </div>

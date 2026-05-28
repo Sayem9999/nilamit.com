@@ -211,7 +211,7 @@ export function ModerationTab() {
       <div className="border-b border-gray-100 pb-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-heading font-black text-gray-900 tracking-tight flex items-center gap-2">
+            <h2 className="text-2xl font-heading font-bold text-gray-900 tracking-tight flex items-center gap-2">
               <ShieldAlert className="w-6 h-6 text-red-600" />
               Administrative Moderation Panel
             </h2>
@@ -220,17 +220,17 @@ export function ModerationTab() {
             </p>
           </div>
 
-          <div className="flex bg-gray-100 p-1.5 rounded-2xl self-start sm:self-center border border-gray-200">
+          <div className="flex bg-gray-100 p-1.5 rounded-md self-start sm:self-center border border-gray-200">
             <button
               onClick={() => setMode("REPORTS")}
-              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 ${mode === "REPORTS" ? "bg-slate-900 shadow-sm text-white" : "text-gray-500 hover:text-gray-900"}`}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 ${mode === "REPORTS" ? "bg-slate-900 shadow-sm text-white" : "text-gray-500 hover:text-gray-900"}`}
             >
               <FileText className="w-3.5 h-3.5" />
               User Reports Queue
             </button>
             <button
               onClick={() => setMode("ALL_AUCTIONS")}
-              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 ${mode === "ALL_AUCTIONS" ? "bg-slate-900 shadow-sm text-white" : "text-gray-500 hover:text-gray-900"}`}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 ${mode === "ALL_AUCTIONS" ? "bg-slate-900 shadow-sm text-white" : "text-gray-500 hover:text-gray-900"}`}
             >
               <PackageOpen className="w-3.5 h-3.5" />
               All Listings
@@ -243,7 +243,7 @@ export function ModerationTab() {
       {mode === "REPORTS" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-500">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Filter queue status
             </span>
             <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
@@ -267,7 +267,7 @@ export function ModerationTab() {
               <Loader2 className="animate-spin w-8 h-8 text-primary-600" />
             </div>
           ) : reportsError ? (
-            <div className="text-center py-16 bg-red-50/50 rounded-3xl border-2 border-dashed border-red-200/50">
+            <div className="text-center py-16 bg-red-50/50 rounded-md border-2 border-dashed border-red-200/50">
               <AlertTriangle className="w-12 h-12 text-red-500/30 mx-auto mb-3" />
               <h3 className="text-lg font-bold text-red-950 tracking-tight">Failed to Load Reports</h3>
               <p className="text-red-700 text-xs mt-1">
@@ -281,7 +281,7 @@ export function ModerationTab() {
               </button>
             </div>
           ) : reports.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200">
+            <div className="text-center py-16 bg-gray-50/50 rounded-md border-2 border-dashed border-gray-200">
               <CheckCircle className="w-12 h-12 text-green-500/30 mx-auto mb-3" />
               <h3 className="text-lg font-bold text-gray-900 tracking-tight">Queue Clear!</h3>
               <p className="text-gray-500 text-xs mt-1">
@@ -293,7 +293,7 @@ export function ModerationTab() {
               {reports.map((report) => (
                 <div
                   key={report.id}
-                  className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-all flex flex-col lg:flex-row gap-6 relative"
+                  className="bg-white p-5 rounded-md border border-gray-100 shadow-xs hover:shadow-md transition-all flex flex-col lg:flex-row gap-6 relative"
                 >
                   {/* Image Preview */}
                   <div className="w-full lg:w-48 h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
@@ -310,7 +310,7 @@ export function ModerationTab() {
                         No image
                       </div>
                     )}
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase bg-slate-900 text-white shadow-xs">
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wider uppercase bg-slate-900 text-white shadow-xs">
                       {report.auction.status}
                     </div>
                   </div>
@@ -336,7 +336,7 @@ export function ModerationTab() {
                     </div>
 
                     <div className="bg-red-50/50 border border-red-100/50 text-red-900 p-3.5 rounded-xl text-xs mb-4">
-                      <strong className="block text-[10px] uppercase tracking-wider text-red-700 font-black mb-1">
+                      <strong className="block text-[10px] uppercase tracking-wider text-red-700 font-bold mb-1">
                         Reason: {report.reason}
                       </strong>
                       <p className="text-slate-600 font-medium leading-relaxed">
@@ -399,7 +399,7 @@ export function ModerationTab() {
       {mode === "ALL_AUCTIONS" && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-500">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Filter database listings by state
             </span>
             <div className="flex flex-wrap bg-gray-100 p-1 rounded-xl border border-gray-200 self-start sm:self-center">
@@ -426,7 +426,7 @@ export function ModerationTab() {
               <Loader2 className="animate-spin w-8 h-8 text-primary-600" />
             </div>
           ) : auctionsError ? (
-            <div className="text-center py-16 bg-red-50/50 rounded-3xl border-2 border-dashed border-red-200/50">
+            <div className="text-center py-16 bg-red-50/50 rounded-md border-2 border-dashed border-red-200/50">
               <AlertTriangle className="w-12 h-12 text-red-500/30 mx-auto mb-3" />
               <h3 className="text-lg font-bold text-red-950 tracking-tight">Failed to Load Listings</h3>
               <p className="text-red-700 text-xs mt-1">
@@ -440,7 +440,7 @@ export function ModerationTab() {
               </button>
             </div>
           ) : auctions.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-200">
+            <div className="text-center py-16 bg-gray-50/50 rounded-md border-2 border-dashed border-gray-200">
               <PackageOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <h3 className="text-lg font-bold text-gray-900 tracking-tight">No Listings</h3>
               <p className="text-gray-500 text-xs mt-1">
@@ -452,7 +452,7 @@ export function ModerationTab() {
               {auctions.map((auction) => (
                 <div
                   key={auction.id}
-                  className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md transition-all flex flex-col md:flex-row gap-6 items-start"
+                  className="bg-white p-5 rounded-md border border-gray-100 shadow-xs hover:shadow-md transition-all flex flex-col md:flex-row gap-6 items-start"
                 >
                   {/* Preview thumb */}
                   <div className="w-full md:w-32 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
@@ -487,7 +487,7 @@ export function ModerationTab() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest uppercase shrink-0 ${
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase shrink-0 ${
                           auction.status === "ACTIVE" ? "bg-green-100 text-green-800" :
                           auction.status === "SOLD" ? "bg-indigo-100 text-indigo-800" :
                           auction.status === "CANCELLED" ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-800"
@@ -558,10 +558,10 @@ export function ModerationTab() {
       {/* OVERLAY DIALOGUE (Suspension & Deletion Confirmations) */}
       {actioningId && actionType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-lg bg-white rounded-md p-6 shadow-md border border-slate-100 animate-in zoom-in-95 duration-200">
             <div className="flex items-center gap-3 text-red-600 mb-4">
               <AlertTriangle className="w-6 h-6 shrink-0" />
-              <h3 className="font-heading font-black text-lg tracking-tight">
+              <h3 className="font-heading font-bold text-lg tracking-tight">
                 Confirm {actionType === "SUSPEND" ? "Listing Suspension" : "Permanent Deletion"}
               </h3>
             </div>

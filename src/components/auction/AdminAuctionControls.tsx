@@ -54,7 +54,7 @@ export function AdminAuctionControls({ auctionId, auctionTitle }: AdminAuctionCo
   };
 
   return (
-    <div className="w-full bg-slate-900 text-white rounded-2xl p-5 mb-8 border-2 border-red-500/30 shadow-xl overflow-hidden relative">
+    <div className="w-full bg-slate-900 text-white rounded-md p-5 mb-8 border-2 border-red-500/30 shadow-xl overflow-hidden relative">
       <div className="absolute top-0 left-0 w-2 h-full bg-red-600 animate-pulse" />
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -67,7 +67,7 @@ export function AdminAuctionControls({ auctionId, auctionTitle }: AdminAuctionCo
               <h4 className="font-heading font-bold text-lg tracking-tight text-white">
                 Admin Control Terminal
               </h4>
-              <span className="bg-red-500/20 text-red-400 text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded border border-red-500/30">
+              <span className="bg-red-500/20 text-red-400 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded border border-red-500/30">
                 Authorized Only
               </span>
             </div>

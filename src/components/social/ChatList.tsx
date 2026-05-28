@@ -55,7 +55,7 @@ export default function ChatList({ conversations }: ChatListProps) {
       <div className="flex items-center justify-between mb-8 px-2">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{t('activeChats')}</h2>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Transaction Coordination</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-1">Transaction Coordination</p>
         </div>
         <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center">
            <MessageSquare className="w-5 h-5 text-primary-500" />
@@ -71,9 +71,9 @@ export default function ChatList({ conversations }: ChatListProps) {
             <Link 
               key={convo.id} 
               href={`/auctions/${convo.auctionId}`}
-              className="flex items-start gap-4 p-4 rounded-3xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100 group"
+              className="flex items-start gap-4 p-4 rounded-md hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100 group"
             >
-              <div className="w-14 h-14 rounded-2xl bg-gray-100 relative overflow-hidden flex-shrink-0">
+              <div className="w-14 h-14 rounded-md bg-gray-100 relative overflow-hidden flex-shrink-0">
                 {convo.auction?.images?.[0] ? (
                   <Image src={convo.auction.images[0]} alt={convo.auction.title} fill sizes="56px" className="object-cover" />
                 ) : (

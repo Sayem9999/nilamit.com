@@ -102,7 +102,7 @@ export function QnaSection({ auctionId, sellerId, initialQuestions, isActive }: 
   };
 
   return (
-    <section className="bg-white border border-gray-100 rounded-2xl p-6">
+    <section className="bg-white border border-gray-100 rounded-md p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-primary-600" />

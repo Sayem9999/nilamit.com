@@ -33,11 +33,11 @@ export function TrendingSection({
             <div>
               <h2
                 id="trending-heading"
-                className="font-heading font-black text-xl sm:text-2xl text-gray-900 tracking-tight leading-none"
+                className="font-heading font-bold text-xl sm:text-2xl text-gray-900 tracking-tight leading-none"
               >
                 {t("trendingTitle")}
               </h2>
-              <p className="text-[12px] text-gray-500 mt-1 uppercase tracking-widest font-bold">
+              <p className="text-[12px] text-gray-500 mt-1 uppercase tracking-wide font-bold">
                 {t("trendingTag")}
               </p>
             </div>

@@ -113,7 +113,7 @@ export default function AdminDisputesClient() {
       {disputes.length === 0 ? (
         <div
           role="status"
-          className="bg-white border border-dashed border-gray-200 rounded-3xl p-12 text-center"
+          className="bg-white border border-dashed border-gray-200 rounded-md p-12 text-center"
         >
           <div
             className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -129,12 +129,12 @@ export default function AdminDisputesClient() {
           {disputes.map((dispute) => (
             <li
               key={dispute.id}
-              className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden hover:shadow-md transition-shadow motion-reduce:transition-none"
+              className="bg-white border border-gray-100 rounded-md shadow-sm overflow-hidden hover:shadow-md transition-shadow motion-reduce:transition-none"
             >
               <article className="p-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-2">
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-amber-600 mb-2">
                       <Clock className="w-3 h-3" aria-hidden="true" />
                       <span>
                         Opened{" "}
@@ -148,7 +148,7 @@ export default function AdminDisputesClient() {
                     </h2>
 
                     <div className="space-y-3 mb-6">
-                      <blockquote className="bg-gray-50 p-4 rounded-2xl italic text-gray-600 text-sm border-l-4 border-amber-400">
+                      <blockquote className="bg-gray-50 p-4 rounded-md italic text-gray-600 text-sm border-l-4 border-amber-400">
                         {dispute.reason}
                       </blockquote>
 
@@ -207,7 +207,7 @@ export default function AdminDisputesClient() {
                   <div
                     role="group"
                     aria-label={`Moderator ruling for ${dispute.transaction.auction.title}`}
-                    className="lg:w-72 bg-gray-50 p-6 rounded-2xl flex flex-col justify-center gap-3"
+                    className="lg:w-72 bg-gray-50 p-6 rounded-md flex flex-col justify-center gap-3"
                   >
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                       Moderator ruling
@@ -257,7 +257,7 @@ export default function AdminDisputesClient() {
             }
           }}
         >
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
+          <div className="bg-white rounded-md shadow-md max-w-md w-full p-6">
             <h2
               id="resolve-dispute-heading"
               className="text-lg font-heading font-bold text-gray-900 mb-1"

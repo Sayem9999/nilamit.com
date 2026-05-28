@@ -26,7 +26,7 @@ export default async function SafetyPage() {
             <ShieldCheck size={18} aria-hidden="true" />
             <span>{t("subNote")}</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-6 tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 tracking-tight">
             {t("title")}
           </h1>
           <p className="text-xl text-gray-500 max-w-3xl mx-auto font-medium leading-relaxed">
@@ -37,10 +37,10 @@ export default async function SafetyPage() {
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20 list-none p-0">
           {highlights.map((item, idx) => (
             <li key={idx} className="p-8 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm hover:shadow-md transition-shadow motion-reduce:transition-none">
-              <div className={`w-12 h-12 ${item.color} rounded-2xl flex items-center justify-center mb-6`} aria-hidden="true">
+              <div className={`w-12 h-12 ${item.color} rounded-md flex items-center justify-center mb-6`} aria-hidden="true">
                 <item.icon size={24} />
               </div>
-              <h2 className="text-2xl font-black text-gray-900 mb-3">{item.title}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">{item.title}</h2>
               <p className="text-gray-500 font-medium leading-relaxed">{item.desc}</p>
             </li>
           ))}
@@ -52,7 +52,7 @@ export default async function SafetyPage() {
               <AlertCircle size={32} className="text-amber-700" />
             </div>
             <div className="flex-grow">
-              <h2 id="safety-warning-heading" className="text-2xl font-black text-amber-900 mb-2">{t("warningTitle")}</h2>
+              <h2 id="safety-warning-heading" className="text-2xl font-bold text-amber-900 mb-2">{t("warningTitle")}</h2>
               <p className="text-amber-800 font-medium leading-relaxed">
                 {t("warningDesc")}
               </p>

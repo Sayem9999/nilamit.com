@@ -180,7 +180,7 @@ export default function CreateAuctionPage() {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-md border border-gray-100 shadow-sm p-6">
         {/* Step: Details */}
         {step === "details" && (
           <div className="space-y-4">
@@ -304,7 +304,7 @@ export default function CreateAuctionPage() {
                     Analyzing market trends...
                   </div>
                 ) : suggestion ? (
-                  <div className="bg-gradient-to-br from-primary-50/40 via-white to-primary-50/10 border border-primary-100/80 rounded-2xl p-5 shadow-sm">
+                  <div className="bg-gradient-to-br from-primary-50/40 via-white to-primary-50/10 border border-primary-100/80 rounded-md p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <div className="p-1.5 rounded-lg bg-primary-100/60 text-primary-600">
@@ -423,7 +423,7 @@ export default function CreateAuctionPage() {
             </div>
 
             <div className="pt-4 border-t border-gray-100">
-              <label className="text-xs font-bold text-gray-900 mb-2 block uppercase tracking-widest">
+              <label className="text-xs font-bold text-gray-900 mb-2 block uppercase tracking-wide">
                 {t("optionalUpgrades")}
               </label>
               <div className="space-y-4">

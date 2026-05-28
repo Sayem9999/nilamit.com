@@ -46,7 +46,7 @@ export function QuickReview({ auctionId, toId, onComplete }: QuickReviewProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+    <div className="bg-white rounded-md border border-gray-100 shadow-sm p-6">
       <h3 className="font-heading font-semibold text-gray-900 mb-3">
         Rate this seller
       </h3>

@@ -17,7 +17,7 @@ export function CategoryGrid() {
         <div className="flex items-baseline justify-between mb-4 sm:mb-6">
           <h2
             id="home-categories-heading"
-            className="font-heading font-black text-xl sm:text-2xl text-gray-900 tracking-tight"
+            className="font-heading font-bold text-xl sm:text-2xl text-gray-900 tracking-tight"
           >
             {t("categoriesTitle")}
           </h2>

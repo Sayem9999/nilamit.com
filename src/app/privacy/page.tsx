@@ -38,7 +38,7 @@ export default async function PrivacyPage() {
             <FileText size={18} aria-hidden="true" />
             <span>{t("lastUpdated")}</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-6 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight">
             {t("title")}
           </h1>
           <p className="text-xl text-gray-500 font-medium leading-relaxed">
@@ -53,13 +53,13 @@ export default async function PrivacyPage() {
               className="flex flex-col md:flex-row gap-8 items-start p-8 rounded-[2.5rem] bg-gray-50/50 border border-gray-100"
             >
               <div
-                className={`w-14 h-14 ${section.color} rounded-2xl flex items-center justify-center shrink-0`}
+                className={`w-14 h-14 ${section.color} rounded-md flex items-center justify-center shrink-0`}
                 aria-hidden="true"
               >
                 <section.icon size={28} />
               </div>
               <div>
-                <h2 className="text-2xl font-black text-gray-900 mb-4">{section.title}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">{section.title}</h2>
                 <p className="text-gray-500 font-medium leading-relaxed text-lg">
                   {section.desc}
                 </p>

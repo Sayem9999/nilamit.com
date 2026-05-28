@@ -49,11 +49,11 @@ export default function RegisterPage() {
   if (success) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] border border-green-100 shadow-2xl text-center animate-in zoom-in-95 duration-300">
+        <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] border border-green-100 shadow-md text-center animate-in zoom-in-95 duration-300">
           <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>
-          <h2 className="text-3xl font-black text-gray-900 tracking-tight mb-2">
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">
             {t("welcomeTitle")}
           </h2>
           <p className="text-gray-500 mb-8 font-medium">
@@ -61,7 +61,7 @@ export default function RegisterPage() {
           </p>
           <Link
             href="/login"
-            className="block w-full bg-gray-900 text-white font-bold py-4 rounded-2xl hover:bg-black shadow-lg transition-all"
+            className="block w-full bg-gray-900 text-white font-bold py-4 rounded-md hover:bg-black shadow-lg transition-all"
           >
             {t("goToLogin")}
           </Link>
@@ -82,7 +82,7 @@ export default function RegisterPage() {
               nilam<span className="text-primary-600">it</span>
             </span>
           </Link>
-          <h1 className="font-black text-3xl text-gray-900 tracking-tight">
+          <h1 className="font-bold text-3xl text-gray-900 tracking-tight">
             {t("signUpTitle")}
           </h1>
           <p className="text-gray-500 mt-1 font-medium">{t("signUpDesc")}</p>
@@ -100,7 +100,7 @@ export default function RegisterPage() {
             {step === "account-type" && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="mb-8">
-                  <h3 className="text-2xl font-black text-gray-900 mb-1">Choose Account Category</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-1">Choose Account Category</h3>
                   <p className="text-sm text-gray-500 font-medium tracking-tight">Select whether you are a casual standard user or a professional retailer.</p>
                 </div>
                 
@@ -113,7 +113,7 @@ export default function RegisterPage() {
                     className="w-full p-6 bg-white border-2 border-gray-100 rounded-[2rem] text-left hover:border-primary-500 hover:bg-primary-50/30 transition-all group relative"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-primary-100 transition-colors">
+                      <div className="w-12 h-12 bg-gray-50 rounded-md flex items-center justify-center group-hover:bg-primary-100 transition-colors">
                         <User className="w-6 h-6 text-gray-400 group-hover:text-primary-600" />
                       </div>
                       <div>
@@ -132,7 +132,7 @@ export default function RegisterPage() {
                     className="w-full p-6 bg-white border-2 border-gray-100 rounded-[2rem] text-left hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group relative"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                      <div className="w-12 h-12 bg-gray-50 rounded-md flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
                         <Gavel className="w-6 h-6 text-gray-400 group-hover:text-indigo-600" />
                       </div>
                       <div>
@@ -148,7 +148,7 @@ export default function RegisterPage() {
                       <div className="w-full border-t border-gray-100"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-widest text-[10px]">
+                      <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-wide text-[10px]">
                         OR
                       </span>
                     </div>
@@ -158,7 +158,7 @@ export default function RegisterPage() {
                     onClick={() => {
                       signIn("google", { callbackUrl: "/dashboard" });
                     }}
-                    className="w-full h-14 bg-white border-2 border-gray-100 hover:border-primary-500 hover:bg-primary-50/30 text-gray-700 rounded-2xl transition-all font-bold text-lg flex items-center justify-center gap-3"
+                    className="w-full h-14 bg-white border-2 border-gray-100 hover:border-primary-500 hover:bg-primary-50/30 text-gray-700 rounded-md transition-all font-bold text-lg flex items-center justify-center gap-3"
                   >
                     <svg className="w-6 h-6" viewBox="0 0 24 24">
                       <path
@@ -185,7 +185,7 @@ export default function RegisterPage() {
                     onClick={() => {
                       signIn("facebook", { callbackUrl: "/dashboard" });
                     }}
-                    className="w-full h-14 bg-white border-2 border-gray-100 hover:border-[#1877F2] hover:bg-[#1877F2]/5 text-gray-700 rounded-2xl transition-all font-bold text-lg flex items-center justify-center gap-3"
+                    className="w-full h-14 bg-white border-2 border-gray-100 hover:border-[#1877F2] hover:bg-[#1877F2]/5 text-gray-700 rounded-md transition-all font-bold text-lg flex items-center justify-center gap-3"
                   >
                     <svg className="w-6 h-6 fill-[#1877F2]" viewBox="0 0 24 24">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -201,7 +201,7 @@ export default function RegisterPage() {
                 <button 
                   type="button"
                   onClick={() => setStep("account-type")} 
-                  className="mb-4 text-[10px] font-black text-gray-400 hover:text-primary-600 uppercase tracking-widest flex items-center gap-1 transition-colors"
+                  className="mb-4 text-[10px] font-bold text-gray-400 hover:text-primary-600 uppercase tracking-wide flex items-center gap-1 transition-colors"
                 >
                   <ArrowRight className="w-3 h-3 rotate-180" /> Back to Account Selection
                 </button>
@@ -215,7 +215,7 @@ export default function RegisterPage() {
                 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="email-signup-name" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">
+                    <label htmlFor="email-signup-name" className="text-xs font-bold text-gray-400 uppercase tracking-wide pl-1 mb-1 block">
                       {accountType === "business" ? "Shop Name / Rep Name" : t("nameLabel")}
                     </label>
                     <input
@@ -226,12 +226,12 @@ export default function RegisterPage() {
                       placeholder={accountType === "business" ? "e.g. Dhaka Electronics" : "e.g. Sayem Ahmed"}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-md px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email-signup-email" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("emailLabel")}</label>
+                    <label htmlFor="email-signup-email" className="text-xs font-bold text-gray-400 uppercase tracking-wide pl-1 mb-1 block">{t("emailLabel")}</label>
                     <input
                       id="email-signup-email"
                       required
@@ -240,12 +240,12 @@ export default function RegisterPage() {
                       placeholder="email@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-md px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email-signup-password" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("passwordLabel")}</label>
+                    <label htmlFor="email-signup-password" className="text-xs font-bold text-gray-400 uppercase tracking-wide pl-1 mb-1 block">{t("passwordLabel")}</label>
                     <input
                       id="email-signup-password"
                       required
@@ -255,12 +255,12 @@ export default function RegisterPage() {
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-md px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email-signup-confirm" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t("confirmPasswordLabel")}</label>
+                    <label htmlFor="email-signup-confirm" className="text-xs font-bold text-gray-400 uppercase tracking-wide pl-1 mb-1 block">{t("confirmPasswordLabel")}</label>
                     <input
                       id="email-signup-confirm"
                       required
@@ -270,7 +270,7 @@ export default function RegisterPage() {
                       placeholder="••••••••"
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-md px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -284,7 +284,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className={`w-full ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-200 text-white font-bold py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2`}
+                  className={`w-full ${accountType === "business" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-gray-900 hover:bg-black"} disabled:bg-gray-200 text-white font-bold py-4 rounded-md shadow-lg transition-all flex items-center justify-center gap-2`}
                 >
                   {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : t("signUpBtn")}
                 </button>
@@ -296,7 +296,7 @@ export default function RegisterPage() {
                 {t("alreadyHaveAccount")}{" "}
                 <Link
                   href="/login"
-                  className="text-primary-600 font-black hover:text-primary-700 transition-colors underline decoration-2 underline-offset-4"
+                  className="text-primary-600 font-bold hover:text-primary-700 transition-colors underline decoration-2 underline-offset-4"
                 >
                   {t("signInBtn")}
                 </Link>

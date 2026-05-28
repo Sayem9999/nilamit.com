@@ -31,7 +31,7 @@ const BidPanel = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 animate-pulse">
+      <div className="bg-white rounded-md border border-gray-100 shadow-sm p-6 animate-pulse">
         <div className="h-6 w-32 bg-gray-200 rounded mb-4"></div>
         <div className="h-20 bg-primary-50 rounded-xl mb-4"></div>
         <div className="h-12 bg-gray-100 rounded-xl mb-4"></div>

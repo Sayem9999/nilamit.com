@@ -47,7 +47,7 @@ export function AuctionDetailTabs({
     : null;
 
   return (
-    <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-premium">
+    <div className="bg-white border border-gray-100 rounded-md overflow-hidden shadow-premium">
       {/* Tabs Header */}
       <div className="flex border-b border-gray-100 bg-gray-50/50 p-1.5 gap-1.5" role="tablist">
         <button
@@ -124,7 +124,7 @@ export function AuctionDetailTabs({
           >
             <div className="grid md:grid-cols-2 gap-6">
               {/* Buyer Protection Mechanism */}
-              <div className="bg-primary-50/30 rounded-2xl border border-primary-100/50 p-5 space-y-3">
+              <div className="bg-primary-50/30 rounded-md border border-primary-100/50 p-5 space-y-3">
                 <h4 className="flex items-center gap-2 font-bold text-primary-800 text-sm uppercase tracking-wide">
                   <ShieldCheck className="w-4.5 h-4.5 text-primary-600" />
                   Nilamit Buyer Protection Guarantee
@@ -149,7 +149,7 @@ export function AuctionDetailTabs({
               </div>
 
               {/* Logistics & Commission */}
-              <div className="bg-slate-50 border border-gray-100 rounded-2xl p-5 space-y-4">
+              <div className="bg-slate-50 border border-gray-100 rounded-md p-5 space-y-4">
                 <div>
                   <h4 className="flex items-center gap-2 font-bold text-gray-800 text-xs uppercase tracking-wide mb-2">
                     <Truck className="w-4 h-4 text-primary-500" />
@@ -177,10 +177,10 @@ export function AuctionDetailTabs({
             </div>
 
             {/* Buyer/Seller Handoff Banner */}
-            <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-4 text-xs text-amber-800">
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-md p-4 text-xs text-amber-800">
               <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <span className="font-black uppercase tracking-wider block mb-1">Safe Bidding Guarantee</span>
+                <span className="font-bold uppercase tracking-wider block mb-1">Safe Bidding Guarantee</span>
                 Never pay a seller directly outside the Nilamit platform! Always utilize the secure treasury accounts shown on the dashboard after winning to be fully covered by our Nilamit Escrow Guarantee.
               </div>
             </div>
@@ -196,9 +196,9 @@ export function AuctionDetailTabs({
           >
             {/* Scoreboard */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm text-center space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Positive Feedback</span>
-                <span className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight block">
+              <div className="bg-white border border-gray-100 p-4 rounded-md shadow-sm text-center space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Positive Feedback</span>
+                <span className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight block">
                   {feedbackPercentage !== null ? `${feedbackPercentage}%` : "—"}
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold block">
@@ -206,34 +206,34 @@ export function AuctionDetailTabs({
                 </span>
               </div>
 
-              <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm text-center space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Seller Level</span>
-                <span className="text-xl sm:text-2xl font-black text-primary-600 tracking-tight flex items-center justify-center gap-1">
+              <div className="bg-white border border-gray-100 p-4 rounded-md shadow-sm text-center space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Seller Level</span>
+                <span className="text-xl sm:text-2xl font-bold text-primary-600 tracking-tight flex items-center justify-center gap-1">
                   <Award className="w-5 h-5 text-primary-500 animate-pulse" />
                   Level {seller.userLevel || 1}
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold block">Active Bidding Shield</span>
               </div>
 
-              <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm text-center space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Winning Streak</span>
-                <span className="text-xl sm:text-2xl font-black text-orange-600 tracking-tight flex items-center justify-center gap-1">
+              <div className="bg-white border border-gray-100 p-4 rounded-md shadow-sm text-center space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Winning Streak</span>
+                <span className="text-xl sm:text-2xl font-bold text-orange-600 tracking-tight flex items-center justify-center gap-1">
                   <Flame className="w-5 h-5 text-orange-500" />
                   {seller.winningStreak || 0}
                 </span>
                 <span className="text-[10px] text-slate-400 font-bold block">Consecutive sales</span>
               </div>
 
-              <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm text-center space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Seller Badges</span>
+              <div className="bg-white border border-gray-100 p-4 rounded-md shadow-sm text-center space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Seller Badges</span>
                 <div className="flex justify-center gap-1.5 pt-1">
                   {seller.isVerifiedSeller && (
-                    <span className="bg-blue-50 border border-blue-200 text-blue-600 rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
+                    <span className="bg-blue-50 border border-blue-200 text-blue-600 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
                       VERIFIED
                     </span>
                   )}
                   {seller.isTopRated && (
-                    <span className="bg-amber-50 border border-amber-200 text-amber-600 rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
+                    <span className="bg-amber-50 border border-amber-200 text-amber-600 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
                       TOP RATED
                     </span>
                   )}
@@ -246,7 +246,7 @@ export function AuctionDetailTabs({
             </div>
 
             {/* Dynamic Detailed Stats Card */}
-            <div className="bg-slate-50 border border-gray-100 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="bg-slate-50 border border-gray-100 rounded-md p-5 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-700">
                   <TrendingUp className="w-6 h-6" />

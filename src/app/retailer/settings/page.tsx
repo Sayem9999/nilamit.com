@@ -164,7 +164,7 @@ export default function RetailerSettingsPage() {
                 <Gavel className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 font-heading">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-heading">
                   Business Settings
                 </h1>
                 <p className="text-slate-500 text-sm font-medium mt-1">
@@ -181,7 +181,7 @@ export default function RetailerSettingsPage() {
                   : "bg-blue-50 border-blue-100 text-blue-700"
               }`}>
                 <ShieldCheck className="w-4 h-4" />
-                <span className="text-[10px] font-black uppercase tracking-widest">
+                <span className="text-[11px] font-semibold uppercase tracking-wide">
                   {user.isRetailer ? "Pro Retailer" : "Verified Seller"}
                 </span>
               </div>
@@ -194,7 +194,7 @@ export default function RetailerSettingsPage() {
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Storefront Cover Banner Card */}
-              <div className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-8 space-y-6">
+              <div className="bg-white border border-slate-100 shadow-sm rounded-md p-8 space-y-6">
                 <h3 className="text-lg font-bold flex items-center gap-2 text-slate-900 font-heading">
                   <Camera className="w-5 h-5 text-indigo-550" />
                   Billboard Cover Banner
@@ -205,7 +205,7 @@ export default function RetailerSettingsPage() {
 
                 <div 
                   onClick={() => !isUploadingBanner && !isRemovingBanner && bannerFileInputRef.current?.click()}
-                  className="group relative w-full h-32 md:h-44 rounded-2xl bg-slate-50 border border-dashed border-slate-200 overflow-hidden flex items-center justify-center cursor-pointer transition-all hover:border-indigo-500"
+                  className="group relative w-full h-32 md:h-44 rounded-md bg-slate-50 border border-dashed border-slate-200 overflow-hidden flex items-center justify-center cursor-pointer transition-all hover:border-indigo-500"
                 >
                   <input
                     type="file"
@@ -228,7 +228,7 @@ export default function RetailerSettingsPage() {
                       <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-2">
                         <Camera className="w-5 h-5 text-white" />
                       </div>
-                      <span className="text-xs font-black uppercase tracking-widest text-white">No Banner Uploaded</span>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-white">No Banner Uploaded</span>
                       <span className="text-[10px] text-white/80 mt-1">Click to upload custom cover photo (1200 x 400 suggested)</span>
                     </div>
                   )}
@@ -237,7 +237,7 @@ export default function RetailerSettingsPage() {
                   {!isUploadingBanner && !isRemovingBanner && user.banner && (
                     <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <Camera className="w-6 h-6 text-white" />
-                      <span className="text-xs font-black uppercase tracking-widest">Change Banner Image</span>
+                      <span className="text-xs font-semibold uppercase tracking-wide">Change Banner Image</span>
                     </div>
                   )}
 
@@ -245,7 +245,7 @@ export default function RetailerSettingsPage() {
                   {(isUploadingBanner || isRemovingBanner) && (
                     <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 text-white z-40">
                       <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-indigo-200">
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-indigo-200">
                         {isRemovingBanner ? "Removing..." : "Uploading Banner..."}
                       </span>
                     </div>
@@ -258,7 +258,7 @@ export default function RetailerSettingsPage() {
                       type="button"
                       onClick={handleRemoveBanner}
                       disabled={isRemovingBanner || isUploadingBanner}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-full transition-all border border-red-200"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[11px] font-semibold uppercase tracking-wide rounded-full transition-all border border-red-200"
                     >
                       <Trash2 className="w-3 h-3" />
                       Remove Banner
@@ -268,7 +268,7 @@ export default function RetailerSettingsPage() {
               </div>
 
               {/* Profile Details Card */}
-              <div className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-8 space-y-6">
+              <div className="bg-white border border-slate-100 shadow-sm rounded-md p-8 space-y-6">
                 <h3 className="text-lg font-bold flex items-center gap-2 text-slate-900 font-heading">
                   <Building className="w-5 h-5 text-indigo-550" />
                   Storefront Profile
@@ -327,7 +327,7 @@ export default function RetailerSettingsPage() {
               </div>
 
               {/* MFS Credentials Card */}
-              <div className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-8 space-y-6">
+              <div className="bg-white border border-slate-100 shadow-sm rounded-md p-8 space-y-6">
                 <h3 className="text-lg font-bold flex items-center gap-2 text-slate-900 font-heading">
                   <Smartphone className="w-5 h-5 text-indigo-550" />
                   MFS Payment Credentials
@@ -371,7 +371,7 @@ export default function RetailerSettingsPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full py-4 bg-indigo-650 hover:bg-indigo-750 text-white disabled:bg-slate-200 disabled:text-slate-400 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-650/10 hover:shadow-lg"
+                className="w-full py-4 bg-indigo-650 hover:bg-indigo-750 text-white disabled:bg-slate-200 disabled:text-slate-400 rounded-md font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-650/10 hover:shadow-lg"
               >
                 {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
                 {isPending ? "Saving..." : "Save Business Settings"}
@@ -381,16 +381,16 @@ export default function RetailerSettingsPage() {
 
           {/* Sidebar Tier Upgrade Controller */}
           <div className="space-y-6">
-            <div className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-8 space-y-6">
+            <div className="bg-white border border-slate-100 shadow-sm rounded-md p-8 space-y-6">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-indigo-550" />
                 <h3 className="text-md font-bold text-slate-900 font-heading">Tier Control Center</h3>
               </div>
 
               <div className="space-y-4">
-                <div className="p-4 bg-slate-50 border border-slate-150 rounded-2xl">
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Current Level</p>
-                  <p className="text-lg font-black text-slate-900 flex items-center gap-1.5 font-heading">
+                <div className="p-4 bg-slate-50 border border-slate-150 rounded-md">
+                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Current Level</p>
+                  <p className="text-lg font-bold text-slate-900 flex items-center gap-1.5 font-heading">
                     {user.isRetailer ? "Professional Retailer" : "Verified Seller"}
                   </p>
                   <p className="text-[10px] text-slate-500 mt-1 leading-relaxed font-medium">
@@ -426,7 +426,7 @@ export default function RetailerSettingsPage() {
             </div>
 
             {/* Platform Trust Box */}
-            <div className="bg-white border border-slate-100 shadow-sm rounded-[2rem] p-8 text-center space-y-4 text-slate-800">
+            <div className="bg-white border border-slate-100 shadow-sm rounded-md p-8 text-center space-y-4 text-slate-800">
               <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center mx-auto text-indigo-600 border border-indigo-100">
                 <ShieldCheck className="w-6 h-6" />
               </div>

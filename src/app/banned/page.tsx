@@ -12,7 +12,7 @@ export default async function BannedPage({
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-6">
-      <div className="max-w-2xl w-full bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+      <div className="max-w-2xl w-full bg-white rounded-md border border-gray-100 shadow-xl overflow-hidden">
         <div className="bg-red-600 p-8 flex justify-center">
           <div className="bg-white/20 p-4 rounded-full backdrop-blur-md">
             <Ban className="w-16 h-16 text-white" />
@@ -20,7 +20,7 @@ export default async function BannedPage({
         </div>
 
         <div className="p-8 md:p-12 text-center">
-          <h1 className="text-3xl md:text-4xl font-heading font-black text-gray-900 mb-4">
+          <h1 className="text-3xl md:text-4xl font-heading font-bold text-gray-900 mb-4">
             {t("title")}
           </h1>
           <p className="text-lg text-gray-600 mb-2">
@@ -30,8 +30,8 @@ export default async function BannedPage({
             {t("subtext")}
           </p>
 
-          <div className="bg-gray-50 rounded-2xl p-6 text-left mb-8 border border-gray-100">
-            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <div className="bg-gray-50 rounded-md p-6 text-left mb-8 border border-gray-100">
+            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 flex items-center gap-2">
               <span className="w-1.5 h-4 bg-red-500 rounded-full" />
               {t("reasonTitle")}
             </h2>
@@ -54,7 +54,7 @@ export default async function BannedPage({
 
           <Link
             href={`/`}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-md font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
           >
             <Home className="w-5 h-5" />
             {t("backHome")}

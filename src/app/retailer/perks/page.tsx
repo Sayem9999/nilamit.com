@@ -45,7 +45,7 @@ export default function RetailerPerksPage() {
                 <Gavel className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3 font-heading">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3 font-heading">
                   Seller Tiers & Perks
                 </h1>
                 <p className="text-slate-500 text-sm font-medium mt-1">
@@ -64,9 +64,9 @@ export default function RetailerPerksPage() {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-slate-50 border border-slate-150 rounded-2xl p-6">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Current Tier</p>
-              <p className="text-xl font-black text-slate-900 flex items-center gap-1.5 mt-1 font-heading">
+            <div className="bg-slate-50 border border-slate-150 rounded-md p-6">
+              <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Current Tier</p>
+              <p className="text-xl font-bold text-slate-900 flex items-center gap-1.5 mt-1 font-heading">
                 {currentTier}
               </p>
               <p className="text-[10px] text-slate-500 mt-2 font-medium leading-relaxed">
@@ -78,9 +78,9 @@ export default function RetailerPerksPage() {
               </p>
             </div>
 
-            <div className="bg-slate-50 border border-slate-150 rounded-2xl p-6">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Total Sales Count</p>
-              <p className="text-2xl font-black text-slate-900 mt-1 font-heading">
+            <div className="bg-slate-50 border border-slate-150 rounded-md p-6">
+              <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Total Sales Count</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1 font-heading">
                 {salesCount} <span className="text-xs text-slate-500 font-bold">Ended Auctions</span>
               </p>
               <div className="w-full bg-slate-200/80 h-2 rounded-full mt-3 overflow-hidden">
@@ -94,9 +94,9 @@ export default function RetailerPerksPage() {
               </p>
             </div>
 
-            <div className="bg-slate-50 border border-slate-150 rounded-2xl p-6">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Feedback Rating</p>
-              <p className="text-2xl font-black text-slate-900 mt-1 flex items-baseline gap-1 font-heading">
+            <div className="bg-slate-50 border border-slate-150 rounded-md p-6">
+              <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Feedback Rating</p>
+              <p className="text-2xl font-bold text-slate-900 mt-1 flex items-baseline gap-1 font-heading">
                 {rating.toFixed(1)} <span className="text-xs text-amber-500">★</span>
               </p>
               <div className="w-full bg-slate-200/80 h-2 rounded-full mt-3 overflow-hidden">
@@ -121,7 +121,7 @@ export default function RetailerPerksPage() {
 
           <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50/50">
+              <tr className="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-slate-50/50">
                 <th className="py-4 px-3">Feature / Privilege</th>
                 <th className="py-4 text-center">Standard Trader</th>
                 <th className="py-4 text-center">Pro Retailer</th>
@@ -148,7 +148,7 @@ export default function RetailerPerksPage() {
                   Commission Rate
                 </td>
                 <td className="py-4 text-center text-blue-600 font-bold">0% (Promo active)</td>
-                <td className="py-4 text-center text-indigo-600 font-black">0% (Promo active)</td>
+                <td className="py-4 text-center text-indigo-600 font-bold">0% (Promo active)</td>
               </tr>
               <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
                 <td className="py-4 px-3 font-bold text-slate-900">Dynamic Storefront Biography</td>
@@ -180,7 +180,7 @@ export default function RetailerPerksPage() {
             </div>
             <Link 
               href="/retailer/settings"
-              className="px-6 py-3 bg-indigo-650 hover:bg-indigo-750 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md shadow-indigo-650/10 hover:shadow-lg transition-all text-center shrink-0"
+              className="px-6 py-3 bg-indigo-650 hover:bg-indigo-750 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-indigo-650/10 hover:shadow-lg transition-all text-center shrink-0"
             >
               Go to Tier Settings
             </Link>

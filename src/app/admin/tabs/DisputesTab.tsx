@@ -112,7 +112,7 @@ export function DisputesTab() {
           <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" />
         </div>
       ) : disputes.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+        <div className="text-center py-12 bg-gray-50 rounded-md border border-dashed border-gray-200">
           <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <h3 className="text-lg font-medium text-gray-900">No Active Disputes</h3>
           <p className="text-gray-500">There are currently no pending disputes.</p>
@@ -120,7 +120,7 @@ export function DisputesTab() {
       ) : (
         <div className="space-y-4">
           {disputes.map((tx) => (
-            <div key={tx.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div key={tx.id} className="bg-white p-6 rounded-md border border-gray-100 shadow-sm">
                <div className="flex flex-col lg:flex-row justify-between gap-6">
                  <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -158,8 +158,8 @@ export function DisputesTab() {
 
                  <div className="lg:w-64 space-y-3 flex flex-col justify-end">
                     <div className="text-right mb-4">
-                       <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-1">Escrowed Funds</p>
-                       <p className="text-2xl font-black text-emerald-600 font-heading">৳{tx.amount}</p>
+                       <p className="text-xs text-gray-500 uppercase font-bold tracking-wide mb-1">Escrowed Funds</p>
+                       <p className="text-2xl font-bold text-emerald-600 font-heading">৳{tx.amount}</p>
                     </div>
 
                     <button
@@ -204,7 +204,7 @@ export function DisputesTab() {
 
       {logModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-md w-full max-w-2xl max-h-[80vh] flex flex-col shadow-md overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <div>
                 <h3 className="font-bold text-gray-900">Coordination Log</h3>
@@ -225,9 +225,9 @@ export function DisputesTab() {
                 </div>
               ) : (
                 activeLog.map((msg: { id: string, content: string, senderId: string, isSystemMessage: boolean, createdAt: Date, imageUrl?: string | null }) => (
-                  <div key={msg.id} className={`flex flex-col max-w-[80%] ${msg.isSystemMessage ? 'mx-auto text-center' : 'bg-white border border-gray-100 p-3 rounded-2xl shadow-sm'}`}>
+                  <div key={msg.id} className={`flex flex-col max-w-[80%] ${msg.isSystemMessage ? 'mx-auto text-center' : 'bg-white border border-gray-100 p-3 rounded-md shadow-sm'}`}>
                     {msg.isSystemMessage ? (
-                      <span className="px-3 py-1 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-widest mx-auto">
+                      <span className="px-3 py-1 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-full uppercase tracking-wide mx-auto">
                         {msg.content}
                       </span>
                     ) : (

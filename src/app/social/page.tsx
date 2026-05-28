@@ -42,7 +42,7 @@ export default async function SocialDashboardPage() {
               <h1 className="text-2xl font-heading font-bold text-gray-900 mb-1">
                 {reputation.name}
               </h1>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-6">
                 Active Trader
               </p>
 
@@ -56,7 +56,7 @@ export default async function SocialDashboardPage() {
               </div>
 
               <div className="mt-10 grid grid-cols-1 gap-4">
-                <div className="p-4 bg-gray-50 rounded-3xl">
+                <div className="p-4 bg-gray-50 rounded-md">
                   <p className="text-xs text-gray-400 font-bold uppercase mb-1">
                     Win Streak
                   </p>
@@ -64,7 +64,7 @@ export default async function SocialDashboardPage() {
                 </div>
               </div>
 
-              <button className="w-full mt-8 py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2">
+              <button className="w-full mt-8 py-4 bg-gray-900 text-white rounded-md font-bold hover:bg-gray-800 transition-all flex items-center justify-center gap-2">
                 <Trophy className="w-4 h-4 text-amber-400" /> Hall of Fame
               </button>
             </div>

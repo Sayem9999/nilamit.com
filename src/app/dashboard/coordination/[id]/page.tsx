@@ -144,7 +144,7 @@ export default async function CoordinationPage({
               recipientImage={recipient?.image || null}
             />
             
-            <div className="mt-4 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3 text-amber-800">
+            <div className="mt-4 p-4 bg-amber-50 rounded-md border border-amber-100 flex gap-3 text-amber-800">
               <Info className="w-5 h-5 flex-shrink-0" />
               <div className="text-xs leading-relaxed">
                 <span className="font-bold">{t("securityNote")}</span> {t("securityDesc")}

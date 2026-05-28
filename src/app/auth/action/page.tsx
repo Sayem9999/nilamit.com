@@ -87,7 +87,7 @@ function AuthActionHandler() {
     ? t('verifyEmailMissingParams')
     : errorMsg;
 
-  const CARD_INNER = "max-w-md w-full bg-white rounded-[2.5rem] p-12 text-center shadow-2xl border border-gray-100 relative overflow-hidden";
+  const CARD_INNER = "max-w-md w-full bg-white rounded-[2.5rem] p-12 text-center shadow-md border border-gray-100 relative overflow-hidden";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 relative overflow-hidden">
@@ -107,7 +107,7 @@ function AuthActionHandler() {
             <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center shadow-md shadow-primary-500/20 transform hover:scale-105 transition-all duration-300" aria-hidden="true">
               <Gavel className="w-6 h-6 text-white" />
             </div>
-            <span className="font-black text-2xl text-gray-900 tracking-tight">
+            <span className="font-bold text-2xl text-gray-900 tracking-tight">
               nilam<span className="text-primary-600">it</span>
             </span>
           </Link>
@@ -122,10 +122,10 @@ function AuthActionHandler() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="space-y-6 py-6"
             >
-              <div className="w-20 h-20 bg-primary-50 rounded-3xl flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+              <div className="w-20 h-20 bg-primary-50 rounded-md flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                 <Loader2 className="w-10 h-10 text-primary-600 animate-spin" />
               </div>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Verifying Link</h1>
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Verifying Link</h1>
               <p className="text-gray-500 font-medium leading-relaxed">
                 Applying cryptographic validation code to secure your connection...
               </p>
@@ -140,17 +140,17 @@ function AuthActionHandler() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="space-y-6"
             >
-              <div className="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center mx-auto mb-4 animate-bounce duration-1000" aria-hidden="true">
+              <div className="w-20 h-20 bg-green-50 rounded-md flex items-center justify-center mx-auto mb-4 animate-bounce duration-1000" aria-hidden="true">
                 <CheckCircle2 className="w-10 h-10 text-green-500" />
               </div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                 {t('emailVerifiedSuccess')}
               </h1>
               <p className="text-gray-500 font-medium leading-relaxed">
                 {t('verifyEmailSuccessBody')}
               </p>
               <Link href="/dashboard" className="block pt-4">
-                <button className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-lg shadow-lg shadow-indigo-600/10 transition-all flex items-center justify-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">
+                <button className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-bold text-lg shadow-lg shadow-indigo-600/10 transition-all flex items-center justify-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">
                   {t('goToDashboard')}
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
@@ -166,10 +166,10 @@ function AuthActionHandler() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="space-y-6"
             >
-              <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+              <div className="w-20 h-20 bg-red-50 rounded-md flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                 <XCircle className="w-10 h-10 text-red-500" />
               </div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                 {t('emailVerifiedError')}
               </h1>
               <p className="text-gray-500 font-medium leading-relaxed">
@@ -177,12 +177,12 @@ function AuthActionHandler() {
               </p>
               <div className="flex gap-4 pt-4">
                 <Link href="/profile" className="flex-1">
-                  <button className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-2xl font-bold text-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400">
+                  <button className="w-full h-14 bg-gray-900 hover:bg-black text-white rounded-md font-bold text-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400">
                     {t('tryAgain')}
                   </button>
                 </Link>
                 <Link href="/" className="flex-1">
-                  <button className="w-full h-14 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-2xl font-bold text-md border border-gray-100 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300">
+                  <button className="w-full h-14 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-md font-bold text-md border border-gray-100 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300">
                     Home
                   </button>
                 </Link>

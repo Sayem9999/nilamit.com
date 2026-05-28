@@ -74,11 +74,11 @@ export default function ForgotPasswordPage() {
   if (success) {
     return (
       <main className="min-h-[80vh] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] border border-blue-100 shadow-2xl text-center animate-in zoom-in-95 duration-300">
+        <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] border border-blue-100 shadow-md text-center animate-in zoom-in-95 duration-300">
           <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6" aria-hidden="true">
             <ShieldCheck className="w-10 h-10 text-blue-500" />
           </div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">
             {t("resetPasswordTitle")}
           </h1>
           <p className="text-gray-500 mb-8 font-medium">
@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
           </p>
           <Link
             href="/login"
-            className="block w-full bg-gray-900 text-white font-bold py-4 rounded-2xl hover:bg-black shadow-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+            className="block w-full bg-gray-900 text-white font-bold py-4 rounded-md hover:bg-black shadow-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
           >
             {t("goToLogin")}
           </Link>
@@ -119,7 +119,7 @@ export default function ForgotPasswordPage() {
               nilam<span className="text-primary-600">it</span>
             </span>
           </Link>
-          <h1 className="font-black text-3xl text-gray-900 tracking-tight">
+          <h1 className="font-bold text-3xl text-gray-900 tracking-tight">
             {t("forgotPasswordTitle")}
           </h1>
           <p className="text-gray-500 mt-1 font-medium">{t("forgotPasswordDesc")}</p>
@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
                       placeholder="email@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-4 py-5 font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-md pl-14 pr-4 py-5 font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
                     />
                   </div>
 
@@ -178,7 +178,7 @@ export default function ForgotPasswordPage() {
                     onClick={handleRequestOTP}
                     disabled={isPending || !email}
                     aria-label={isPending ? "Sending reset code" : t("sendResetBtn")}
-                    className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                    className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-md shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                   >
                     {isPending ? (
                       <Loader2 className="w-6 h-6 animate-spin motion-reduce:animate-none" aria-hidden="true" />
@@ -195,7 +195,7 @@ export default function ForgotPasswordPage() {
             {step === "otp" && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-300 motion-reduce:animate-none">
                 <div className="mb-6 text-center">
-                  <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                  <div className="w-16 h-16 bg-primary-50 rounded-md flex items-center justify-center mx-auto mb-4" aria-hidden="true">
                     <ShieldCheck className="w-8 h-8 text-primary-600" />
                   </div>
                   <h2 className="text-xl font-bold text-gray-900 mb-1">{t("verifyCodeTitle")}</h2>
@@ -216,7 +216,7 @@ export default function ForgotPasswordPage() {
                     aria-label="6-digit verification code"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-4 py-6 text-5xl font-black tracking-[0.5em] text-center focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-4 py-6 text-5xl font-bold tracking-[0.5em] text-center focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 focus:bg-white outline-none transition-all"
                   />
 
                   {errorBlock}
@@ -225,7 +225,7 @@ export default function ForgotPasswordPage() {
                     type="button"
                     onClick={handleVerifyOTP}
                     disabled={otp.length !== 6}
-                    className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-2xl shadow-lg transition-all uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                    className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-100 disabled:text-gray-400 text-white font-bold rounded-md shadow-lg transition-all uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                   >
                     {t("verifyBtn")}
                   </button>
@@ -246,7 +246,7 @@ export default function ForgotPasswordPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="forgot-password-new" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">
+                    <label htmlFor="forgot-password-new" className="text-xs font-bold text-gray-400 uppercase tracking-wide pl-1 mb-1 block">
                       {t("passwordLabel")}
                     </label>
                     <input
@@ -258,12 +258,12 @@ export default function ForgotPasswordPage() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-md px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="forgot-password-confirm" className="text-xs font-bold text-gray-400 uppercase tracking-widest pl-1 mb-1 block">
+                    <label htmlFor="forgot-password-confirm" className="text-xs font-bold text-gray-400 uppercase tracking-wide pl-1 mb-1 block">
                       {t("confirmPasswordLabel")}
                     </label>
                     <input
@@ -275,7 +275,7 @@ export default function ForgotPasswordPage() {
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-100 rounded-md px-4 py-4 text-sm font-medium focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -286,7 +286,7 @@ export default function ForgotPasswordPage() {
                   type="submit"
                   disabled={isPending}
                   aria-label={isPending ? "Updating password" : t("resetPasswordTitle")}
-                  className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-200 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-widest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                  className="w-full h-14 bg-gray-900 hover:bg-black disabled:bg-gray-200 text-white font-bold rounded-md shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                 >
                   {isPending ? (
                     <Loader2 className="w-6 h-6 animate-spin motion-reduce:animate-none" aria-hidden="true" />
@@ -300,7 +300,7 @@ export default function ForgotPasswordPage() {
             <div className="mt-8 text-center pt-8 border-t border-gray-100">
               <Link
                 href="/login"
-                className="text-sm text-gray-400 hover:text-gray-900 font-bold uppercase tracking-widest transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+                className="text-sm text-gray-400 hover:text-gray-900 font-bold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
               >
                 {t("signInBtn")}
               </Link>

@@ -28,7 +28,7 @@ export function EndingSoonSection({ endingSoon }: EndingSoonSectionProps) {
             <div>
               <h2
                 id="ending-soon-heading"
-                className="font-heading font-black text-xl sm:text-2xl text-gray-900 tracking-tight leading-none"
+                className="font-heading font-bold text-xl sm:text-2xl text-gray-900 tracking-tight leading-none"
               >
                 {t("endingSoon")}
               </h2>

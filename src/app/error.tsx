@@ -50,7 +50,7 @@ export default function Error({
       </div>
       
       {error.digest && (
-        <p className="mt-8 text-[10px] font-mono text-gray-300 uppercase tracking-widest">
+        <p className="mt-8 text-[10px] font-mono text-gray-300 uppercase tracking-wide">
           Error ID: {error.digest}
         </p>
       )}

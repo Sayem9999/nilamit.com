@@ -115,12 +115,12 @@ export function HomeContent({
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between gap-4 mb-6 sm:mb-8">
               <div>
-                <div className="inline-flex items-center gap-1.5 text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest mb-2">
+                <div className="inline-flex items-center gap-1.5 text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide mb-2">
                   <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> {t("featuredTag")}
                 </div>
                 <h2
                   id="featured-heading"
-                  className="font-heading font-black text-2xl sm:text-3xl text-gray-900 tracking-tight"
+                  className="font-heading font-bold text-2xl sm:text-3xl text-gray-900 tracking-tight"
                 >
                   {t("featuredTitle")}
                 </h2>

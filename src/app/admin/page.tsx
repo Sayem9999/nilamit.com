@@ -80,7 +80,7 @@ async function OverviewTab({
       {/* Recent Activity Section */}
       <section
         aria-labelledby="recent-users-heading"
-        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+        className="bg-white rounded-md border border-gray-100 p-6 shadow-sm"
       >
         <h2
           id="recent-users-heading"
@@ -150,7 +150,7 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+    <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm flex items-center gap-4">
       <div
         className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}
       >

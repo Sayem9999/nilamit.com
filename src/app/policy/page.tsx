@@ -11,7 +11,7 @@ export default function PolicyPage() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary-50 rounded-full text-primary-600 text-xs font-bold mb-4">
             <ShieldCheck className="w-4 h-4" /> Nilamit Trust Guarantee
           </div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-4">Marketplace Policy</h1>
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-4">Marketplace Policy</h1>
           <p className="text-gray-500 font-medium">Building the most trusted peer-to-peer community in Bangladesh.</p>
         </header>
 
@@ -21,7 +21,7 @@ export default function PolicyPage() {
              <div className="absolute top-0 right-0 p-8 opacity-5">
                 <Truck className="w-32 h-32 text-gray-900" />
              </div>
-             <h2 className="text-2xl font-black text-gray-900 mb-4 flex items-center gap-3">
+             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                 <div className="p-2 bg-white rounded-xl shadow-sm">
                   <Truck className="w-6 h-6 text-indigo-600" />
                 </div>
@@ -45,7 +45,7 @@ export default function PolicyPage() {
 
           {/* Section: Escrow */}
           <section className="p-8">
-             <h2 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
+             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                 <div className="p-2 bg-gray-100 rounded-xl">
                   <ShieldCheck className="w-6 h-6 text-emerald-600" />
                 </div>
@@ -69,18 +69,18 @@ export default function PolicyPage() {
 
           {/* Section: Prohibited */}
           <section className="p-8 border-2 border-red-50 bg-red-50/10 rounded-[2.5rem]">
-             <h2 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
+             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                 <div className="p-2 bg-red-100 rounded-xl">
                   <AlertOctagon className="w-6 h-6 text-red-600" />
                 </div>
                 Zero Tolerance
              </h2>
              <div className="space-y-4">
-                <div className="bg-white p-4 rounded-2xl border border-red-100">
+                <div className="bg-white p-4 rounded-md border border-red-100">
                    <h4 className="text-sm font-bold text-red-700 mb-1">Shill Bidding</h4>
                    <p className="text-xs text-gray-500">Using fake accounts to pump prices results in an immediate permanent ban for all involved IDs.</p>
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-red-100">
+                <div className="bg-white p-4 rounded-md border border-red-100">
                    <h4 className="text-sm font-bold text-red-700 mb-1">Off-Platform Deals</h4>
                    <p className="text-xs text-gray-500">Dealing outside Nilamit violates our safety protocols and removes your escrow protection.</p>
                 </div>
@@ -89,12 +89,12 @@ export default function PolicyPage() {
         </div>
 
         <footer className="mt-20 pt-12 border-t border-gray-100 text-center">
-          <p className="text-xs text-gray-400 font-medium uppercase tracking-widest mb-4">Ready to start trading?</p>
+          <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-4">Ready to start trading?</p>
           <div className="flex justify-center gap-4">
-             <Link href="/" className="px-8 py-3 bg-gray-900 text-white rounded-2xl font-bold text-sm hover:bg-black transition-all">
+             <Link href="/" className="px-8 py-3 bg-gray-900 text-white rounded-md font-bold text-sm hover:bg-black transition-all">
                 Browse Auctions
              </Link>
-             <Link href="/auctions/create" className="px-8 py-3 bg-white border border-gray-200 text-gray-900 rounded-2xl font-bold text-sm hover:bg-gray-50 transition-all">
+             <Link href="/auctions/create" className="px-8 py-3 bg-white border border-gray-200 text-gray-900 rounded-md font-bold text-sm hover:bg-gray-50 transition-all">
                 Start Selling
              </Link>
           </div>

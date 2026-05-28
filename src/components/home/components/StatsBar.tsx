@@ -34,13 +34,13 @@ export function StatsBar({ totalAuctions, totalUsers, totalBids, verifiedSellers
                 transition={{ delay: i * 0.1, duration: 0.5 }}
                 className="flex flex-col items-center justify-center py-8 px-4 text-center group"
               >
-                <div className={`w-12 h-12 ${stat.bg} ${stat.border} border rounded-2xl flex items-center justify-center flex-shrink-0 mb-3 group-hover:scale-110 transition-transform duration-300 shadow-sm`} aria-hidden="true">
+                <div className={`w-12 h-12 ${stat.bg} ${stat.border} border rounded-md flex items-center justify-center flex-shrink-0 mb-3 group-hover:scale-110 transition-transform duration-300 shadow-sm`} aria-hidden="true">
                   <stat.icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
-                <dd className={`text-2xl font-heading font-black leading-none ${stat.color} tracking-tight`}>
+                <dd className={`text-2xl font-heading font-bold leading-none ${stat.color} tracking-tight`}>
                   {stat.value}
                 </dd>
-                <dt className="text-[10px] text-gray-500 font-bold mt-1.5 uppercase tracking-widest">
+                <dt className="text-[10px] text-gray-500 font-bold mt-1.5 uppercase tracking-wide">
                   {stat.label}
                 </dt>
               </motion.div>
