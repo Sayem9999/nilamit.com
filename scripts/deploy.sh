@@ -23,7 +23,7 @@
 #   ✓ Updates .firebaserc with project ID
 #   ✓ Connects GitHub repo and initializes Firebase App Hosting
 #   ✓ Pushes code to trigger the first deploy
-#   ✓ Sets up all 3 Cloud Scheduler cron jobs
+#   ✓ Cron is handled by GitHub Actions (.github/workflows/cron.yml) — no Cloud Scheduler
 #   ✓ Verifies the deployment with a health check
 #
 # REQUIRES ONE BROWSER INTERACTION:
@@ -511,50 +511,17 @@ echo ""
 echo -e "  ${CYAN}Build progress:${NC}"
 echo -e "  https://console.firebase.google.com/project/${PROJECT_ID}/apphosting"
 echo ""
-echo -e "  Waiting 90 seconds for the build to start before setting up cron..."
-sleep 90
-
 # ══════════════════════════════════════════════════════════════════════
-# 15. SET UP CLOUD SCHEDULER
+# 15. CRON — handled by GitHub Actions, NOT Cloud Scheduler
 # ══════════════════════════════════════════════════════════════════════
 
-step "Setting up Cloud Scheduler cron jobs"
-
-SCHEDULER_REGION="$REGION"
-
-create_or_update_cron() {
-  local JOB_NAME="$1"
-  local SCHEDULE="$2"
-  local ENDPOINT="$3"
-  local DESCRIPTION="$4"
-  local URL="$APP_URL$ENDPOINT"
-  local AUTH_HEADER="Authorization: Bearer $CRON_SECRET_VALUE"
-
-  echo "  → $JOB_NAME ($SCHEDULE)"
-
-  if gcloud scheduler jobs describe "$JOB_NAME" \
-      --project="$PROJECT_ID" --location="$SCHEDULER_REGION" &>/dev/null; then
-    gcloud scheduler jobs update http "$JOB_NAME" \
-      --project="$PROJECT_ID" --location="$SCHEDULER_REGION" \
-      --schedule="$SCHEDULE" --uri="$URL" --http-method=POST \
-      --headers="$AUTH_HEADER" --time-zone="Asia/Dhaka" \
-      --attempt-deadline=60s --description="$DESCRIPTION" --quiet
-    echo "    Updated"
-  else
-    gcloud scheduler jobs create http "$JOB_NAME" \
-      --project="$PROJECT_ID" --location="$SCHEDULER_REGION" \
-      --schedule="$SCHEDULE" --uri="$URL" --http-method=POST \
-      --headers="$AUTH_HEADER" --time-zone="Asia/Dhaka" \
-      --attempt-deadline=60s --description="$DESCRIPTION" --quiet
-    echo "    Created"
-  fi
-}
-
-create_or_update_cron "nilamit-close-auctions" "* * * * *"    "/api/cron/close-auctions" "Close expired auctions"
-create_or_update_cron "nilamit-closing-soon"   "*/15 * * * *" "/api/cron/closing-soon"   "Ending-soon notifications"
-create_or_update_cron "nilamit-process-alerts" "*/2 * * * *"  "/api/cron/process-alerts" "Price alert processing"
-
-ok "3 cron jobs configured (close-auctions, closing-soon, process-alerts)"
+step "Cron jobs"
+echo -e "  Cron runs via GitHub Actions (.github/workflows/cron.yml) — it POSTs the"
+echo -e "  /api/cron/* and /api/tasks/* endpoints with Bearer \$CRON_SECRET on schedule."
+echo -e "  No Cloud Scheduler jobs are created here: a second scheduler would"
+echo -e "  DOUBLE-FIRE every job (the bug we removed in 2026-05). Do NOT re-add"
+echo -e "  'gcloud scheduler jobs create' / setup-cloud-scheduler.sh."
+ok "Cron is managed by GitHub Actions — nothing to provision"
 
 # ══════════════════════════════════════════════════════════════════════
 # 16. WAIT FOR DEPLOY AND VERIFY
@@ -598,7 +565,7 @@ echo -e "\n${BOLD}${GREEN}  Deployment Complete!${NC}\n"
 echo -e "  ${BOLD}Live URL:${NC}         $APP_URL"
 echo -e "  ${BOLD}Health check:${NC}     ${APP_URL}/api/health"
 echo -e "  ${BOLD}Firebase Console:${NC} https://console.firebase.google.com/project/${PROJECT_ID}/apphosting"
-echo -e "  ${BOLD}Cloud Scheduler:${NC}  https://console.cloud.google.com/cloudscheduler?project=${PROJECT_ID}"
+echo -e "  ${BOLD}Cron (GitHub Actions):${NC}  https://github.com/Sayem9999/nilamit.com/actions"
 echo -e "  ${BOLD}Logs:${NC}             $LOG_FILE"
 echo ""
 echo -e "  ${BOLD}${YELLOW}Next steps:${NC}"
