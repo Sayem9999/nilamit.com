@@ -370,6 +370,7 @@ export default async function AuctionDetailPage({ params }: Props) {
               isOwner={session?.user?.id === auction.sellerId}
               isFeatured={auction.isFeatured}
               featuredUntil={auction.featuredUntil ?? null}
+              enabled={systemConfig?.featuredListingsEnabled ?? false}
             />
           </div>
 

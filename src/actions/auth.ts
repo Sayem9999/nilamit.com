@@ -11,6 +11,7 @@ import {
 } from "@/lib/schemas";
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from "@/lib/errors";
 import { log } from "@/lib/logger";
+import { getSystemConfig } from "@/actions/admin-content";
 
 import { headers } from "next/headers";
 import { authLimiter } from "@/lib/ratelimit";
@@ -35,6 +36,12 @@ export async function registerUser(data: unknown): Promise<ServiceResponse<{ mes
   const { name, email, password, isRetailer } = parsed.data;
 
   try {
+    // Feature kill-switch — new sign-ups can be paused platform-wide.
+    const cfgRes = await getSystemConfig();
+    if (cfgRes.success && cfgRes.data?.registrationsEnabled === false) {
+      return errorResponse(ErrorType.FORBIDDEN, 'New registrations are temporarily paused. Please check back soon.');
+    }
+
     // Check if user already exists
     const existing = await db.collection("users").where("email", "==", email).limit(1).get();
     if (!existing.empty) {

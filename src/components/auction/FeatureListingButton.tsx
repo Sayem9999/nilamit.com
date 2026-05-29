@@ -12,6 +12,9 @@ interface Props {
   /** If already featured, render the badge instead of the CTA. */
   isFeatured?: boolean;
   featuredUntil?: Date | null;
+  /** Admin kill-switch (systemConfig.featuredListingsEnabled). When false the
+   *  purchase CTA is hidden (an already-featured pill still shows). */
+  enabled?: boolean;
 }
 
 const DURATIONS = [
@@ -35,6 +38,7 @@ export function FeatureListingButton({
   isOwner,
   isFeatured,
   featuredUntil,
+  enabled = true,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -51,6 +55,10 @@ export function FeatureListingButton({
       </div>
     );
   }
+
+  // Feature kill-switch is off platform-wide — hide the purchase CTA entirely
+  // (the server action also refuses, but don't show a button that can't work).
+  if (!enabled) return null;
 
   const handlePurchase = (days: number) => {
     startTransition(async () => {

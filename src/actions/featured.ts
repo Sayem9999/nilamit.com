@@ -61,6 +61,14 @@ export async function quoteFeaturedPurchase(
   const { auctionId, days } = parsed.data;
 
   try {
+    // Feature kill-switch — featured purchases are refused when the feature is
+    // disabled platform-wide (default OFF until the purchase flow is complete).
+    const cfgSnap = await db.collection('systemConfig').doc('default').get();
+    const cfg = cfgSnap.data() as { featurePricingBdt?: Record<string, number>; featuredListingsEnabled?: boolean } | undefined;
+    if (cfg?.featuredListingsEnabled !== true) {
+      return errorResponse(ErrorType.FORBIDDEN, 'Featured listings are currently disabled.');
+    }
+
     const aSnap = await db.collection('auctions').doc(auctionId).get();
     if (!aSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Auction not found');
     const auction = aSnap.data() as { sellerId: string; status: string; isFeatured?: boolean };
@@ -74,9 +82,8 @@ export async function quoteFeaturedPurchase(
       return errorResponse(ErrorType.VALIDATION, 'Auction is already featured');
     }
 
-    // Admin-controlled override; fall back to defaults.
-    const cfgSnap = await db.collection('systemConfig').doc('default').get();
-    const cfg = cfgSnap.data() as { featurePricingBdt?: Record<string, number> } | undefined;
+    // Admin-controlled pricing override; fall back to defaults. (cfg already
+    // loaded above for the kill-switch check.)
     const priceBdt = cfg?.featurePricingBdt?.[String(days)] ?? DEFAULT_PRICING_BDT[days];
 
     const tranId = `feat-${auctionId}-${Date.now()}`;
