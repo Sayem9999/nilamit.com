@@ -4,10 +4,9 @@ import { Providers } from "@/components/providers/Providers";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { MerchantSubNav } from "@/components/layout/MerchantSubNav";
 import { env, validateEnv } from "@/lib/env";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations } from "next-intl/server";
+import { getMessages, getTranslations, getLocale } from "next-intl/server";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import { headers } from "next/headers";
@@ -49,11 +48,13 @@ export const viewport: Viewport = {
   themeColor: "#6366f1",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Do NOT set maximumScale/userScalable:false — disabling pinch-zoom is a
+  // WCAG 1.4.4 accessibility failure. Users must be able to zoom.
 };
 
-const DOMAIN = "https://nilamit.com";
+// Canonical host is www (middleware 301s the apex → www). Metadata/OG/JSON-LD
+// must use the same host we redirect TO, not the one we redirect away from.
+const DOMAIN = "https://www.nilamit.com";
 
 function getMetadataBase() {
   const urlString = env.NEXT_PUBLIC_APP_URL || DOMAIN;
@@ -121,7 +122,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = "en";
+  // Cookie-driven locale (en | bn) — must match the messages so Bengali users
+  // get Bengali number/date formatting and a correct <html lang>. Previously
+  // this was hardcoded to "en", so bn rendered with en locale semantics.
+  const locale = await getLocale();
   const messages = await getMessages();
   const nonce = (await headers()).get('x-nonce') || undefined;
 
@@ -187,7 +191,6 @@ export default async function RootLayout({
               }}
             />
             <Navbar />
-            <MerchantSubNav />
             <main className="min-h-screen bg-gray-50/50">{children}</main>
             <Footer />
           </Providers>

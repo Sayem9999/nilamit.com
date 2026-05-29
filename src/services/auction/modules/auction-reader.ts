@@ -108,9 +108,25 @@ export class AuctionReader {
       if (filters.location && filters.location !== 'all') query = query.where('location', '==', filters.location);
 
       const searchKeyword = filters.search?.trim();
+
+      // Resolve the sort field once — shared by the search and standard paths so
+      // the search base scan is deterministically ordered using the SAME
+      // composite indexes the standard path already relies on.
+      const ALLOWED_SORT_FIELDS = ['currentPrice', 'endTime', 'bidCount', 'createdAt', 'bids'];
+      const orderField = (sortBy && ALLOWED_SORT_FIELDS.includes(sortBy))
+        ? (sortBy === 'bids' ? 'bidCount' : sortBy)
+        : 'endTime';
+
       if (searchKeyword) {
-        // Hybrid Search Resolver: Fetch up to 1000 items matching other filters
-        const baseAuctionsSnap = await query.limit(1000).get();
+        // Firestore has no native substring search. We scan the most-relevant
+        // slice — ordered by the requested sort (deterministic, index-backed,
+        // no longer an arbitrary 1000) — then substring-match in memory.
+        // NOTE: a denormalized `searchTokens[]` + array-contains query would
+        // remove this scan cost at large catalog sizes; deferred because it
+        // needs a backfill of existing listings and changes match semantics
+        // (whole-token vs substring).
+        const SEARCH_SCAN_CAP = 1000;
+        const baseAuctionsSnap = await query.orderBy(orderField, sortOrder).limit(SEARCH_SCAN_CAP).get();
         const baseAuctions = snapDocs<Auction>(baseAuctionsSnap);
 
         const searchLower = searchKeyword.toLowerCase();
@@ -119,12 +135,6 @@ export class AuctionReader {
           const descMatch = a.description?.toLowerCase().includes(searchLower);
           return titleMatch || descMatch;
         });
-
-        // In-memory sorting
-        const ALLOWED_SORT_FIELDS = ['currentPrice', 'endTime', 'bidCount', 'createdAt', 'bids'];
-        const orderField = (sortBy && ALLOWED_SORT_FIELDS.includes(sortBy)) 
-          ? (sortBy === 'bids' ? 'bidCount' : sortBy) 
-          : 'endTime';
 
         filteredDocs.sort((a, b) => {
           let valA = a[orderField as keyof Auction];
@@ -190,12 +200,8 @@ export class AuctionReader {
         });
       }
 
-      // Standard Firestore-level pagination when no search filter is specified
-      const ALLOWED_SORT_FIELDS = ['currentPrice', 'endTime', 'bidCount', 'createdAt', 'bids'];
-      const orderField = (sortBy && ALLOWED_SORT_FIELDS.includes(sortBy)) 
-        ? (sortBy === 'bids' ? 'bidCount' : sortBy) 
-        : 'endTime';
-      
+      // Standard Firestore-level pagination when no search filter is specified.
+      // (orderField/ALLOWED_SORT_FIELDS resolved once above.)
       let auctionsQuery = query.orderBy(orderField, sortOrder);
 
       if (lastId) {
@@ -284,11 +290,17 @@ export class AuctionReader {
         sellerMap = new Map(sellerSnaps.map(s => [s.id, toSellerPublic(s.id, s.data())!]));
       }
 
-      const endingSoon = endingDocs.map((a) => ({
-        ...a,
-        seller: sellerMap.get(a.sellerId)!,
-        endTime: (a.endTime as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.endTime as unknown as Date),
-      })) as AuctionWithSeller[];
+      const endingSoon = endingDocs.map((a) => {
+        // Strip proxy bid internals — these must never reach public clients
+        // (revealing a bidder's maximum proxy bid breaks auction fairness).
+        const { proxyMaxBid: _pmb, proxyBidderId: _pbi, ...safe } = a as unknown as Record<string, unknown>;
+        void _pmb; void _pbi;
+        return {
+          ...safe,
+          seller: sellerMap.get(a.sellerId)!,
+          endTime: (a.endTime as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.endTime as unknown as Date),
+        };
+      }) as AuctionWithSeller[];
 
       const bidDocs = latestBidsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Bid));
       const bidderIds = [...new Set(bidDocs.map((b) => b.bidderId))];
@@ -313,7 +325,9 @@ export class AuctionReader {
           const auctionEntry = auctionsMap.get(b.auctionId) ?? { id: b.auctionId, title: 'Unknown' };
           return {
             id: b.id,
-            amount: b.amount,
+            // publicAmount is the displayed price; b.amount is the bidder's
+            // private proxy max and must never be surfaced publicly.
+            amount: b.publicAmount ?? b.amount,
             createdAt,
             bidder: biddersMap.get(b.bidderId) ?? { name: null },
             auction: { id: auctionEntry.id, title: auctionEntry.title },

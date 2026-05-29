@@ -334,7 +334,7 @@ export function SystemTab() {
                     <div className="space-y-1 pr-4">
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                        <span className="font-semibold text-gray-900 text-sm">Require Secured Escrow</span>
+                        <span className="font-semibold text-gray-900 text-sm">Require Secured Advance Payment</span>
                       </div>
                       <p className="text-xs text-gray-500 leading-relaxed">
                         Route sales through secure treasury holds. When disabled, won auctions coordinate instantly with funds released.
@@ -360,7 +360,7 @@ export function SystemTab() {
                       <div className="space-y-1 pr-4">
                         <div className="flex items-center gap-2">
                           <ShieldCheck className="w-4 h-4 text-primary-600" />
-                          <span className="font-semibold text-gray-900 text-sm">COD-Escrow Hybrid Model (Option A)</span>
+                          <span className="font-semibold text-gray-900 text-sm">COD-Advance Payment Hybrid Model (Option A)</span>
                         </div>
                         <p className="text-xs text-gray-500 leading-relaxed">
                           Enable buyers to pay only a partial advance deposit (Delivery Charge + commitment deposit) and the rest in Cash on Delivery at their doorstep.
@@ -584,7 +584,7 @@ export function SystemTab() {
           <div className="flex-1">
             <h3 className="font-heading font-bold text-lg text-gray-900">Treasury Configuration</h3>
             <p className="text-sm text-gray-500 mt-1">
-              Set the official MFS numbers used for receiving escrow deposits.
+              Set the official MFS numbers used for receiving advance-payment deposits.
             </p>
 
             {isLoadingConfig ? (

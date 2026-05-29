@@ -59,7 +59,7 @@ export default function DisputeModal({ transactionId, isOpen, onClose }: Dispute
                   Raise Dispute
                 </Dialog.Title>
                 <Dialog.Description className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                  Escrow Protection
+                  Advance Payment Protection
                 </Dialog.Description>
               </div>
             </div>
@@ -73,7 +73,7 @@ export default function DisputeModal({ transactionId, isOpen, onClose }: Dispute
           <div className="space-y-6">
             <div className="p-4 bg-amber-50 border border-amber-100 rounded-md">
               <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
-                Raising a dispute will freeze the escrow funds. Both parties will be contacted for evidence. False disputes may result in account suspension.
+                Raising a dispute will freeze the advance payment funds. Both parties will be contacted for evidence. False disputes may result in account suspension.
               </p>
             </div>
 

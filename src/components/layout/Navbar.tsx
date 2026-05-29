@@ -43,6 +43,32 @@ export const Navbar = memo(function Navbar() {
   useEffect(() => {
     if (!userId) return;
     let unsub: (() => void) | null = null;
+    let latest: Record<string, unknown> = {};
+    const seenKey = `nilamit_notif_seen_${userId}`;
+
+    // Unread = notifications stamped after the user last opened the inbox.
+    // (Previously this counted every notification ever received, so the badge
+    // never cleared and grew unbounded.)
+    const recompute = () => {
+      let seen = 0;
+      try {
+        seen = Number(localStorage.getItem(seenKey) || 0);
+      } catch {
+        seen = 0;
+      }
+      const entries = latest && typeof latest === "object" ? Object.values(latest) : [];
+      const count = entries.filter((v) => {
+        if (!v || typeof v !== "object") return false;
+        const rec = v as Record<string, unknown>;
+        const ts = Number(rec.timestamp ?? rec._ts ?? 0);
+        return ts > seen;
+      }).length;
+      setUnreadCount(count);
+    };
+
+    const onSeen = () => recompute();
+    window.addEventListener("nilamit:notif-seen", onSeen);
+
     void (async () => {
       try {
         await ensureFirebaseAuth();
@@ -51,8 +77,8 @@ export const Navbar = memo(function Navbar() {
         unsub = onValue(
           notifRef,
           (snapshot) => {
-            const data = snapshot.val();
-            setUnreadCount(data ? Object.keys(data).length : 0);
+            latest = (snapshot.val() as Record<string, unknown>) || {};
+            recompute();
           },
           (error) => {
             console.error("Failed to subscribe to navbar notifications:", error);
@@ -65,6 +91,7 @@ export const Navbar = memo(function Navbar() {
     })();
     return () => {
       unsub?.();
+      window.removeEventListener("nilamit:notif-seen", onSeen);
       setUnreadCount(0);
     };
   }, [userId]);

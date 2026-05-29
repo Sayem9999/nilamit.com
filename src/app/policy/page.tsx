@@ -37,7 +37,7 @@ export default function PolicyPage() {
                    </div>
                    <div>
                       <strong className="block text-gray-900 font-bold">Secure Direct Deals</strong>
-                      <span className="text-sm text-gray-500">Nilamit secures the buyer&apos;s payment in our escrow system before shipping. Once the buyer receives and verifies the item directly from the seller or courier, funds are released.</span>
+                      <span className="text-sm text-gray-500">Nilamit secures the buyer&apos;s payment as an advance payment before shipping. Once the buyer receives and verifies the item directly from the seller or courier, funds are released.</span>
                    </div>
                 </li>
              </ul>
@@ -49,7 +49,7 @@ export default function PolicyPage() {
                 <div className="p-2 bg-gray-100 rounded-xl">
                   <ShieldCheck className="w-6 h-6 text-emerald-600" />
                 </div>
-                Escrow Protection
+                Advance Payment Protection
              </h2>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
@@ -61,7 +61,7 @@ export default function PolicyPage() {
                 <div>
                    <h4 className="font-bold text-gray-900 mb-2">For Sellers</h4>
                    <p className="text-sm text-gray-500 leading-relaxed">
-                      Guarantee your sale. We only ask you to ship once the buyer&apos;s payment is fully secured in our escrow system.
+                      Guarantee your sale. We only ask you to ship once the buyer&apos;s payment is fully secured as an advance payment.
                    </p>
                 </div>
              </div>
@@ -82,7 +82,7 @@ export default function PolicyPage() {
                 </div>
                 <div className="bg-white p-4 rounded-md border border-red-100">
                    <h4 className="text-sm font-bold text-red-700 mb-1">Off-Platform Deals</h4>
-                   <p className="text-xs text-gray-500">Dealing outside Nilamit violates our safety protocols and removes your escrow protection.</p>
+                   <p className="text-xs text-gray-500">Dealing outside Nilamit violates our safety protocols and removes your advance-payment protection.</p>
                 </div>
              </div>
           </section>

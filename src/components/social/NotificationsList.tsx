@@ -57,6 +57,19 @@ export function NotificationsList() {
     return () => clearInterval(interval);
   }, []);
 
+  // Viewing the inbox marks all current notifications as "seen" so the navbar
+  // bell badge clears. We persist a high-water timestamp and notify the navbar
+  // (which recomputes unread = items newer than this) via a window event.
+  useEffect(() => {
+    if (!userId) return;
+    try {
+      localStorage.setItem(`nilamit_notif_seen_${userId}`, String(Date.now()));
+      window.dispatchEvent(new Event("nilamit:notif-seen"));
+    } catch {
+      /* localStorage unavailable (private mode) — badge just won't persist. */
+    }
+  }, [userId, notifications.length]);
+
   useEffect(() => {
     // ─── Loader lifecycle ──────────────────────────────────────────────
     // Three cases must clear the spinner:
@@ -116,7 +129,13 @@ export function NotificationsList() {
                     list.push({
                       id: key,
                       event: typeof typedVal.event === "string" ? typedVal.event : "",
-                      amount: typeof typedVal.amount === "number" ? typedVal.amount : undefined,
+                      // Writers use either `amount` (seller new-bid) or `newAmount` (outbid).
+                      amount:
+                        typeof typedVal.amount === "number"
+                          ? typedVal.amount
+                          : typeof typedVal.newAmount === "number"
+                            ? typedVal.newAmount
+                            : undefined,
                       auctionId: typeof typedVal.auctionId === "string" ? typedVal.auctionId : undefined,
                       auctionTitle: typeof typedVal.auctionTitle === "string" ? typedVal.auctionTitle : undefined,
                       message: typeof typedVal.message === "string" ? typedVal.message : undefined,
@@ -127,7 +146,13 @@ export function NotificationsList() {
                           : undefined,
                       senderName: typeof typedVal.senderName === "string" ? typedVal.senderName : undefined,
                       preview: typeof typedVal.preview === "string" ? typedVal.preview : undefined,
-                      _ts: typeof typedVal._ts === "number" ? typedVal._ts : Date.now(),
+                      // Writers stamp `timestamp`; keep `_ts` as a legacy fallback.
+                      _ts:
+                        typeof typedVal.timestamp === "number"
+                          ? typedVal.timestamp
+                          : typeof typedVal._ts === "number"
+                            ? typedVal._ts
+                            : Date.now(),
                     });
                   }
                 }
@@ -272,7 +297,7 @@ export function NotificationsList() {
           title: "Congratulations! You Won!",
           body: `You won the auction "${item.auctionTitle || item.title || "item"}"! Final price: ৳${item.amount?.toLocaleString() || ""}.`,
           link: `/dashboard?tab=escrow`,
-          linkText: "Complete Escrow",
+          linkText: "Complete Advance Payment",
         };
       case "badge_earned":
         return {
@@ -330,9 +355,9 @@ export function NotificationsList() {
           bgColor: "bg-emerald-50 dark:bg-emerald-950/20",
           borderColor: "border-emerald-100 dark:border-emerald-950/30",
           title: "Payment Verified!",
-          body: item.message || "Advance payment successfully held in escrow.",
+          body: item.message || "Advance payment successfully secured.",
           link: `/dashboard?tab=escrow`,
-          linkText: "View Escrow",
+          linkText: "View Advance Payment",
         };
       case "ITEM_SHIPPED":
       case "item_shipped":

@@ -89,12 +89,12 @@ export function TreasuryTab() {
   };
 
   const handleManualResolve = async (id: string, resolution: 'RELEASE' | 'REFUND') => {
-    if (!confirm(`Are you sure you want to FORCE ${resolution} this escrow?`)) return;
+    if (!confirm(`Are you sure you want to FORCE ${resolution} this advance payment?`)) return;
     setResolving(id);
     try {
       const res = await resolveAdminDispute(id, resolution);
       if (res.success) {
-        toast.success(`Escrow ${resolution.toLowerCase()}ed successfully`);
+        toast.success(`Advance payment ${resolution.toLowerCase()}ed successfully`);
         setActiveEscrows(prev => prev.filter(e => e.id !== id));
       } else {
         toast.error(res.error?.message || "Resolution failed");
@@ -153,7 +153,7 @@ export function TreasuryTab() {
             <ShieldCheck className="w-6 h-6 text-emerald-600" />
             Treasury Audit Hub
           </h3>
-          <p className="text-sm text-gray-500">Real-time oversight of automated MFS escrow transactions.</p>
+          <p className="text-sm text-gray-500">Real-time oversight of automated MFS advance-payment transactions.</p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-200">
            <Download className="w-4 h-4" /> Export Ledger
@@ -285,13 +285,13 @@ export function TreasuryTab() {
       {/* Active Escrow Resolution Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
-            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wide">Active Escrow Control (HELD Status)</h4>
+            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wide">Active Advance Payment Control (HELD Status)</h4>
             <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Manual Override</span>
         </div>
         
         {activeEscrows.length === 0 ? (
             <div className="bg-gray-50/50 border border-dashed border-gray-200 rounded-md p-8 text-center">
-                <p className="text-sm text-gray-400 italic">No funds currently held in escrow.</p>
+                <p className="text-sm text-gray-400 italic">No funds currently held.</p>
             </div>
         ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">

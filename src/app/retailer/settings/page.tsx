@@ -341,7 +341,7 @@ export default function RetailerSettingsPage() {
                   MFS Payment Credentials
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  Provide verified bKash or Nagad numbers to receive automatic settlements upon escrow releases.
+                  Provide verified bKash or Nagad numbers to receive automatic settlements upon advance-payment releases.
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -403,7 +403,7 @@ export default function RetailerSettingsPage() {
                   </p>
                   <p className="text-[10px] text-slate-500 mt-1 leading-relaxed font-medium">
                     {user.isRetailer 
-                      ? "Full access to pro badges and 0% escrow promotional fees."
+                      ? "Full access to pro badges and 0% advance-payment promotional fees."
                       : "Access to the standard Seller Hub, unlimited single listings, and standard buyer coordination tools."}
                   </p>
                 </div>
@@ -440,7 +440,7 @@ export default function RetailerSettingsPage() {
               </div>
               <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-heading">Standard Seller Protections</h4>
               <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                Our dynamic escrow system automatically protects sellers from fraudulent bids while maintaining a 100% transparency standard.
+                Our dynamic advance-payment system automatically protects sellers from fraudulent bids while maintaining a 100% transparency standard.
               </p>
             </div>
           </div>

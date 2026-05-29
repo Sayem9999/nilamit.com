@@ -90,24 +90,49 @@ interface EliteProps extends PromptProps {
 export function EliteBarrierPrompt({ onClose, auctionId, amount }: EliteProps) {
   const t = useTranslations("BidPanel");
   const [isPending, setIsPending] = React.useState(false);
+  const [submitted, setSubmitted] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const router = useRouter();
 
   const handleDeposit = async () => {
     setIsPending(true);
+    setError(null);
     try {
       const res = await createBidDeposit(auctionId, amount);
       if (res.success) {
-        // In a real flow, this would be a bKash redirect
-        // For now, we simulate success and refresh
-        onClose();
+        // The deposit is recorded as PENDING — it does NOT grant elite access
+        // until an admin verifies the real MFS payment. Reflect that honestly
+        // rather than implying the gate is now cleared.
+        setSubmitted(true);
         router.refresh();
       } else {
-        alert(res.error?.message || "Deposit failed");
+        setError(res.error?.message || "Deposit failed");
       }
     } finally {
       setIsPending(false);
     }
   };
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="bg-white rounded-md p-6 max-w-sm mx-4 shadow-xl text-center">
+          <h3 className="font-heading font-semibold text-lg text-gray-900 mb-2">Deposit submitted</h3>
+          <p className="text-sm text-gray-500 mb-5">
+            Your 1% security deposit (৳{Math.floor(amount * 0.01).toLocaleString()}) is recorded and
+            pending verification. Once an admin confirms your payment you&apos;ll be able to place
+            elite bids on this auction.
+          </p>
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700"
+          >
+            {t("laterBtn")}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -116,6 +141,7 @@ export function EliteBarrierPrompt({ onClose, auctionId, amount }: EliteProps) {
           {t("eliteBarrier")}
         </h3>
         <p className="text-sm text-gray-500 mb-2">{t("eliteDepositDesc")}</p>
+        {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
 
         {/* MFS Brand Micro-Badges */}
         <div className="flex items-center justify-center gap-3 my-4 bg-gray-50/50 p-3 rounded-xl border border-gray-100/60">

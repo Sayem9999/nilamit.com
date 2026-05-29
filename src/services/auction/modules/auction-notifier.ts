@@ -32,6 +32,7 @@ export class AuctionNotifier {
         sellerId,
         auctionTitle: title,
         coverImage:   coverImage ?? null,
+        timestamp:    Date.now(),
       }).catch((e) => log.error(`[AuctionNotifier] notify follower ${followerId} failed`, e, { auctionId }));
     });
 
