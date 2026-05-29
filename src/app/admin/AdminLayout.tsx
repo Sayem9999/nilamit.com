@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Wrench,
   FileText,
+  SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ type Tab =
   | "disputes"
   | "kyc"
   | "operations"
+  | "featureFlags"
   | "audit"
   | "live";
 
@@ -42,6 +44,7 @@ interface AdminLayoutProps {
   disputes?: React.ReactNode;
   kyc?: React.ReactNode;
   operations?: React.ReactNode;
+  featureFlags?: React.ReactNode;
   audit?: React.ReactNode;
   live?: React.ReactNode;
 }
@@ -57,6 +60,7 @@ export function AdminLayout({
   disputes,
   kyc,
   operations,
+  featureFlags,
   audit,
   live,
 }: AdminLayoutProps) {
@@ -67,6 +71,7 @@ export function AdminLayout({
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "live", label: "Live Activity", icon: TrendingUp },
     { id: "operations", label: "Operations", icon: Wrench, danger: true },
+    { id: "featureFlags", label: "Feature Flags", icon: SlidersHorizontal },
     { id: "moderation", label: "Moderation", icon: ShieldAlert },
     { id: "users", label: "Users", icon: Users },
     { id: "kyc", label: "KYC Queue", icon: ShieldCheck },
@@ -150,6 +155,7 @@ export function AdminLayout({
           {activeTab === "disputes" && disputes}
           {activeTab === "kyc" && kyc}
           {activeTab === "operations" && operations}
+          {activeTab === "featureFlags" && featureFlags}
           {activeTab === "audit" && audit}
           {activeTab === "system" && system}
         </div>

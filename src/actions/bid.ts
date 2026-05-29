@@ -167,6 +167,11 @@ export async function executeBuyItNow(auctionId: string): Promise<ServiceRespons
     const configRes = await getSystemConfig();
     const systemConfig = configRes.success ? configRes.data : null;
 
+    // Feature kill-switch — Buy It Now can be disabled platform-wide.
+    if (systemConfig?.buyItNowEnabled === false) {
+      return errorResponse(ErrorType.VALIDATION, 'Buy It Now is currently disabled.');
+    }
+
     const privileges = await requireBiddingPrivileges(userId, systemConfig);
     if (!privileges.success) return privileges as ServiceResponse<never>;
     const user = privileges.data!;

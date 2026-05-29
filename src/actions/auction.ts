@@ -68,6 +68,12 @@ export async function createAuction(input: unknown): Promise<ServiceResponse<{ a
   try {
     const configRes = await getSystemConfig();
     const systemConfig = configRes.success ? configRes.data : null;
+
+    // Feature kill-switch — new listing creation/relisting can be paused platform-wide.
+    if (systemConfig?.newListingsEnabled === false) {
+      return errorResponse(ErrorType.FORBIDDEN, 'New listings are temporarily paused. Please check back soon.');
+    }
+
     const postingReqs = systemConfig?.postingRequirementsEnabled ?? true;
 
     const userSnap = await db.collection('users').doc(session.user.id).get();
@@ -283,6 +289,12 @@ export async function relistAuction(auctionId: string): Promise<ServiceResponse<
   try {
     const configRes = await getSystemConfig();
     const systemConfig = configRes.success ? configRes.data : null;
+
+    // Feature kill-switch — new listing creation/relisting can be paused platform-wide.
+    if (systemConfig?.newListingsEnabled === false) {
+      return errorResponse(ErrorType.FORBIDDEN, 'New listings are temporarily paused. Please check back soon.');
+    }
+
     const postingReqs = systemConfig?.postingRequirementsEnabled ?? true;
 
     const orig = await db.runTransaction(async (tx) => {

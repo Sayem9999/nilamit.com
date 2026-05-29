@@ -14,6 +14,7 @@ import { DisputesTab } from "./tabs/DisputesTab";
 import { TreasuryTab } from "./tabs/TreasuryTab";
 import { KycTab } from "./tabs/KycTab";
 import { OperationsTab } from "./tabs/OperationsTab";
+import { FeatureFlagsTab } from "./tabs/FeatureFlagsTab";
 import { AuditLogTab } from "./tabs/AuditLogTab";
 import { Users, Package, TrendingUp, DollarSign } from "lucide-react";
 import { SystemConfig } from "@/types";
@@ -214,6 +215,7 @@ export default async function AdminPage() {
           initialMaintenanceMessage={(systemConfig as { maintenanceMessage?: string | null } | null)?.maintenanceMessage ?? null}
         />
       }
+      featureFlags={<FeatureFlagsTab />}
       audit={<AuditLogTab />}
       live={<AdminLiveFeed />}
     />
