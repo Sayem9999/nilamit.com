@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       job:
-        description: "Specific job to run (close-auctions | closing-soon | process-alerts | enforce-policies | gc-uploads | all)"
+        description: "Specific job to run (close-auctions | closing-soon | process-alerts | enforce-policies | gc-uploads | saved-search-matches | all)"
         required: false
         default: "all"
 
@@ -44,6 +44,22 @@ jobs:
       - name: POST /api/tasks/closing-soon
         run: |
           curl --fail-with-body -sS -X POST "$BASE_URL/api/tasks/closing-soon" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 300
+
+  # Saved-search match detector. Runs every 15 min — same cadence as
+  # closing-soon because both are user-facing engagement loops. Per-tick
+  # cost capped server-side at 500 saved searches × 25 matches = 12500
+  # notify() calls max, well within Firestore + Upstash quotas. See
+  # src/app/api/cron/saved-search-matches/route.ts for the match logic.
+  saved-search-matches:
+    if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/saved-search-matches
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/saved-search-matches" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             --data '{}' --max-time 300

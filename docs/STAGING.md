@@ -1,5 +1,21 @@
 # Staging environment
 
+> **Status as of May 2026**: An attempt to auto-create `nilamit-staging`
+> via `firebase projects:create` failed with `QUOTA_EXCEEDED` — Google
+> caps Firebase project count per account. Resolution options:
+>
+> 1. **Delete an unused project** at https://console.cloud.google.com/cloud-resource-manager
+>    (look for stale test projects you no longer need)
+> 2. **Request a quota increase** at https://console.cloud.google.com/iam-admin/quotas
+>    — filter for "Project quota" and submit a justification ("staging environment for production marketplace nilamit-52073"). Usually approved within 1-2 days.
+> 3. **Use a separate Google account** — register `nilamit-staging` under a different Workspace account, then grant cross-project access to your prod admin email.
+>
+> Once the project exists, follow the rest of this doc verbatim. The
+> apphosting-staging.yaml + .github/workflows/staging-deploy.yml are
+> already shipped and waiting.
+
+
+
 This doc covers the one-time setup to give nilamit a real staging tier so
 PRs can be tested against a production-like backend before merging to
 `main` (which auto-deploys to prod).
