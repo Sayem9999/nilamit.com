@@ -314,7 +314,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
 
               <p className="text-gray-600 text-sm max-w-3xl mb-6 font-medium leading-relaxed">
                 {seller.bio || (seller.isRetailer 
-                  ? `Welcome to ${seller.name}'s official storefront. Discover authentic product collections, reliable services, and secure escrow guarantees since ${safeGetYear(seller.createdAt)}.`
+                  ? `Welcome to ${seller.name}'s official storefront. Discover authentic product collections, reliable services, and secure advance-payment guarantees since ${safeGetYear(seller.createdAt)}.`
                   : `Welcome to ${seller.name}'s official trading page. Safe C2C auctions and trusted community member in Bangladesh since ${safeGetYear(seller.createdAt)}.`)}
               </p>
 
@@ -545,7 +545,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                       <CheckCircle className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-tight">Escrow Protected</h4>
+                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-tight">Advance Payment Protected</h4>
                       <p className="text-[11px] text-gray-500 font-medium">Payment is securely held by Nilamit until you confirm parcel delivery.</p>
                     </div>
                   </div>

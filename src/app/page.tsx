@@ -8,6 +8,7 @@ import { SystemConfig } from "@/types/common";
 import type { AuctionWithSeller, LatestActivity } from "@/types";
 import { log } from "@/lib/logger";
 import { getTopSellers } from "@/actions/user";
+import { getLocale } from "next-intl/server";
 
 interface GlobalStats {
   totalUsers?: number;
@@ -152,7 +153,7 @@ async function loadHomeData(): Promise<ResolvedHomeData> {
 }
 
 export default async function HomePage() {
-  const locale = "en";
+  const locale = await getLocale();
 
   // Load data inside a try so a Firestore outage falls back to a safe empty
   // state. JSX is constructed AFTER the try block — render errors propagate

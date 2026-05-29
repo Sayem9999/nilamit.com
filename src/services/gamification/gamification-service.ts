@@ -78,6 +78,7 @@ export class GamificationService {
         event:   FIREBASE_EVENTS.TRUST_UPDATE,
         message: `You earned ${badgesAwarded.length} new badge(s): ${badgesAwarded.join(', ')}!`,
         badges:  badgesAwarded,
+        timestamp: Date.now(),
       }).catch((e) => log.error('[GamificationService] badge notification push failed', e));
     }
   }

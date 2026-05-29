@@ -37,6 +37,17 @@ jobs:
             -H "Content-Type: application/json" \
             --data '{}' --max-time 300
 
+  process-alerts:
+    if: github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/process-alerts
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/process-alerts" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 300
+
   closing-soon:
     if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest

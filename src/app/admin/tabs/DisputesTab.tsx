@@ -95,7 +95,7 @@ export function DisputesTab() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-heading font-bold text-gray-900">Escrow Dispute Center</h2>
+          <h2 className="text-xl font-heading font-bold text-gray-900">Advance Payment Dispute Center</h2>
           <p className="text-sm text-gray-500">Neutral ground for resolving transaction conflicts.</p>
         </div>
         <button 
@@ -158,7 +158,7 @@ export function DisputesTab() {
 
                  <div className="lg:w-64 space-y-3 flex flex-col justify-end">
                     <div className="text-right mb-4">
-                       <p className="text-xs text-gray-500 uppercase font-bold tracking-wide mb-1">Escrowed Funds</p>
+                       <p className="text-xs text-gray-500 uppercase font-bold tracking-wide mb-1">Secured Funds</p>
                        <p className="text-2xl font-bold text-emerald-600 font-heading">৳{tx.amount}</p>
                     </div>
 

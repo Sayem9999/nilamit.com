@@ -126,6 +126,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         auctionId:    result.auction.id,
         auctionTitle: result.auction.title,
         message:      `Payment submitted for "${result.auction.title}". Verification pending.`,
+        timestamp:    Date.now(),
       });
     } catch (sideEffectErr) {
       log.error('[escrow] side-effects failed after successful TX', sideEffectErr, { area: 'escrow', severity: 'warning' });
@@ -201,6 +202,7 @@ export async function confirmItemReceived(transactionId: string): Promise<Servic
           recalculateUserRating(session.user.id),
           rtdbPush(RTDB_PATHS.userNotifications(sellerId), {
             event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Sale confirmed! Funds released.',
+            timestamp: Date.now(),
           }),
           updateSellerPerformance(sellerId),
         ]);
@@ -266,6 +268,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
   await rtdbPush(RTDB_PATHS.userNotifications(buyerId), {
     event: 'ITEM_SHIPPED', auctionId,
     message: `Your item has been shipped! Tracking: ${safeTracking}`,
+    timestamp: Date.now(),
   });
 
   revalidatePath('/dashboard');

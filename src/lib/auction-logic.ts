@@ -104,6 +104,11 @@ export function processAuctionSale(
     paymentMethod:    null,
     providerRef:      null,
     verificationType: null,
+    // Token the payment webhook matches against (PaymentService.verifyAndReleaseEscrow).
+    // The gateway must echo this as its tran_id; we use the auctionId so the
+    // SSLCommerz/bKash callback can locate the escrow. Without it the automated
+    // release path could never match an escrow.
+    automationToken:  auction.id,
     createdAt:        now,
     updatedAt:        now,
   });
@@ -150,7 +155,9 @@ export function sendSaleNotifications(payload: SaleNotifyPayload) {
     event:     FIREBASE_EVENTS.AUCTION_WON,
     auctionId: payload.auctionId,
     title:     payload.title,
+    auctionTitle: payload.title,
     amount:    payload.finalPrice,
+    timestamp: Date.now(),
   }).catch((e) => log.error('auction-logic: winner RTDB notification failed', e, { auctionId: payload.auctionId }));
 
   GamificationService.processSaleGamification(payload.winnerId, payload.sellerId).catch((e) =>
@@ -207,10 +214,18 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
 
       if (!winnerId || !finalPrice) {
         tx.update(aRef, { status: 'EXPIRED', updatedAt: now });
-        
-        // Notify RTDB of expiry (fire and forget after tx commit if possible, but here we are in tx)
-        // We'll do it after the transaction to be safe.
-        return { expired: true, auctionId };
+
+        // Notify RTDB of expiry after the transaction commits.
+        return { expired: true, auctionId, sellerId: a.sellerId as string, title: a.title as string, reason: 'NO_BIDS' as const };
+      }
+
+      // Reserve-price guard — handle BEFORE processAuctionSale (which throws on
+      // an unmet reserve). Throwing here would reject the transaction, leave the
+      // auction ACTIVE with a past endTime, and make the cron re-process it on
+      // every run forever. Instead we mark it EXPIRED (unsold) once.
+      if (a.reservePrice && finalPrice < a.reservePrice) {
+        tx.update(aRef, { status: 'EXPIRED', isReserveMet: false, updatedAt: now });
+        return { expired: true, auctionId, sellerId: a.sellerId as string, title: a.title as string, reason: 'RESERVE_NOT_MET' as const };
       }
 
       const configRef = db.collection('systemConfig').doc('default');
@@ -243,6 +258,18 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
           status: 'EXPIRED',
           updatedAt: new Date().toISOString(),
         }).catch((e: unknown) => log.error('auction-logic: RTDB expiry sync failed', e, { auctionId: notifyPayload.auctionId }));
+
+        // Tell the seller why their listing closed without a sale.
+        const message = notifyPayload.reason === 'RESERVE_NOT_MET'
+          ? `"${notifyPayload.title}" ended below your reserve price and did not sell.`
+          : `"${notifyPayload.title}" ended without any bids.`;
+        rtdbPush(RTDB_PATHS.userNotifications(notifyPayload.sellerId), {
+          event: FIREBASE_EVENTS.AUCTION_CLOSED,
+          auctionId: notifyPayload.auctionId,
+          auctionTitle: notifyPayload.title,
+          message,
+          timestamp: Date.now(),
+        }).catch((e: unknown) => log.error('auction-logic: seller expiry notification failed', e, { auctionId: notifyPayload.auctionId }));
       } else {
         sendSaleNotifications(notifyPayload);
       }

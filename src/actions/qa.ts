@@ -81,6 +81,7 @@ export async function askQuestion(input: unknown): Promise<ServiceResponse<{ que
       auctionId,
       auctionTitle: auction.title,
       questionId:   id,
+      timestamp:    Date.now(),
     }).catch((e) => log.error('[Action] askQuestion seller notify failed', e, { auctionId }));
 
     revalidatePath(`/auctions/${auctionId}`);
@@ -137,6 +138,7 @@ export async function answerQuestion(input: unknown): Promise<ServiceResponse<nu
         auctionId,
         auctionTitle: auctionTitle ?? null,
         questionId,
+        timestamp:    Date.now(),
       }).catch((e) => log.error('[Action] answerQuestion asker notify failed', e, { questionId }));
     }
 

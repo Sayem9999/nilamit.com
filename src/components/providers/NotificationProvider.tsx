@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { onChildAdded, ref } from "firebase/database";
 import { getClientDB, ensureFirebaseAuth } from "@/lib/firebase-client";
+import { registerExistingPushGrant } from "@/lib/fcm";
 import { RTDB_PATHS, FIREBASE_EVENTS } from "@/lib/firebase-events";
 import { showNotification } from "@/lib/notifications";
 import { toast } from "react-hot-toast";
@@ -25,16 +26,26 @@ export function NotificationProvider({
       // Authenticate Firebase client using our custom-token endpoint
       await ensureFirebaseAuth();
 
+      // If the user has already granted notification permission, (re)register
+      // their FCM token so background push actually delivers. Never prompts.
+      void registerExistingPushGrant();
+
       const db           = getClientDB();
       const notifRef     = ref(db, RTDB_PATHS.userNotifications(userId));
 
-      // onChildAdded fires for every new notification pushed by the server.
-      // We skip the initial backfill by ignoring items older than "now".
+      // onChildAdded fires for every existing child on attach, then for each new
+      // one. Skip the backfill by ignoring items stamped before "now". Writers
+      // stamp `timestamp` (with legacy `_ts` fallback); the old code only checked
+      // `_ts`, which was never set — so every stored notification re-toasted on
+      // each page load.
       const startTime    = Date.now();
 
       unsub = onChildAdded(notifRef, (snapshot) => {
         const data = snapshot.val();
-        if (!data || (data._ts && data._ts < startTime)) return; // skip backfill
+        if (!data) return;
+        const ts = Number(data.timestamp ?? data._ts ?? 0);
+        if (ts && ts < startTime) return; // skip backfill of older notifications
+        if (!ts) return; // undated legacy item — don't replay as a toast
 
         handleNotification(data);
       });

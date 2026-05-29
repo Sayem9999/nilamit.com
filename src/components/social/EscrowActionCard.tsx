@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { formatBDT } from "@/lib/format";
 import dynamic from "next/dynamic";
-const MockPaymentGateway = dynamic(() => import("@/components/payment/MockPaymentGateway").then(mod => mod.MockPaymentGateway), { ssr: false });
+const MfsPaymentModal = dynamic(() => import("@/components/payment/MfsPaymentModal").then(mod => mod.MfsPaymentModal), { ssr: false });
 import DisputeModal from "./DisputeModal";
 import { cn } from "@/lib/utils";
 
@@ -444,7 +444,7 @@ export function EscrowActionCard({
         </div>
       </CardContent>
 
-      <MockPaymentGateway
+      <MfsPaymentModal
         isOpen={isPaymentOpen}
         onClose={() => setIsPaymentOpen(false)}
         onSuccess={handlePaymentSuccess}

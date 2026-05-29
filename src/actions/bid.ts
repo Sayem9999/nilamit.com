@@ -92,7 +92,10 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
     const MIN_SALES = 5;
 
     if (amount >= ELITE_THRESHOLD) {
-      const isVetted = user.isVerifiedSeller;
+      // "Vetted" must mean genuinely KYC-approved — NOT the isVerifiedSeller
+      // flag, which is auto-granted on email verification / first listing and
+      // would let anyone bypass the elite trust gate.
+      const isVetted = user.kycStatus === 'APPROVED';
       const currentRating = (user.rating as number) ?? 0;
       const salesCount = (user.ratingCount as number) ?? 0;
 
@@ -118,62 +121,29 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
       }
     }
 
-    // Execute with high-level retry logic for contention handling
-    let attempts = 0;
-    const MAX_ATTEMPTS = 3;
+    // BidProcessor runs the bid in a Firestore transaction (the SDK retries
+    // internally on contention) and returns a structured ServiceResponse —
+    // including BID_TOO_LOW with `details.newMinimum`. No throw-based retry
+    // needed here; side-effects fire after the commit, inside the service.
+    const result = await BiddingService.placeBid(
+      auctionId,
+      amount,
+      userId,
+      session.user.name || 'Someone',
+      session.user.email || '',
+      ip,
+      userAgent
+    );
 
-    while (attempts < MAX_ATTEMPTS) {
-      try {
-        const result = await BiddingService.placeBid(
-          auctionId,
-          amount,
-          userId,
-          session.user.name || 'Someone',
-          session.user.email || '',
-          ip,
-          userAgent
-        );
-        
-        revalidateTag('auctions', { expire: 0 });
-        revalidateTag('bids',     { expire: 0 });
-        revalidateTag('stats',    { expire: 0 });
-        revalidatePath(`/auctions/${auctionId}`);
-        revalidatePath('/auctions');
-        revalidatePath('/dashboard');
-        revalidatePath('/');
-        
-        if (!result.success) return result as ServiceResponse<never>;
-        return successResponse(result.data!);
-      } catch (error) {
-        attempts++;
-        const message = error instanceof Error ? error.message : '';
-        
-        // Handle outbid / bid too low gracefully without retrying.
-        // Format: `BID_TOO_LOW: ৳<amount>` — extract digits only from the trailing
-        // amount portion to avoid concatenating digits embedded in the prefix.
-        if (message.startsWith(ERROR_CODES.BID_TOO_LOW)) {
-          const amountPart = message.slice(ERROR_CODES.BID_TOO_LOW.length);
-          const match = amountPart.match(/\d+([,.]\d+)*/);
-          const newMinimum = match ? parseInt(match[0].replace(/\D/g, ''), 10) : undefined;
-          return errorResponse(ErrorType.CONFLICT, message, ERROR_CODES.BID_TOO_LOW, { newMinimum });
-        }
-        
-        // Only retry on transient contention/transaction errors
-        const isContention = message.includes('too much contention') || message.includes('transaction failed');
-        
-        if (isContention && attempts < MAX_ATTEMPTS) {
-          const delay = Math.pow(2, attempts) * 100 + Math.random() * 50;
-          log.warn(`[Contention] Retrying bid ${attempts}/${MAX_ATTEMPTS}`, { auctionId, userId, delay });
-          await new Promise(r => setTimeout(r, delay));
-          continue;
-        }
+    revalidateTag('auctions', { expire: 0 });
+    revalidateTag('bids',     { expire: 0 });
+    revalidateTag('stats',    { expire: 0 });
+    revalidatePath(`/auctions/${auctionId}`);
+    revalidatePath('/auctions');
+    revalidatePath('/dashboard');
 
-        log.error('[bid] placeBid failed', error, { userId, auctionId, amount, attempts, area: 'bid', severity: 'critical' });
-        return errorResponse(ErrorType.INTERNAL, message || 'Failed to place bid.');
-      }
-    }
-    
-    return errorResponse(ErrorType.INTERNAL, 'The bidding system is currently very busy. Please try again in a moment.');
+    if (!result.success) return result as ServiceResponse<never>;
+    return successResponse(result.data!);
   } catch (error) {
     log.error('[bid] placeBid outer failed', error, { userId, auctionId, amount, area: 'bid', severity: 'critical' });
     return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred.');

@@ -75,6 +75,7 @@ export async function sendMessage(conversationId: string, content: string, image
     rtdbPush(RTDB_PATHS.userNotifications(recipientId), {
       event: FIREBASE_EVENTS.NEW_MESSAGE, conversationId, auctionId: conv.auctionId,
       senderName: session.user.name ?? 'Someone', preview: filtered.slice(0, 60),
+      timestamp: Date.now(),
     }).catch((e) => log.error('[chat] recipient notification push failed', e, { area: 'chat', severity: 'warning' }));
   } catch (rtdbErr) {
     log.error('[chat] RTDB real-time signaling failed; gracefully falling back to Firestore', rtdbErr, {

@@ -79,7 +79,7 @@ export function AuctionDetailTabs({
           }`}
         >
           <Truck className="w-4 h-4" />
-          <span>Shipping & Escrow</span>
+          <span>Shipping & Advance Payment</span>
         </button>
 
         <button
@@ -130,7 +130,7 @@ export function AuctionDetailTabs({
                   Nilamit Buyer Protection Guarantee
                 </h4>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  We secure trade safety through secure mobile money escrow. When you win, you send the deposit/full amount to secure Nilamit Treasury bKash/Nagad accounts.
+                  We secure trade safety through secure mobile money advance payments. When you win, you send the deposit/full amount to secure Nilamit Treasury bKash/Nagad accounts.
                 </p>
                 <ul className="space-y-2 text-[11px] text-gray-600 font-medium">
                   <li className="flex items-start gap-1.5">
@@ -181,7 +181,7 @@ export function AuctionDetailTabs({
               <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold uppercase tracking-wider block mb-1">Safe Bidding Guarantee</span>
-                Never pay a seller directly outside the Nilamit platform! Always utilize the secure treasury accounts shown on the dashboard after winning to be fully covered by our Nilamit Escrow Guarantee.
+                Never pay a seller directly outside the Nilamit platform! Always utilize the secure treasury accounts shown on the dashboard after winning to be fully covered by our Nilamit Advance Payment Guarantee.
               </div>
             </div>
           </div>
@@ -256,7 +256,7 @@ export function AuctionDetailTabs({
                   <p className="text-xs text-gray-500 mt-0.5">
                     {hasReviews
                       ? "This seller satisfies all platform response time guidelines and dispute handling measures."
-                      : "New seller: This merchant has not received any reviews yet. Secure trade guaranteed via Nilamit Escrow."}
+                      : "New seller: This merchant has not received any reviews yet. Secure trade guaranteed via Nilamit Advance Payment."}
                   </p>
                 </div>
               </div>

@@ -240,22 +240,23 @@ test.describe('End-to-End Bid Flow Happy Path', () => {
     // 5. SIMULATE AUCTION END (WINNER DETERMINATION)
     await endAuctionAndAwardWinner(auctionId, bidderEmail);
 
-    // Go to Won / Escrow tab on dashboard
+    // Go to Won / Advance Payment tab on dashboard
     await page.goto('/dashboard?tab=escrow', { timeout: 30000 });
-    await expect(page.locator('text=Won / Escrow')).toBeVisible();
-    
+    await expect(page.locator('text=Won / Advance Payment')).toBeVisible();
+
     // Wait for hydration to complete to ensure event listeners are attached
     await page.waitForTimeout(2000);
 
-    // Click pay escrow link
+    // Click pay advance link
     await page.click('button:has-text("Pay Advance Fee")');
-    
-    // Interact with MockPaymentGateway
-    await page.fill('input[type="tel"]', '01711111111');
-    await page.check('#policy-consent');
-    await page.click('button:has-text("PAY NOW")');
 
-    // Confirm Escrow Receipt (Mock Callback or action success transitions status to VERIFICATION_PENDING)
+    // Interact with the manual MFS payment modal: enter phone + real TrxID, consent, submit
+    await page.fill('input[type="tel"]', '01711111111');
+    await page.fill('input[placeholder="e.g. 9H7A2K4L8P"]', 'TRX12345678');
+    await page.check('#policy-consent');
+    await page.click('button:has-text("Submit for verification")');
+
+    // Action success transitions escrow status to VERIFICATION_PENDING
     await expect(page.locator('text=Verification in Progress')).toBeVisible({ timeout: 35000 });
   });
 });

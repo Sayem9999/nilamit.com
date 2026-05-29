@@ -20,24 +20,32 @@ export class PaymentService {
   ): Promise<ServiceResponse<EscrowTransaction>> {
     try {
       return await db.runTransaction(async (tx) => {
-        // 1. Find the exact escrow by its unique automation token
+        // 1. Find the escrow by its automation token (NOT status-filtered, so a
+        //    replayed webhook for an already-HELD escrow can be detected and
+        //    answered idempotently instead of returning a misleading 404).
         const query = db.collection('escrowTransactions')
           .where('automationToken', '==', automationToken)
-          .where('status', '==', 'PENDING')
           .limit(1);
         const escrowSnap = await tx.get(query);
 
         if (escrowSnap.empty) {
-          log.warn('Payment: No matching pending escrow found', { transactionId, amount, provider });
+          log.warn('Payment: No matching escrow found', { transactionId, amount, provider });
           return errorResponse(ErrorType.NOT_FOUND, 'Matching transaction not found');
         }
 
         const escrowDoc = escrowSnap.docs[0];
         const escrowData = escrowDoc.data() as EscrowTransaction;
 
-        // 2. Prevent duplicate processing
-        if (escrowData.providerRef === transactionId) {
+        // 2. Idempotency — a duplicate callback for an already-processed escrow
+        //    returns success so the gateway stops retrying / alerting.
+        if (escrowData.status === 'HELD' && escrowData.providerRef === transactionId) {
           return successResponse(escrowData);
+        }
+
+        // 3. Only a PENDING escrow can be moved to HELD.
+        if (escrowData.status !== 'PENDING') {
+          log.warn('Payment: escrow not in a payable state', { transactionId, status: escrowData.status });
+          return errorResponse(ErrorType.CONFLICT, `Escrow is in ${escrowData.status} state, cannot release.`);
         }
 
         // 3. Update Escrow state to HELD
@@ -73,6 +81,7 @@ export class PaymentService {
           event: FIREBASE_EVENTS.PAYMENT_SUCCESS,
           message: `Payment verified. ${amount} BDT is now held in escrow.`,
           auctionId: escrowData.auctionId,
+          timestamp: Date.now(),
         }).catch(e => log.error('Payment: buyer notification failed', e));
 
         const fullData = { ...escrowData, ...updateData };

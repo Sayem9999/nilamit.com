@@ -167,7 +167,7 @@ export default function AdminLiveFeed() {
                 Moderation queue
               </h2>
               <p className="text-primary-200 text-xs leading-relaxed mb-4">
-                The live ticker is read-only. Open disputes, escrow holds, and reported
+                The live ticker is read-only. Open disputes, advance-payment holds, and reported
                 listings are actioned from the moderation panels below.
               </p>
               <Link

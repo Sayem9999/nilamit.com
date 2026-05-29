@@ -156,7 +156,7 @@ export default function RetailerPerksPage() {
                 <td className="py-4 text-center text-emerald-600 font-bold">Enabled</td>
               </tr>
               <tr className="hover:bg-slate-50/30 transition-colors border-b border-slate-100">
-                <td className="py-4 px-3 font-bold text-slate-900">Escrow Release Speed</td>
+                <td className="py-4 px-3 font-bold text-slate-900">Advance Payment Release Speed</td>
                 <td className="py-4 text-center text-slate-500">Standard (7 days)</td>
                 <td className="py-4 text-center text-emerald-600 font-bold">Priority (3 days)</td>
               </tr>
@@ -175,7 +175,7 @@ export default function RetailerPerksPage() {
             <div>
               <h4 className="text-md font-bold text-indigo-950 mb-1 font-heading">Unlock Pro Retailer Privileges Instantly</h4>
               <p className="text-xs text-indigo-855/80 leading-relaxed font-medium">
-                Want to unlock priority escrow releases or premium store badges? Perform a self-service upgrade on your settings page now.
+                Want to unlock priority advance-payment releases or premium store badges? Perform a self-service upgrade on your settings page now.
               </p>
             </div>
             <Link 

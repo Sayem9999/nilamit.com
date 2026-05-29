@@ -46,10 +46,15 @@ export default auth((req) => {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-nonce', nonce);
 
+  // 'unsafe-eval' is only needed by Next.js dev (React Fast Refresh / webpack
+  // HMR). Production bundles — including Firebase v11, d3, framer-motion and
+  // jsPDF v4 — do not use eval, so we drop it in prod to harden the CSP.
+  const scriptEval = process.env.NODE_ENV === 'production' ? '' : "'unsafe-eval' ";
+
   // Content Security Policy
   const cspHeader = `
     default-src 'self' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://*.firebaseapp.com https://*.web.app;
-    script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://*.nilamit.com https://nilamit.com https://*.hosted.app https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.asia-southeast1.firebasedatabase.app https://www.gstatic.com https://*.googleapis.com https://www.google.com https://*.recaptcha.net;
+    script-src 'self' 'nonce-${nonce}' ${scriptEval}https://*.nilamit.com https://nilamit.com https://*.hosted.app https://js.sentry-cdn.com https://browser.sentry-cdn.com https://*.pusher.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.asia-southeast1.firebasedatabase.app https://www.gstatic.com https://*.googleapis.com https://www.google.com https://*.recaptcha.net;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.nilamit.com https://nilamit.com https://*.hosted.app;
     img-src 'self' data: blob: https://*.googleusercontent.com https://utfs.io https://*.uploadthing.com https://firebasestorage.googleapis.com https://storage.googleapis.com https://*.firebasestorage.app https://*.appspot.com https://avatars.githubusercontent.com https://i.pravatar.cc https://images.unsplash.com https://*.ingest.sentry.io https://*.nilamit.com https://nilamit.com https://*.hosted.app https://*.facebook.com https://*.fbcdn.net https://platform-lookaside.fbsbx.com;
     font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com;
