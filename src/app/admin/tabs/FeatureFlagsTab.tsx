@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  Sparkles, Mail, Wallet, ShieldCheck, Percent, Loader2,
+  Sparkles, Mail, Wallet, ShieldCheck, Percent,
   Star, Zap, PackagePlus, UserPlus, SlidersHorizontal,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getSystemConfig, updateSystemConfig } from '@/actions/admin-content';
+import { updateSystemConfig } from '@/actions/admin-content';
 import { SystemConfig } from '@/types';
 import { ConfigToggle } from './_components/ConfigToggle';
 
@@ -18,17 +18,11 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function FeatureFlagsTab() {
-  const [config, setConfig] = useState<SystemConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      const res = await getSystemConfig();
-      if (res.success && res.data) setConfig(res.data);
-      setIsLoading(false);
-    })();
-  }, []);
+export function FeatureFlagsTab({ initialConfig }: { initialConfig: SystemConfig | null }) {
+  // Config is supplied by the server (the admin page is force-dynamic, so it's
+  // always fresh). No client-side fetch — a client-invoked getSystemConfig
+  // (which wraps unstable_cache) could hang the tab on "Loading…" forever.
+  const [config, setConfig] = useState<SystemConfig | null>(initialConfig);
 
   const handleToggle = async (field: keyof SystemConfig, value: boolean | number | null) => {
     if (!config) return;
@@ -73,11 +67,7 @@ export function FeatureFlagsTab() {
               server-side in its Server Action — toggling here changes real behavior for all users.
             </p>
 
-            {isLoading ? (
-              <div className="mt-8 flex items-center justify-center py-6 text-sm text-gray-400">
-                <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading operational modes…
-              </div>
-            ) : !config ? (
+            {!config ? (
               <div className="mt-8 text-center text-sm text-gray-400 py-6 border border-dashed border-gray-200 rounded-xl">
                 Failed to load system configuration.
               </div>
