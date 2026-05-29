@@ -25,9 +25,7 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   biddingRequirementsEnabled: true,
   hybridEscrowEnabled: false,
   hybridCommitmentPercentage: 2,
-  // Marketplace feature kill-switches. Featured is OFF by default (the
-  // self-serve purchase flow is not yet complete); the rest are ON.
-  featuredListingsEnabled: false,
+  // Marketplace feature kill-switches.
   buyItNowEnabled: true,
   newListingsEnabled: true,
   registrationsEnabled: true,
@@ -67,7 +65,6 @@ export async function updateSystemConfig(data: {
   biddingRequirementsEnabled?: boolean;
   hybridEscrowEnabled?: boolean;
   hybridCommitmentPercentage?: number | null;
-  featuredListingsEnabled?: boolean;
   buyItNowEnabled?: boolean;
   newListingsEnabled?: boolean;
   registrationsEnabled?: boolean;

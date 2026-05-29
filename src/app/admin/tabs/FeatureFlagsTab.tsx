@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import {
   Sparkles, Mail, Wallet, ShieldCheck, Percent,
-  Star, Zap, PackagePlus, UserPlus, SlidersHorizontal,
+  Zap, PackagePlus, UserPlus, SlidersHorizontal,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { updateSystemConfig } from '@/actions/admin-content';
@@ -187,15 +187,6 @@ export function FeatureFlagsTab({ initialConfig }: { initialConfig: SystemConfig
                 <div>
                   <SectionTitle>Marketplace Features</SectionTitle>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <ConfigToggle
-                      label="Featured Listings"
-                      description="Seller self-serve “Promote to Featured” purchase. Keep OFF until the payment flow is complete — when off, the promote button is hidden and the action is refused."
-                      icon={<Star className="w-4 h-4 text-amber-500" />}
-                      checked={config.featuredListingsEnabled ?? false}
-                      onChange={(v) => handleToggle('featuredListingsEnabled', v)}
-                      tone="danger"
-                      badge={(config.featuredListingsEnabled ?? false) ? undefined : { label: 'Incomplete', tone: 'amber' }}
-                    />
                     <ConfigToggle
                       label="Buy It Now"
                       description="Allow instant purchase at the listed BIN price. Off = bidding only."

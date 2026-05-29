@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { updateSystemConfig, toggleFeaturedAuction } from '@/actions/admin-content';
-import { getAuctions } from '@/actions/auction';
 import { 
   Loader2, 
   Trash2, 
@@ -23,61 +22,48 @@ import toast from 'react-hot-toast';
 interface ContentTabProps {
   initialConfig: SystemConfig;
   featuredAuctions: { id: string; title: string; currentPrice: number; images: string[] }[];
+  /** Active auctions for the "feature this" directory — fetched server-side in
+   *  admin/page.tsx and passed in, so this tab never client-fetches (avoids the
+   *  fragile Server-Action-on-mount pattern). */
+  activeAuctions: AuctionWithSeller[];
 }
 
-export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps) {
+export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: ContentTabProps) {
   const [config, setConfig] = useState(initialConfig);
   const [auctions, setAuctions] = useState(featuredAuctions);
   const [isSaving, setIsSaving] = useState(false);
   const [newAuctionId, setNewAuctionId] = useState('');
-  
-  // New UI/UX enhancements state
-  const [activeAuctions, setActiveAuctions] = useState<AuctionWithSeller[]>([]);
-  const [isLoadingActive, setIsLoadingActive] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Fetch active auctions on mount
-  useEffect(() => {
-    const fetchActive = async () => {
-      setIsLoadingActive(true);
-      try {
-        const res = await getAuctions({ limit: 100 });
-        if (res.success && res.data) {
-          setActiveAuctions(res.data.auctions);
-        }
-      } catch (err) {
-        console.error('Failed to load active auctions:', err);
-      } finally {
-        setIsLoadingActive(false);
-      }
-    };
-    fetchActive();
-  }, []);
-
-  const handleSaveConfig = async () => {
+  // Each save button writes only its own fields (updateSystemConfig merges),
+  // so saving the banner no longer rewrites treasury numbers and vice-versa.
+  const saveFields = async (fields: Parameters<typeof updateSystemConfig>[0], label: string) => {
     setIsSaving(true);
     try {
-      const res = await updateSystemConfig({
-        heroTitle: config.heroTitle ?? undefined,
-        heroSubtitle: config.heroSubtitle ?? undefined,
-        heroImage: config.heroImage ?? undefined,
-        announcement: config.announcement ?? undefined,
-        showAnnouncement: config.showAnnouncement,
-        treasuryBkash: config.treasuryBkash ?? undefined,
-        treasuryNagad: config.treasuryNagad ?? undefined,
-      });
+      const res = await updateSystemConfig(fields);
       if (res.success) {
-        toast.success('Content updated successfully!');
+        toast.success(`${label} updated successfully!`);
       } else {
-        toast.error(res.error?.message || 'Failed to update content');
+        toast.error(res.error?.message || `Failed to update ${label.toLowerCase()}`);
       }
     } catch (e: unknown) {
-      toast.error('Failed to update content: ' + (e instanceof Error ? e.message : 'Unknown error'));
+      toast.error(`Failed to update ${label.toLowerCase()}: ` + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
       setIsSaving(false);
     }
   };
+
+  const handleSaveBanner = () => saveFields({
+    heroTitle: config.heroTitle ?? undefined,
+    heroSubtitle: config.heroSubtitle ?? undefined,
+    heroImage: config.heroImage ?? undefined,
+  }, 'Homepage banner');
+
+  const handleSaveTreasury = () => saveFields({
+    treasuryBkash: config.treasuryBkash ?? undefined,
+    treasuryNagad: config.treasuryNagad ?? undefined,
+  }, 'Treasury');
 
   const handleToggleFeatured = async (id: string) => {
     if (!id.trim()) {
@@ -87,6 +73,9 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
 
     try {
       const isCurrentlyFeatured = auctions.some(a => a.id === id);
+      if (isCurrentlyFeatured && !window.confirm('Remove this auction from the featured list?')) {
+        return;
+      }
       const res = await toggleFeaturedAuction(id, !isCurrentlyFeatured);
       
       if (res.success) {
@@ -146,19 +135,21 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
         </h3>
         <div className="space-y-4 max-w-2xl">
           <div>
-            <label className="text-sm font-medium text-gray-700">Hero Title</label>
-            <input 
-              type="text" 
-              value={config.heroTitle || ''} 
+            <label htmlFor="cfg-hero-title" className="text-sm font-medium text-gray-700">Hero Title</label>
+            <input
+              id="cfg-hero-title"
+              type="text"
+              value={config.heroTitle || ''}
               onChange={e => setConfig({ ...config, heroTitle: e.target.value })}
               className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700">Hero Subtitle</label>
-            <input 
-              type="text" 
-              value={config.heroSubtitle || ''} 
+            <label htmlFor="cfg-hero-subtitle" className="text-sm font-medium text-gray-700">Hero Subtitle</label>
+            <input
+              id="cfg-hero-subtitle"
+              type="text"
+              value={config.heroSubtitle || ''}
               onChange={e => setConfig({ ...config, heroSubtitle: e.target.value })}
               className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
             />
@@ -173,8 +164,8 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
               />
             </div>
           </div>
-          <button 
-            onClick={handleSaveConfig}
+          <button
+            onClick={handleSaveBanner}
             disabled={isSaving}
             className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-indigo-700 flex items-center gap-2 transition-all shadow-sm hover:shadow active:scale-95 disabled:opacity-50"
           >
@@ -193,20 +184,22 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
         <p className="text-sm text-gray-500 mb-6">These numbers will be displayed in the Automated Checkout Gateway.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
           <div>
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wide">bKash Merchant/Personal</label>
-            <input 
-              type="text" 
-              value={config.treasuryBkash || ''} 
+            <label htmlFor="cfg-treasury-bkash" className="text-xs font-bold text-gray-400 uppercase tracking-wide">bKash Merchant/Personal</label>
+            <input
+              id="cfg-treasury-bkash"
+              type="text"
+              value={config.treasuryBkash || ''}
               onChange={e => setConfig({ ...config, treasuryBkash: e.target.value })}
               placeholder="017XXXXXXXX"
               className="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono transition-all"
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wide">Nagad Merchant/Personal</label>
-            <input 
-              type="text" 
-              value={config.treasuryNagad || ''} 
+            <label htmlFor="cfg-treasury-nagad" className="text-xs font-bold text-gray-400 uppercase tracking-wide">Nagad Merchant/Personal</label>
+            <input
+              id="cfg-treasury-nagad"
+              type="text"
+              value={config.treasuryNagad || ''}
               onChange={e => setConfig({ ...config, treasuryNagad: e.target.value })}
               placeholder="018XXXXXXXX"
               className="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono transition-all"
@@ -215,7 +208,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
         </div>
         <div className="mt-6">
           <button 
-            onClick={handleSaveConfig}
+            onClick={handleSaveTreasury}
             disabled={isSaving}
             className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-emerald-700 flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50"
           >
@@ -319,7 +312,6 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
                 <h4 className="font-semibold text-sm text-gray-800 uppercase tracking-wider">Active Listings Directory</h4>
                 <p className="text-xs text-gray-400 mt-0.5">Feature active items with one click</p>
               </div>
-              {isLoadingActive && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
             </div>
 
             {/* Search Bar */}
@@ -336,12 +328,7 @@ export function ContentTab({ initialConfig, featuredAuctions }: ContentTabProps)
 
             {/* Scrollable Listings List */}
             <div className="flex-1 overflow-y-auto max-h-[320px] space-y-2 pr-1">
-              {isLoadingActive && activeAuctions.length === 0 ? (
-                <div className="flex items-center justify-center py-12 text-sm text-gray-400">
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  Loading listings...
-                </div>
-              ) : filteredActiveAuctions.length === 0 ? (
+              {filteredActiveAuctions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center text-sm text-gray-400">
                   <p>No active auctions found.</p>
                   {searchTerm && <p className="text-xs text-gray-300 mt-1">Try a different search term.</p>}
