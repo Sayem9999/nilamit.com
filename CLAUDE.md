@@ -14,7 +14,7 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **Live URL:** `https://www.nilamit.com`
 
-**Admin panel:** `/admin` — gated by `requireAdmin()` in [src/lib/admin-guard.ts](src/lib/admin-guard.ts) (DB-deep check, not JWT-only). Admin emails come from `ADMIN_EMAILS` (`sayemf21@gmail.com`, `md.moimsarkar22@gmail.com`).
+**Admin panel:** `/admin` — gated by `requireAdmin()` in [src/lib/admin-guard.ts](src/lib/admin-guard.ts) (DB-deep check, not JWT-only). Admin emails come from the `ADMIN_EMAILS` secret (in Secret Manager — not listed here).
 
 **Cron:** GitHub Actions workflow in [.github/workflows/cron.yml](.github/workflows/cron.yml) hits the `/api/cron/*` POST endpoints with `Bearer ${CRON_SECRET}`. There is **no** Cloud Scheduler. Five jobs scheduled: `close-auctions` + `process-alerts` (every 5 min), `closing-soon` (every 15 min), `enforce-policies` (hourly), `gc-uploads` (weekly Sun 04:00 UTC).
 
@@ -160,8 +160,8 @@ DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (ad
 
 | Secret | Status | Notes |
 |---|---|---|
-| `AUTH_SECRET` | ✓ Real | `aFOCaYn0TDGp6WA4Gi77noq0vu/S/LbFx5UT5GBkz9Q=` |
-| `ADMIN_EMAILS` | ✓ Real | `sayemf21@gmail.com,md.moimsarkar22@gmail.com` |
+| `AUTH_SECRET` | ✓ Real | Value lives ONLY in Secret Manager — never commit it. (Rotated after a repo-visibility exposure; old value is burned.) |
+| `ADMIN_EMAILS` | ✓ Real | In Secret Manager. Do not list admin addresses in source. |
 | `CRON_SECRET` | ✓ Real | Auto-generated hex |
 | `FIREBASE_PROJECT_ID` | ✓ Real | `nilamit-52073` |
 | `FIREBASE_CLIENT_EMAIL` | ✓ Real | Firebase Admin SDK SA |
@@ -174,7 +174,7 @@ DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (ad
 | `GOOGLE_CLIENT_ID` | ✓ Real | OAuth client |
 | `GOOGLE_CLIENT_SECRET` | ✓ Real | Rotated May 4, 2026 |
 | `SENTRY_DSN` | ✓ Real | EU region: `ingest.de.sentry.io` |
-| `UPSTASH_REDIS_REST_URL` | ✓ Real | `https://safe-stallion-50421.upstash.io` |
+| `UPSTASH_REDIS_REST_URL` | ✓ Real | In Secret Manager. |
 | `UPSTASH_REDIS_REST_TOKEN` | ✓ Real | Real Upstash token |
 | `IMAGE_MODERATION` | env var | Set to `enabled` (May 2026); disable here to bypass Cloud Vision SafeSearch |
 | `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | ✓ Real | Activated. Public Web Push certificate from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates. Powers FCM browser push in `src/lib/fcm.ts`. |
