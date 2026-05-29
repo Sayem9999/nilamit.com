@@ -5,6 +5,7 @@ import { ERROR_CODES } from '@/lib/constants';
 import { log } from '@/lib/logger';
 import { BidSideEffects } from './bid-side-effects';
 import { validateBidPreconditions, computeAntiSnipeExtension } from '../bid-rules';
+import { resolveProxyBid } from '../proxy-logic';
 import { AuditService } from '@/services/admin/audit-service';
 
 /** Discriminated result of the bid transaction closure. */
@@ -79,44 +80,33 @@ export class BidProcessor {
           return { error: mapPreconditionError(e instanceof Error ? e.message : '', minRequired) };
         }
 
-        const existingProxy = auction.proxyMaxBid || auction.currentPrice || 0;
+        // Retained for the post-commit side-effects (outbid notification target).
         const existingProxyBidder = auction.proxyBidderId ?? null;
 
-        let newCurrentPrice = auction.currentPrice;
-        let newCurrentBidderId = auction.currentBidderId;
-        let newProxyMaxBid = auction.proxyMaxBid ?? 0;
-        let newProxyBidderId = auction.proxyBidderId ?? null;
-
-        let newSecondHighestBidderId = auction.secondHighestBidderId ?? null;
-        let newSecondHighestBidAmount = auction.secondHighestBidAmount ?? 0;
-
-        // 2. Proxy Bidding Logic
-        if (!newCurrentBidderId) {
-          newCurrentPrice = auction.startingPrice;
-          newCurrentBidderId = userId;
-          newProxyMaxBid = amount;
-          newProxyBidderId = userId;
-        } else if (userId === existingProxyBidder) {
-          if (amount > existingProxy) {
-            newProxyMaxBid = amount;
-          } else {
-            return { error: errorResponse(ErrorType.VALIDATION, 'You already have a higher or equal max bid.') };
-          }
-        } else {
-          if (amount > existingProxy) {
-            newSecondHighestBidderId = existingProxyBidder;
-            newSecondHighestBidAmount = existingProxy;
-            newCurrentPrice = Math.min(amount, existingProxy + increment);
-            newCurrentBidderId = userId;
-            newProxyMaxBid = amount;
-            newProxyBidderId = userId;
-          } else {
-            newSecondHighestBidderId = userId;
-            newSecondHighestBidAmount = amount;
-            newCurrentPrice = Math.min(existingProxy, amount + increment);
-            newCurrentBidderId = existingProxyBidder;
-          }
+        // 2. Proxy Bidding Logic — pure + unit-tested (see proxy-logic.ts).
+        const proxy = resolveProxyBid({
+          amount,
+          bidderId: userId,
+          startingPrice: auction.startingPrice,
+          currentPrice: auction.currentPrice,
+          currentBidderId: auction.currentBidderId ?? null,
+          proxyMaxBid: auction.proxyMaxBid ?? null,
+          proxyBidderId: auction.proxyBidderId ?? null,
+          secondHighestBidderId: auction.secondHighestBidderId ?? null,
+          secondHighestBidAmount: auction.secondHighestBidAmount ?? 0,
+          minBidIncrement: increment,
+        });
+        if (proxy.status === 'REJECTED_NOT_HIGHER') {
+          return { error: errorResponse(ErrorType.VALIDATION, 'You already have a higher or equal max bid.') };
         }
+        const {
+          currentPrice: newCurrentPrice,
+          currentBidderId: newCurrentBidderId,
+          proxyMaxBid: newProxyMaxBid,
+          proxyBidderId: newProxyBidderId,
+          secondHighestBidderId: newSecondHighestBidderId,
+          secondHighestBidAmount: newSecondHighestBidAmount,
+        } = proxy.state;
 
         const bidId = newId();
         const bidRef = db.collection('bids').doc(bidId);
