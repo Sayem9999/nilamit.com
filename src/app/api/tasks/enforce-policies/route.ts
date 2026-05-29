@@ -122,10 +122,14 @@ export async function POST(req: Request) {
 
     // ── Batch mode (GitHub Actions, hourly) ──
     const deadline = new Date(now - PAYMENT_DEADLINE_MS);
+    // orderBy('createdAt','desc') so this reuses the existing
+    // escrowTransactions(status, createdAt DESC) composite index — a bare
+    // range filter would implicitly need a (status, createdAt ASC) index.
     const snap = await db
       .collection('escrowTransactions')
       .where('status', '==', 'PENDING')
       .where('createdAt', '<=', deadline)
+      .orderBy('createdAt', 'desc')
       .limit(BATCH_LIMIT)
       .get();
 

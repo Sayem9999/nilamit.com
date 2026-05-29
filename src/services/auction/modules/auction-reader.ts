@@ -125,8 +125,14 @@ export class AuctionReader {
         // remove this scan cost at large catalog sizes; deferred because it
         // needs a backfill of existing listings and changes match semantics
         // (whole-token vs substring).
+        //
+        // We order the scan by endTime (which has full composite-index coverage
+        // for every status/category/location filter combo) rather than the
+        // requested sort field — ordering by currentPrice/bidCount/createdAt
+        // here would require composite indexes that don't exist for some filter
+        // combos and 500. The requested sort is still applied in-memory below.
         const SEARCH_SCAN_CAP = 1000;
-        const baseAuctionsSnap = await query.orderBy(orderField, sortOrder).limit(SEARCH_SCAN_CAP).get();
+        const baseAuctionsSnap = await query.orderBy('endTime', sortOrder).limit(SEARCH_SCAN_CAP).get();
         const baseAuctions = snapDocs<Auction>(baseAuctionsSnap);
 
         const searchLower = searchKeyword.toLowerCase();
