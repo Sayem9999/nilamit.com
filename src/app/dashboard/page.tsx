@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { db, docData } from "@/lib/db";
 import AuctionCard from "@/components/auction/AuctionCard";
 import { 
   Package, Star, Store,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import type { AuctionWithSeller } from "@/types";
+import type { Auction, AuctionWithSeller } from "@/types";
 import { formatBDT } from "@/lib/format";
 import { EscrowActionCard } from "@/components/social/EscrowActionCard";
 import { getTranslations } from "next-intl/server";
@@ -154,19 +154,16 @@ export default async function DashboardPage({
       const seller = sellerSnap.data() ?? {};
       const bidCountMap = new Map(auctionIds.map((id, i) => [id, bidCountSnaps[i].data().count]));
 
-      const allListings = rawSnap.docs.map(d => {
-        const a = d.data();
-        return {
-          ...a, id: d.id,
-          createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
-          endTime:   a.endTime?.toDate?.()   || new Date(a.endTime),
-          startTime: a.startTime?.toDate?.() || (a.startTime ? new Date(a.startTime) : undefined),
-          updatedAt: a.updatedAt?.toDate?.() || (a.updatedAt ? new Date(a.updatedAt) : undefined),
-          seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, rating: seller.rating, ratingCount: seller.ratingCount },
-          _count: { bids: bidCountMap.get(d.id) ?? 0 },
-          watchlist: [],
-        };
-      }) as unknown as AuctionWithSeller[];
+      // docData() recursively converts ALL Firestore Timestamps to Dates so the
+      // object is safe to pass to the AuctionCard client component. The previous
+      // manual spread left non-converted Timestamp fields (e.g. featuredUntil) as
+      // class instances, crashing RSC serialization.
+      const allListings = rawSnap.docs.map(d => ({
+        ...docData<Auction>(d)!,
+        seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, rating: seller.rating, ratingCount: seller.ratingCount },
+        _count: { bids: bidCountMap.get(d.id) ?? 0 },
+        watchlist: [],
+      })) as unknown as AuctionWithSeller[];
 
       // Aggregate stats across ALL listings, regardless of UI filter, so the
       // header summary stays consistent as the user toggles tabs.
@@ -213,7 +210,7 @@ export default async function DashboardPage({
           db.collection('bids').where('auctionId', '==', id).count().get()
         )),
       ]);
-      const auctionMap  = new Map(auctionSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
+      const auctionMap  = new Map(auctionSnaps.map(s => [s.id, s]));
       const bidCountMap = new Map(auctionIds.map((id, i) => [id, bidCountSnaps[i].data().count]));
 
       // Pass 2: batch sellers from auction data
@@ -222,20 +219,17 @@ export default async function DashboardPage({
       const sellerMap = new Map(sellerSnaps.map(s => [s.id, s.data() ?? {}]));
 
       watchlistAuctions = watchDocs.map(w => {
-        const a = auctionMap.get(w.auctionId);
-        if (!a) return null;
+        const snap = auctionMap.get(w.auctionId);
+        if (!snap?.exists) return null;
+        const a = docData<Auction>(snap)!;
         const seller = sellerMap.get(a.sellerId) ?? {};
         return {
-          ...a, id: w.auctionId,
-          createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
-          endTime:   a.endTime?.toDate?.()   || new Date(a.endTime),
-          startTime: a.startTime?.toDate?.() || (a.startTime ? new Date(a.startTime) : undefined),
-          updatedAt: a.updatedAt?.toDate?.() || (a.updatedAt ? new Date(a.updatedAt) : undefined),
+          ...a,
           seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, rating: seller.rating, ratingCount: seller.ratingCount },
           _count: { bids: bidCountMap.get(w.auctionId) ?? 0 },
           watchlist: [{
             ...w,
-            createdAt: w.createdAt?.toDate?.() || (w.createdAt ? new Date(w.createdAt) : undefined),
+            createdAt: (w.createdAt as { toDate?: () => Date })?.toDate?.() || (w.createdAt ? new Date(w.createdAt as string) : undefined),
           }],
         };
       }).filter(Boolean) as unknown as AuctionWithSeller[];
@@ -253,7 +247,7 @@ export default async function DashboardPage({
     if (uniqueAuctionIds.length > 0) {
       // Pass 1: batch auctions
       const auctionSnaps = await db.getAll(...uniqueAuctionIds.map(id => db.collection('auctions').doc(id)));
-      const auctionMap = new Map(auctionSnaps.map(s => [s.id, s.exists ? s.data()! : null]));
+      const auctionMap = new Map(auctionSnaps.map(s => [s.id, s]));
 
       // Count bids per auction from the already-fetched bids — no second DB call
       const bidCountMap = new Map<string, number>();
@@ -269,15 +263,12 @@ export default async function DashboardPage({
       }
 
       activeBids = uniqueAuctionIds.map(id => {
-        const a = auctionMap.get(id);
-        if (!a || a.status !== 'ACTIVE') return null;
+        const snap = auctionMap.get(id);
+        if (!snap?.exists || snap.data()?.status !== 'ACTIVE') return null;
+        const a = docData<Auction>(snap)!;
         const seller = sellerMap.get(a.sellerId) ?? {};
         return {
-          ...a, id,
-          createdAt: a.createdAt?.toDate?.() || new Date(a.createdAt),
-          endTime:   a.endTime?.toDate?.()   || new Date(a.endTime),
-          startTime: a.startTime?.toDate?.() || (a.startTime ? new Date(a.startTime) : undefined),
-          updatedAt: a.updatedAt?.toDate?.() || (a.updatedAt ? new Date(a.updatedAt) : undefined),
+          ...a,
           seller: { name: seller.name, image: seller.image, isVerifiedSeller: seller.isVerifiedSeller, rating: seller.rating, ratingCount: seller.ratingCount },
           _count: { bids: bidCountMap.get(id) ?? 0 },
           watchlist: [],

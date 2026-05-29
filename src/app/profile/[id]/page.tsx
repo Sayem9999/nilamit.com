@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db, docData } from "@/lib/db";
 export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import AuctionCard from "@/components/auction/AuctionCard";
@@ -97,15 +97,12 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
   const initialFollowerCount = followerCountRes.success ? followerCountRes.data!.count : 0;
 
   const rawAuctions = await Promise.all(auctionsSnap.docs.map(async d => {
-    const a = d.data() as Auction;
     const abidsSnap = await db.collection('bids').where('auctionId', '==', d.id).get();
+    // docData() recursively converts Firestore Timestamps to Dates so the object
+    // is serializable across the Server→Client (AuctionCard) boundary. The prior
+    // manual conversion missed fields like featuredUntil, crashing the render.
     const result: AuctionWithSeller = {
-      ...a,
-      id: d.id,
-      createdAt: (a.createdAt as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.createdAt as unknown as string | Date),
-      updatedAt: (a.updatedAt as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.updatedAt as unknown as string | Date),
-      startTime: (a.startTime as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.startTime as unknown as string | Date),
-      endTime: (a.endTime as unknown as { toDate?: () => Date })?.toDate?.() ?? new Date(a.endTime as unknown as string | Date),
+      ...docData<Auction>(d)!,
       seller: {
         id: seller.id,
         name: seller.name,
