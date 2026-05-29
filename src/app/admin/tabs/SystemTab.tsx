@@ -14,7 +14,6 @@ export function SystemTab() {
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [_isSavingConfig, setIsSavingConfig] = useState(false);
 
   // Operational Config State
   const [config, setConfig] = useState<SystemConfig | null>(null);
@@ -80,22 +79,6 @@ export function SystemTab() {
     } catch {
       toast.error('An error occurred while updating setting');
       setConfig({ ...config, [field]: previousValue });
-    }
-  };
-
-  const _handleUpdateConfig = async () => {
-    setIsSavingConfig(true);
-    try {
-      const res = await updateSystemConfig({});
-      if (res.success) {
-        toast.success('System configuration updated');
-      } else {
-        toast.error(res.error?.message || 'Update failed');
-      }
-    } catch {
-      toast.error('An error occurred');
-    } finally {
-      setIsSavingConfig(false);
     }
   };
 
