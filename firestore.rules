@@ -121,6 +121,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Financial ledger — immutable money-movement trail. Admins read; only
+    // Server Actions (Admin SDK) write. Never client-writable.
+    match /ledgerEntries/{entryId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ─── CATCH-ALL ───
     match /{document=**} {
       allow read, write: if false;

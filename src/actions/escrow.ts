@@ -13,6 +13,7 @@ import { updateSellerPerformance } from '@/lib/seller-performance';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { adminRefundEscrow } from './dispute';
 import { AuditService } from '@/services/admin/audit-service';
+import { recordLedgerEntry } from '@/lib/ledger';
 
 /**
  * Transitions PENDING → VERIFICATION_PENDING (buyer submits MFS payment ref).
@@ -106,6 +107,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         sellerAddress: seller.address as string,
         ref,
         codAmount:     t.codAmount ?? 0,
+        amount:        (t.amount as number) ?? 0,
       };
     });
 
@@ -127,6 +129,20 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         auctionTitle: result.auction.title,
         message:      `Payment submitted for "${result.auction.title}". Verification pending.`,
         timestamp:    Date.now(),
+      });
+
+      // Ledger: buyer submitted an MFS reference (no funds confirmed yet → NONE).
+      await recordLedgerEntry({
+        type: 'ADVANCE_SUBMITTED',
+        direction: 'NONE',
+        escrowId: transactionId,
+        auctionId: result.auction.id,
+        amount: result.amount,
+        buyerId: session.user.id,
+        sellerId: result.auction.sellerId as string,
+        paymentMethod: 'mfs_manual',
+        providerRef: result.ref,
+        operatorId: session.user.id,
       });
     } catch (sideEffectErr) {
       log.error('[escrow] side-effects failed after successful TX', sideEffectErr, { area: 'escrow', severity: 'warning' });
@@ -207,6 +223,18 @@ export async function confirmItemReceived(transactionId: string): Promise<Servic
           updateSellerPerformance(sellerId),
         ]);
       }
+
+      // Ledger: funds released to the seller (money OUT of escrow).
+      await recordLedgerEntry({
+        type: 'RELEASED',
+        direction: 'OUT',
+        escrowId: transactionId,
+        auctionId: result.auctionId as string,
+        amount: (result.amount as number) ?? 0,
+        buyerId: result.buyerId as string,
+        sellerId: result.sellerId as string,
+        operatorId: session.user.id,
+      });
     } catch (err) {
       log.error('[escrow] updates failed after successful TX', err, { area: 'escrow', severity: 'warning' });
     }

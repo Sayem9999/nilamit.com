@@ -11,6 +11,7 @@ import { log } from '@/lib/logger';
 import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { AuditService } from '@/services/admin/audit-service';
+import { recordLedgerEntry } from '@/lib/ledger';
 
 const REFUNDABLE_ESCROW_STATES = new Set(['HELD', 'DISPUTED', 'PENDING', 'VERIFICATION_PENDING']);
 
@@ -64,7 +65,7 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
 
   try {
     const adminSession = await requireAdmin();
-    const { sellerId, buyerId } = await db.runTransaction(async (tx) => {
+    const { sellerId, buyerId, amount, auctionId, escrowId } = await db.runTransaction(async (tx) => {
       const disputeRef = db.collection('disputes').doc(disputeId);
       const disputeSnap = await tx.get(disputeRef);
       if (!disputeSnap.exists) throw new Error('Dispute not found');
@@ -106,7 +107,13 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
         });
       }
 
-      return { sellerId: seller, buyerId: escrow.buyerId as string };
+      return {
+        sellerId: seller,
+        buyerId: escrow.buyerId as string,
+        amount: (escrow.amount as number) ?? 0,
+        auctionId: escrow.auctionId as string,
+        escrowId: dispute.transactionId as string,
+      };
     });
 
     await db.collection('admin_logs').add({
@@ -116,6 +123,19 @@ export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYE
       ruling,
       resolution: trimmedResolution,
       createdAt: new Date(),
+    });
+
+    // Ledger: dispute resolution moved real (previously-HELD) funds.
+    await recordLedgerEntry({
+      type: ruling === 'SELLER' ? 'RELEASED' : 'REFUNDED',
+      direction: ruling === 'SELLER' ? 'OUT' : 'REFUND',
+      escrowId,
+      auctionId,
+      amount,
+      buyerId,
+      sellerId: sellerId ?? null,
+      operatorId: adminSession.user.id,
+      metadata: { via: 'dispute', disputeId },
     });
 
     if (sellerId) {
@@ -147,9 +167,8 @@ export async function adminRefundEscrow(transactionId: string, reason: string): 
 
   try {
     const adminSession = await requireAdmin();
-    let sellerId: string | null = null;
 
-    sellerId = await db.runTransaction(async (tx) => {
+    const refund = await db.runTransaction(async (tx) => {
       const escrowRef  = db.collection('escrowTransactions').doc(transactionId);
       const escrowSnap = await tx.get(escrowRef);
       if (!escrowSnap.exists) throw new Error('Escrow transaction not found');
@@ -188,8 +207,16 @@ export async function adminRefundEscrow(transactionId: string, reason: string): 
         }
       }
 
-      return seller;
+      return {
+        seller,
+        amount: (escrow.amount as number) ?? 0,
+        buyerId: (escrow.buyerId as string) ?? null,
+        auctionId: (escrow.auctionId as string) ?? null,
+        priorStatus: escrow.status as string,
+      };
     });
+
+    const sellerId = refund.seller;
 
     await db.collection('admin_logs').add({
       action:    'ADMIN_REFUND_ESCROW',
@@ -197,6 +224,20 @@ export async function adminRefundEscrow(transactionId: string, reason: string): 
       targetId:  transactionId,
       reason:    trimmedReason,
       createdAt: new Date(),
+    });
+
+    // Ledger: REFUND direction only when funds were actually held (HELD/DISPUTED);
+    // refunding a PENDING/VERIFICATION_PENDING escrow moved no money (NONE).
+    await recordLedgerEntry({
+      type: 'REFUNDED',
+      direction: refund.priorStatus === 'HELD' || refund.priorStatus === 'DISPUTED' ? 'REFUND' : 'NONE',
+      escrowId: transactionId,
+      auctionId: refund.auctionId ?? transactionId,
+      amount: refund.amount,
+      buyerId: refund.buyerId,
+      sellerId: refund.seller,
+      operatorId: adminSession.user.id,
+      metadata: { reason: trimmedReason, priorStatus: refund.priorStatus },
     });
 
     if (sellerId) await updateSellerPerformance(sellerId);
