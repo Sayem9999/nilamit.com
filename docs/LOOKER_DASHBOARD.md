@@ -23,7 +23,9 @@ data source. Click → Sign in with the same Google account that owns
 
 (URLs use the Looker Studio Linking API. They're long because the
 config inline-encodes; no shortener needed since they're personal
-one-time setup links.)
+one-time setup links. Note: `lookerstudio.google.com` may 301-redirect
+to the legacy `datastudio.google.com` domain — that's expected, both
+work identically.)
 
 ### 1. Web Vitals p75 trend → suggested chart: **Time series**
 

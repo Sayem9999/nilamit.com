@@ -1,18 +1,15 @@
 # Staging environment
 
-> **Status as of May 2026**: An attempt to auto-create `nilamit-staging`
-> via `firebase projects:create` failed with `QUOTA_EXCEEDED` — Google
-> caps Firebase project count per account. Resolution options:
+> **Status as of May 2026**: Account project quota is exhausted. The
+> 4 obvious deletion candidates have already been soft-deleted (they
+> still count against quota for 30 days). The unblock path is a
+> **quota increase request** with the paste-ready form text in
+> [docs/QUOTA_REQUEST.md](./QUOTA_REQUEST.md).
 >
-> 1. **Delete an unused project** at https://console.cloud.google.com/cloud-resource-manager
->    (look for stale test projects you no longer need)
-> 2. **Request a quota increase** at https://console.cloud.google.com/iam-admin/quotas
->    — filter for "Project quota" and submit a justification ("staging environment for production marketplace nilamit-52073"). Usually approved within 1-2 days.
-> 3. **Use a separate Google account** — register `nilamit-staging` under a different Workspace account, then grant cross-project access to your prod admin email.
->
-> Once the project exists, follow the rest of this doc verbatim. The
-> apphosting-staging.yaml + .github/workflows/staging-deploy.yml are
-> already shipped and waiting.
+> 1–2 day SLA, then `firebase projects:create nilamit-staging` works
+> and the rest of this doc applies verbatim. apphosting-staging.yaml
+> + .github/workflows/staging-deploy.yml are already shipped and
+> waiting.
 
 
 
