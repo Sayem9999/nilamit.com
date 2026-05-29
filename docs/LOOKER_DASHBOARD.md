@@ -1,94 +1,126 @@
-# Looker Studio dashboard setup
+# Looker Studio dashboard setup — 5-minute one-click version
 
-A 30-minute one-time setup to get business + product metrics flowing
-from BigQuery into a shareable dashboard.
+7 BigQuery **views** are already created in `nilamit-52073:nilamit_events.*`:
 
-## What you'll have at the end
+| View | What it shows |
+|------|---------------|
+| `v_web_vitals_p75` | LCP/CLS/INP/FCP/TTFB p75 + p50 by route, last 7d |
+| `v_bid_volume_daily` | Daily bids, unique bidders, auctions, GMV — last 30d |
+| `v_escrow_funnel` | Pending → held → released → refunded, plus completion rate, last 30d |
+| `v_top_sellers` | Top 50 sellers by GMV, last 30d |
+| `v_anti_snipe_rate` | % of bids that triggered anti-snipe extension, last 7d |
+| `v_featured_revenue` | Featured-listing purchases + revenue, last 30d |
+| `v_rum_sessions` | Per-session web-vitals summary, last 24h |
 
-A Looker Studio report with 7 panels:
+Since they're views (not custom queries), Looker can introspect their
+schemas — pick chart types without retyping SQL.
 
-1. **Web Vitals p75 trend** — LCP/CLS/INP by page, last 7 days
-2. **Daily bid volume + GMV** — bid count + ৳ flowing through the marketplace
-3. **Escrow funnel** — pending → held → released conversion
-4. **Top sellers by GMV** — whales for VIP outreach
-5. **Anti-snipe trigger rate** — calibrate `antiSnipeSeconds` in Remote Config
-6. **Featured-listing revenue** — validate the new monetisation surface
-7. **RUM session summary** — debug bad releases user-by-user
+## One-click setup
 
-Data refreshes every 12 hours by default (configurable per data source).
+Each link below opens Looker Studio with that view pre-attached as a
+data source. Click → Sign in with the same Google account that owns
+`nilamit-52073` → `Add to report` → drag fields to charts.
 
-## Setup steps
+(URLs use the Looker Studio Linking API. They're long because the
+config inline-encodes; no shortener needed since they're personal
+one-time setup links.)
 
-### 1. Open Looker Studio
+### 1. Web Vitals p75 trend → suggested chart: **Time series**
 
-https://lookerstudio.google.com — sign in with the same Google account
-that has BigQuery access on `nilamit-52073`.
+```
+https://lookerstudio.google.com/datasources/create?connectorId=2&ds.connector=bigQuery&ds.type=TABLE&ds.projectId=nilamit-52073&ds.datasetId=nilamit_events&ds.tableId=v_web_vitals_p75&ds.refreshFields=true
+```
 
-### 2. Create the data source
+Drag `day` → Time dimension, `p75` → Metric, `path` + `metric` → Breakdown dimensions.
 
-`+ Create` → `Data source` → `BigQuery` connector → `My projects` →
-`nilamit-52073` → `nilamit_events` → `events`. Click `Connect`.
+### 2. Bid volume + GMV → **Combo chart** (bars + line)
 
-Looker auto-detects the schema (event_id, event_type, ts, user_id,
-auction_id, amount_bdt, metadata). The JSON `metadata` field appears
-as a plain string — extract individual fields per query (see below).
+```
+https://lookerstudio.google.com/datasources/create?connectorId=2&ds.connector=bigQuery&ds.type=TABLE&ds.projectId=nilamit-52073&ds.datasetId=nilamit_events&ds.tableId=v_bid_volume_daily&ds.refreshFields=true
+```
 
-### 3. Add the 7 panels
+`day` → X-axis. Bars: `bid_count`. Line: `gross_bid_volume_bdt`.
 
-For each panel, the source query is in `docs/LOOKER_QUERIES.sql`.
-Looker Studio's "Custom Query" mode is the simplest path:
+### 3. Escrow funnel → **Table** (or Sankey if you install the community viz)
 
-`+ Add data` → `BigQuery` → `Custom Query` → paste the SQL → name it.
+```
+https://lookerstudio.google.com/datasources/create?connectorId=2&ds.connector=bigQuery&ds.type=TABLE&ds.projectId=nilamit-52073&ds.datasetId=nilamit_events&ds.tableId=v_escrow_funnel&ds.refreshFields=true
+```
 
-Each query is bounded by a TIMESTAMP_SUB window so even with a full
-refresh the scan stays cheap (a few MB per query).
+`day`, `pending`, `held`, `released`, `refunded`, `completion_rate`.
 
-| Panel | Chart type | Source query |
-|-------|------------|--------------|
-| Web Vitals trend | Time series | `LOOKER_QUERIES.sql` #1 |
-| Bid volume + GMV | Combo chart (bars + line) | #2 |
-| Escrow funnel | Table | #3 |
-| Top sellers | Table | #4 |
-| Anti-snipe trigger rate | Time series | #5 |
-| Featured revenue | Combo chart | #6 |
-| RUM sessions | Table (sortable) | #7 |
+### 4. Top sellers → **Table** (sortable)
 
-### 4. Set up scheduled-email reports
+```
+https://lookerstudio.google.com/datasources/create?connectorId=2&ds.connector=bigQuery&ds.type=TABLE&ds.projectId=nilamit-52073&ds.datasetId=nilamit_events&ds.tableId=v_top_sellers&ds.refreshFields=true
+```
 
-For business-metric alerting without a separate Slack integration:
+`seller_id` → Row dimension. Metrics: `gmv_bdt`, `bids_received`, `auctions_with_bids`.
 
-Report → `Share` → `Schedule email delivery` → daily 09:00 BD time →
-recipients.
+### 5. Anti-snipe trigger rate → **Time series**
 
-This is the cheap MVP of business-metric alerting. For real
-threshold-based alerts (e.g. "GMV dropped 30% vs yesterday"), wire a
-Cloud Scheduler job that runs `bq query` against the same SQL and POSTs
-to a Slack webhook on threshold breach. ~1 day of work; track in
-`docs/ENTERPRISE_GAPS.md` under Gap 3.
+```
+https://lookerstudio.google.com/datasources/create?connectorId=2&ds.connector=bigQuery&ds.type=TABLE&ds.projectId=nilamit-52073&ds.datasetId=nilamit_events&ds.tableId=v_anti_snipe_rate&ds.refreshFields=true
+```
 
-### 5. Sanity check after setup
+`day` → X. Line: `pct_extended`. Watch this when tuning the
+`antiSnipeSeconds` Remote Config flag.
 
-Open each panel and verify:
-- **Web Vitals panel shows data within 6 hours of any production traffic** (RUM events from `WebVitalsReporter.tsx` ship to BigQuery via `/api/rum`).
-- **Bid volume shows data within 6 hours of any bid** (`BidSideEffects.handleBidSideEffects` calls `log.event('bid_placed')`).
-- **Featured revenue may be empty** until first seller buys a featured listing — that's expected.
+### 6. Featured revenue → **Combo chart**
+
+```
+https://lookerstudio.google.com/datasources/create?connectorId=2&ds.connector=bigQuery&ds.type=TABLE&ds.projectId=nilamit-52073&ds.datasetId=nilamit_events&ds.tableId=v_featured_revenue&ds.refreshFields=true
+```
+
+`day` → X. Bars: `purchases`. Line: `revenue_bdt`. Empty until first
+seller hits the new "Promote to Featured" CTA — expected.
+
+### 7. RUM sessions → **Table** (debug bad releases)
+
+```
+https://lookerstudio.google.com/datasources/create?connectorId=2&ds.connector=bigQuery&ds.type=TABLE&ds.projectId=nilamit-52073&ds.datasetId=nilamit_events&ds.tableId=v_rum_sessions&ds.refreshFields=true
+```
+
+Sort by `lcp_ms DESC` to find the slowest sessions. Filter by
+`first_seen >= today` to debug a fresh release.
+
+## Combining all 7 into one report
+
+After clicking each link above and adding it to a NEW report:
+
+1. In the first link's Looker tab, click `Create Report`.
+2. Name it "Nilamit Dashboard".
+3. For each subsequent data source: `+ Add data` → `Existing data sources` → pick the view you just created.
+4. Drag charts onto the canvas (7 panels total).
+
+Total click count: ~30 clicks. Time: ~5 minutes.
+
+## Scheduled email refresh
+
+In the report: `Share` → `Schedule email delivery` → daily 09:00 BD time → recipients.
+
+Free, fires every morning so you wake up knowing GMV.
+
+For real threshold alerts ("ping Slack when GMV drops 30% vs yesterday"), wire a Cloud Scheduler + `bq query` + webhook job — ~1 day of work, tracked under Gap 3 in `docs/ENTERPRISE_GAPS.md`.
 
 ## Costs
 
-- BigQuery: pay-per-byte-scanned. The bounded WHERE clauses mean each query
-  scans at most ~10 MB (1 day-partition × ~1 MB/day at current volume).
-  At your current scale, **all 7 queries combined cost <$0.01/month**.
-- Looker Studio: **free** for personal use; team sharing requires Looker Studio Pro (~$9/user/mo).
-- BigQuery streaming inserts (already running): ~$0.05/GB inserted, which at
-  current event volume is **~$1/month**.
+- BigQuery query scans: each view restricts via `TIMESTAMP_SUB` so a full refresh scans <10 MB. All 7 views combined: **<$0.01/month** at current event volume.
+- Looker Studio: free for personal use. Looker Studio Pro (~$9/user/mo) only needed for team sharing with role-based access.
+- BigQuery streaming inserts (already running): ~$1/month at current ingest rate.
+
+## Maintenance
+
+When you want to add a new metric:
+1. Edit the matching `v_*` view: `bq update --view='NEW SQL' nilamit_events.v_*`
+2. Looker auto-picks up the new columns next refresh (default 12h; force a refresh in Looker UI for testing).
+
+No code deploys required for new dashboard metrics — the SQL is the source of truth.
 
 ## What this does NOT cover
 
-- **Real-time alerts** (Slack ping when GMV craters): need a separate
-  Cloud Scheduler + bq query + webhook job.
-- **Anomaly detection** (auto-flag when today is statistically weird):
-  needs BigQuery ML or a third-party tool like Anodot/Datadog.
-- **User segment analysis** (cohort retention, LTV): needs a `users`
-  dimension table to JOIN against; doc'd as a follow-up.
+- **Real-time alerts** (Slack ping on threshold breach): needs Cloud Scheduler + webhook
+- **Anomaly detection** (auto-flag statistical weirdness): needs BigQuery ML or Anodot/Datadog
+- **Cohort / retention analysis**: needs a `users` dimension table to JOIN; tracked as separate follow-up
 
-For where this fits in the broader observability stack: `docs/ENTERPRISE_GAPS.md` Gap 3.
+For the broader observability roadmap: `docs/ENTERPRISE_GAPS.md` Gap 3.
