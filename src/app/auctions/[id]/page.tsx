@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AuctionDetailTabs } from "@/components/auction/AuctionDetailTabs";
+import { calculateSuccessFee } from "@/services/finance/commission";
 import { canReviewAuction } from "@/actions/review";
 import { getAuctionQuestions } from "@/actions/qa";
 import { getSystemConfig } from "@/actions/admin-content";
@@ -255,11 +256,19 @@ export default async function AuctionDetailPage({ params }: Props) {
 
           {/* eBay Multi-Tab Details Switcher */}
           {(() => {
-            const resolvedCommissionRate = (auction.commissionRate !== undefined && auction.commissionRate !== null)
-              ? auction.commissionRate
-              : (systemConfig
-                ? (systemConfig.commissionPercentageEnabled !== false ? (systemConfig.commissionPercentage ?? 5) : 0)
-                : 5);
+            // Shown as a percent. auction.commissionRate is stored as a fraction
+            // (e.g. 0.025) at sale time; systemConfig.commissionPercentage is
+            // already a percent (e.g. 1.5). For unsold auctions on the default
+            // dynamic tiers, estimate the real tiered rate for the current price
+            // (the same logic the close flow charges) instead of a flat placeholder.
+            const commissionPct =
+              auction.commissionRate != null
+                ? auction.commissionRate * 100
+                : systemConfig?.commissionPercentageEnabled === false
+                  ? 0
+                  : systemConfig?.commissionPercentage
+                    ?? calculateSuccessFee(auction.currentPrice, null).rate * 100;
+            const resolvedCommissionRate = Math.round(commissionPct * 100) / 100;
             return (
               <AuctionDetailTabs
                 description={auction.description}
