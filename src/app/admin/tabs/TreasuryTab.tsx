@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute, getVerificationQueue, approveEscrowPayment, refundWithDeduction } from '@/actions/admin';
-import { ShieldCheck, Download, ExternalLink, Clock, Scale, RotateCcw, Loader2, CheckCircle2, Trash2 } from 'lucide-react';
+import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute, getVerificationQueue, approveEscrowPayment, refundWithDeduction, getLedgerSummary } from '@/actions/admin';
+import { ShieldCheck, Download, ExternalLink, Clock, Scale, RotateCcw, Loader2, CheckCircle2, Trash2, Wallet } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
 import { generateInvoice } from '@/lib/pdf-generator';
 import toast from 'react-hot-toast';
@@ -28,10 +28,19 @@ interface ActiveEscrow {
   buyer: { name: string | null };
 }
 
+interface LedgerSummary {
+  totalIn: number;
+  totalOut: number;
+  totalRefund: number;
+  heldBalance: number;
+  counts: { in: number; out: number; refund: number };
+}
+
 export function TreasuryTab() {
   const [logs, setLogs] = useState<TreasuryLog[]>([]);
   const [activeEscrows, setActiveEscrows] = useState<ActiveEscrow[]>([]);
   const [verificationQueue, setVerificationQueue] = useState<TreasuryLog[]>([]);
+  const [ledger, setLedger] = useState<LedgerSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState<string | null>(null);
   const [approving, setApproving] = useState<string | null>(null);
@@ -39,15 +48,20 @@ export function TreasuryTab() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [auditRes, escrowRes, queueRes] = await Promise.all([
+      const [auditRes, escrowRes, queueRes, ledgerRes] = await Promise.all([
         getTreasuryAudit(),
         getAdminActiveEscrows(),
-        getVerificationQueue()
+        getVerificationQueue(),
+        getLedgerSummary()
       ]);
       if (auditRes.success && auditRes.data) {
         setLogs(auditRes.data as TreasuryLog[]);
       } else if (!auditRes.success) {
         toast.error(auditRes.error?.message || "Failed to load treasury audit");
+      }
+
+      if (ledgerRes.success && ledgerRes.data) {
+        setLedger(ledgerRes.data as LedgerSummary);
       }
 
       if (escrowRes.success && escrowRes.data) {
@@ -159,6 +173,33 @@ export function TreasuryTab() {
            <Download className="w-4 h-4" /> Export Ledger
         </button>
       </div>
+
+      {/* Reconciliation summary — financial ledger (IN − OUT − REFUND = held). */}
+      {ledger && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-gray-900 text-white rounded-md p-4 shadow-sm">
+            <div className="flex items-center gap-1.5 text-gray-300 text-[10px] font-bold uppercase tracking-wide">
+              <Wallet className="w-3.5 h-3.5" /> Held in Escrow
+            </div>
+            <p className="text-2xl font-bold mt-1">{formatBDT(ledger.heldBalance)}</p>
+          </div>
+          <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Total In</p>
+            <p className="text-2xl font-bold text-emerald-600 mt-1">{formatBDT(ledger.totalIn)}</p>
+            <p className="text-[10px] text-gray-400">{ledger.counts.in} entries</p>
+          </div>
+          <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Released to Sellers</p>
+            <p className="text-2xl font-bold text-blue-600 mt-1">{formatBDT(ledger.totalOut)}</p>
+            <p className="text-[10px] text-gray-400">{ledger.counts.out} entries</p>
+          </div>
+          <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Refunded to Buyers</p>
+            <p className="text-2xl font-bold text-amber-600 mt-1">{formatBDT(ledger.totalRefund)}</p>
+            <p className="text-[10px] text-gray-400">{ledger.counts.refund} entries</p>
+          </div>
+        </div>
+      )}
 
       {/* Verification Queue Section */}
       {verificationQueue.length > 0 && (

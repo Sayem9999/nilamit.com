@@ -7,6 +7,7 @@ import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { verifyCronSecret } from '@/lib/cron-utils';
 import { log } from '@/lib/logger';
+import { recordLedgerEntry } from '@/lib/ledger';
 
 /**
  * 24h payment-policy enforcement. A sale that the winner never pays for would
@@ -39,6 +40,8 @@ interface EnforceResult {
   sellerId?: string;
   winnerId?: string | null;
   title?: string;
+  amount?: number;
+  auctionId?: string;
 }
 
 async function enforceOne(auctionId: string, now: number): Promise<EnforceResult> {
@@ -69,7 +72,7 @@ async function enforceOne(auctionId: string, now: number): Promise<EnforceResult
       tx.update(winnerSnap.ref, { xp, userLevel: calculateLevel(xp), winningStreak: 0, updatedAt: when });
     }
 
-    return { acted: true, sellerId: auction.sellerId as string, winnerId, title: auction.title as string };
+    return { acted: true, sellerId: auction.sellerId as string, winnerId, title: auction.title as string, amount: (escrow.amount as number) ?? 0, auctionId };
   });
 }
 
@@ -96,6 +99,19 @@ async function notify(result: EnforceResult): Promise<void> {
     );
   }
   await Promise.allSettled(tasks);
+
+  // Ledger: lifecycle record of the cancelled unpaid sale (no funds moved → NONE).
+  await recordLedgerEntry({
+    type: 'CANCELLED',
+    direction: 'NONE',
+    escrowId: result.auctionId ?? '',
+    auctionId: result.auctionId ?? '',
+    amount: result.amount ?? 0,
+    buyerId: result.winnerId ?? null,
+    sellerId: result.sellerId ?? null,
+    operatorId: 'system',
+    metadata: { reason: 'unpaid_24h' },
+  });
 }
 
 export async function POST(req: Request) {

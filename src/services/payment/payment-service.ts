@@ -6,6 +6,7 @@ import { ServiceResponse, successResponse, errorResponse, ErrorType } from '@/li
 import { log } from '@/lib/logger';
 import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { recordLedgerEntry } from '@/lib/ledger';
 
 export class PaymentService {
   /**
@@ -19,7 +20,9 @@ export class PaymentService {
     provider: 'bkash' | 'nagad'
   ): Promise<ServiceResponse<EscrowTransaction>> {
     try {
-      return await db.runTransaction(async (tx) => {
+      let didTransition = false;
+      let held: EscrowTransaction | null = null;
+      const res = await db.runTransaction(async (tx) => {
         // 1. Find the escrow by its automation token (NOT status-filtered, so a
         //    replayed webhook for an already-HELD escrow can be detected and
         //    answered idempotently instead of returning a misleading 404).
@@ -85,10 +88,31 @@ export class PaymentService {
         }).catch(e => log.error('Payment: buyer notification failed', e));
 
         const fullData = { ...escrowData, ...updateData };
+        didTransition = true;
+        held = fullData as EscrowTransaction;
         log.info('Payment: Escrow successfully moved to HELD', { transactionId, escrowId: escrowDoc.id });
 
         return successResponse(fullData);
       });
+
+      // Ledger (post-commit; only on a real PENDING→HELD transition, never on
+      // an idempotent replay — so the IN total can't be double-counted).
+      if (res.success && didTransition && held) {
+        const h: EscrowTransaction = held;
+        await recordLedgerEntry({
+          type: 'ADVANCE_HELD',
+          direction: 'IN',
+          escrowId: h.id,
+          auctionId: h.auctionId,
+          amount: (h.amount as number) ?? amount ?? 0,
+          buyerId: h.buyerId,
+          sellerId: h.sellerId,
+          paymentMethod: provider,
+          providerRef: transactionId,
+          operatorId: 'system',
+        });
+      }
+      return res;
     } catch (err) {
       Sentry.captureException(err, {
         extra: { transactionId, automationToken, amount, provider }
