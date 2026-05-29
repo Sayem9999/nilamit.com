@@ -1,8 +1,9 @@
 name: Nilamit Cron Jobs
 
 # All cron routes are POST (CLAUDE.md rule #6) and behind Bearer ${CRON_SECRET}.
-# Base URL points at the App Hosting backend; the .com domain is currently
-# not routable from GitHub Actions runners.
+# Base URL is the canonical custom domain. The old
+# nilamit--nilamit-52073.asia-southeast1.hosted.app URL now serves the App
+# Hosting 404 placeholder, which silently failed EVERY cron job.
 #
 # GitHub Actions enforces a 5-minute minimum cron interval — we can't run
 # close-auctions every minute as documented. 5-minute granularity is fine in
@@ -22,7 +23,7 @@ on:
         default: "all"
 
 env:
-  BASE_URL: https://nilamit--nilamit-52073.asia-southeast1.hosted.app
+  BASE_URL: https://www.nilamit.com
 
 jobs:
 
