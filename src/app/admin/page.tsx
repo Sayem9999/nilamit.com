@@ -203,7 +203,7 @@ export default async function AdminPage() {
           featuredAuctions={featuredAuctions as Parameters<typeof ContentTab>[0]['featuredAuctions']}
         />
       }
-      system={<SystemTab />}
+      system={<SystemTab initialConfig={systemConfig ?? null} />}
       users={<UsersTab />}
       metrics={<MetricsTab />}
       treasury={<TreasuryTab />}
@@ -215,7 +215,7 @@ export default async function AdminPage() {
           initialMaintenanceMessage={(systemConfig as { maintenanceMessage?: string | null } | null)?.maintenanceMessage ?? null}
         />
       }
-      featureFlags={<FeatureFlagsTab />}
+      featureFlags={<FeatureFlagsTab initialConfig={systemConfig ?? null} />}
       audit={<AuditLogTab />}
       live={<AdminLiveFeed />}
     />

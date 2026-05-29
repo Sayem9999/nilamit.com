@@ -3,21 +3,21 @@
 import { useState } from 'react';
 import { Trash2, AlertTriangle, AlertCircle, Download, FileText, Database, Upload, Loader2, Megaphone, Landmark } from 'lucide-react';
 import { adminWipeTestData, exportTransactionsCSV, exportDatabaseBackup, importDatabaseBackup } from '@/actions/admin-system';
-import { getSystemConfig, updateSystemConfig } from '@/actions/admin-content';
-import { useEffect } from 'react';
+import { updateSystemConfig } from '@/actions/admin-content';
 import toast from 'react-hot-toast';
 import { SystemConfig } from '@/types';
 
-export function SystemTab() {
+export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | null }) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
-  // Operational Config State
-  const [config, setConfig] = useState<SystemConfig | null>(null);
-  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  // Operational Config State — provided by the server page (no client fetch,
+  // which could hang on a Server Action round-trip).
+  const [config, setConfig] = useState<SystemConfig | null>(initialConfig);
+  const [isLoadingConfig] = useState(false);
 
   // Backup & Restore states
   const [isExportingBackup, setIsExportingBackup] = useState(false);
@@ -26,18 +26,6 @@ export function SystemTab() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
   const [backupEntries, setBackupEntries] = useState<unknown[] | null>(null);
-
-  useEffect(() => {
-    const fetchConfig = async () => {
-      setIsLoadingConfig(true);
-      const res = await getSystemConfig();
-      if (res.success && res.data) {
-        setConfig(res.data);
-      }
-      setIsLoadingConfig(false);
-    };
-    fetchConfig();
-  }, []);
 
   const handleToggle = async (field: keyof SystemConfig, value: boolean | number | null) => {
     if (!config) return;
