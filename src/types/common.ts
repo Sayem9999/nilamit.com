@@ -32,8 +32,6 @@ export interface SystemConfig {
   // ─── Marketplace feature kill-switches ───────────────────────────────
   // Operational flags that enable/disable whole features platform-wide.
   // Enforced server-side in the relevant Server Action (never UI-only).
-  /** Featured-listing self-serve purchase. Default OFF — flow is incomplete. */
-  featuredListingsEnabled?: boolean;
   /** Buy It Now instant purchase. */
   buyItNowEnabled?: boolean;
   /** New auction creation (and relisting). Off = "listings paused". */

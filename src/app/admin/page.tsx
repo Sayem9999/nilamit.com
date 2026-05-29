@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { getAdminStats } from "@/actions/admin";
 import { getSystemConfig, getFeaturedAuctions } from "@/actions/admin-content";
+import { getAuctions } from "@/actions/auction";
 import { AdminLayout } from "./AdminLayout";
 import { SystemTab } from "./tabs/SystemTab";
 import { ContentTab } from "./tabs/ContentTab";
@@ -175,14 +176,16 @@ export default async function AdminPage() {
   const session = await requireAdmin().catch(() => null);
   if (!session) redirect("/login");
 
-  const [systemConfigRes, featuredAuctionsRes, adminStatsRes] = await Promise.all([
+  const [systemConfigRes, featuredAuctionsRes, adminStatsRes, activeAuctionsRes] = await Promise.all([
     getSystemConfig(),
     getFeaturedAuctions(),
     getAdminStats(),
+    getAuctions({ limit: 100 }),
   ]);
 
   const systemConfig = systemConfigRes.success ? systemConfigRes.data : null;
   const featuredAuctions = featuredAuctionsRes.success ? featuredAuctionsRes.data : [];
+  const activeAuctions = activeAuctionsRes.success && activeAuctionsRes.data ? activeAuctionsRes.data.auctions : [];
   const adminStats = adminStatsRes.success ? adminStatsRes.data : {
     totalUsers: 0,
     verifiedUsers: 0,
@@ -201,6 +204,7 @@ export default async function AdminPage() {
         <ContentTab
           initialConfig={systemConfig as SystemConfig}
           featuredAuctions={featuredAuctions as Parameters<typeof ContentTab>[0]['featuredAuctions']}
+          activeAuctions={activeAuctions as Parameters<typeof ContentTab>[0]['activeAuctions']}
         />
       }
       system={<SystemTab initialConfig={systemConfig ?? null} />}
