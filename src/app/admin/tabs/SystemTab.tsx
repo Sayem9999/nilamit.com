@@ -105,10 +105,10 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert(result.error?.message || 'Export failed');
+        toast.error(result.error?.message || 'Export failed');
       }
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Export failed');
+      toast.error(e instanceof Error ? e.message : 'Export failed');
     } finally {
       setIsExporting(false);
     }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { adminToggleVerification } from '@/actions/admin';
 import { Shield, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface VerificationToggleProps {
   userId: string;
@@ -20,10 +21,10 @@ export function VerificationToggle({ userId, initialStatus }: VerificationToggle
       if (res.success) {
         setIsVerified(!!res.data?.isVerifiedSeller);
       } else {
-        alert(res.error?.message || 'Verification toggle failed');
+        toast.error(res.error?.message || 'Verification toggle failed');
       }
     } catch {
-      alert('Verification toggle failed');
+      toast.error('Verification toggle failed');
     } finally {
       setIsLoading(false);
     }

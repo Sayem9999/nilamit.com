@@ -55,7 +55,9 @@ export default function AdminLiveFeed() {
       if (!data) return;
 
       const newBid: GlobalBid = {
-        id: snapshot.key || Math.random().toString(),
+        // RTDB always supplies a stable child key; the fallback is content-derived
+        // (never random) so de-duplication by id stays correct.
+        id: snapshot.key ?? `${data.timestamp ?? Date.now()}-${data.auctionId ?? 'evt'}`,
         ...data
       };
 

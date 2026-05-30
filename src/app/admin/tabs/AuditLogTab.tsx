@@ -44,12 +44,15 @@ export function AuditLogTab() {
 
   useEffect(() => {
     void (async () => {
-      const res = await listAuditLog(100);
-      if (res.success && res.data) {
-        setRows(res.data);
-        if (res.data.length < 100) setHasMore(false);
+      try {
+        const res = await listAuditLog(100);
+        if (res.success && res.data) {
+          setRows(res.data);
+          if (res.data.length < 100) setHasMore(false);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, []);
 
