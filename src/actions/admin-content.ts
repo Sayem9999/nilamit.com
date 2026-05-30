@@ -7,6 +7,7 @@ import { AdminService } from '@/services/admin/admin-service';
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
+import { systemConfigUpdateSchema, formatZodError } from '@/lib/schemas';
 
 const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   id: 'default',
@@ -52,27 +53,18 @@ export async function getSystemConfig(): Promise<ServiceResponse<SystemConfig>> 
   }
 }
 
-export async function updateSystemConfig(data: {
-  heroTitle?: string; heroSubtitle?: string; heroImage?: string;
-  announcement?: string; showAnnouncement?: boolean;
-  treasuryBkash?: string; treasuryNagad?: string;
-  defaultCommissionRate?: number;
-  mfsLinkageRequired?: boolean;
-  escrowRequired?: boolean;
-  commissionPercentageEnabled?: boolean;
-  commissionPercentage?: number | null;
-  postingRequirementsEnabled?: boolean;
-  biddingRequirementsEnabled?: boolean;
-  hybridEscrowEnabled?: boolean;
-  hybridCommitmentPercentage?: number | null;
-  buyItNowEnabled?: boolean;
-  newListingsEnabled?: boolean;
-  registrationsEnabled?: boolean;
-}): Promise<ServiceResponse<null>> {
+export async function updateSystemConfig(input: unknown): Promise<ServiceResponse<null>> {
   try {
     await requireAdmin();
+    // Whitelist + validate before writing the shared config doc: unknown keys
+    // are stripped (no mass-assignment) and treasury MFS numbers / percentages
+    // are format-checked so a typo can't misroute payments or break math.
+    const parsed = systemConfigUpdateSchema.safeParse(input);
+    if (!parsed.success) {
+      return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
+    }
     await db.collection('systemConfig').doc('default').set(
-      { ...data, id: 'default', updatedAt: new Date() }, { merge: true }
+      { ...parsed.data, id: 'default', updatedAt: new Date() }, { merge: true }
     );
     revalidateTag('config', { expire: 0 });
     revalidatePath('/');

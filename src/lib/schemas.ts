@@ -270,6 +270,50 @@ export type ImportBackupInput = z.infer<typeof importBackupSchema>;
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 /** Flatten a ZodError into a single human-readable line for action responses. */
+// ─── System config (admin Content / Feature Flags / System tabs) ────────────
+
+/** Bangladeshi MFS (bKash/Nagad) wallet number: 11 digits, 01[3-9]XXXXXXXX. */
+const MFS_NUMBER_RE = /^01[3-9]\d{8}$/;
+const treasuryNumberSchema = z
+  .string()
+  .trim()
+  .refine((v) => v === '' || MFS_NUMBER_RE.test(v), {
+    message: 'Enter a valid 11-digit bKash/Nagad number, e.g. 01712345678',
+  });
+const configPercent = z
+  .number()
+  .min(0, 'Cannot be negative')
+  .max(100, 'Cannot exceed 100');
+
+/**
+ * Whitelists + validates every field the admin config tabs may write to
+ * `systemConfig/default`. Unknown keys are stripped (default z.object behaviour),
+ * so a crafted payload can't mass-assign arbitrary fields. The treasury numbers
+ * are the live payment destinations shown at checkout, so they're format-checked
+ * here — a typo must never silently misroute buyer payments.
+ */
+export const systemConfigUpdateSchema = z.object({
+  heroTitle: z.string().max(200).optional(),
+  heroSubtitle: z.string().max(300).optional(),
+  heroImage: z.string().max(2048).nullable().optional(),
+  announcement: z.string().max(1000).nullable().optional(),
+  showAnnouncement: z.boolean().optional(),
+  treasuryBkash: treasuryNumberSchema.optional(),
+  treasuryNagad: treasuryNumberSchema.optional(),
+  defaultCommissionRate: configPercent.optional(),
+  mfsLinkageRequired: z.boolean().optional(),
+  escrowRequired: z.boolean().optional(),
+  commissionPercentageEnabled: z.boolean().optional(),
+  commissionPercentage: configPercent.nullable().optional(),
+  postingRequirementsEnabled: z.boolean().optional(),
+  biddingRequirementsEnabled: z.boolean().optional(),
+  hybridEscrowEnabled: z.boolean().optional(),
+  hybridCommitmentPercentage: configPercent.nullable().optional(),
+  buyItNowEnabled: z.boolean().optional(),
+  newListingsEnabled: z.boolean().optional(),
+  registrationsEnabled: z.boolean().optional(),
+});
+
 export function formatZodError(err: z.ZodError): string {
   const first = err.issues[0];
   if (!first) return 'Invalid input';
