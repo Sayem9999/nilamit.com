@@ -5,8 +5,53 @@ import {
   passwordSchema,
   emailSchema,
   MAX_AUCTION_PRICE_BDT,
+  systemConfigUpdateSchema,
 } from '@/lib/schemas';
 import crypto from 'crypto';
+
+// ─── systemConfigUpdateSchema ───────────────────────────────────────────────
+
+describe('systemConfigUpdateSchema', () => {
+  it('accepts valid 11-digit bKash/Nagad treasury numbers', () => {
+    const r = systemConfigUpdateSchema.safeParse({
+      treasuryBkash: '01712345678',
+      treasuryNagad: '01812345678',
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects malformed treasury numbers (payment-destination safety)', () => {
+    expect(systemConfigUpdateSchema.safeParse({ treasuryBkash: '12345' }).success).toBe(false);
+    expect(systemConfigUpdateSchema.safeParse({ treasuryBkash: '02712345678' }).success).toBe(false); // bad prefix
+    expect(systemConfigUpdateSchema.safeParse({ treasuryBkash: '0171234567' }).success).toBe(false);  // 10 digits
+    expect(systemConfigUpdateSchema.safeParse({ treasuryBkash: '017123456789' }).success).toBe(false); // 12 digits
+    expect(systemConfigUpdateSchema.safeParse({ treasuryNagad: '0171234567a' }).success).toBe(false);  // non-digit
+  });
+
+  it('allows an empty treasury string (clearing the number)', () => {
+    expect(systemConfigUpdateSchema.safeParse({ treasuryBkash: '' }).success).toBe(true);
+  });
+
+  it('strips unknown keys so a crafted payload cannot mass-assign', () => {
+    const r = systemConfigUpdateSchema.safeParse({
+      heroTitle: 'Hi',
+      isAdmin: true,
+      id: 'evil',
+      maintenanceMode: true,
+    });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data).toEqual({ heroTitle: 'Hi' });
+    }
+  });
+
+  it('enforces percentage bounds (0–100) and allows null tiers', () => {
+    expect(systemConfigUpdateSchema.safeParse({ commissionPercentage: 50 }).success).toBe(true);
+    expect(systemConfigUpdateSchema.safeParse({ commissionPercentage: null }).success).toBe(true);
+    expect(systemConfigUpdateSchema.safeParse({ commissionPercentage: 101 }).success).toBe(false);
+    expect(systemConfigUpdateSchema.safeParse({ hybridCommitmentPercentage: -1 }).success).toBe(false);
+  });
+});
 
 // ─── placeBidSchema ────────────────────────────────────────────────────────
 

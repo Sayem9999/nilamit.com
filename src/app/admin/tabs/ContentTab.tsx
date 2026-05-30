@@ -19,6 +19,10 @@ import Image from 'next/image';
 import { SystemConfig, AuctionWithSeller } from '@/types';
 import toast from 'react-hot-toast';
 
+/** BD MFS (bKash/Nagad) wallet number: 11 digits, 01[3-9]XXXXXXXX. Mirrors the
+ *  server check in systemConfigUpdateSchema so admins get instant feedback. */
+const MFS_NUMBER_RE = /^01[3-9]\d{8}$/;
+
 interface ContentTabProps {
   initialConfig: SystemConfig;
   featuredAuctions: { id: string; title: string; currentPrice: number; images: string[] }[];
@@ -60,10 +64,21 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
     heroImage: config.heroImage ?? undefined,
   }, 'Homepage banner');
 
-  const handleSaveTreasury = () => saveFields({
-    treasuryBkash: config.treasuryBkash ?? undefined,
-    treasuryNagad: config.treasuryNagad ?? undefined,
-  }, 'Treasury');
+  const handleSaveTreasury = () => {
+    const bkash = (config.treasuryBkash ?? '').trim();
+    const nagad = (config.treasuryNagad ?? '').trim();
+    // These numbers are the live payment destinations shown to buyers at
+    // checkout — reject a malformed entry before it can misroute money.
+    if (bkash && !MFS_NUMBER_RE.test(bkash)) {
+      toast.error('bKash number must be 11 digits, e.g. 01712345678');
+      return;
+    }
+    if (nagad && !MFS_NUMBER_RE.test(nagad)) {
+      toast.error('Nagad number must be 11 digits, e.g. 01712345678');
+      return;
+    }
+    saveFields({ treasuryBkash: bkash, treasuryNagad: nagad }, 'Treasury');
+  };
 
   const handleToggleFeatured = async (id: string) => {
     if (!id.trim()) {
@@ -188,8 +203,10 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
             <input
               id="cfg-treasury-bkash"
               type="text"
+              inputMode="numeric"
+              maxLength={11}
               value={config.treasuryBkash || ''}
-              onChange={e => setConfig({ ...config, treasuryBkash: e.target.value })}
+              onChange={e => setConfig({ ...config, treasuryBkash: e.target.value.replace(/\D/g, '') })}
               placeholder="017XXXXXXXX"
               className="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono transition-all"
             />
@@ -199,8 +216,10 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
             <input
               id="cfg-treasury-nagad"
               type="text"
+              inputMode="numeric"
+              maxLength={11}
               value={config.treasuryNagad || ''}
-              onChange={e => setConfig({ ...config, treasuryNagad: e.target.value })}
+              onChange={e => setConfig({ ...config, treasuryNagad: e.target.value.replace(/\D/g, '') })}
               placeholder="018XXXXXXXX"
               className="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono transition-all"
             />
