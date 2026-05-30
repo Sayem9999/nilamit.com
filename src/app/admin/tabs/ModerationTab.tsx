@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import toast from "react-hot-toast";
 
 type Mode = "REPORTS" | "ALL_AUCTIONS";
 
@@ -142,7 +143,7 @@ export function ModerationTab() {
       if (res.success) {
         setReports((prev) => prev.filter((r) => r.id !== id));
       } else {
-        alert(res.error?.message || "Failed to dismiss report");
+        toast.error(res.error?.message || "Failed to dismiss report");
       }
     });
   };
@@ -159,7 +160,7 @@ export function ModerationTab() {
       if (res.success) {
         setReports((prev) => prev.filter((r) => r.id !== reportId));
       } else {
-        alert(res.error?.message || "Failed to suspend auction");
+        toast.error(res.error?.message || "Failed to suspend auction");
       }
     });
   };
@@ -173,7 +174,7 @@ export function ModerationTab() {
   const submitAuctionAction = () => {
     if (!actioningId || !actionType) return;
     if (!actionReason.trim()) {
-      alert("Please enter a valid reason for this operation.");
+      toast.error("Please enter a valid reason for this operation.");
       return;
     }
 
@@ -181,7 +182,7 @@ export function ModerationTab() {
       if (actionType === "SUSPEND") {
         const res = await adminTakeDownAuction(actioningId, actionReason);
         if (res.success) {
-          alert("Auction has been successfully suspended.");
+          toast.success("Auction has been successfully suspended.");
           // Refresh lists
           setAuctions((prev) =>
             prev.map((a) => (a.id === actioningId ? { ...a, status: "CANCELLED" } : a))
@@ -189,17 +190,17 @@ export function ModerationTab() {
           setActioningId(null);
           setActionType(null);
         } else {
-          alert(res.error?.message || "Failed to suspend auction.");
+          toast.error(res.error?.message || "Failed to suspend auction.");
         }
       } else if (actionType === "DELETE") {
         const res = await adminDeleteAuction(actioningId, actionReason);
         if (res.success) {
-          alert("Auction has been permanently deleted from the database.");
+          toast.success("Auction has been permanently deleted from the database.");
           setAuctions((prev) => prev.filter((a) => a.id !== actioningId));
           setActioningId(null);
           setActionType(null);
         } else {
-          alert(res.error?.message || "Failed to permanently delete auction.");
+          toast.error(res.error?.message || "Failed to permanently delete auction.");
         }
       }
     });

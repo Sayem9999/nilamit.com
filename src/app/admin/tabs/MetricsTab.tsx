@@ -78,8 +78,8 @@ export function MetricsTab() {
         if (mounted && res.success && res.data) {
           setMetrics(res.data);
         }
-      } catch {
-        // User not admin or error
+      } catch (e) {
+        console.error('[MetricsTab] failed to load metrics', e);
       }
       if (mounted) setLoading(false);
     };

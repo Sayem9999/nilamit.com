@@ -8,6 +8,7 @@ import {
 } from "@/actions/admin-users";
 import { Search, Users, Ban } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export function UsersTab() {
   interface AdminUser {
@@ -78,7 +79,7 @@ export function UsersTab() {
           ),
         );
       } else {
-        alert(result.error?.message || "Failed to update ban status");
+        toast.error(result.error?.message || "Failed to update ban status");
       }
     });
   };
