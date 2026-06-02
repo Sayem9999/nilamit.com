@@ -23,6 +23,13 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
   const escrowEnabled = systemConfig?.escrowRequired ?? true;
   const heroImage = systemConfig?.heroImage || "/hero_c2c.png";
 
+  // Admin-editable copy (Admin → Content → Homepage Banner). Fall back to the
+  // localized default when an admin hasn't set a custom value, so the promo
+  // strip is never blank. Previously these admin fields were ignored entirely
+  // and the strip always showed the i18n strings.
+  const heroTitle = systemConfig?.heroTitle?.trim() || t("promoSellTitle");
+  const heroSubtitle = systemConfig?.heroSubtitle?.trim() || t("promoSellSubtitle");
+
   const formattedUsers = totalUsers
     ? totalUsers >= 1000
       ? `${(totalUsers / 1000).toFixed(1)}k+`
@@ -46,10 +53,10 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 <Tag className="w-3 h-3" /> {t("promoTagFree")}
               </div>
               <h2 className="font-heading font-bold text-xl sm:text-2xl leading-tight tracking-tight">
-                {t("promoSellTitle")}
+                {heroTitle}
               </h2>
               <p className="mt-1 text-primary-100 text-xs sm:text-sm max-w-md">
-                {t("promoSellSubtitle")}
+                {heroSubtitle}
               </p>
               <span className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-white group-hover:gap-2 transition-all">
                 {t("promoSellCta")} <ArrowRight className="w-4 h-4" />

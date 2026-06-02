@@ -17,6 +17,7 @@ import { getDatabase, type Database } from 'firebase-admin/database';
 import { getStorage, type Storage } from 'firebase-admin/storage';
 import { getAuth, type Auth } from 'firebase-admin/auth';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { RTDB_PATHS, type UserNotification } from '@/lib/firebase-events';
 
 /** Robust private key parsing: handles literal newlines, escaped \n, 
  * and potential JSON-stringified wrappers from secret managers. */
@@ -155,6 +156,16 @@ export async function rtdbPush(path: string, data: Record<string, unknown>): Pro
     ...data,
     _ts: Date.now(),
   });
+}
+
+/**
+ * Type-safe push to a user's notification inbox. Every writer should use this
+ * instead of calling rtdbPush(RTDB_PATHS.userNotifications(...)) directly, so
+ * the payload is checked against the shared `UserNotification` contract — a
+ * mistyped or missing field the consumer reads is then a compile error.
+ */
+export async function pushUserNotification(userId: string, notification: UserNotification): Promise<void> {
+  await rtdbPush(RTDB_PATHS.userNotifications(userId), notification as unknown as Record<string, unknown>);
 }
 
 /**

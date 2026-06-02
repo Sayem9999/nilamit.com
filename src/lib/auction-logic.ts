@@ -2,7 +2,7 @@ import 'server-only';
 import { randomUUID } from 'crypto';
 import { db, incrementGlobalStat } from '@/lib/db';
 import { sendAuctionWonEmail } from '@/lib/firebase-email';
-import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
+import { rtdbSet, pushUserNotification } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import type { AuctionStatus, SystemConfig } from '@/types';
 import { log } from '@/lib/logger';
@@ -146,7 +146,7 @@ export function sendSaleNotifications(payload: SaleNotifyPayload) {
     sendAuctionWonEmail(payload.winnerEmail, payload.title, payload.finalPrice, payload.auctionId)
       .catch((e) => log.error('auction-logic: winner email failed', e, { auctionId: payload.auctionId }));
   }
-  rtdbPush(RTDB_PATHS.userNotifications(payload.winnerId), {
+  pushUserNotification(payload.winnerId, {
     event:     FIREBASE_EVENTS.AUCTION_WON,
     auctionId: payload.auctionId,
     title:     payload.title,
@@ -258,7 +258,7 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
         const message = notifyPayload.reason === 'RESERVE_NOT_MET'
           ? `"${notifyPayload.title}" ended below your reserve price and did not sell.`
           : `"${notifyPayload.title}" ended without any bids.`;
-        rtdbPush(RTDB_PATHS.userNotifications(notifyPayload.sellerId), {
+        pushUserNotification(notifyPayload.sellerId, {
           event: FIREBASE_EVENTS.AUCTION_CLOSED,
           auctionId: notifyPayload.auctionId,
           auctionTitle: notifyPayload.title,

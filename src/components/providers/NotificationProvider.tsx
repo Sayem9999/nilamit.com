@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { onChildAdded, ref } from "firebase/database";
 import { getClientDB, ensureFirebaseAuth } from "@/lib/firebase-client";
 import { registerExistingPushGrant } from "@/lib/fcm";
-import { RTDB_PATHS, FIREBASE_EVENTS } from "@/lib/firebase-events";
+import { RTDB_PATHS, FIREBASE_EVENTS, type UserNotification } from "@/lib/firebase-events";
 import { showNotification } from "@/lib/notifications";
 import { toast } from "react-hot-toast";
 
@@ -47,7 +47,9 @@ export function NotificationProvider({
         if (ts && ts < startTime) return; // skip backfill of older notifications
         if (!ts) return; // undated legacy item — don't replay as a toast
 
-        handleNotification(data);
+        // RTDB values are untyped at the boundary; assert to the shared
+        // contract so field access below is checked against UserNotification.
+        handleNotification(data as UserNotification);
       });
     })();
 
@@ -59,7 +61,7 @@ export function NotificationProvider({
 
 // ─── Notification dispatcher ─────────────────────────────────────────────────
 
-function handleNotification(data: Record<string, unknown>) {
+function handleNotification(data: UserNotification) {
   switch (data.event) {
 
     case FIREBASE_EVENTS.OUTBID_ALERT: {

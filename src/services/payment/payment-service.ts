@@ -4,8 +4,8 @@ import { EscrowTransaction, EscrowStatus } from '@/types';
 import { AuditService } from '@/services/admin/audit-service';
 import { ServiceResponse, successResponse, errorResponse, ErrorType } from '@/lib/errors';
 import { log } from '@/lib/logger';
-import { rtdbPush } from '@/lib/firebase-admin';
-import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { pushUserNotification } from '@/lib/firebase-admin';
+import { FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recordLedgerEntry } from '@/lib/ledger';
 
 /**
@@ -113,7 +113,7 @@ export class PaymentService {
         await AuditService.logAuctionChange(escrowData.auctionId, beforeAuction, afterAuction, 'UPDATE', 'system', tx);
 
         // 7. Notify parties via RTDB
-        rtdbPush(RTDB_PATHS.userNotifications(escrowData.buyerId), {
+        pushUserNotification(escrowData.buyerId, {
           event: FIREBASE_EVENTS.PAYMENT_SUCCESS,
           message: `Payment verified. ${amount} BDT is now held in escrow.`,
           auctionId: escrowData.auctionId,

@@ -1,4 +1,4 @@
-import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
+import { rtdbPush, rtdbSet, pushUserNotification } from '@/lib/firebase-admin';
 import { ShillDetectorService } from '@/services/security/shill-detector';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { Auction, Bid } from '@/types';
@@ -100,15 +100,12 @@ export class BidSideEffects {
 
   private static async notifyOutbid(userId: string, auction: Auction, newAmount: number): Promise<void> {
     try {
-      await rtdbPush(RTDB_PATHS.userNotifications(userId), {
+      await pushUserNotification(userId, {
         event: FIREBASE_EVENTS.OUTBID_ALERT,
         auctionId: auction.id,
         auctionTitle: auction.title,
-        // Field is `amount` to match the NotificationProvider consumer and every
-        // other notification event. Previously `newAmount`, which the consumer
-        // never read — the outbid toast rendered "৳undefined".
         amount: newAmount,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
       // Browser push (no-op if FCM not configured). Fire-and-forget so it
       // never blocks bid commit acknowledgement.
@@ -125,12 +122,12 @@ export class BidSideEffects {
 
   private static async notifySeller(sellerId: string, auction: Auction, amount: number): Promise<void> {
     try {
-      await rtdbPush(RTDB_PATHS.userNotifications(sellerId), {
+      await pushUserNotification(sellerId, {
         event: FIREBASE_EVENTS.NEW_BID,
         auctionId: auction.id,
         auctionTitle: auction.title,
         amount,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
       // Browser push for the seller too — they want to know about activity
       // on their listing without keeping a tab open.

@@ -1,6 +1,15 @@
 import { jsPDF } from 'jspdf';
 import { formatBDT } from './format';
 
+/**
+ * jsPDF's built-in Helvetica (standard-14 PDF fonts) has no glyph for the
+ * Bengali Taka sign ৳ (U+09F3) — it renders as a blank/garbled box. For the
+ * PDF we swap the symbol for an ASCII "BDT" prefix so amounts are legible.
+ */
+function formatBDTForPdf(amount: number): string {
+  return formatBDT(amount).replace('৳', 'BDT ');
+}
+
 interface InvoiceData {
   invoiceNumber: string;
   date: Date;
@@ -60,7 +69,7 @@ export function generateInvoice(data: InvoiceData) {
   
   doc.setFont("helvetica", "normal");
   doc.text(data.auctionTitle, margin + 5, 120);
-  doc.text(formatBDT(data.amount), 160, 120);
+  doc.text(formatBDTForPdf(data.amount), 160, 120);
   
   // Footer
   doc.setDrawColor(240);

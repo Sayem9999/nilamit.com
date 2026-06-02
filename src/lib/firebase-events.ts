@@ -73,3 +73,35 @@ export const FIREBASE_EVENTS = {
 } as const;
 
 export type FirebaseEvent = typeof FIREBASE_EVENTS[keyof typeof FIREBASE_EVENTS];
+
+// ─── User notification inbox contract ─────────────────────────────────────────
+//
+// Discriminated union for payloads pushed to RTDB_PATHS.userNotifications.
+// This is the single source of truth shared by every writer (via
+// `pushUserNotification` in firebase-admin.ts) and the NotificationProvider
+// consumer. Renaming/omitting a field a consumer reads becomes a COMPILE error
+// instead of a silently dropped toast (the `newAmount`→`amount` class of bug).
+
+interface UserNotificationBase {
+  auctionId?: string;
+  /** epoch ms — the consumer uses this to skip replaying backfilled items */
+  timestamp: number;
+}
+
+export type UserNotification =
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.OUTBID_ALERT; auctionTitle: string; amount: number })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.NEW_BID; auctionTitle: string; amount: number })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.ENDING_SOON; auctionTitle: string; amount: number; currentPrice: number; endTime?: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.PRICE_ALERT; auctionTitle: string; type: 'TARGET_REACHED' | 'PRICE_DROP'; amount: number; threshold: number; title?: string; message?: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.AUCTION_WON; title: string; auctionTitle?: string; amount: number })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.AUCTION_CLOSED; auctionTitle?: string; message: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.PAYMENT_SUCCESS; message: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.ADVANCE_PAID; auctionTitle?: string; message: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.TRUST_UPDATE; message: string; badges?: string[] })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.CHAT_NOTIFICATION; message: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.NEW_MESSAGE; conversationId: string; senderName?: string; preview?: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.NEW_LISTING; auctionTitle: string; sellerId?: string; coverImage?: string | null })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.NEW_QUESTION; auctionTitle: string; questionId?: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.QUESTION_ANSWERED; auctionTitle?: string | null; questionId?: string })
+  | (UserNotificationBase & { event: 'ITEM_SHIPPED'; message: string })
+  | (UserNotificationBase & { event: 'badge_earned'; badge?: { label?: string; icon?: string } });
