@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 import { db, toDate } from '@/lib/db';
-import { rtdbPush } from '@/lib/firebase-admin';
-import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { pushUserNotification } from '@/lib/firebase-admin';
+import { FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { sendEndingSoonEmail } from '@/lib/firebase-email';
 import { verifyCronSecret } from '@/lib/cron-utils';
 import { log } from '@/lib/logger';
@@ -58,7 +58,7 @@ async function notifyForAuction(auction: Auction): Promise<{ emails: number; eve
       }
 
       tasks.push(
-        rtdbPush(RTDB_PATHS.userNotifications(user.id), {
+        pushUserNotification(user.id, {
           event: FIREBASE_EVENTS.ENDING_SOON,
           auctionId: auction.id,
           auctionTitle: auction.title as string,
@@ -78,7 +78,7 @@ async function notifyForAuction(auction: Auction): Promise<{ emails: number; eve
       if (notifiedUserIds.has(userId)) continue;
 
       tasks.push(
-        rtdbPush(RTDB_PATHS.userNotifications(userId), {
+        pushUserNotification(userId, {
           event: FIREBASE_EVENTS.ENDING_SOON,
           auctionId: auction.id,
           auctionTitle: auction.title as string,

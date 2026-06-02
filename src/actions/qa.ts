@@ -9,8 +9,8 @@ import { log } from '@/lib/logger';
 import { ERROR_CODES } from '@/lib/constants';
 import { filterPII } from '@/lib/pii-filter';
 import { qaLimiter } from '@/lib/ratelimit';
-import { rtdbPush } from '@/lib/firebase-admin';
-import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { pushUserNotification } from '@/lib/firebase-admin';
+import { FIREBASE_EVENTS } from '@/lib/firebase-events';
 
 export interface PublicQuestion {
   id:          string;
@@ -76,7 +76,7 @@ export async function askQuestion(input: unknown): Promise<ServiceResponse<{ que
     });
 
     // Notify the seller — fire-and-forget, never blocks the response.
-    rtdbPush(RTDB_PATHS.userNotifications(auction.sellerId), {
+    pushUserNotification(auction.sellerId, {
       event:        FIREBASE_EVENTS.NEW_QUESTION,
       auctionId,
       auctionTitle: auction.title,
@@ -133,7 +133,7 @@ export async function answerQuestion(input: unknown): Promise<ServiceResponse<nu
     });
 
     if (askerId && auctionId) {
-      rtdbPush(RTDB_PATHS.userNotifications(askerId), {
+      pushUserNotification(askerId, {
         event:        FIREBASE_EVENTS.QUESTION_ANSWERED,
         auctionId,
         auctionTitle: auctionTitle ?? null,

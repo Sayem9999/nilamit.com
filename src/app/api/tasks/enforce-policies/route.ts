@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { calculateLevel } from '@/lib/gamification-engine';
-import { rtdbPush } from '@/lib/firebase-admin';
-import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { pushUserNotification } from '@/lib/firebase-admin';
+import { FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { verifyCronSecret } from '@/lib/cron-utils';
 import { log } from '@/lib/logger';
 import { recordLedgerEntry } from '@/lib/ledger';
@@ -82,7 +82,7 @@ async function notify(result: EnforceResult): Promise<void> {
   const tasks: Promise<unknown>[] = [];
   if (result.sellerId) {
     tasks.push(
-      rtdbPush(RTDB_PATHS.userNotifications(result.sellerId), {
+      pushUserNotification(result.sellerId, {
         event: FIREBASE_EVENTS.AUCTION_CLOSED,
         message: `The winner of "${title}" did not pay within 24h. The sale was cancelled.`,
         timestamp: Date.now(),
@@ -91,7 +91,7 @@ async function notify(result: EnforceResult): Promise<void> {
   }
   if (result.winnerId) {
     tasks.push(
-      rtdbPush(RTDB_PATHS.userNotifications(result.winnerId), {
+      pushUserNotification(result.winnerId, {
         event: FIREBASE_EVENTS.TRUST_UPDATE,
         message: `You missed the 24h payment window for "${title}". The sale was cancelled and a penalty was applied.`,
         timestamp: Date.now(),

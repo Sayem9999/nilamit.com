@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 import { db } from '@/lib/db';
-import { rtdbPush } from '@/lib/firebase-admin';
-import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { pushUserNotification } from '@/lib/firebase-admin';
+import { FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { verifyCronSecret } from '@/lib/cron-utils';
 import { log } from '@/lib/logger';
 
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     }
 
     const tasks: Promise<unknown>[] = toFire.map((a) =>
-      rtdbPush(RTDB_PATHS.userNotifications(a.userId), {
+      pushUserNotification(a.userId, {
         event: FIREBASE_EVENTS.PRICE_ALERT,
         auctionId: a.auctionId,
         auctionTitle: a.auctionTitle,

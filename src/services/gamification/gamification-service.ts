@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { rtdbPush } from "@/lib/firebase-admin";
-import { RTDB_PATHS, FIREBASE_EVENTS } from "@/lib/firebase-events";
+import { pushUserNotification } from "@/lib/firebase-admin";
+import { FIREBASE_EVENTS } from "@/lib/firebase-events";
 import { XP_REWARDS, calculateLevel } from "@/lib/gamification-engine";
 import { log } from "@/lib/logger";
 
@@ -74,7 +74,7 @@ export class GamificationService {
     await Promise.all(tasks);
 
     if (badgesAwarded.length > 0) {
-      rtdbPush(RTDB_PATHS.userNotifications(userId), {
+      pushUserNotification(userId, {
         event:   FIREBASE_EVENTS.TRUST_UPDATE,
         message: `You earned ${badgesAwarded.length} new badge(s): ${badgesAwarded.join(', ')}!`,
         badges:  badgesAwarded,

@@ -3,8 +3,8 @@
 import { db, FieldValue } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { rtdbPush } from '@/lib/firebase-admin';
-import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { pushUserNotification } from '@/lib/firebase-admin';
+import { FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recalculateUserRating } from '@/lib/rating';
 import { createLogisticsOrder } from '@/lib/logistics';
 import { log } from '@/lib/logger';
@@ -123,7 +123,7 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         codAmount:       result.codAmount,
       });
 
-      await rtdbPush(RTDB_PATHS.userNotifications(result.auction.sellerId as string), {
+      await pushUserNotification(result.auction.sellerId as string, {
         event:        FIREBASE_EVENTS.ADVANCE_PAID,
         auctionId:    result.auction.id,
         auctionTitle: result.auction.title,
@@ -216,7 +216,7 @@ export async function confirmItemReceived(transactionId: string): Promise<Servic
         await Promise.all([
           recalculateUserRating(sellerId),
           recalculateUserRating(session.user.id),
-          rtdbPush(RTDB_PATHS.userNotifications(sellerId), {
+          pushUserNotification(sellerId, {
             event: FIREBASE_EVENTS.TRUST_UPDATE, message: 'Sale confirmed! Funds released.',
             timestamp: Date.now(),
           }),
@@ -293,7 +293,7 @@ export async function markAsShipped(transactionId: string, trackingNumber: strin
     return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Failed to mark as shipped.');
   }
 
-  await rtdbPush(RTDB_PATHS.userNotifications(buyerId), {
+  await pushUserNotification(buyerId, {
     event: 'ITEM_SHIPPED', auctionId,
     message: `Your item has been shipped! Tracking: ${safeTracking}`,
     timestamp: Date.now(),

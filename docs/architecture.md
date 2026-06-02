@@ -129,5 +129,48 @@ Request
 ## Performance Patterns
 
 - **Batch reads over N+1:** Admin hydration uses `db.getAll()`.
-- **Firestore aggregations:** Admin stats use `.count().get()`.
+- **Firestore aggregations:** Admin stats use `.count().get()` — skipped on
+  "load more" pages (only the first page needs the total).
 - **Request-Level Caching:** Critical server actions are wrapped in React `cache()`.
+- **Tag-based ISR caching:** `unstable_cache` on hot reads (system config, auction
+  lists, bid privileges) with `revalidateTag` invalidation on writes.
+
+---
+
+## Cross-cutting contracts (added since the initial draft)
+
+- **Typed notification bus.** Payloads to `notifications/user/{id}` use the
+  discriminated `UserNotification` union (`lib/firebase-events.ts`) pushed via the
+  `pushUserNotification` helper (`lib/firebase-admin.ts`). Writer/consumer field
+  drift is now a **compile error**, not a silently dropped toast.
+- **Immutable financial ledger.** Every escrow money-movement is appended to
+  `ledgerEntries` (`lib/ledger.ts`) — the reconciliation trail, distinct from the
+  per-document `history_logs` audit written by `AuditService`.
+- **Layered runtime config.** Remote Config > `systemConfig` (Firestore) >
+  hard-coded defaults (`lib/firebase-remote-config.ts`), on top of build-time
+  `env.ts` validation.
+
+---
+
+## Scalability assessment & refactor backlog
+
+**Assessment (2026-06):** the codebase is already layered (presentation →
+use-case → domain → infrastructure) and domain-organized (`services/` spans 11
+bounded contexts, each with `modules/`). The 15 largest files are all UI
+pages/components — **there is no backend monolith to decompose.** No structural
+folder rewrite is warranted; the items below are additive and independently
+shippable. Execute on branches with `tsc` + tests + a real-app smoke check.
+
+| # | Item | Value | Risk | Notes |
+|---|------|-------|------|-------|
+| 1 | Split large UI files (`ProfileSettings` 1116, `dashboard/page` 844, `auctions/create` 650) into presentational sub-components | Maintainability | **Med** | Pure JSX extraction; verify in a running app, one file per branch. |
+| 2 | Consolidate flat `actions/admin-*.ts` into `actions/admin/` | Consistency | Low–Med | Mechanical move + import updates (codemod + tsc). |
+| 3 | Remove unused dep `next-navigation` | Hygiene | **Med** | Lockfile change → must re-apply the `@emnapi` patch (CLAUDE.md). Do deliberately. |
+| 4 | Retire legacy `uploadthing` route/deps (superseded by `/api/upload`) | Deps/bundle | Med | Confirm zero client refs first, then drop route + deps + lockfile patch. |
+| 5 | Guard `/api/sentry-test` to non-production | Hygiene | Low | Keep only if used for alert verification. |
+| 6 | Finish `pushUserNotification` migration for peripheral writers (qa, escrow, alerts, gamification, enforce-policies) | Correctness | Low | Union already covers these events; mechanical swap. |
+| 7 | Denormalized `searchTokens[]` for substring search | Scale | Med | Removes the 1000-doc scan in `AuctionReader.list`; needs a one-time backfill. |
+
+> **Anti-recommendation:** do **not** "convert to MVC / move everything into new
+> folders." On a live App-Router marketplace that only rewrites imports across
+> hundreds of files for no behavioral gain and real regression risk.

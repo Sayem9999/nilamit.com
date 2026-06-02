@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
-import { rtdbPush } from '@/lib/firebase-admin';
-import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
+import { pushUserNotification } from '@/lib/firebase-admin';
+import { FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { log } from '@/lib/logger';
 
 export class AuctionNotifier {
@@ -26,7 +26,7 @@ export class AuctionNotifier {
     const tasks = snap.docs.map((d) => {
       const followerId = d.data().followerId as string | undefined;
       if (!followerId) return Promise.resolve();
-      return rtdbPush(RTDB_PATHS.userNotifications(followerId), {
+      return pushUserNotification(followerId, {
         event:        FIREBASE_EVENTS.NEW_LISTING,
         auctionId,
         sellerId,
