@@ -53,8 +53,12 @@ async function registerToken(): Promise<string | null> {
   if (!app) return null;
   try {
     const messaging = getMessaging(app);
-    const swReg = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
-      ?? (await navigator.serviceWorker.register('/firebase-messaging-sw.js'));
+    // Register the FCM SW at its own scope so it never fights the PWA service
+    // worker (sw.js) for control of "/". register() is idempotent for the same
+    // (script, scope) pair, so this is safe to call repeatedly.
+    const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      scope: '/firebase-cloud-messaging-push-scope/',
+    });
     const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
     if (!token) return null;
 

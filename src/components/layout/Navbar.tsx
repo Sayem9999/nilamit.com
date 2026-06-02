@@ -169,6 +169,9 @@ export const Navbar = memo(function Navbar() {
                 {t("myAccount")}
               </Link>
             )}
+            <Link href="/browse" className="hidden sm:inline-flex hover:text-primary-600">
+              Browse
+            </Link>
             <Link href="/how-it-works" className="hidden md:inline-flex hover:text-primary-600">
               {t("help")}
             </Link>
