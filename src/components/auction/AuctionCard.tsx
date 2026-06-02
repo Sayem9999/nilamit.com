@@ -11,6 +11,7 @@ import {
 import { formatBDT } from "@/lib/format";
 import { CountdownTimer } from "./CountdownTimer";
 import { WatchlistButton } from "./WatchlistButton";
+import { ShareButton } from "./ShareButton";
 import { EditListingModal } from "./EditListingModal";
 import type { AuctionWithSeller } from "@/types";
 import { useSession } from "next-auth/react";
@@ -211,6 +212,13 @@ export const AuctionCard = memo(({
                   <Star className={`w-3 h-3 ${isFeatured ? "fill-white" : ""}`} />
                 </button>
               )}
+              <ShareButton
+                compact
+                title={auction.title}
+                auctionId={auction.id}
+                price={currentPrice}
+                className="w-7 h-7"
+              />
               <WatchlistButton
                 auctionId={auction.id}
                 initialIsWatchlisted={isWatchlisted}
@@ -366,6 +374,13 @@ export const AuctionCard = memo(({
               </button>
             )}
 
+            <ShareButton
+              compact
+              title={auction.title}
+              auctionId={auction.id}
+              price={currentPrice}
+              className="w-8 h-8 md:w-11 md:h-11"
+            />
             <WatchlistButton
               auctionId={auction.id}
               initialIsWatchlisted={isWatchlisted}

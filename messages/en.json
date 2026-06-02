@@ -823,5 +823,16 @@
     "selectRating": "Tap a star to choose a rating before submitting.",
     "submitted": "Review submitted",
     "submitFailed": "Couldn't submit your review. Please try again."
+  },
+  "Share": {
+    "shareAuction": "Share auction",
+    "menuLabel": "Share menu",
+    "via": "Share via…",
+    "facebook": "Facebook",
+    "whatsapp": "WhatsApp",
+    "telegram": "Telegram",
+    "x": "X (Twitter)",
+    "copy": "Copy link",
+    "copied": "Link copied!"
   }
 }
