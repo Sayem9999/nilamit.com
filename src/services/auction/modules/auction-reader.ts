@@ -215,12 +215,15 @@ export class AuctionReader {
         if (lastDoc.exists) auctionsQuery = auctionsQuery.startAfter(lastDoc);
       }
 
-      const [totalSnap, auctionsSnap] = await Promise.all([
-        query.count().get(),
-        auctionsQuery.limit(limit).get()
-      ]);
-
-      const total = totalSnap.data().count;
+      // The aggregate count is a full-scan over the filtered set. It's only
+      // shown on the first page ("N auctions found"); "load more" pages pass
+      // lastId and the client discards total — so we skip the count entirely
+      // when paginating forward. First page keeps count + fetch parallel.
+      const countPromise: Promise<number> = lastId
+        ? Promise.resolve(-1)
+        : query.count().get().then((s) => s.data().count);
+      const auctionsSnap = await auctionsQuery.limit(limit).get();
+      const total = await countPromise;
       const auctionDocs = snapDocs<Auction>(auctionsSnap);
 
       const sellerIds = [...new Set(auctionDocs.map(a => a.sellerId))];

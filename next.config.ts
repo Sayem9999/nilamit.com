@@ -42,7 +42,9 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns"],
+    // Barrel-optimize the largest UI deps so only the imported symbols are
+    // bundled instead of the whole package surface.
+    optimizePackageImports: ["lucide-react", "date-fns", "framer-motion", "radix-ui"],
   },
 
   // outputFileTracingIncludes is valid at runtime but may be missing from types

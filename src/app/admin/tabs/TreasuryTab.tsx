@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { getTreasuryAudit, getAdminActiveEscrows, resolveAdminDispute, getVerificationQueue, approveEscrowPayment, refundWithDeduction, getLedgerSummary } from '@/actions/admin';
 import { ShieldCheck, Download, ExternalLink, Clock, Scale, RotateCcw, Loader2, CheckCircle2, Trash2, Wallet } from 'lucide-react';
 import { formatBDT } from '@/lib/format';
-import { generateInvoice } from '@/lib/pdf-generator';
 import toast from 'react-hot-toast';
 
 interface TreasuryLog {
@@ -139,8 +138,11 @@ export function TreasuryTab() {
     }
   };
 
-  const handleDownloadInvoice = (log: TreasuryLog) => {
+  const handleDownloadInvoice = async (log: TreasuryLog) => {
     try {
+      // Lazy-load jsPDF (~150KB) only when an admin actually downloads an
+      // invoice, so it never ships in the Treasury tab's initial chunk.
+      const { generateInvoice } = await import('@/lib/pdf-generator');
       const doc = generateInvoice({
         invoiceNumber: log.id.slice(-8).toUpperCase(),
         date: new Date(),
