@@ -104,7 +104,10 @@ export class BidSideEffects {
         event: FIREBASE_EVENTS.OUTBID_ALERT,
         auctionId: auction.id,
         auctionTitle: auction.title,
-        newAmount,
+        // Field is `amount` to match the NotificationProvider consumer and every
+        // other notification event. Previously `newAmount`, which the consumer
+        // never read — the outbid toast rendered "৳undefined".
+        amount: newAmount,
         timestamp: Date.now()
       });
       // Browser push (no-op if FCM not configured). Fire-and-forget so it

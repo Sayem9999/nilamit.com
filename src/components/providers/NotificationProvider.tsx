@@ -121,6 +121,25 @@ function handleNotification(data: Record<string, unknown>) {
       break;
     }
 
+    case FIREBASE_EVENTS.NEW_BID: {
+      // Pushed to the seller's inbox when their listing receives a bid.
+      const body = `New bid of ৳${(data.amount as number)?.toLocaleString()} on "${data.auctionTitle}".`;
+      toast(body, { duration: 5000, icon: "🔨" });
+      break;
+    }
+
+    case FIREBASE_EVENTS.PAYMENT_SUCCESS: {
+      // Pushed to the buyer when their escrow advance is verified/held.
+      toast(`✅ ${data.message ?? "Payment verified — funds held in escrow."}`, { duration: 6000 });
+      break;
+    }
+
+    case FIREBASE_EVENTS.AUCTION_CLOSED: {
+      // Pushed to the seller when a listing ends (no sale / reserve not met).
+      toast(`📦 ${data.message ?? "Your listing has ended."}`, { duration: 6000 });
+      break;
+    }
+
     case FIREBASE_EVENTS.CHAT_NOTIFICATION: {
       toast(`💬 New message: ${data.message ?? ""}`, { duration: 5000 });
       break;
