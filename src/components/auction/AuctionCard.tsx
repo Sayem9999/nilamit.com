@@ -159,7 +159,16 @@ export const AuctionCard = memo(({
       (w: { userId: string }) => w.userId === session?.user?.id,
     ) ?? false;
 
-  const sellerName = auction.seller.name || t("seller");
+  // Defensive: a deleted / unhydrated seller (toSellerPublic returns null for a
+  // missing user doc, and AuctionReader asserts it non-null) must never crash
+  // the card render. This was the "Something went wrong" page when an auction
+  // with a missing seller doc was featured. Fall back to a safe shell.
+  const seller = auction.seller ?? ({
+    id: auction.sellerId, name: null, image: null, rating: 0, ratingCount: 0,
+    emailVerified: null, isVerifiedSeller: false,
+  } as AuctionWithSeller["seller"]);
+
+  const sellerName = seller.name || t("seller");
   const cardLabel = `${auction.title} — ${formatBDT(currentPrice)}, by ${sellerName}, ${bidCount} bid${bidCount === 1 ? "" : "s"}`;
 
   const isValidImageUrl = (url?: string) => {
@@ -268,11 +277,11 @@ export const AuctionCard = memo(({
                   className="flex items-center gap-1 hover:text-primary-600 transition-colors"
                 >
                   <span className="font-semibold text-gray-500 truncate">
-                    {auction.seller.name || t("seller")}
+                    {seller.name || t("seller")}
                   </span>
                   <VerificationBadge
-                    emailVerified={auction.seller.emailVerified}
-                    isVerifiedSeller={!!auction.seller.isVerifiedSeller}
+                    emailVerified={seller.emailVerified}
+                    isVerifiedSeller={!!seller.isVerifiedSeller}
                     size="sm"
                     showText={false}
                   />
@@ -445,24 +454,24 @@ export const AuctionCard = memo(({
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/seller/${auction.sellerId}`); }}
-              aria-label={`View ${auction.seller.name || t("seller")}'s profile`}
+              aria-label={`View ${seller.name || t("seller")}'s profile`}
               className="flex items-center gap-1 min-w-0 hover:text-primary-600 transition-colors relative z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded"
             >
               <span className="text-[11px] font-medium text-gray-500 truncate">
-                {auction.seller.name || t("seller")}
+                {seller.name || t("seller")}
               </span>
               <VerificationBadge
-                emailVerified={auction.seller.emailVerified}
-                isVerifiedSeller={!!auction.seller.isVerifiedSeller}
+                emailVerified={seller.emailVerified}
+                isVerifiedSeller={!!seller.isVerifiedSeller}
                 size="sm"
                 showText={false}
                 className="scale-90 origin-left"
               />
             </button>
-            {(auction.seller.rating ?? 0) > 0 && (
+            {(seller.rating ?? 0) > 0 && (
               <TrustBadge
-                rating={auction.seller.rating ?? 0}
-                ratingCount={auction.seller.ratingCount ?? 0}
+                rating={seller.rating ?? 0}
+                ratingCount={seller.ratingCount ?? 0}
                 size="sm"
                 className="scale-75 md:scale-95 origin-left"
               />

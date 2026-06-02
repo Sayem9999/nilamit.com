@@ -63,15 +63,19 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
   return (
     <div className="space-y-4">
       {/* Main Image Container */}
-      <div className="relative aspect-[4/3] sm:aspect-[4/3] lg:aspect-square rounded-md overflow-hidden bg-gray-100 group shadow-sm border border-gray-100/50">
+      <div className="relative aspect-[4/3] max-h-[70vh] lg:max-h-[540px] rounded-md overflow-hidden bg-gray-100 group shadow-sm border border-gray-100/50">
         <Image
           key={`${currentIndex}-${isMainImageBroken ? "broken" : "ok"}`}
           src={mainImageSrc}
           alt={`${title} - Image ${currentIndex + 1}`}
           fill
           priority={currentIndex === 0}
+          quality={90}
           unoptimized={isMainImageBroken}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          // The gallery is ~half the page on desktop (max-w-7xl, 2-col). A 33vw
+          // hint made Next serve a ~475px image into a ~640px box → soft. Serve
+          // a properly sized image so product photos look HD.
+          sizes="(max-width: 1024px) 100vw, 640px"
           className={`object-cover transition-transform duration-500 ${"group-hover:scale-105"}`}
           onError={() => setFailedImages((prev) => ({ ...prev, [currentIndex]: true }))}
         />

@@ -117,12 +117,20 @@ export function deserializeValue(val: unknown): unknown {
 }
 
 /**
+ * Collections excluded from the downloadable backup. `verificationTokens` holds
+ * hashed OTPs / password-reset tokens — ephemeral and security-sensitive, with
+ * zero restore value; it must never land in a JSON file an admin downloads.
+ */
+const EXCLUDED_COLLECTIONS = new Set(['verificationTokens']);
+
+/**
  * Recursively fetches all documents and subcollections under a collection.
  */
 async function backupCollection(
   colRef: FirebaseFirestore.CollectionReference,
   entries: BackupEntry[]
 ): Promise<void> {
+  if (EXCLUDED_COLLECTIONS.has(colRef.id)) return;
   const snapshot = await colRef.get();
 
   for (const doc of snapshot.docs) {

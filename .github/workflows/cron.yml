@@ -14,6 +14,7 @@ on:
     - cron: "*/5 * * * *"      # every 5 min  → close-auctions, process-alerts
     - cron: "*/15 * * * *"     # every 15 min → closing-soon
     - cron: "0 * * * *"        # hourly       → enforce-policies
+    - cron: "0 3 * * *"        # daily 03:00 UTC → backup (managed Firestore export)
     - cron: "0 4 * * 0"        # weekly Sun 04:00 UTC → gc-uploads
   workflow_dispatch:
     inputs:
@@ -83,6 +84,19 @@ jobs:
       - name: POST /api/tasks/enforce-policies
         run: |
           curl --fail-with-body -sS -X POST "$BASE_URL/api/tasks/enforce-policies" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 300
+
+  # Daily managed Firestore export to GCS (autobackup). No-op until
+  # BACKUP_GCS_BUCKET + IAM are provisioned — see src/app/api/cron/backup/route.ts.
+  backup:
+    if: github.event.schedule == '0 3 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /api/cron/backup
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/backup" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             --data '{}' --max-time 300
