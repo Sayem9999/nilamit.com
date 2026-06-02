@@ -190,7 +190,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           Facebook({
             clientId: facebookClientId!,
             clientSecret: facebookClientSecret!,
-            allowDangerousEmailAccountLinking: true,
+            // NOT dangerously linked (audit finding H5): Facebook does not
+            // guarantee a verified email, so auto-linking by email would let an
+            // attacker take over an existing account via an unverified address.
+            // Google (above) always verifies email, so linking there is safe.
           }),
         ]
       : []),

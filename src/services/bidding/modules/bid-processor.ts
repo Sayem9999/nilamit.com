@@ -46,15 +46,44 @@ export class BidProcessor {
     amount: number,
     userId: string,
     ip?: string,
-    userAgent?: string
+    userAgent?: string,
+    requiredDepositHold = 0
   ): Promise<ServiceResponse<PlaceBidResult>> {
     try {
       const outcome = await db.runTransaction<BidTxOutcome>(async (tx) => {
+        // All reads first (Firestore transaction rule). Read the auction and
+        // the bidder together so the ban check is fresh and atomic.
         const auctionRef = db.collection('auctions').doc(auctionId);
-        const auctionSnap = await tx.get(auctionRef);
+        const userRef = db.collection('users').doc(userId);
+        const [auctionSnap, userSnap] = await Promise.all([tx.get(auctionRef), tx.get(userRef)]);
 
         const auction = docData<Auction>(auctionSnap);
         if (!auction) return { error: errorResponse(ErrorType.NOT_FOUND, 'Auction not found') };
+
+        // Fresh, atomic ban check (audit finding H3). The action-layer privilege
+        // read is cached (~30s); re-verifying inside the transaction closes the
+        // window where a just-banned account could still place a binding bid.
+        const bidder = userSnap.data();
+        if (!bidder) return { error: errorResponse(ErrorType.NOT_FOUND, 'User not found') };
+        if (bidder.isBanned) {
+          return { error: errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED') };
+        }
+
+        // Elite security-deposit gate, re-verified inside the transaction
+        // (audit finding H4) so a deposit released between the action-layer
+        // pre-check and commit cannot slip a high-stake bid through.
+        if (requiredDepositHold > 0) {
+          const depSnap = await tx.get(
+            db.collection('bidDeposits')
+              .where('bidderId', '==', userId)
+              .where('auctionId', '==', auctionId)
+              .where('status', '==', 'held')
+          );
+          const totalHeld = depSnap.docs.reduce((acc, d) => acc + (Number(d.data().amount) || 0), 0);
+          if (totalHeld < requiredDepositHold) {
+            return { error: errorResponse(ErrorType.FORBIDDEN, `Elite bid requires a held security deposit of ৳${requiredDepositHold.toLocaleString()}.`, ERROR_CODES.ELITE_DEPOSIT_REQUIRED) };
+          }
+        }
 
         const now = new Date();
         const endTime = auction.endTime instanceof Date ? auction.endTime : new Date(auction.endTime);

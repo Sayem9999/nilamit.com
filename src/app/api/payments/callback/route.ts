@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
-import { PaymentService } from '@/services/payment/payment-service';
+import crypto, { timingSafeEqual } from 'crypto';
+import { PaymentService, type PaymentProvider } from '@/services/payment/payment-service';
 import { log } from '@/lib/logger';
+
+const PAYMENT_PROVIDERS: readonly PaymentProvider[] = ['bkash', 'nagad', 'sslcommerz', 'card'];
+
+function isPaymentProvider(v: unknown): v is PaymentProvider {
+  return typeof v === 'string' && (PAYMENT_PROVIDERS as readonly string[]).includes(v);
+}
+
+/** Constant-time secret comparison — avoids leaking the webhook secret via timing. */
+function secretEquals(provided: unknown, expected: string): boolean {
+  if (typeof provided !== 'string' || provided.length === 0) return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Verify SSLCommerz checksum signature
@@ -39,20 +58,39 @@ export async function POST(req: NextRequest) {
     // Check if the request is a JSON trigger (e.g. tests or manual automation payload)
     const contentType = req.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
+      // SECURITY (audit finding C4): the JSON branch releases escrow on a shared
+      // static secret alone — there is no gateway signature here. It is a
+      // dev/test + manual-automation affordance and MUST NOT be a production
+      // money-release path. Disabled in production unless an operator explicitly
+      // opts in via PAYMENT_WEBHOOK_ALLOW_PROD, so a leaked secret can't drain
+      // escrow on the live site by default.
+      const jsonReleaseAllowed =
+        process.env.NODE_ENV !== 'production' ||
+        process.env.PAYMENT_WEBHOOK_ALLOW_PROD === 'true';
+
+      if (!jsonReleaseAllowed) {
+        log.warn('[PaymentCallback] JSON release branch invoked in production — blocked');
+        return new NextResponse('Not Found', { status: 404 });
+      }
+
       const body = await req.json();
       const { transactionId, automationToken, amount, provider, secret } = body;
 
-      // Check developer webhook secret
-      if (secret === process.env.PAYMENT_WEBHOOK_SECRET && process.env.PAYMENT_WEBHOOK_SECRET) {
+      // Check developer webhook secret (constant-time compare)
+      const expectedSecret = process.env.PAYMENT_WEBHOOK_SECRET;
+      if (expectedSecret && secretEquals(secret, expectedSecret)) {
         if (!automationToken || !transactionId || !amount || !provider) {
           return new NextResponse('Bad Request', { status: 400 });
+        }
+        if (!isPaymentProvider(provider)) {
+          return NextResponse.json({ success: false, error: 'Unknown payment provider' }, { status: 400 });
         }
 
         const res = await PaymentService.verifyAndReleaseEscrow(
           automationToken,
           transactionId,
           Number(amount),
-          provider as 'bkash' | 'nagad'
+          provider
         );
 
         if (res.success) {
@@ -70,7 +108,7 @@ export async function POST(req: NextRequest) {
       payload[key] = value.toString();
     });
 
-    const { status, tran_id, val_id, amount, card_type } = payload;
+    const { status, tran_id, val_id, amount, value_a } = payload;
 
     if (status !== 'VALID') {
       log.warn('[PaymentCallback] Ignored non-valid callback status', { tran_id, status });
@@ -90,12 +128,21 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── Escrow branch ─────────────────────────────────────────────────
-    // Release escrow atomically using the payment service
+    // Locate the escrow by its high-entropy automation token (audit finding
+    // C2). The init request seeds that token into SSLCommerz `value_a`, which
+    // the gateway echoes back here. We fall back to tran_id only for legacy
+    // sessions created before the token migration.
+    const automationToken = value_a || tran_id;
+
+    // card_type is the card brand (VISA / MASTER / bKash-via-SSL etc.); it is
+    // NOT an MFS provider. Record the rail as 'sslcommerz' so the ledger stays
+    // clean (audit finding C3). Amount is reconciled against the escrow inside
+    // verifyAndReleaseEscrow (audit finding C1).
     const res = await PaymentService.verifyAndReleaseEscrow(
-      tran_id, // using transactional ID as the automation token target
+      automationToken,
       tran_id,
       Number(amount),
-      (card_type || 'sslcommerz') as 'bkash' | 'nagad'
+      'sslcommerz'
     );
 
     if (res.success) {
