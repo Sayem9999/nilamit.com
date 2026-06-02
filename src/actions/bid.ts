@@ -91,6 +91,11 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
     const MIN_RATING = 4.5;
     const MIN_SALES = 5;
 
+    // When > 0, BidProcessor re-verifies this held-deposit amount INSIDE the bid
+    // transaction (audit finding H4), so the check below is a fast-fail UX guard
+    // and the transaction is the authoritative gate.
+    let eliteDepositRequired = 0;
+
     if (amount >= ELITE_THRESHOLD) {
       // "Vetted" must mean genuinely KYC-approved — NOT the isVerifiedSeller
       // flag, which is auto-granted on email verification / first listing and
@@ -102,7 +107,7 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
       // Trust Waiver Check
       if (!isVetted && (currentRating < MIN_RATING || salesCount < MIN_SALES)) {
         // Fallback: Check for a 1% Security Deposit
-        const requiredDeposit = Math.floor(amount * 0.01);
+        eliteDepositRequired = Math.floor(amount * 0.01);
         const depositSnap = await db.collection('bidDeposits')
           .where('bidderId', '==', userId)
           .where('auctionId', '==', auctionId)
@@ -111,10 +116,10 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
 
         const totalHeld = depositSnap.docs.reduce((acc, doc) => acc + (doc.data().amount || 0), 0);
 
-        if (totalHeld < requiredDeposit) {
+        if (totalHeld < eliteDepositRequired) {
           return errorResponse(
-            ErrorType.FORBIDDEN, 
-            `` + `Elite auctions (৳150k+) require a 4.5★ rating or a 1% security deposit (৳${requiredDeposit.toLocaleString()}).`, 
+            ErrorType.FORBIDDEN,
+            `Elite auctions (৳150k+) require a 4.5★ rating or a 1% security deposit (৳${eliteDepositRequired.toLocaleString()}).`,
             ERROR_CODES.ELITE_DEPOSIT_REQUIRED
           );
         }
@@ -129,10 +134,9 @@ export async function placeBid(auctionId: string, amount: number): Promise<Servi
       auctionId,
       amount,
       userId,
-      session.user.name || 'Someone',
-      session.user.email || '',
       ip,
-      userAgent
+      userAgent,
+      eliteDepositRequired
     );
 
     revalidateTag('auctions', { expire: 0 });

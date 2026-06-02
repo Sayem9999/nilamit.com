@@ -30,7 +30,9 @@ export function LiveTicker({ initialActivity }: LiveTickerProps) {
       if (!data || !data.auctionId || (data._ts && data._ts < startTime)) return;
 
       const newActivity: LatestActivity = {
-        id:        snapshot.key ?? Math.random().toString(),
+        // Stable id — a random fallback would change every render and force
+        // React to remount the row, dropping the ticker animation (audit M5).
+        id:        snapshot.key ?? `evt-${data._ts ?? Date.now()}`,
         amount:    data.amount,
         createdAt: new Date(data._ts ?? Date.now()),
         bidder:    { name: data.bidder ?? 'Someone' },

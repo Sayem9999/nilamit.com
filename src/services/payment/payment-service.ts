@@ -8,16 +8,23 @@ import { rtdbPush } from '@/lib/firebase-admin';
 import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recordLedgerEntry } from '@/lib/ledger';
 
+/**
+ * Settled payment rails. `card`/`sslcommerz` are NOT MFS providers — keeping
+ * them distinct prevents card brands (VISA/MASTER) from being written into the
+ * ledger as if they were bKash/Nagad (audit finding C3).
+ */
+export type PaymentProvider = 'bkash' | 'nagad' | 'sslcommerz' | 'card';
+
 export class PaymentService {
   /**
-   * Process an incoming MFS payment (bKash/Nagad)
-   * This is a "stub" for the actual webhook integration.
+   * Process an incoming MFS / gateway payment callback and, if it checks out,
+   * move the matching escrow into HELD.
    */
   static async verifyAndReleaseEscrow(
     automationToken: string,
     transactionId: string,
-    amount: number, 
-    provider: 'bkash' | 'nagad'
+    amount: number,
+    provider: PaymentProvider
   ): Promise<ServiceResponse<EscrowTransaction>> {
     try {
       let didTransition = false;
@@ -39,19 +46,47 @@ export class PaymentService {
         const escrowDoc = escrowSnap.docs[0];
         const escrowData = escrowDoc.data() as EscrowTransaction;
 
+        // Read the auction up front. Firestore transactions require ALL reads
+        // before ANY write — the previous code read the auction AFTER updating
+        // the escrow, which throws "transactions require all reads to be
+        // executed before all writes" and silently broke the release path
+        // (audit follow-up C5). Hoisting the read fixes it.
+        const aRef = db.collection('auctions').doc(escrowData.auctionId);
+        const aSnap = await tx.get(aRef);
+
         // 2. Idempotency — a duplicate callback for an already-processed escrow
         //    returns success so the gateway stops retrying / alerting.
         if (escrowData.status === 'HELD' && escrowData.providerRef === transactionId) {
           return successResponse(escrowData);
         }
 
-        // 3. Only a PENDING escrow can be moved to HELD.
-        if (escrowData.status !== 'PENDING') {
+        // 3. Only a pre-funded escrow can be moved to HELD. Both PENDING (no
+        //    buyer action yet) and VERIFICATION_PENDING (buyer submitted a
+        //    manual MFS reference) are valid sources — this reconciles the
+        //    automated gateway path with the manual advance path so a gateway
+        //    confirmation can settle either (audit finding H2).
+        if (escrowData.status !== 'PENDING' && escrowData.status !== 'VERIFICATION_PENDING') {
           log.warn('Payment: escrow not in a payable state', { transactionId, status: escrowData.status });
           return errorResponse(ErrorType.CONFLICT, `Escrow is in ${escrowData.status} state, cannot release.`);
         }
 
-        // 3. Update Escrow state to HELD
+        // 4. AMOUNT RECONCILIATION (audit finding C1) — never mark an escrow
+        //    HELD for less than the required advance. Without this, a buyer who
+        //    pays ৳1 (tampered init / underpayment) still gets funds "held",
+        //    silently diverging the ledger from cash actually received.
+        const requiredAmount = Number(escrowData.amount) || 0;
+        if (Number(amount) < requiredAmount) {
+          log.error('Payment: underpayment rejected', {
+            transactionId, paid: amount, required: requiredAmount, provider,
+            area: 'escrow', severity: 'critical',
+          });
+          return errorResponse(
+            ErrorType.CONFLICT,
+            `Paid amount (৳${amount}) is below the required advance (৳${requiredAmount}).`,
+          );
+        }
+
+        // 5. Update Escrow state to HELD
         const now = new Date();
         const updateData: Partial<EscrowTransaction> = {
           status: 'HELD' as EscrowStatus,
@@ -66,9 +101,7 @@ export class PaymentService {
         tx.update(escrowDoc.ref, updateData);
         await AuditService.logEscrowChange(escrowDoc.id, beforeEscrow, afterEscrow, 'UPDATE', 'system', tx);
 
-        // 4. Update Auction state to SOLD (if it was AWAITING_PAYMENT)
-        const aRef = db.collection('auctions').doc(escrowData.auctionId);
-        const aSnap = await tx.get(aRef);
+        // 6. Update Auction state to SOLD (auction was read above, before writes)
         const beforeAuction = aSnap.data() || null;
         const updateAuction = {
           status: 'SOLD',
@@ -79,7 +112,7 @@ export class PaymentService {
         tx.update(aRef, updateAuction);
         await AuditService.logAuctionChange(escrowData.auctionId, beforeAuction, afterAuction, 'UPDATE', 'system', tx);
 
-        // 5. Notify parties via RTDB
+        // 7. Notify parties via RTDB
         rtdbPush(RTDB_PATHS.userNotifications(escrowData.buyerId), {
           event: FIREBASE_EVENTS.PAYMENT_SUCCESS,
           message: `Payment verified. ${amount} BDT is now held in escrow.`,

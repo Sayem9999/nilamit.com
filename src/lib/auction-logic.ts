@@ -1,4 +1,5 @@
 import 'server-only';
+import { randomUUID } from 'crypto';
 import { db, incrementGlobalStat } from '@/lib/db';
 import { sendAuctionWonEmail } from '@/lib/firebase-email';
 import { rtdbPush, rtdbSet } from '@/lib/firebase-admin';
@@ -96,11 +97,13 @@ export function processAuctionSale(
     paymentMethod:    null,
     providerRef:      null,
     verificationType: null,
-    // Token the payment webhook matches against (PaymentService.verifyAndReleaseEscrow).
-    // The gateway must echo this as its tran_id; we use the auctionId so the
-    // SSLCommerz/bKash callback can locate the escrow. Without it the automated
-    // release path could never match an escrow.
-    automationToken:  auction.id,
+    // High-entropy token the payment webhook matches against
+    // (PaymentService.verifyAndReleaseEscrow). The payment init flow seeds this
+    // into the gateway session (SSLCommerz `value_a`) and the gateway echoes it
+    // back on callback. It is NEVER exposed to the client. Previously this was
+    // the public auctionId, which let anyone with the webhook secret release any
+    // escrow by guessing the token (audit finding C2).
+    automationToken:  randomUUID(),
     createdAt:        now,
     updatedAt:        now,
   });
@@ -273,21 +276,36 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
 
 // ─── closeAllEndedAuctions ───────────────────────────────────────────────────
 export async function closeAllEndedAuctions(): Promise<void> {
-  const snap = await db.collection('auctions')
-    .where('status', '==', 'ACTIVE')
-    .where('endTime', '<=', new Date())
-    .limit(200)
-    .get();
-
-  if (snap.empty) return;
-
+  const BATCH = 200;
   const CONCURRENCY = 15;
-  const ids = snap.docs.map((d) => d.id);
+  // Safety ceiling so a pathological backlog can't run past the cron timeout.
+  // 40 * 200 = 8,000 auctions per invocation; the remainder is picked up on the
+  // next run. closeAuctionIfEnded flips status to SOLD/EXPIRED, so a closed
+  // auction never reappears in the query — the loop terminates naturally.
+  const MAX_BATCHES = 40;
 
-  log.info(`[Cron] Closing ${ids.length} ended auctions...`);
+  let totalClosed = 0;
+  for (let batch = 0; batch < MAX_BATCHES; batch++) {
+    const snap = await db.collection('auctions')
+      .where('status', '==', 'ACTIVE')
+      .where('endTime', '<=', new Date())
+      .limit(BATCH)
+      .get();
 
-  for (let i = 0; i < ids.length; i += CONCURRENCY) {
-    const chunk = ids.slice(i, i + CONCURRENCY);
-    await Promise.all(chunk.map((id) => closeAuctionIfEnded(id)));
+    if (snap.empty) break;
+
+    const ids = snap.docs.map((d) => d.id);
+    log.info(`[Cron] Closing ${ids.length} ended auctions (batch ${batch + 1})...`);
+
+    for (let i = 0; i < ids.length; i += CONCURRENCY) {
+      const chunk = ids.slice(i, i + CONCURRENCY);
+      await Promise.all(chunk.map((id) => closeAuctionIfEnded(id)));
+    }
+    totalClosed += ids.length;
+
+    // A short page means we've drained the backlog for this run.
+    if (ids.length < BATCH) break;
   }
+
+  if (totalClosed > 0) log.info(`[Cron] Closed ${totalClosed} ended auctions this run.`);
 }

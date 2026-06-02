@@ -16,16 +16,14 @@ export class BiddingService {
    * Orchestrates the bid placement process via the BidProcessor.
    */
   static async placeBid(
-    auctionId: string, 
-    amount: number, 
-    userId: string, 
-    _userName: string, 
-    _userEmail: string,
+    auctionId: string,
+    amount: number,
+    userId: string,
     ip?: string,
-    userAgent?: string
+    userAgent?: string,
+    requiredDepositHold = 0,
   ): Promise<ServiceResponse<PlaceBidResult>> {
-    void _userName; void _userEmail;
-    return BidProcessor.placeBid(auctionId, amount, userId, ip, userAgent);
+    return BidProcessor.placeBid(auctionId, amount, userId, ip, userAgent, requiredDepositHold);
   }
 
   /**

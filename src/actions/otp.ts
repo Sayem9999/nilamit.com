@@ -8,9 +8,7 @@ import { log } from '@/lib/logger';
 import { ErrorType, errorResponse, successResponse } from '@/lib/errors';
 import crypto from 'crypto';
 
-const OTP_EXPIRY_MS        = 5 * 60 * 1000;
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-const MAX_OTP_PER_HOUR     = 5;
+const OTP_EXPIRY_MS = 5 * 60 * 1000;
 
 function hashOTP(otp: string): string {
   return crypto.createHash('sha256').update(otp).digest('hex');
@@ -31,15 +29,10 @@ export async function sendEmailOTP(email: string) {
 
   const otp        = generateOTP();
   const hashedOTP  = hashOTP(otp);   // store hash, not plaintext
-  const oneHourAgo = new Date(Date.now() - RATE_LIMIT_WINDOW_MS);
 
-  const rateSnap = await db.collection('verificationTokens')
-    .where('identifier', '==', normalized)
-    .where('expires', '>', oneHourAgo)
-    .get();
-  if (rateSnap.size >= MAX_OTP_PER_HOUR) {
-    return errorResponse(ErrorType.RATE_LIMIT, 'Too many OTP requests. Try again in an hour.');
-  }
+  // Per-address throttling is handled by emailOtpSendLimiter (Upstash, fail-
+  // closed) above — the previous Firestore range-count was a redundant indexed
+  // read per request (audit finding M3) and has been removed.
 
   // Doc ID uses the hash — doc ID is observable in error messages and logs,
   // so we never embed the raw OTP there.
