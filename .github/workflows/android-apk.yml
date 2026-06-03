@@ -68,16 +68,26 @@ jobs:
           echo "$KEYSTORE_B64" | base64 -d > android.keystore
           echo "Keystore restored ($(stat -c%s android.keystore) bytes)."
 
+      - name: Point Bubblewrap at the preinstalled JDK & Android SDK
+        run: |
+          # Without this, `bubblewrap` prompts to download its OWN JDK/SDK and
+          # then defaults "No" to the Android SDK Terms — which fails in CI.
+          # Pinning the paths to the runner's setup-java/setup-android installs
+          # skips those prompts entirely.
+          mkdir -p "$HOME/.bubblewrap"
+          printf '{ "jdkPath": "%s", "androidSdkPath": "%s" }\n' "$JAVA_HOME" "$ANDROID_HOME" \
+            > "$HOME/.bubblewrap/config.json"
+          cat "$HOME/.bubblewrap/config.json"
+          # Pre-accept SDK licenses so Gradle never blocks on them.
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
+
       - name: Generate Android project from twa-manifest.json
-        env:
-          BUBBLEWRAP_INSTALL_GRADLE: "true"
         run: |
           # Our committed twa-manifest.json (packageId, shortcuts, signingKey →
           # ./android.keystore alias nilamit) is the source of truth. `update`
-          # (re)generates the Gradle project from it; fall back to a fresh init
-          # from the live manifest if the project scaffold isn't present yet.
-          bubblewrap update --skipVersionUpgrade || \
-          yes "" | bubblewrap init --manifest https://www.nilamit.com/manifest.json --directory .
+          # regenerates the Gradle project from it — non-interactively now that
+          # config.json points at the preinstalled JDK/SDK.
+          bubblewrap update --skipVersionUpgrade
 
       - name: Build & sign APK
         env:
