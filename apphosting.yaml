@@ -106,6 +106,15 @@ env:
   - variable: BIGQUERY_TABLE
     value: events
 
+  # ─── Automated backups ──────────────────────────────────────────────
+  # Daily managed Firestore export (POST /api/cron/backup, scheduled in
+  # .github/workflows/cron.yml). Bucket is US multi-region to match the
+  # (default) Firestore database in nam5. SA firebase-adminsdk-fbsvc has
+  # roles/datastore.importExportAdmin + storage.objectAdmin on the bucket.
+  # 30-day object lifecycle keeps storage bounded.
+  - variable: BACKUP_GCS_BUCKET
+    value: nilamit-52073-backups
+
   # ─── SSLCommerz gateway ─────────────────────────────────────────────
   # Set SSLCOMMERZ_STORE_ID + SSLCOMMERZ_STORE_PASSWORD in Secret Manager
   # to activate the /api/payments/sslcommerz/* routes. Until then the init

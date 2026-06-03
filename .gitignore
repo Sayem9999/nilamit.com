@@ -63,6 +63,8 @@ test-results/
 # (The published APK lives at public/downloads/nilamit.apk and is NOT ignored.)
 *.keystore
 android.keystore
+android-keystore-credentials.txt
+keystore.b64
 /app-release-signed.apk
 /app-release-unsigned.apk
 /app-release-bundle.aab
