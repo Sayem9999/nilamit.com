@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
 import { SystemConfig } from "@/types";
 
 interface TrustFeaturesProps {
@@ -20,6 +21,8 @@ interface TrustFeaturesProps {
 
 export function TrustFeatures({ systemConfig }: TrustFeaturesProps) {
   const t = useTranslations("Home");
+  const { status } = useSession();
+  const isAuthed = status === "authenticated";
   const escrowRequired = systemConfig?.escrowRequired ?? true;
 
   const steps = [
@@ -107,14 +110,17 @@ export function TrustFeatures({ systemConfig }: TrustFeaturesProps) {
       <section className="py-16 sm:py-20 bg-gradient-to-r from-primary-600 to-primary-800" aria-labelledby="home-cta-heading">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 id="home-cta-heading" className="font-heading font-bold text-2xl sm:text-3xl text-white mb-4">
-            {t("ctaFooterTitle")}
+            {isAuthed ? t("ctaFooterTitleAuthed") : t("ctaFooterTitle")}
           </h2>
-          <p className="text-primary-100 mb-8">{t("ctaFooterDesc")}</p>
+          <p className="text-primary-100 mb-8">
+            {isAuthed ? t("ctaFooterDescAuthed") : t("ctaFooterDesc")}
+          </p>
           <Link
-            href="/login"
+            href={isAuthed ? "/auctions/create" : "/login"}
             className="inline-flex items-center gap-2 bg-white text-primary-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-primary-50 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700"
           >
-            {t("ctaFooterBtn")} <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            {isAuthed ? t("ctaFooterBtnAuthed") : t("ctaFooterBtn")}{" "}
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
         </div>
       </section>
