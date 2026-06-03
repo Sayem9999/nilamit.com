@@ -19,9 +19,9 @@
   "appVersionName": "1",
   "appVersionCode": 1,
   "shortcuts": [
-    { "name": "Browse", "shortName": "Browse", "url": "/browse" },
-    { "name": "Create Auction", "shortName": "Sell", "url": "/auctions/create" },
-    { "name": "Dashboard", "shortName": "Dashboard", "url": "/dashboard" }
+    { "name": "Browse", "shortName": "Browse", "url": "/browse", "chosenIconUrl": "https://www.nilamit.com/icon-192.png" },
+    { "name": "Create Auction", "shortName": "Sell", "url": "/auctions/create", "chosenIconUrl": "https://www.nilamit.com/icon-192.png" },
+    { "name": "Dashboard", "shortName": "Dashboard", "url": "/dashboard", "chosenIconUrl": "https://www.nilamit.com/icon-192.png" }
   ],
   "signingKey": { "path": "./android.keystore", "alias": "nilamit" },
   "enableNotifications": true,
