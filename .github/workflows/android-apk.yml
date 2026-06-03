@@ -93,14 +93,23 @@ jobs:
         env:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          # Bubblewrap prompts for the keystore AND key passwords via inquirer,
-          # which doesn't reliably consume two piped lines (the key prompt hit
-          # EOF → exit 130). The store and key passwords are identical, so feed
-          # the password on every line with `yes`: each prompt gets it and the
-          # stream never ends. `yes` will SIGPIPE once Bubblewrap stops reading,
-          # so disable pipefail and judge success by the signed APK existing.
-          set +o pipefail
-          yes "$KS_PASS" | bubblewrap build --skipPwaValidation
+          # Bubblewrap signs via inquirer prompts that need a real TTY — piping
+          # (printf/yes) is unreliable (EOF→exit130, or floods the input). Drive
+          # the two password prompts deterministically over a pseudo-TTY with
+          # `expect`. Store & key passwords are identical.
+          sudo apt-get update -qq && sudo apt-get install -y -qq expect
+          export KS_PASS
+          expect <<'EOF'
+          set timeout 1800
+          spawn bubblewrap build --skipPwaValidation
+          expect {
+            -re "Password for the Key Store:" { send -- "$env(KS_PASS)\r"; exp_continue }
+            -re "Password for the Key:"        { send -- "$env(KS_PASS)\r"; exp_continue }
+            eof
+          }
+          catch wait result
+          exit [lindex $result 3]
+          EOF
           echo "--- artifacts ---"; ls -la *.apk || true
           test -f app-release-signed.apk
 
