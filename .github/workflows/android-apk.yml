@@ -92,13 +92,17 @@ jobs:
       - name: Build & sign APK
         env:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          # Bubblewrap prompts for keystore + key passwords on stdin; feed them
-          # non-interactively. --skipPwaValidation avoids a network round-trip to
-          # re-validate the (already-known-good) PWA.
-          printf '%s\n%s\n' "$KS_PASS" "$KEY_PASS" | bubblewrap build --skipPwaValidation
-          ls -la *.apk
+          # Bubblewrap prompts for the keystore AND key passwords via inquirer,
+          # which doesn't reliably consume two piped lines (the key prompt hit
+          # EOF → exit 130). The store and key passwords are identical, so feed
+          # the password on every line with `yes`: each prompt gets it and the
+          # stream never ends. `yes` will SIGPIPE once Bubblewrap stops reading,
+          # so disable pipefail and judge success by the signed APK existing.
+          set +o pipefail
+          yes "$KS_PASS" | bubblewrap build --skipPwaValidation
+          echo "--- artifacts ---"; ls -la *.apk || true
+          test -f app-release-signed.apk
 
       - name: Stage APK for in-app download
         run: |
