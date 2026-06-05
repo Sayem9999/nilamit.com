@@ -51,10 +51,6 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Debug secret shapes (no values revealed)
-        run: |
-          node -e "for(const k of ['FIREBASE_PROJECT_ID','FIREBASE_CLIENT_EMAIL','FIREBASE_PRIVATE_KEY']){const v=process.env[k]||'';console.log(k+' len='+v.length+' nl='+v.includes(String.fromCharCode(10))+' cr='+v.includes(String.fromCharCode(13))+' firstHex='+(v.charCodeAt(0)||'')+' lastHex='+(v.charCodeAt(v.length-1)||''))}"
-
       - name: Run e2e (login → bid)
         run: npx playwright test login-bid.spec.ts --project=chromium
 
