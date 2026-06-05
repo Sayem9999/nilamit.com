@@ -1,0 +1,63 @@
+name: E2E (browser)
+
+# Real browser end-to-end gate: registers a seller + bidder, lists an auction,
+# places a bid, wins, and submits an escrow advance — against the LIVE site.
+# A globalTeardown removes all @nilamit.test data afterwards.
+#
+# Runs nightly + on demand (NOT every push) because it mutates the live DB and
+# depends on production being up. To gate PRs instead, point BASE_URL at a
+# preview/staging deployment.
+#
+# Required repository secrets (used by the test's firebase-admin helpers +
+# teardown): FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY.
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Target base URL"
+        default: "https://www.nilamit.com"
+  schedule:
+    - cron: "0 2 * * *" # nightly 02:00 UTC
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: "true"
+      BASE_URL: ${{ github.event.inputs.base_url || 'https://www.nilamit.com' }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+      FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e (bid flow)
+        run: npx playwright test bid-flow.spec.ts --project=chromium
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

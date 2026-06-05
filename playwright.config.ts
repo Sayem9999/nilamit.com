@@ -6,9 +6,14 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: process.env.CI ? [['html', { open: 'never' }], ['list']] : 'html',
+  // Removes @nilamit.test data created by the run (firebase-admin) so CI never
+  // accumulates test users/auctions/escrow in the live DB.
+  globalTeardown: './tests/e2e/global-teardown.ts',
   use: {
-    baseURL: 'http://localhost:3000',
+    // CI runs against the deployed site (BASE_URL=https://www.nilamit.com);
+    // local dev defaults to the dev server.
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
