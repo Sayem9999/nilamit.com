@@ -15,6 +15,13 @@ import bcrypt from 'bcryptjs';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
+// firebase-admin auto-detects the projectId from process.env for the gRPC
+// resource-prefix metadata. A trailing newline in the CI secret makes that
+// header invalid ("Metadata string value 'projects/...'"). Sanitise in place.
+for (const k of ['FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EMAIL']) {
+  if (process.env[k]) process.env[k] = process.env[k]!.trim();
+}
+
 function parsePrivateKey(raw: string): string {
   let key = raw.trim();
   if (key.startsWith('"') && key.endsWith('"')) key = key.slice(1, -1);

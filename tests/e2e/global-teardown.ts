@@ -13,6 +13,12 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
+// See global-setup: trim env in place so firebase-admin's auto-detected
+// projectId (used in gRPC metadata) has no trailing newline from CI secrets.
+for (const k of ['FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EMAIL']) {
+  if (process.env[k]) process.env[k] = process.env[k]!.trim();
+}
+
 function parsePrivateKey(raw: string): string {
   let key = raw.trim();
   if (key.startsWith('"') && key.endsWith('"')) key = key.slice(1, -1);
