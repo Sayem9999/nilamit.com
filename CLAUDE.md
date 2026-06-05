@@ -16,7 +16,9 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **Admin panel:** `/admin` — gated by `requireAdmin()` in [src/lib/admin-guard.ts](src/lib/admin-guard.ts) (DB-deep check, not JWT-only). Admin emails come from the `ADMIN_EMAILS` secret (in Secret Manager — not listed here).
 
-**Cron:** GitHub Actions workflow in [.github/workflows/cron.yml](.github/workflows/cron.yml) hits the `/api/cron/*` POST endpoints with `Bearer ${CRON_SECRET}`. There is **no** Cloud Scheduler. Five jobs scheduled: `close-auctions` + `process-alerts` (every 5 min), `closing-soon` (every 15 min), `enforce-policies` (hourly), `gc-uploads` (weekly Sun 04:00 UTC).
+**Cron:** GitHub Actions workflow in [.github/workflows/cron.yml](.github/workflows/cron.yml) hits the `/api/cron/*` + `/api/tasks/*` POST endpoints with `Bearer ${CRON_SECRET}`. There is **no** Cloud Scheduler. Jobs: `close-auctions` + `process-alerts` (every 5 min), `closing-soon` + `saved-search-matches` (every 15 min), `enforce-policies` (hourly), `backup` (daily 03:00 UTC — managed Firestore export to GCS, env-gated on `BACKUP_GCS_BUCKET`), `gc-uploads` (weekly Sun 04:00 UTC).
+
+**Android APK:** [.github/workflows/android-apk.yml](.github/workflows/android-apk.yml) builds a signed TWA APK (Bubblewrap → direct Gradle build with AGP injected signing) and publishes it to `public/downloads/nilamit.apk` (served by the in-app install UI). Trigger: manual dispatch or `v*` tag. Requires `ANDROID_KEYSTORE_BASE64` + `ANDROID_KEYSTORE_PASSWORD` + `ANDROID_KEY_PASSWORD` repo secrets. See [docs/MOBILE.md](docs/MOBILE.md). The PWA itself (manifest + `public/sw.js` + `InstallAppButton`) is the cross-platform installable app.
 
 **i18n:** English + Bengali. Cookie-driven (`NEXT_LOCALE`); no URL prefix to keep SEO stable. Switch via `<LocaleSwitcher />` in the navbar utility row — it calls `setLocale` Server Action which sets the cookie + revalidates the layout. The Navigation namespace in `messages/bn.json` is fully translated; remaining namespaces are seeded from `en.json` (drop-in translations as you go — no MISSING_MESSAGE crashes). Add another locale = update `src/i18n/routing.ts` + `src/i18n.ts` + ship `messages/<locale>.json` + extend `LocaleSwitcher`.
 
@@ -184,6 +186,7 @@ DISPUTED             → resolveDispute()         → RELEASED or REFUNDED   (ad
 | `BIGQUERY_DATASET` | env var | Dataset name (e.g. `nilamit_events`). Without it `log.event()` no-ops, so callers don't need null-checks. |
 | `BIGQUERY_TABLE` | env var | Defaults to `events`. Schema: `event_id STRING REQUIRED, event_type STRING REQUIRED, ts TIMESTAMP REQUIRED, user_id STRING, auction_id STRING, amount_bdt INT64, metadata JSON`. |
 | `GCP_PROJECT_ID` | env var | Falls back to `FIREBASE_PROJECT_ID`. Used by BigQuery client. |
+| `BACKUP_GCS_BUCKET` | env var | `nilamit-52073-backups` (US, matches the `(default)` nam5 DB). Enables daily managed Firestore export via `/api/cron/backup`. Without it the cron no-ops. SA `firebase-adminsdk-fbsvc` has `datastore.importExportAdmin` + bucket `storage.objectAdmin`; 30-day object lifecycle. |
 
 ---
 
