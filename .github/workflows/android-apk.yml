@@ -142,7 +142,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "APK unchanged — nothing to commit."
           else
-            git commit -m "chore(android): publish signed APK [skip ci]"
+            git commit -m "chore(android): publish signed APK"
             git push origin HEAD:main
           fi
 
