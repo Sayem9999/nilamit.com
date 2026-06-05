@@ -31,6 +31,7 @@ html {
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px; /* horizontal scrollbars (e.g. category strip) were default-thick */
 }
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
@@ -41,6 +42,19 @@ html {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #3b82f6;
+}
+
+/* Hide-scrollbar utility for horizontal strips (navbar category row, image
+   gallery thumbnails). These classes were referenced in markup but never
+   defined, so a raw horizontal scrollbar showed on mobile. Cross-browser. */
+.hide-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none; /* IE / old Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Chrome / Safari / WebKit */
 }
 
 /* Countdown pulse animation */
