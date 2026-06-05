@@ -51,8 +51,8 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run e2e (bid flow)
-        run: npx playwright test bid-flow.spec.ts --project=chromium
+      - name: Run e2e (login → bid)
+        run: npx playwright test login-bid.spec.ts --project=chromium
 
       - name: Upload Playwright report
         if: always()

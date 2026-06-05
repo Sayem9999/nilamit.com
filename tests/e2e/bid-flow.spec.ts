@@ -117,7 +117,7 @@ test.describe('End-to-End Bid Flow Happy Path', () => {
     await page.goto('/register');
     
     // Step 1: Account Type
-    await page.click('text=Personal Account');
+    await page.click('button:has-text("Seller / Bidder")');
     
     // Step 2: Switch to Email signup to bypass real SMS OTP (directly on email form now)
 
@@ -202,7 +202,7 @@ test.describe('End-to-End Bid Flow Happy Path', () => {
     await page.goto('/register');
     
     // Step 1: Account Type
-    await page.click('text=Personal Account');
+    await page.click('button:has-text("Seller / Bidder")');
     
     // Step 2: Switch to Email signup (directly on email form now)
 

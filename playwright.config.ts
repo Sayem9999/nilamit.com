@@ -7,8 +7,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? [['html', { open: 'never' }], ['list']] : 'html',
-  // Removes @nilamit.test data created by the run (firebase-admin) so CI never
-  // accumulates test users/auctions/escrow in the live DB.
+  // Seeds a verified bidder + active auction (login-bid gate); teardown removes
+  // all @nilamit.test data so CI never accumulates test docs in the live DB.
+  globalSetup: './tests/e2e/global-setup.ts',
   globalTeardown: './tests/e2e/global-teardown.ts',
   use: {
     // CI runs against the deployed site (BASE_URL=https://www.nilamit.com);
