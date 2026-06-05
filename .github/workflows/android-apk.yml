@@ -102,6 +102,8 @@ jobs:
           # signing config via standard AGP properties. Fully deterministic, no
           # daemon, no prompts.
           chmod +x ./gradlew
+          echo "=== app/build.gradle (debug) ==="; cat -n app/build.gradle || true
+          echo "=== end build.gradle ==="
           ./gradlew assembleRelease --no-daemon --stacktrace \
             -Pandroid.injected.signing.store.file="$PWD/android.keystore" \
             -Pandroid.injected.signing.store.password="$KS_PASS" \
