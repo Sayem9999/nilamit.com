@@ -24,8 +24,8 @@ function parsePrivateKey(raw: string): string {
 }
 
 export default async function globalTeardown() {
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
   const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY;
   if (!projectId || !clientEmail || !privateKeyRaw) {
     console.warn('[e2e teardown] Missing FIREBASE_* env — skipping cleanup.');
