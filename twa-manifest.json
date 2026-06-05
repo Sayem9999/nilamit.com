@@ -5,6 +5,7 @@
   "launcherName": "Nilamit",
   "display": "standalone",
   "orientation": "portrait",
+  "splashScreenFadeOutDuration": 300,
   "themeColor": "#2563eb",
   "themeColorDark": "#0f172a",
   "backgroundColor": "#ffffff",
