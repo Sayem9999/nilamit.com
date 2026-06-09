@@ -23,10 +23,10 @@ const MAX_DELETES      = 500;
 const PAGE_SIZE        = 1000;
 const STORAGE_PREFIX   = 'auctions/';
 
-// Quick test for whether a URL string references the given file path.
-// Signed URLs include the encoded object name; we just substring-check.
-function urlReferencesPath(url: string, encodedPath: string): boolean {
-  return typeof url === 'string' && url.includes(encodedPath);
+// Strip a Resize-Images extension size suffix (`_200x200`) so a thumbnail maps
+// back to its base original: `auctions/uid/uuid_200x200.webp` -> `.../uuid.webp`.
+function baseObjectPath(path: string): string {
+  return path.replace(/_\d+x\d+(\.[^./]+)$/, '$1');
 }
 
 export async function POST(req: Request) {
@@ -47,14 +47,18 @@ export async function POST(req: Request) {
       if (!Array.isArray(images)) continue;
       for (const url of images) {
         if (typeof url !== 'string') continue;
-        // Try to extract `auctions/...` substring from the URL path.
-        const idx = url.indexOf(STORAGE_PREFIX);
-        if (idx >= 0) {
-          // Stop at the first `?` (query string) to get just the object name.
-          const tail  = url.slice(idx);
-          const clean = tail.split('?')[0];
-          referenced.add(decodeURIComponent(clean));
-        }
+        // Auction URLs encode the object path with slashes as `%2F` (firebase
+        // download URLs: `.../o/auctions%2Fuid%2Fuuid.webp?alt=media`) — legacy
+        // signed URLs kept them literal. Decode first so BOTH forms expose a
+        // literal `auctions/...` path. Without this, indexOf returns -1 for every
+        // modern URL, the referenced set is empty, and the GC below deletes every
+        // in-use auction image once it ages past the grace window.
+        const decoded = decodeURIComponent(url);
+        const idx = decoded.indexOf(STORAGE_PREFIX);
+        if (idx < 0) continue;
+        // Stop at the first `?` (query string) to get just the object name.
+        const clean = decoded.slice(idx).split('?')[0];
+        referenced.add(clean);
       }
     }
 
@@ -80,10 +84,12 @@ export async function POST(req: Request) {
         const path = file.name;
         if (referenced.has(path)) continue;
 
-        // Some clients store URLs with the path partially encoded — also test
-        // an encoded form against the URL set.
-        const encoded = encodeURIComponent(path).replace(/%2F/g, '/');
-        if ([...referenced].some(r => urlReferencesPath(r, encoded))) continue;
+        // The Resize-Images extension writes sibling thumbnails (`_200x200`)
+        // that are NEVER stored in the doc's images[] — the client derives them
+        // at render time. Protect a thumbnail whenever its base original is still
+        // referenced, otherwise the GC strips every card thumbnail after grace.
+        const base = baseObjectPath(path);
+        if (base !== path && referenced.has(base)) continue;
 
         // Age guard.
         const [meta] = await file.getMetadata();
