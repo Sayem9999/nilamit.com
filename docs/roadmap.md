@@ -1,6 +1,7 @@
 # 🗺️ Nilamit Strategic Roadmap
 
-> Last Updated: April 29, 2026
+> Last Updated: June 9, 2026
+> See `docs/ENTERPRISE_GAPS.md` for the code-verified capability status table.
 
 ## Phase 1: Foundation (Q1 2026) — COMPLETED ✅
 - [x] Initial Next.js scaffold and Firestore setup.
@@ -23,6 +24,16 @@
 
 ## Phase 4: AI & Ecosystem (Q3-Q4 2026)
 - [ ] **Auto-Moderator**: AI-driven fake listing detection.
-- [ ] **Smart Pricing**: Suggestions for sellers based on historical auction data.
+- [ ] **Smart Pricing**: Suggestions for sellers based on historical auction data. *(Note: `getSmartPricingSuggestion` action already exists — verify scope before reopening.)*
 - [ ] **Voice Commerce**: Bangla voice-to-listing for non-literate sellers.
-- [ ] **Professional Logistics**: One-click booking with local courier partners.
+- [x] **Professional Logistics**: One-click courier booking — **env-gated, shipped** (`lib/courier.ts`, Steadfast adapter + `/api/courier/webhook`; activate with `COURIER_*` secrets). See `docs/ENTERPRISE_GAPS.md`.
+
+## Phase 5: Scale infrastructure (provisioning, not building)
+
+The code for these is shipped and env-gated; the remaining work is external
+provisioning, not engineering:
+- [ ] **Search at scale**: provision Typesense in-region (`docs/SEARCH_SELFHOST.md`) + backfill. Removes the keyword-search ceiling.
+- [ ] **Online payments**: set SSLCommerz creds → featured + escrow advances take real money (`docs/PAYMENTS.md`).
+- [ ] **Courier**: set `COURIER_*` creds → real shipment booking.
+- [ ] **Pub/Sub fan-out**: provision topics once sustained bid volume warrants it.
+- [ ] **Data locality**: measure TTFB-by-connection (Looker query #8), then co-locate compute in `asia-south1`/`asia-southeast1` (`docs/PERFORMANCE.md`).

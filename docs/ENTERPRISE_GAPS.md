@@ -1,24 +1,39 @@
-# Enterprise gaps — what landed in this PR, what's still TODO
+# Platform capability status — verified June 2026
 
-This doc enumerates the 10 enterprise gaps surfaced in the May-2026 audit
-and where each one stands after the "do all 10" push. Items marked
-**scaffolded** ship working code but need external accounts/credentials
-to fully activate.
+> **Doc-truth audit (2026-06-09):** the original "10 enterprise gaps" table was
+> badly stale — it listed as TODO several things that were already shipped.
+> This is the reconciled, code-verified state. Each row was checked against the
+> actual source, not assumed.
+>
+> **Reading guide:** *Shipped* = live & active. *Env-gated* = production-ready
+> code that no-ops cleanly until you set its secrets (the platform's standard
+> pattern — search, payments, courier all follow it). *Pending* = genuinely not
+> built.
 
-## Status
+## The original 10 gaps (reconciled)
 
-| # | Gap | Status | Activation work needed |
-|---|-----|--------|------------------------|
-| 1 | Staging env + canary deploy | **scaffolded** | Create `nilamit-staging` Firebase project (see `docs/STAGING.md`) |
-| 2 | Proxy / max bidding | **already shipped** | BidProcessor already implements `proxyMaxBid`/`proxyBidderId`. UI hint added to BidPanel. |
-| 3 | RUM via web-vitals → BigQuery | **fully shipped** | None — `web-vitals` package installed, reporter mounted, `/api/rum` route live, ships to `nilamit_events.events`. Build Looker Studio dashboard from the `web_vital` event_type. |
-| 4 | Pub/Sub fan-out + idempotency | **scaffolded** | `npm install @google-cloud/pubsub`, create topics + subscriber Cloud Functions, set `PUBSUB_TOPIC_PREFIX=nilamit-prod`. Inline RTDB+FCM path keeps working until then. |
-| 5 | Seller analytics dashboard | **schema added** | `Auction.viewCount` field added. Need: increment on auction-detail page hit + new dashboard tab UI. |
-| 6 | Featured-listing self-serve purchase | **shipped** | End-to-end: `src/services/finance/featured.ts` (pricing + `feat_` tran codec), `src/lib/featured-service.ts` (idempotent, amount-guarded activation), `src/actions/featured.ts` (quote/initiate), `feat_` routing in the payment callback, `/api/cron/expire-featured` (wired hourly in cron.yml), and `FeatureListingButton` mounted on the seller's auction detail page. Remaining platform-wide gap: no gateway *init* endpoint exists yet (escrow shares this) — the button reserves the tran id; drop the init URL in when built. |
-| 7 | WhatsApp + SMS notifications | **adapters shipped** | `src/lib/notification-channels.ts` adapter pattern + Twilio WhatsApp + SMS adapter. Need: `TWILIO_*` secrets + Meta WhatsApp template approvals + BD SMS gateway credentials. |
-| 8 | Seller KYC | **shipped** | Full pipeline live: `src/actions/kyc.ts`, seller `KycSubmissionForm`, admin `KycTab` moderation queue. `listPendingKyc` now mints fresh 1-hour signed URLs at view time so docs never 404 in the queue (previously relied on the 7-day upload URL). |
-| 9 | Saved searches + price alerts | **scaffolded** | `savedSearches` collection + CRUD Server Actions. Need: cron job at `/api/cron/saved-search-matches` to run filter queries against new auctions and fire notifications. |
-| 10 | PWA install prompt + offline shell | **install prompt shipped** | `InstallPrompt` component mounted in Providers — surfaces after 15s dwell. Offline shell (Workbox cache for `/auctions` list, background-sync queue) is the still-pending follow-up. |
+| # | Gap | Verified status | What's left |
+|---|-----|--------|------|
+| 1 | Staging env + canary | **Env-gated** | Code + `apphosting-staging.yaml` + `staging-deploy.yml` exist. Create the `nilamit-staging` Firebase project (`docs/STAGING.md`). |
+| 2 | Proxy / max bidding | **Shipped** | `BidProcessor` implements `proxyMaxBid`/`proxyBidderId`; BidPanel UI live. |
+| 3 | RUM → BigQuery | **Shipped** | Reporter mounted, `/api/rum` live, Looker queries in `LOOKER_QUERIES.sql`. Now also captures `effectiveType` for the TTFB-by-connection query (#8 in that file). |
+| 4 | Pub/Sub fan-out | **Env-gated + wired** | `src/lib/pubsub.ts` is wired into `BidSideEffects` (publish() called). Set `PUBSUB_TOPIC_PREFIX` + create topics/subscribers. Inline RTDB+FCM keeps working until then. |
+| 5 | Seller analytics dashboard | **Shipped** | `viewCount` increment wired (`auction-view.ts` + `AuctionViewTracker`); `/dashboard/analytics` shows views/bids/conversion. |
+| 6 | Featured-listing purchase | **Shipped** | Full pipeline: `services/finance/featured.ts`, `lib/featured-service.ts`, `actions/featured.ts`, `feat_` routing in the callback, `/api/cron/expire-featured` (hourly), `FeatureListingButton`. Paid checkout via the SSLCommerz init below. |
+| 7 | WhatsApp + SMS | **Env-gated** | `notification-channels.ts` adapters shipped. Needs `TWILIO_*` + Meta template approvals + BD SMS creds. |
+| 8 | Seller KYC | **Shipped** | `actions/kyc.ts`, `KycSubmissionForm`, admin `KycTab`. `listPendingKyc` mints fresh 1h signed URLs so docs never 404. |
+| 9 | Saved searches + alerts | **Shipped** | CRUD actions + `/api/cron/saved-search-matches` (wired in cron.yml). |
+| 10 | PWA install + offline | **Mostly shipped** | `InstallPrompt` + `OfflineIndicator` live. Full Workbox offline shell (cache `/auctions`, bg-sync queue) is the remaining polish — the one genuinely *Pending* item here. |
+
+## Capabilities added after the original audit (June 2026)
+
+| Capability | Status | Notes |
+|---|---|---|
+| **External search engine** | **Env-gated** | Typesense adapter (`lib/search-engine.ts`) removes the 1000-doc in-memory scan cap. Reader queries engine → hydrates from Firestore (source of truth) → self-heals status. Backfill script + `docs/SEARCH.md` + `docs/SEARCH_SELFHOST.md`. Set `TYPESENSE_HOST`+`TYPESENSE_API_KEY` to activate. |
+| **Payment init (SSLCommerz)** | **Env-gated** | The missing init half. `lib/sslcommerz.ts` + `POST /api/payments/sslcommerz/init`. Handles `featured` (live) and `escrow` advances. Returns 503 `GATEWAY_OFF` until `SSLCOMMERZ_STORE_ID`+`SSLCOMMERZ_STORE_PASSWORD` set. See `docs/PAYMENTS.md`. |
+| **Escrow gateway + logistics-on-confirm** | **Env-gated** | `initEscrowGatewayPayment` seeds the `automationToken`; `verifyAndReleaseEscrow` now creates the logistics order on gateway settlement (closing the gap where the automated path skipped logistics). Dormant until SSLCommerz creds are set — soak in staging before going live. |
+| **Courier integration** | **Env-gated** | `lib/courier.ts` (Steadfast; Pathao/RedX-ready) books real shipments in `createLogisticsOrder`; `/api/courier/webhook` feeds status back. Falls back to internal `NILAMIT_EXPRESS` tracking until `COURIER_API_KEY`+`COURIER_SECRET_KEY` set. |
+| **Performance posture** | **Documented** | `docs/PERFORMANCE.md` — caching map, why auctions are intentionally uncached, and the data-locality (US `nam5` → BD) lever with a measurement query. |
 
 ## What "scaffolded" means in this context
 

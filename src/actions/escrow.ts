@@ -105,6 +105,8 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         auction,
         buyerAddress:  buyer.address as string,
         sellerAddress: seller.address as string,
+        buyerName:     (buyer.name as string | undefined) ?? null,
+        buyerPhone:    (buyer.phoneNumber as string | undefined) ?? (buyer.bkashNumber as string | undefined) ?? (buyer.nagadNumber as string | undefined) ?? null,
         ref,
         codAmount:     t.codAmount ?? 0,
         amount:        (t.amount as number) ?? 0,
@@ -121,6 +123,8 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
         sellerAddress:   result.sellerAddress,
         buyerAddress:    result.buyerAddress,
         codAmount:       result.codAmount,
+        recipientName:   result.buyerName,
+        recipientPhone:  result.buyerPhone,
       });
 
       await pushUserNotification(result.auction.sellerId as string, {
@@ -162,6 +166,53 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
       'Advance already paid or verification pending': 'Payment has already been submitted for this transaction.',
     };
     const msg = USER_MESSAGES[code] ?? 'Payment processing failed. Please try again.';
+    return errorResponse(ErrorType.INTERNAL, msg);
+  }
+}
+
+/**
+ * Gateway path for the escrow advance: seed a high-entropy `automationToken`
+ * onto the buyer's PENDING escrow so the signed payment callback can locate it
+ * (verifyAndReleaseEscrow queries by automationToken). Returns the token + the
+ * required amount; the caller (POST /api/payments/sslcommerz/init) feeds these
+ * into the gateway session as tran_id + value_a.
+ *
+ * Idempotent: re-running on an escrow that already has a token returns the same
+ * token (so a retried checkout reuses the session identity).
+ */
+export async function initEscrowGatewayPayment(
+  transactionId: string,
+): Promise<ServiceResponse<{ automationToken: string; amountBdt: number }>> {
+  const session = await auth();
+  if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
+
+  try {
+    const out = await db.runTransaction(async (tx) => {
+      const txRef = db.collection('escrowTransactions').doc(transactionId);
+      const snap = await tx.get(txRef);
+      if (!snap.exists) throw new Error('Transaction not found');
+      const t = snap.data()!;
+
+      if (t.buyerId !== session.user.id) throw new Error('Unauthorized');
+      if (t.status !== 'PENDING') throw new Error('Advance already paid or verification pending');
+
+      const existing = t.automationToken as string | undefined;
+      const token = existing ?? `esc_${randomUUID().replace(/-/g, '')}`;
+      if (!existing) {
+        tx.update(txRef, { automationToken: token, paymentMethod: 'gateway', updatedAt: new Date() });
+      }
+      return { token, amount: (t.amount as number) ?? 0 };
+    });
+
+    return successResponse({ automationToken: out.token, amountBdt: out.amount });
+  } catch (e) {
+    log.error('[escrow] initEscrowGatewayPayment failed', e, { area: 'escrow', severity: 'warning' });
+    const code = e instanceof Error ? e.message : '';
+    const msg =
+      code === 'Unauthorized' ? 'You are not authorized to pay this transaction.'
+      : code === 'Transaction not found' ? 'Transaction not found.'
+      : code === 'Advance already paid or verification pending' ? 'Payment already submitted for this transaction.'
+      : 'Could not start gateway payment.';
     return errorResponse(ErrorType.INTERNAL, msg);
   }
 }

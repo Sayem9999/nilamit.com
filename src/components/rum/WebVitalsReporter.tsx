@@ -34,6 +34,13 @@ export function WebVitalsReporter() {
 
     const path = pathname || "/";
 
+    // Coarse connection class (4g/3g/2g/slow-2g). Lets us separate "slow
+    // because our data is in US nam5" (high TTFB on a 4g link) from "slow
+    // because the user is on a weak mobile connection". Not on all browsers.
+    const effectiveType =
+      (navigator as Navigator & { connection?: { effectiveType?: string } }).connection
+        ?.effectiveType ?? null;
+
     const ship = (metric: {
       name: string;
       value: number;
@@ -45,6 +52,7 @@ export function WebVitalsReporter() {
         rating: metric.rating,
         path,
         sessionId,
+        effectiveType,
       });
       // Prefer sendBeacon for unloads — fire-and-forget, no response blocking.
       if (navigator.sendBeacon) {

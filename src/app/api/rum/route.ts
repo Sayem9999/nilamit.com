@@ -28,6 +28,9 @@ const InputSchema = z.object({
   path: z.string().max(500),
   /** Unique browser-session id so a session's vitals can be correlated. */
   sessionId: z.string().min(1).max(64),
+  /** Coarse connection class (4g/3g/2g/slow-2g) — for slicing TTFB by link
+   *  quality vs. server distance. Absent on browsers without NetworkInformation. */
+  effectiveType: z.string().max(16).nullable().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -61,6 +64,7 @@ export async function POST(req: NextRequest) {
       rating: parsed.data.rating,
       path: parsed.data.path,
       sessionId: parsed.data.sessionId,
+      effectiveType: parsed.data.effectiveType ?? null,
     },
   });
 

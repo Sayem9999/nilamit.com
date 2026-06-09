@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { apiLimiter } from '@/lib/ratelimit';
 import { createPaymentSession, isSSLCommerzConfigured } from '@/lib/sslcommerz';
 import { initiateFeaturedPurchase } from '@/actions/featured';
+import { initEscrowGatewayPayment } from '@/actions/escrow';
 import { log } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -46,45 +47,66 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { purpose?: string; auctionId?: string; days?: number };
+  let body: { purpose?: string; auctionId?: string; days?: number; transactionId?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (body.purpose !== 'featured') {
-    return NextResponse.json({ error: 'Unsupported payment purpose' }, { status: 400 });
-  }
-
-  // Reuse the Server Action for ownership + tier validation + tran-id minting.
-  const init = await initiateFeaturedPurchase(String(body.auctionId), Number(body.days));
-  if (!init.success || !init.data) {
-    return NextResponse.json({ error: init.error?.message || 'Could not start purchase' }, { status: 400 });
-  }
-
-  // Pull contact details for the gateway customer block.
+  // Common: contact details for the gateway customer block.
   let phone: string | null = null;
   try {
     const u = await db.collection('users').doc(session.user.id).get();
     phone = (u.data()?.phoneNumber as string | undefined) ?? null;
   } catch { /* non-fatal — gateway accepts a placeholder */ }
+  const customer = { name: session.user.name, email: session.user.email, phone };
 
-  const result = await createPaymentSession({
-    tranId: init.data.tranId,
-    amountBdt: init.data.amountBdt,
-    productName: 'Featured listing promotion',
-    productCategory: 'featured',
-    valueA: init.data.tranId, // callback detects feat_ ids and activates
-    customer: { name: session.user.name, email: session.user.email, phone },
-    isPhysical: false,
-  });
-
-  if (!result.ok) {
-    const status = result.reason === 'not_configured' ? 503 : 502;
-    return NextResponse.json({ error: result.message }, { status });
+  // ── Featured listing ────────────────────────────────────────────────
+  if (body.purpose === 'featured') {
+    const init = await initiateFeaturedPurchase(String(body.auctionId), Number(body.days));
+    if (!init.success || !init.data) {
+      return NextResponse.json({ error: init.error?.message || 'Could not start purchase' }, { status: 400 });
+    }
+    const result = await createPaymentSession({
+      tranId: init.data.tranId,
+      amountBdt: init.data.amountBdt,
+      productName: 'Featured listing promotion',
+      productCategory: 'featured',
+      valueA: init.data.tranId, // callback detects feat_ ids and activates
+      customer,
+      isPhysical: false,
+    });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.message }, { status: result.reason === 'not_configured' ? 503 : 502 });
+    }
+    log.info('[pay-init] featured session created', { auctionId: init.data.auctionId, userId: session.user.id });
+    return NextResponse.json({ gatewayUrl: result.gatewayUrl });
   }
 
-  log.info('[pay-init] featured session created', { auctionId: init.data.auctionId, userId: session.user.id });
-  return NextResponse.json({ gatewayUrl: result.gatewayUrl });
+  // ── Escrow advance ──────────────────────────────────────────────────
+  if (body.purpose === 'escrow') {
+    const init = await initEscrowGatewayPayment(String(body.transactionId));
+    if (!init.success || !init.data) {
+      return NextResponse.json({ error: init.error?.message || 'Could not start payment' }, { status: 400 });
+    }
+    const result = await createPaymentSession({
+      // tran_id == value_a == automationToken: the callback locates the escrow
+      // by automationToken (and it isn't a feat_ id, so it routes to escrow).
+      tranId: init.data.automationToken,
+      amountBdt: init.data.amountBdt,
+      productName: 'Nilamit escrow advance',
+      productCategory: 'escrow',
+      valueA: init.data.automationToken,
+      customer,
+      isPhysical: true,
+    });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.message }, { status: result.reason === 'not_configured' ? 503 : 502 });
+    }
+    log.info('[pay-init] escrow session created', { transactionId: body.transactionId, userId: session.user.id });
+    return NextResponse.json({ gatewayUrl: result.gatewayUrl });
+  }
+
+  return NextResponse.json({ error: 'Unsupported payment purpose' }, { status: 400 });
 }

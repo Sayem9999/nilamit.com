@@ -7,6 +7,7 @@ import { log } from '@/lib/logger';
 import { pushUserNotification } from '@/lib/firebase-admin';
 import { FIREBASE_EVENTS } from '@/lib/firebase-events';
 import { recordLedgerEntry } from '@/lib/ledger';
+import { createLogisticsOrder } from '@/lib/logistics';
 
 /**
  * Settled payment rails. `card`/`sslcommerz` are NOT MFS providers — keeping
@@ -29,6 +30,16 @@ export class PaymentService {
     try {
       let didTransition = false;
       let held: EscrowTransaction | null = null;
+      // Captured inside the transaction, used post-commit to create the
+      // shipping order on a gateway-settled escrow (the manual payEscrowAdvance
+      // path creates logistics itself; the gateway path didn't — this closes
+      // that gap). Null when logistics already exists (idempotent / manual).
+      type LogisticsCaptured = {
+        auctionId: string; sellerId: string; buyerId: string;
+        sellerAddress: string; buyerAddress: string; codAmount: number;
+        recipientName: string | null; recipientPhone: string | null;
+      };
+      let logisticsInput: LogisticsCaptured | null = null;
       const res = await db.runTransaction(async (tx) => {
         // 1. Find the escrow by its automation token (NOT status-filtered, so a
         //    replayed webhook for an already-HELD escrow can be detected and
@@ -53,6 +64,13 @@ export class PaymentService {
         // (audit follow-up C5). Hoisting the read fixes it.
         const aRef = db.collection('auctions').doc(escrowData.auctionId);
         const aSnap = await tx.get(aRef);
+
+        // Read buyer + seller up front (all reads precede writes) so we can
+        // create the logistics order post-commit on a gateway settlement.
+        const [buyerSnap, sellerSnap] = await Promise.all([
+          tx.get(db.collection('users').doc(escrowData.buyerId)),
+          tx.get(db.collection('users').doc(escrowData.sellerId)),
+        ]);
 
         // 2. Idempotency — a duplicate callback for an already-processed escrow
         //    returns success so the gateway stops retrying / alerting.
@@ -123,6 +141,26 @@ export class PaymentService {
         const fullData = { ...escrowData, ...updateData };
         didTransition = true;
         held = fullData as EscrowTransaction;
+
+        // Queue logistics creation for post-commit — only if the auction has no
+        // logistics yet (so a manual-path order or a replay isn't duplicated)
+        // and both addresses exist.
+        const auctionData = (beforeAuction || {}) as Record<string, unknown>;
+        const buyer = buyerSnap.data() || {};
+        const seller = sellerSnap.data() || {};
+        if (!auctionData.logistics && buyer.address && seller.address) {
+          logisticsInput = {
+            auctionId: escrowData.auctionId,
+            sellerId: escrowData.sellerId,
+            buyerId: escrowData.buyerId,
+            sellerAddress: seller.address as string,
+            buyerAddress: buyer.address as string,
+            codAmount: (escrowData.codAmount as number) ?? 0,
+            recipientName: (buyer.name as string | undefined) ?? null,
+            recipientPhone: (buyer.phoneNumber as string | undefined) ?? (buyer.bkashNumber as string | undefined) ?? (buyer.nagadNumber as string | undefined) ?? null,
+          };
+        }
+
         log.info('Payment: Escrow successfully moved to HELD', { transactionId, escrowId: escrowDoc.id });
 
         return successResponse(fullData);
@@ -144,6 +182,23 @@ export class PaymentService {
           providerRef: transactionId,
           operatorId: 'system',
         });
+      }
+
+      // Create the shipping order for a gateway-settled escrow (post-commit so
+      // a retry can't double-create; guarded above to skip if logistics exists
+      // or addresses are missing). Never throws into the callback.
+      if (res.success && didTransition && logisticsInput) {
+        // Explicit annotation: TS can't track the closure assignment above, so
+        // it narrows logisticsInput to `never` here (same quirk handled for
+        // `held`). The runtime guard guarantees it's non-null.
+        const li: LogisticsCaptured = logisticsInput;
+        try {
+          await createLogisticsOrder(li);
+        } catch (logErr) {
+          log.error('Payment: logistics creation failed after HELD', logErr, {
+            auctionId: li.auctionId, area: 'logistics', severity: 'warning',
+          });
+        }
       }
       return res;
     } catch (err) {

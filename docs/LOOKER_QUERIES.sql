@@ -147,3 +147,23 @@ GROUP BY session_id
 HAVING pages_viewed > 0
 ORDER BY first_seen DESC
 LIMIT 500;
+
+-- ────────────────────────────────────────────────────────────────────
+-- 8. TTFB p75 by connection class — the data-locality signal
+--    Use case: Firestore lives in US (nam5) but users are in BD. TTFB is
+--    dominated by the server round-trip. If p75 TTFB is high even on '4g'
+--    links, the bottleneck is server/data distance (the locality lever),
+--    NOT the user's connection. Slice the fix's impact here.
+--    Requires the effectiveType field added to the RUM payload.
+-- ────────────────────────────────────────────────────────────────────
+SELECT
+  COALESCE(JSON_VALUE(metadata, '$.effectiveType'), 'unknown') AS connection,
+  APPROX_QUANTILES(CAST(JSON_VALUE(metadata, '$.value') AS FLOAT64), 100)[OFFSET(75)] AS ttfb_p75_ms,
+  APPROX_QUANTILES(CAST(JSON_VALUE(metadata, '$.value') AS FLOAT64), 100)[OFFSET(50)] AS ttfb_p50_ms,
+  COUNT(*) AS samples
+FROM `nilamit-52073.nilamit_events.events`
+WHERE event_type = 'web_vital'
+  AND JSON_VALUE(metadata, '$.name') = 'TTFB'
+  AND ts >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+GROUP BY connection
+ORDER BY samples DESC;

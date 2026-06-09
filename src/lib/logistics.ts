@@ -3,6 +3,7 @@ import 'server-only';
 import { db, FieldValue } from '@/lib/db';
 import { log } from '@/lib/logger';
 import { randomBytes } from 'crypto';
+import { bookShipment } from '@/lib/courier';
 
 /**
  * Logistics is implemented as an INTERNAL helper, not a Server Action.
@@ -35,6 +36,10 @@ export interface CreateLogisticsOrderInput {
   sellerAddress: string;
   buyerAddress:  string;
   codAmount?:    number;
+  /** Buyer name/phone for the courier booking. Optional — when absent (or the
+   *  courier is unconfigured) we fall back to the internal NILAMIT_EXPRESS id. */
+  recipientName?:  string | null;
+  recipientPhone?: string | null;
 }
 
 function newTrackingId(): string {
@@ -59,10 +64,35 @@ export async function createLogisticsOrder(input: CreateLogisticsOrderInput): Pr
   const trackingId = newTrackingId();
   const now = new Date();
 
+  // Attempt a real courier booking (no-op + null when COURIER_* isn't set, so
+  // the default path is unchanged). Never throws — a courier outage falls back
+  // to the internal tracking id so escrow settlement is never blocked.
+  let provider = 'NILAMIT_EXPRESS';
+  let consignmentId: string | null = null;
+  let courierTrackingCode: string | null = null;
+  if (input.recipientPhone) {
+    const booked = await bookShipment({
+      invoice:          trackingId,
+      recipientName:    input.recipientName || 'Nilamit Buyer',
+      recipientPhone:   input.recipientPhone,
+      recipientAddress: input.buyerAddress,
+      codAmount:        input.codAmount ?? 0,
+      note:             `Auction ${input.auctionId}`,
+    });
+    if (booked) {
+      provider = booked.provider;
+      consignmentId = booked.consignmentId;
+      courierTrackingCode = booked.courierTrackingCode;
+    }
+  }
+
   await db.collection('auctions').doc(input.auctionId).update({
     logistics: {
-      provider:        'NILAMIT_EXPRESS',
+      provider,
       trackingId,
+      // Courier-side identifiers (present only on a real booking).
+      ...(consignmentId ? { consignmentId } : {}),
+      ...(courierTrackingCode ? { courierTrackingCode } : {}),
       status:          LogisticsStatus.READY_FOR_PICKUP,
       pickupAddress:   input.sellerAddress,
       deliveryAddress: input.buyerAddress,
@@ -70,12 +100,12 @@ export async function createLogisticsOrder(input: CreateLogisticsOrderInput): Pr
       updatedAt:       now,
       history: [
         { status: LogisticsStatus.PENDING,          timestamp: now, note: 'Order created in Nilamit' },
-        { status: LogisticsStatus.READY_FOR_PICKUP, timestamp: now, note: 'Awaiting courier pickup' },
+        { status: LogisticsStatus.READY_FOR_PICKUP, timestamp: now, note: courierTrackingCode ? `Booked with ${provider} (${courierTrackingCode})` : 'Awaiting courier pickup' },
       ],
     },
   });
 
-  log.info(`Logistics order created for auction ${input.auctionId}`, { trackingId });
+  log.info(`Logistics order created for auction ${input.auctionId}`, { trackingId, provider });
   return { trackingId };
 }
 

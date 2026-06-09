@@ -170,3 +170,19 @@ env:
   # - variable: TYPESENSE_PORT
   #   value: "443"
 
+  # ─── Courier integration — pending creds ────────────────────────────
+  # One-click shipment booking + tracking (see docs/PAYMENTS.md / courier.ts).
+  # Until COURIER_API_KEY + COURIER_SECRET_KEY are set, createLogisticsOrder
+  # uses the internal NILAMIT_EXPRESS tracking id (today's behavior). Set them
+  # to switch on real booking with a BD courier (Steadfast by default).
+  # Status updates POST to /api/courier/webhook (auth via COURIER_WEBHOOK_SECRET).
+  #
+  # - variable: COURIER_PROVIDER
+  #   value: "steadfast"
+  # - variable: COURIER_API_KEY
+  #   secret: COURIER_API_KEY
+  # - variable: COURIER_SECRET_KEY
+  #   secret: COURIER_SECRET_KEY
+  # - variable: COURIER_WEBHOOK_SECRET
+  #   secret: COURIER_WEBHOOK_SECRET
+
