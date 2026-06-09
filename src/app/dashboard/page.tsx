@@ -335,7 +335,7 @@ export default async function DashboardPage({
                         {watchlistCount}
                       </span>
                     ) : (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -362,7 +362,7 @@ export default async function DashboardPage({
                         {bidsCount}
                       </span>
                     ) : (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -389,7 +389,7 @@ export default async function DashboardPage({
                         {escrowCount}
                       </span>
                     ) : (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -422,7 +422,7 @@ export default async function DashboardPage({
                         {totalListingsCount}
                       </span>
                     ) : (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -455,7 +455,7 @@ export default async function DashboardPage({
                         {chatsCount}
                       </span>
                     ) : (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -521,28 +521,28 @@ export default async function DashboardPage({
                     {session.user.isTopRated ? (
                       <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 animate-pulse">
                         <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                        <span className="text-[9px] font-bold text-amber-700">TOP RATED</span>
+                        <span className="text-[10px] font-bold text-amber-700">TOP RATED</span>
                       </div>
                     ) : session.user.isRetailer ? (
                       <div className="flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                         <Shield className="w-2.5 h-2.5 text-indigo-500 fill-indigo-500/10" />
-                        <span className="text-[9px] font-bold text-indigo-700">RETAILER</span>
+                        <span className="text-[10px] font-bold text-indigo-700">RETAILER</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                         <Shield className="w-2.5 h-2.5 text-blue-550 fill-blue-550/10" />
-                        <span className="text-[9px] font-bold text-blue-700">SELLER / BIDDER</span>
+                        <span className="text-[10px] font-bold text-blue-700">SELLER / BIDDER</span>
                       </div>
                     )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-white p-2 rounded-xl border border-gray-50">
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Sales</p>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Sales</p>
                       <p className="text-sm font-bold text-gray-900">{session.user.salesCount || 0}</p>
                     </div>
                     <div className="bg-white p-2 rounded-xl border border-gray-50">
-                      <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">Defect Rate</p>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Defect Rate</p>
                       <p className={`text-sm font-bold ${
                         (session.user.defectCount / (session.user.salesCount + session.user.defectCount || 1)) > 0.03 
                           ? "text-red-600" 
@@ -555,7 +555,7 @@ export default async function DashboardPage({
 
                   {!session.user.isTopRated && (
                     <div className="p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                      <p className="text-[9px] text-gray-500 leading-tight">
+                      <p className="text-[10px] text-gray-500 leading-tight">
                         <span className="font-bold">Goal:</span> 10 sales & &lt;5% defect rate for <span className="text-amber-600 font-bold">Top Rated</span> status.
                       </p>
                     </div>

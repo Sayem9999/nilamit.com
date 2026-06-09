@@ -56,7 +56,7 @@ export function TopSellersShowcase({ sellers = [] }: TopSellersShowcaseProps) {
             >
               {/* Premium Top Rated Banner Overlay */}
               {seller.isTopRated && (
-                <div className="absolute top-4 right-4 flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100 text-amber-700 text-[9px] font-bold uppercase tracking-wider shadow-xs">
+                <div className="absolute top-4 right-4 flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-wider shadow-xs">
                   <Sparkles className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
                   TOP RATED
                 </div>
@@ -103,14 +103,14 @@ export function TopSellersShowcase({ sellers = [] }: TopSellersShowcaseProps) {
                 {/* Level / Sales Stats */}
                 <div className="grid grid-cols-2 gap-3 mb-6 bg-slate-50/50 p-3 rounded-md border border-gray-50">
                   <div className="text-center">
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter mb-0.5">Vetted Level</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mb-0.5">Vetted Level</p>
                     <div className="flex items-center justify-center gap-1 text-sm font-bold text-slate-800">
                       <Award className="w-3.5 h-3.5 text-indigo-500" />
                       <span>Lvl {seller.userLevel || 1}</span>
                     </div>
                   </div>
                   <div className="text-center border-l border-gray-150">
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter mb-0.5">Completed Sales</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mb-0.5">Completed Sales</p>
                     <div className="flex items-center justify-center gap-1 text-sm font-bold text-slate-800">
                       <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500/10" />
                       <span>{seller.salesCount || 0} Trades</span>

@@ -341,7 +341,7 @@ export function EscrowActionCard({
                 </Button>
                 <div className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800">
                   <AlertTriangle className="w-3 h-3 text-slate-400 mt-0.5" />
-                  <p className="text-[9px] text-slate-500 leading-tight bn">
+                  <p className="text-[10px] text-slate-500 leading-tight bn">
                     {t("rejectionPolicyWarning")}
                   </p>
                 </div>

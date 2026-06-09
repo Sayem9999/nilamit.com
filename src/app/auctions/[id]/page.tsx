@@ -587,7 +587,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <span className="text-[10px] uppercase font-bold text-primary-600 flex items-center gap-1">
                       <Shield className="w-3 h-3" aria-hidden="true" /> {t("successFee")}
                     </span>
-                    <span className="text-[9px] text-slate-400">{t("platformCommission")}</span>
+                    <span className="text-[10px] text-slate-400">{t("platformCommission")}</span>
                   </div>
                   <span className="text-sm font-semibold text-primary-700">-{formatBDT(auction.commissionEarned || 0)}</span>
                 </div>
@@ -597,7 +597,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                     <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
                       <Truck className="w-3 h-3" aria-hidden="true" /> {t("deliveryCharge")}
                     </span>
-                    <span className="text-[9px] text-slate-400">{t("sellerProtection")}</span>
+                    <span className="text-[10px] text-slate-400">{t("sellerProtection")}</span>
                   </div>
                    <span className="text-sm font-semibold text-slate-700">{formatBDT(auction.deliveryCharge || 0)}</span>
                 </div>

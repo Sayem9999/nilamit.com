@@ -371,10 +371,10 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
                           <p className="font-semibold text-xs text-gray-900 truncate leading-snug">{auction.title}</p>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="text-[10px] font-bold text-primary-600">৳{auction.currentPrice.toLocaleString()}</span>
-                            <span className="text-gray-300 text-[8px]">•</span>
+                            <span className="text-gray-300 text-[10px]">•</span>
                             <button
                               onClick={() => handleCopyId(auction.id)}
-                              className="text-[9px] font-mono text-gray-400 hover:text-indigo-600 hover:underline flex items-center gap-0.5 select-all"
+                              className="text-[10px] font-mono text-gray-400 hover:text-indigo-600 hover:underline flex items-center gap-0.5 select-all"
                               title="Copy ID"
                             >
                               <span>{auction.id.slice(0, 8)}...</span>

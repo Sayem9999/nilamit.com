@@ -506,7 +506,7 @@ export default function ProfileSettings() {
               <div className="flex flex-col md:flex-row md:items-center gap-2">
                 <h1 className="text-2xl font-bold text-white">{session.user?.name}</h1>
                 {user.userLevel > 5 && (
-                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-[9px] font-bold text-white uppercase tracking-wider mx-auto md:mx-0">
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-[10px] font-bold text-white uppercase tracking-wider mx-auto md:mx-0">
                     <Trophy size={10} className="text-amber-400" /> {t_prof("eliteMember") || "Elite"}
                   </div>
                 )}
@@ -622,28 +622,28 @@ export default function ProfileSettings() {
         {/* Stats Grid */}
         <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
            <div className="bg-white p-5 rounded-md border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide mb-1">Trades Done</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Trades Done</p>
               <p className="text-xl font-bold text-gray-900 leading-tight">
                 {user.salesCount || 0} <span className="text-[10px] text-gray-400 font-medium">Trades</span>
               </p>
            </div>
 
            <div className="bg-white p-5 rounded-md border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide mb-1">Feedback Score</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Feedback Score</p>
               <p className="text-xl font-bold text-gray-900 leading-tight">
                 {Number(user.rating || 0).toFixed(1)} <span className="text-[10px] text-gray-400 font-medium">/ 5.0</span>
               </p>
            </div>
 
            <div className="bg-white p-5 rounded-md border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide mb-1">Reputation Score</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Reputation Score</p>
               <p className="text-xl font-bold text-gray-900 leading-tight">
                 {user.reputationScore || 0}
               </p>
            </div>
 
            <div className="bg-white p-5 rounded-md border border-gray-100 shadow-sm hover:shadow-md transition-all group text-center sm:text-left">
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide mb-1">Trader Level</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Trader Level</p>
               <p className="text-xl font-bold text-gray-900 leading-tight">
                 Lv. {user.userLevel || 1}
               </p>
@@ -676,7 +676,7 @@ export default function ProfileSettings() {
                     <button
                       onClick={handleSendEmailVerification}
                       disabled={isPending}
-                      className="w-full bg-blue-600 text-white py-2 rounded-xl font-bold text-[9px] uppercase tracking-wide hover:bg-blue-700 transition-all flex items-center justify-center gap-1.5"
+                      className="w-full bg-blue-600 text-white py-2 rounded-xl font-bold text-[10px] uppercase tracking-wide hover:bg-blue-700 transition-all flex items-center justify-center gap-1.5"
                     >
                       {isPending ? "Sending..." : "Send Verification Link"}
                     </button>
@@ -703,7 +703,7 @@ export default function ProfileSettings() {
 
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="profile-fullname" className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block mb-1">Full Name</label>
+                  <label htmlFor="profile-fullname" className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block mb-1">Full Name</label>
                   {editing ? (
                     <div className="flex gap-2">
                       <input
@@ -730,15 +730,15 @@ export default function ProfileSettings() {
                 </div>
 
                 <div>
-                  <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block mb-1">Email Address</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block mb-1">Email Address</label>
                   <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
                     <span>{session.user?.email}</span>
                     {isEmailVerifiedLocal ? (
-                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-green-50 text-green-700 text-[8px] font-bold rounded-full border border-green-200">
+                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold rounded-full border border-green-200">
                         VERIFIED
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold rounded-full border border-amber-200">
+                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200">
                         UNVERIFIED
                       </span>
                     )}
@@ -753,7 +753,7 @@ export default function ProfileSettings() {
                 <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                   <ShieldCheck size={18} className="text-primary-600" /> Account Class
                 </h3>
-                <span className={`text-[8px] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full border ${
+                <span className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full border ${
                   user.isRetailer 
                     ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
                     : 'bg-primary-50 text-primary-700 border-primary-100'
@@ -793,7 +793,7 @@ export default function ProfileSettings() {
                 {!editingAddress && (
                   <button 
                     onClick={() => setEditingAddress(true)}
-                    className="text-[9px] font-bold uppercase tracking-wide text-primary-650 hover:text-primary-850"
+                    className="text-[10px] font-bold uppercase tracking-wide text-primary-650 hover:text-primary-850"
                   >
                     Edit
                   </button>
@@ -803,7 +803,7 @@ export default function ProfileSettings() {
               {editingAddress ? (
                 <div className="space-y-3">
                   <div>
-                    <label htmlFor="address-street" className="text-[8px] font-bold text-gray-400 uppercase tracking-wide block mb-0.5">Street Address</label>
+                    <label htmlFor="address-street" className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block mb-0.5">Street Address</label>
                     <input 
                       id="address-street"
                       type="text"
@@ -815,7 +815,7 @@ export default function ProfileSettings() {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="col-span-2">
-                      <label htmlFor="address-area" className="text-[8px] font-bold text-gray-400 uppercase tracking-wide block mb-0.5">Area / Neighborhood</label>
+                      <label htmlFor="address-area" className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block mb-0.5">Area / Neighborhood</label>
                       <input 
                         id="address-area"
                         type="text"
@@ -826,7 +826,7 @@ export default function ProfileSettings() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="address-zip" className="text-[8px] font-bold text-gray-400 uppercase tracking-wide block mb-0.5">Zip Code</label>
+                      <label htmlFor="address-zip" className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block mb-0.5">Zip Code</label>
                       <input 
                         id="address-zip"
                         type="text"
@@ -838,7 +838,7 @@ export default function ProfileSettings() {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="address-district" className="text-[8px] font-bold text-gray-400 uppercase tracking-wide block mb-0.5">District / City</label>
+                    <label htmlFor="address-district" className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block mb-0.5">District / City</label>
                     <select
                       id="address-district"
                       value={addressDistrict}
@@ -862,7 +862,7 @@ export default function ProfileSettings() {
                       type="button"
                       onClick={handleSaveAddress}
                       disabled={isSavingAddress}
-                      className="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-wide transition-all disabled:opacity-40"
+                      className="flex-1 bg-primary-600 hover:bg-primary-700 text-white py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-all disabled:opacity-40"
                     >
                       {isSavingAddress ? "Saving..." : "Save Address"}
                     </button>
@@ -884,7 +884,7 @@ export default function ProfileSettings() {
                         }
                       }}
                       disabled={isSavingAddress}
-                      className="px-4 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-wide hover:bg-gray-200 transition-all"
+                      className="px-4 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wide hover:bg-gray-200 transition-all"
                     >
                       Cancel
                     </button>
@@ -894,7 +894,7 @@ export default function ProfileSettings() {
                 <div className="space-y-3 py-1">
                   {addressStreet || addressArea || addressDistrict ? (
                     <div className="space-y-1.5 bg-slate-50/50 p-4 rounded-md border border-slate-100 text-xs font-bold text-slate-800">
-                      <p className="font-semibold text-[8px] text-slate-400 uppercase tracking-wider">Default Destination</p>
+                      <p className="font-semibold text-[10px] text-slate-400 uppercase tracking-wider">Default Destination</p>
                       <p className="text-sm font-bold text-slate-900">{addressStreet}</p>
                       <p className="text-slate-600">{addressArea}, {addressDistrict} {addressZip && ` - ${addressZip}`}</p>
                     </div>
@@ -923,11 +923,11 @@ export default function ProfileSettings() {
                       <Image src={BKASH_LOGO_PRIMARY} alt="bKash" width={32} height={32} className="object-contain" />
                     </div>
                     {user.bkashNumber ? (
-                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-green-50 text-green-700 text-[8px] font-bold rounded-full border border-green-200">
+                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold rounded-full border border-green-200">
                         LINKED
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-gray-50 text-gray-500 text-[8px] font-bold rounded-full border border-gray-200">
+                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-bold rounded-full border border-gray-200">
                         UNLINKED
                       </span>
                     )}
@@ -1001,11 +1001,11 @@ export default function ProfileSettings() {
                       <Image src={NAGAD_LOGO_PRIMARY} alt="Nagad" width={32} height={32} className="object-contain" />
                     </div>
                     {user.nagadNumber ? (
-                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-green-50 text-green-700 text-[8px] font-bold rounded-full border border-green-200">
+                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold rounded-full border border-green-200">
                         LINKED
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-gray-50 text-gray-500 text-[8px] font-bold rounded-full border border-gray-200">
+                      <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-bold rounded-full border border-gray-200">
                         UNLINKED
                       </span>
                     )}

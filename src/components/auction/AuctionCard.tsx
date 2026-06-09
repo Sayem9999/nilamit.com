@@ -30,7 +30,7 @@ import React, { memo, useState, useTransition } from "react";
 // Premium dynamic styling and Lucide icons for categories
 const getCategoryBadgeStyles = (cat?: string) => {
   const normalized = (cat || 'other').toLowerCase().replace(/_/g, '-');
-  const className = "bg-slate-100/70 text-slate-600 dark:text-slate-300 border-slate-200/60 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 border uppercase tracking-wider";
+  const className = "bg-slate-100/70 text-slate-600 dark:text-slate-300 border-slate-200/60 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border uppercase tracking-wider";
   switch (normalized) {
     case 'mobile-phones': return { className, icon: Smartphone };
     case 'computers-laptops': return { className, icon: Laptop };
@@ -54,17 +54,17 @@ const getConditionBadgeStyles = (cond?: string) => {
   switch (normalized) {
     case 'NEW':
       return {
-        className: "bg-emerald-50 text-emerald-700 dark:text-emerald-350 border-emerald-200/60 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 border uppercase tracking-wider",
+        className: "bg-emerald-50 text-emerald-700 dark:text-emerald-350 border-emerald-200/60 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border uppercase tracking-wider",
         icon: Sparkles
       };
     case 'USED':
       return {
-        className: "bg-slate-50 text-slate-700 dark:text-slate-350 border-slate-200/60 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 border uppercase tracking-wider",
+        className: "bg-slate-50 text-slate-700 dark:text-slate-400 border-slate-200/60 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border uppercase tracking-wider",
         icon: RefreshCw
       };
     case 'REFURBISHED':
       return {
-        className: "bg-blue-50 text-blue-700 dark:text-blue-350 border-blue-200/60 rounded px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 border uppercase tracking-wider",
+        className: "bg-blue-50 text-blue-700 dark:text-blue-350 border-blue-200/60 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border uppercase tracking-wider",
         icon: Wrench
       };
     default:
@@ -200,7 +200,7 @@ export const AuctionCard = memo(({
                     onError={() => setImageError(true)}
                   />
                 ) : (
-                  <div className="w-full h-full bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4 text-center text-slate-350">
+                  <div className="w-full h-full bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4 text-center text-slate-400">
                     <Package className="w-8 h-8 stroke-[1.5]" aria-hidden="true" />
                   </div>
                 )}
@@ -250,7 +250,7 @@ export const AuctionCard = memo(({
                   const styles = getCategoryBadgeStyles(auction.category);
                   const CatIcon = styles.icon;
                   return (
-                    <span className="bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 backdrop-blur-md rounded-full px-2 py-0.5 text-[9px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
+                    <span className="bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 backdrop-blur-md rounded-full px-2 py-0.5 text-[10px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
                       <CatIcon className="w-2.5 h-2.5" />
                       {tCat(auction.category || 'other')}
                     </span>
@@ -261,7 +261,7 @@ export const AuctionCard = memo(({
                   if (!styles) return null;
                   const CondIcon = styles.icon;
                   return (
-                    <span className="bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20 backdrop-blur-md rounded-full px-2 py-0.5 text-[9px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
+                    <span className="bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20 backdrop-blur-md rounded-full px-2 py-0.5 text-[10px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
                       <CondIcon className="w-2.5 h-2.5" />
                       {auction.condition}
                     </span>
@@ -297,7 +297,7 @@ export const AuctionCard = memo(({
             {/* Bottom pricing section */}
             <div className="mt-4 pt-3 border-t border-gray-100/60 flex flex-wrap items-end justify-between gap-4">
               <div className="space-y-0.5">
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block leading-none">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block leading-none">
                   {t("currentPrice")}
                 </span>
                 <div className="flex items-baseline gap-2">
@@ -357,7 +357,7 @@ export const AuctionCard = memo(({
               ) : (
                 <div className="w-full h-full bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center gap-1.5 p-4 text-center text-slate-300 dark:text-slate-700">
                   <Package className="w-8 h-8 stroke-[1.5]" aria-hidden="true" />
-                  <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400/60">{t("noImage")}</span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400/60">{t("noImage")}</span>
                 </div>
               )}
             </div>
@@ -441,7 +441,7 @@ export const AuctionCard = memo(({
             })()}
 
             {auction.isFeatured && (
-              <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
+              <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
                 <Star className="w-2.5 h-2.5 fill-white text-white" aria-hidden="true" />
                 Featured
               </span>

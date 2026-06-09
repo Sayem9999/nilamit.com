@@ -311,7 +311,7 @@ export function ModerationTab() {
                         No image
                       </div>
                     )}
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wider uppercase bg-slate-900 text-white shadow-xs">
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-slate-900 text-white shadow-xs">
                       {report.auction.status}
                     </div>
                   </div>
@@ -488,7 +488,7 @@ export function ModerationTab() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase shrink-0 ${
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase shrink-0 ${
                           auction.status === "ACTIVE" ? "bg-green-100 text-green-800" :
                           auction.status === "SOLD" ? "bg-indigo-100 text-indigo-800" :
                           auction.status === "CANCELLED" ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-800"

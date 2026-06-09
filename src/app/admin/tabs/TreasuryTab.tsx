@@ -216,7 +216,7 @@ export function TreasuryTab() {
               {verificationQueue.map((item) => (
                 <div key={item.id} className="bg-white border border-amber-200/50 rounded-md p-5 shadow-sm flex items-center justify-between">
                    <div className="flex-1">
-                      <p className="text-[9px] font-bold text-amber-600 uppercase mb-1">Pending #{item.id.slice(-6)}</p>
+                      <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Pending #{item.id.slice(-6)}</p>
                       <h5 className="font-bold text-gray-900 text-sm truncate">{item.auction.title}</h5>
                       <p className="text-[10px] text-gray-500 mt-0.5">
                         <span className="font-bold">{item.buyer.name}</span> | {item.providerRef || 'No Reference'}

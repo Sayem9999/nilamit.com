@@ -324,7 +324,7 @@ export function BidPanel({
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold tracking-wide text-primary-200">Live Bid Alert</span>
                     {liveBidAlert.isAntiSnipe && (
-                      <span className="text-[9px] bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-bounce">
+                      <span className="text-[10px] bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-bounce">
                         Anti-Snipe Extended
                       </span>
                     )}

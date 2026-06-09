@@ -240,7 +240,7 @@ export function DisputesTab() {
                           <img src={msg.imageUrl} alt="Attachment" className="max-w-full h-auto rounded-lg mb-2" />
                         )}
                         <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.content}</p>
-                        <p className="text-[9px] text-gray-400 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
+                        <p className="text-[10px] text-gray-400 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
                       </>
                     )}
                   </div>

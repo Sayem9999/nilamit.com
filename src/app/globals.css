@@ -1,4 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@500;600&display=swap");
+/* Fonts are self-hosted via next/font in layout.tsx (Plus Jakarta, Inter,
+ * JetBrains Mono, Noto Sans Bengali). The previous Google Fonts @import here
+ * duplicated those loads — render-blocking + extra bytes + a CSP dependency —
+ * so it was removed. Do not re-add it; add weights in layout.tsx instead. */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -17,7 +20,9 @@
   --color-primary-300: #9ab8f5;
   --color-primary-400: #6490f8;
   --color-primary-500: #3665f3;
-  --color-primary-600: #3665f3;
+  /* Was identical to 500 (#3665f3), so hover:bg-primary-600 produced no visible
+   * change. Darkened one step so button hover/active states are perceptible. */
+  --color-primary-600: #2b51d0;
   --color-primary-700: #0046d5;
   --color-primary-800: #0036a3;
   --color-primary-900: #0b2240;

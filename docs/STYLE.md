@@ -1,6 +1,8 @@
 # 🎨 nilamit.com — Style Guide & Design System
 
-> Last Updated: April 29, 2026
+> Last Updated: June 9, 2026 (reconciled to the implemented tokens in
+> `src/app/globals.css` — the prior version documented an aspirational palette
+> that didn't match the code).
 
 > White & Blue. Clean. Trustworthy. Welcoming.
 
@@ -8,17 +10,23 @@
 
 ## Color Palette
 
-### Primary — Blue (Trust)
+### Primary — Blue (Trust) — actual tokens in `globals.css`
+
+Use the Tailwind `primary-*` utilities (e.g. `bg-primary-600`, `text-primary-700`).
+These are the real hex values:
 
 ```
---blue-50:  #eff6ff   (backgrounds, hover states)
---blue-100: #dbeafe   (light cards, tag backgrounds)
---blue-200: #bfdbfe   (borders, dividers)
---blue-500: #3b82f6   (primary buttons, links)
---blue-600: #2563eb   (button hover, active states)
---blue-700: #1d4ed8   (headings, emphasis)
---blue-900: #1e3a5f   (dark text, footer)
+--color-primary-50:  #f4f7fd   (backgrounds, hover states)
+--color-primary-100: #e2e8f5   (light cards, tag backgrounds)
+--color-primary-200: #c8d6f0   (borders, dividers)
+--color-primary-500: #3665f3   (links, primary surface)
+--color-primary-600: #2b51d0   (primary buttons + hover/active — distinct from 500)
+--color-primary-700: #0046d5   (emphasis)
+--color-primary-900: #0b2240   (dark text, footer)
 ```
+
+> Note: 500 and 600 were once the same hex (`#3665f3`), which made button
+> hover invisible. 600 is now `#2b51d0` — keep them distinct.
 
 ### Neutral — White/Gray (Clean)
 
@@ -45,18 +53,26 @@
 
 ## Typography
 
-| Role         | Font                  | Weight         | Size         |
-| ------------ | --------------------- | -------------- | ------------ |
-| Headings     | **Plus Jakarta Sans** | 700 (Bold)     | 2xl–4xl      |
-| Body         | **Inter**             | 400 (Regular)  | sm–base      |
-| Mono/Prices  | **JetBrains Mono**    | 600 (SemiBold) | lg           |
-| Bengali text | **Noto Sans Bengali** | 400–700        | Matches role |
+| Role         | Font                  | Tailwind class | Notes |
+| ------------ | --------------------- | -------------- | ----- |
+| Headings     | **Plus Jakarta Sans** | `font-heading` | applied via the `--font-heading` next/font var on `<body>` |
+| Body         | **Inter**             | `font-body` (default) | |
+| Mono/Prices  | **JetBrains Mono**    | `font-mono`    | use `formatBDT()` for amounts |
+| Bengali text | **Noto Sans Bengali** | `font-bengali` | |
 
-### Import
+### Loading — do NOT use a CSS `@import`
 
-```css
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@500;600&display=swap");
-```
+All four fonts are **self-hosted via `next/font/google` in `layout.tsx`** (one
+place, deduplicated, no render-blocking external request, CSP-clean). A Google
+Fonts `@import` in `globals.css` was removed because it duplicated these loads.
+To add a weight, edit the `next/font` config in `layout.tsx` — never re-add the
+`@import`.
+
+### Minimum text size
+
+Floor is **`text-[10px]`** (sub-10px `text-[8px]`/`text-[9px]` were removed for
+legibility on mid-range Android). Prefer `text-xs` (12px) for anything users
+must read; reserve 10–11px for dense, secondary metadata only.
 
 ---
 
@@ -99,7 +115,10 @@ Category:   bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-xs font-medium
 - Page max-width: `max-w-7xl mx-auto`
 - Section padding: `py-16 sm:py-24`
 - Card grid: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6`
-- Border radius: `rounded-xl` (default) / `rounded-2xl` (cards) / `rounded-full` (badges)
+- Border radius: the codebase predominantly uses **`rounded-md`** for cards,
+  inputs, and buttons (the de-facto default), with `rounded-full` for badges/
+  avatars. `rounded-xl`/`rounded-lg` also appear — when in doubt, match the
+  surrounding surface rather than introducing a new radius.
 
 ---
 

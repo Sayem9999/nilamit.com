@@ -89,7 +89,7 @@ export default function RetailerPerksPage() {
                   style={{ width: `${Math.min(100, (salesCount / 10) * 100)}%` }}
                 />
               </div>
-              <p className="text-[9px] text-slate-500 mt-2 font-medium">
+              <p className="text-[10px] text-slate-500 mt-2 font-medium">
                 {salesCount >= 10 ? "Benchmark satisfied for high-volume sales!" : `${10 - salesCount} more sales to reach Retailer standard.`}
               </p>
             </div>
@@ -105,7 +105,7 @@ export default function RetailerPerksPage() {
                   style={{ width: `${Math.min(100, (rating / 5) * 100)}%` }}
                 />
               </div>
-              <p className="text-[9px] text-slate-500 mt-2 font-medium">
+              <p className="text-[10px] text-slate-500 mt-2 font-medium">
                 {rating >= 4.5 ? "Top-rated seller status active!" : "Maintain at least 4.5 rating for Top Seller perks."}
               </p>
             </div>

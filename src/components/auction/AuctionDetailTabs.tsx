@@ -228,12 +228,12 @@ export function AuctionDetailTabs({
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Seller Badges</span>
                 <div className="flex justify-center gap-1.5 pt-1">
                   {seller.isVerifiedSeller && (
-                    <span className="bg-blue-50 border border-blue-200 text-blue-600 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                    <span className="bg-blue-50 border border-blue-200 text-blue-600 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                       VERIFIED
                     </span>
                   )}
                   {seller.isTopRated && (
-                    <span className="bg-amber-50 border border-amber-200 text-amber-600 rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                    <span className="bg-amber-50 border border-amber-200 text-amber-600 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                       TOP RATED
                     </span>
                   )}
@@ -241,7 +241,7 @@ export function AuctionDetailTabs({
                     <span className="text-xs text-gray-400 italic">No extra badges</span>
                   )}
                 </div>
-                <span className="text-[9px] text-slate-400 block pt-0.5">Trust markers</span>
+                <span className="text-[10px] text-slate-400 block pt-0.5">Trust markers</span>
               </div>
             </div>
 

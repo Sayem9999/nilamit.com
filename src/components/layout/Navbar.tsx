@@ -269,7 +269,7 @@ export const Navbar = memo(function Navbar() {
                 >
                   <Bell className="w-5 h-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-white px-1">
+                    <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white px-1">
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
@@ -320,7 +320,7 @@ export const Navbar = memo(function Navbar() {
                           <User className="w-4 h-4" /> {t("profile")}
                         </span>
                         <span
-                          className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
                             isVerified ? "text-blue-700 bg-blue-50" : "text-amber-700 bg-amber-50"
                           }`}
                         >
