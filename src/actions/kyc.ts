@@ -21,6 +21,7 @@
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { adminStorage } from '@/lib/firebase-admin';
 import { requireAdmin } from '@/lib/admin-guard';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
@@ -134,6 +135,34 @@ export async function rejectKyc(userId: string, reason: string): Promise<Service
 }
 
 /**
+ * Re-sign a stored KYC doc URL so moderators always get a working link.
+ *
+ * The seller's upload (via /api/upload type='chat') returns a 7-day signed
+ * URL that we persist in kycDocsRef. If a submission sits in the queue past
+ * that window the stored link 404s. Here we extract the storage object path
+ * from the stored URL and mint a fresh 1-hour signed URL at view time.
+ * Best-effort: on any parse/sign failure we fall back to the stored URL.
+ */
+async function freshSignedUrl(storedUrl: unknown): Promise<string | undefined> {
+  if (typeof storedUrl !== 'string' || !storedUrl) return undefined;
+  try {
+    const u = new URL(storedUrl);
+    const bucket = adminStorage.bucket();
+    // Signed-URL path is `/{bucket}/{objectPath}`; strip the bucket segment.
+    let path = decodeURIComponent(u.pathname.replace(/^\/+/, ''));
+    if (path.startsWith(`${bucket.name}/`)) path = path.slice(bucket.name.length + 1);
+    if (!path) return storedUrl;
+    const [fresh] = await bucket.file(path).getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 60 * 60 * 1000, // 1 hour — enough for one review
+    });
+    return fresh;
+  } catch {
+    return storedUrl;
+  }
+}
+
+/**
  * Admin: list pending KYC submissions for the moderator queue.
  * Limited to 50 oldest-first so reviewers work through backlog.
  */
@@ -148,17 +177,34 @@ export async function listPendingKyc(): Promise<
       .orderBy('kycSubmittedAt', 'asc')
       .limit(50)
       .get();
-    const rows = snap.docs.map((d) => {
-      const data = d.data() as {
-        kycSubmittedAt?: { toDate?: () => Date };
-        kycDocsRef?: unknown;
-      };
-      return {
-        userId: d.id,
-        submittedAt: data.kycSubmittedAt?.toDate?.() ?? null,
-        docs: data.kycDocsRef ?? null,
-      };
-    });
+    const rows = await Promise.all(
+      snap.docs.map(async (d) => {
+        const data = d.data() as {
+          kycSubmittedAt?: { toDate?: () => Date };
+          kycDocsRef?: {
+            nidFrontUrl?: string;
+            nidBackUrl?: string;
+            selfieUrl?: string;
+            tradeLicenseUrl?: string;
+          } | null;
+        };
+        const ref = data.kycDocsRef ?? null;
+        // Mint fresh 1-hour signed URLs so links never 404 in the queue.
+        const docs = ref
+          ? {
+              nidFrontUrl: await freshSignedUrl(ref.nidFrontUrl),
+              nidBackUrl: await freshSignedUrl(ref.nidBackUrl),
+              selfieUrl: await freshSignedUrl(ref.selfieUrl),
+              tradeLicenseUrl: await freshSignedUrl(ref.tradeLicenseUrl),
+            }
+          : null;
+        return {
+          userId: d.id,
+          submittedAt: data.kycSubmittedAt?.toDate?.() ?? null,
+          docs,
+        };
+      }),
+    );
     return successResponse(rows);
   } catch (err) {
     log.error('[kyc] list pending failed', err, { area: 'admin' });

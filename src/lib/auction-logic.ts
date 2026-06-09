@@ -7,6 +7,7 @@ import { RTDB_PATHS, FIREBASE_EVENTS } from '@/lib/firebase-events';
 import type { AuctionStatus, SystemConfig } from '@/types';
 import { log } from '@/lib/logger';
 import { scheduleEnforcePaymentPolicy } from '@/lib/cloud-tasks';
+import { updateAuctionInIndex } from '@/lib/search-engine';
 // Commission tiers live in a pure, unit-tested module (this file is server-only).
 import { calculateSuccessFee } from '@/services/finance/commission';
 export { calculateSuccessFee };
@@ -246,6 +247,12 @@ export async function closeAuctionIfEnded(auctionId: string): Promise<void> {
     });
 
     if (notifyPayload) {
+      // Reindex the new terminal status so the listing leaves ACTIVE search
+      // results (no-op until the search engine is provisioned).
+      const closedStatus = 'expired' in notifyPayload ? 'EXPIRED' : 'SOLD';
+      updateAuctionInIndex(auctionId, { status: closedStatus })
+        .catch((e: unknown) => log.warn('auction-logic: search reindex on close failed', { auctionId, error: String(e) }));
+
       if ('expired' in notifyPayload) {
         rtdbSet(RTDB_PATHS.auctionStatus(notifyPayload.auctionId), {
           type: FIREBASE_EVENTS.AUCTION_CLOSED,

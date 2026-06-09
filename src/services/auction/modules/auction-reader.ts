@@ -2,6 +2,7 @@ import { db, toSellerPublic, toSellerPrivate, docData, snapDocs } from '@/lib/db
 import { Auction, AuctionFilters, AuctionWithSeller, SellerPublic, Bid, LatestActivity } from '@/types';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
+import { isSearchEngineConfigured, searchAuctions } from '@/lib/search-engine';
 
 export class AuctionReader {
   /**
@@ -118,6 +119,87 @@ export class AuctionReader {
         : 'endTime';
 
       if (searchKeyword) {
+        // ── External search engine path (preferred when provisioned) ──────────
+        // Removes the 1000-doc scan cap and adds relevance ranking + typo
+        // tolerance. We query the engine for ranked ids, then hydrate the full
+        // docs from Firestore (the source of truth — price/bidCount can't go
+        // stale). Falls through to the legacy scan below if the engine isn't
+        // configured or errors, so search never hard-fails.
+        //
+        // Pagination: the engine is page-based but the public API is cursor
+        // (`lastId`)-based. We emit an opaque `p:{page}` cursor the client
+        // round-trips verbatim — no client change needed.
+        if (isSearchEngineConfigured()) {
+          const enginePage = lastId?.startsWith('p:')
+            ? Math.max(1, parseInt(lastId.slice(2), 10) || 1)
+            : 1;
+          const engineRes = await searchAuctions({
+            query: searchKeyword,
+            status: status || undefined,
+            category: category && category !== 'all' ? category : undefined,
+            location: filters.location && filters.location !== 'all' ? filters.location : undefined,
+            condition: filters.condition,
+            isFeatured: filters.isFeatured,
+            sortBy: orderField as 'endTime' | 'currentPrice' | 'createdAt' | 'bidCount',
+            sortOrder,
+            page: enginePage,
+            perPage: limit,
+          });
+
+          if (engineRes) {
+            const refs = engineRes.ids.map((id) => db.collection('auctions').doc(id));
+            const snaps = refs.length ? await db.getAll(...refs) : [];
+            // db.getAll preserves ref order, so ranked order survives. Drop any
+            // ids that lost their Firestore doc (index lag / deleted).
+            //
+            // SELF-HEALING STATUS FILTER: the index is best-effort and a few
+            // status transitions (CANCELLED via admin/dispute) don't reindex.
+            // We re-assert the requested status against the authoritative
+            // Firestore doc here, so a stale index entry is harmless (filtered
+            // out) rather than wrong (shown as ACTIVE). Backfill prunes them.
+            const pagedDocs = (snaps
+              .filter((s) => s.exists)
+              .map((s) => ({ id: s.id, ...s.data() })) as Auction[])
+              .filter((a) => !status || a.status === status);
+
+            const sellerIds = [...new Set(pagedDocs.map((a) => a.sellerId))];
+            const sellerSnaps = sellerIds.length > 0
+              ? await db.getAll(...sellerIds.map((id) => db.collection('users').doc(id)))
+              : [];
+            const sellerMap = new Map(sellerSnaps.map((s) => [s.id, toSellerPublic(s.id, s.data())]));
+
+            let watchlistSet = new Set<string>();
+            if (viewerId && pagedDocs.length > 0) {
+              const auctionIds = pagedDocs.map((a) => a.id).slice(0, 30);
+              const watchlistSnap = await db.collection('users').doc(viewerId)
+                .collection('watchlist')
+                .where('auctionId', 'in', auctionIds)
+                .get();
+              watchlistSet = new Set(watchlistSnap.docs.map((d) => d.data().auctionId));
+            }
+
+            const auctions = pagedDocs.map((a) => {
+              const rawEnd = a.endTime as unknown as { toDate?: () => Date } | Date;
+              const endTime = rawEnd instanceof Date ? rawEnd : rawEnd?.toDate?.() ?? new Date(rawEnd as unknown as string);
+              const { proxyMaxBid: _pmb, proxyBidderId: _pbi, ...safeData } = a as unknown as Record<string, unknown>;
+              void _pmb; void _pbi;
+              return {
+                ...safeData,
+                seller: sellerMap.get(a.sellerId)!,
+                endTime,
+                isWatchlisted: watchlistSet.has(a.id),
+              };
+            }) as AuctionWithSeller[];
+
+            return successResponse({
+              auctions,
+              total: engineRes.total,
+              lastId: engineRes.ids.length === limit ? `p:${enginePage + 1}` : null,
+            });
+          }
+        }
+
+        // ── Legacy fallback: in-memory scan ───────────────────────────────────
         // Firestore has no native substring search. We scan the most-relevant
         // slice — ordered by the requested sort (deterministic, index-backed,
         // no longer an arbitrary 1000) — then substring-match in memory.

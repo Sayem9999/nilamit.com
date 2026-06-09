@@ -144,3 +144,29 @@ env:
   # - variable: PAYMENT_WEBHOOK_SECRET
   #   secret: PAYMENT_WEBHOOK_SECRET
 
+  # ─── Typesense search engine — pending provisioning ─────────────────
+  # Fronts keyword search (see docs/SEARCH.md). Until TYPESENSE_HOST +
+  # TYPESENSE_API_KEY are set, src/lib/search-engine.ts no-ops and the
+  # reader falls back to the legacy in-memory scan — nothing breaks.
+  #
+  # Activation:
+  #   1. Provision Typesense in-region (Singapore/Mumbai for BD latency).
+  #   2. Store the ADMIN api key in Secret Manager:
+  #        firebase apphosting:secrets:set TYPESENSE_API_KEY \
+  #          --project nilamit-52073 --data-file -
+  #        firebase apphosting:secrets:grantaccess TYPESENSE_API_KEY \
+  #          --project nilamit-52073 --backend nilamit
+  #   3. Uncomment the block below, set the real host, deploy.
+  #   4. Backfill the catalog:
+  #        TYPESENSE_HOST=... TYPESENSE_API_KEY=... npx tsx scripts/backfill-search.ts
+  #
+  # TYPESENSE_PROTOCOL defaults to https, TYPESENSE_PORT to 443,
+  # TYPESENSE_COLLECTION to "auctions" — only override if non-standard.
+  #
+  # - variable: TYPESENSE_HOST
+  #   value: "xxxxxxxxxx.a1.typesense.net"   # Typesense Cloud host, or your self-hosted DNS
+  # - variable: TYPESENSE_API_KEY
+  #   secret: TYPESENSE_API_KEY
+  # - variable: TYPESENSE_PORT
+  #   value: "443"
+

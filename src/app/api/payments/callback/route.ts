@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto, { timingSafeEqual } from 'crypto';
 import { PaymentService, type PaymentProvider } from '@/services/payment/payment-service';
+import { activateFeaturedFromPayment } from '@/lib/featured-service';
+import { isFeaturedTranId } from '@/services/finance/featured';
 import { log } from '@/lib/logger';
 
 const PAYMENT_PROVIDERS: readonly PaymentProvider[] = ['bkash', 'nagad', 'sslcommerz', 'card'];
@@ -86,6 +88,14 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ success: false, error: 'Unknown payment provider' }, { status: 400 });
         }
 
+        // Featured-listing purchases route to activation, not escrow release.
+        if (isFeaturedTranId(transactionId)) {
+          const feat = await activateFeaturedFromPayment(transactionId, Number(amount), provider);
+          return feat.success
+            ? NextResponse.json({ success: true, message: 'Featured activated' })
+            : NextResponse.json({ success: false, error: feat.error?.message }, { status: 400 });
+        }
+
         const res = await PaymentService.verifyAndReleaseEscrow(
           automationToken,
           transactionId,
@@ -125,6 +135,20 @@ export async function POST(req: NextRequest) {
     if (!verifySSLCommerzSignature(payload, storePassMd5)) {
       log.error('[PaymentCallback] Signature verification failed!', { tran_id });
       return NextResponse.json({ error: 'Signature mismatch' }, { status: 400 });
+    }
+
+    // ─── Featured-listing branch ──────────────────────────────────────
+    // A `feat_` transaction id is a self-serve featured purchase, not an
+    // escrow advance. Signature is already verified above, so activation is
+    // safe to run here.
+    if (isFeaturedTranId(tran_id)) {
+      const feat = await activateFeaturedFromPayment(tran_id, Number(amount), 'sslcommerz');
+      if (feat.success) {
+        log.info('[PaymentCallback] Featured listing activated', { tran_id, val_id });
+        return NextResponse.json({ status: 'OK' });
+      }
+      log.error('[PaymentCallback] Featured activation failed', feat.error?.message);
+      return NextResponse.json({ error: feat.error?.message }, { status: 400 });
     }
 
     // ─── Escrow branch ─────────────────────────────────────────────────

@@ -8,6 +8,7 @@ import type { CreateAuctionInputValidated } from '@/lib/schemas';
 import { scheduleAuctionClosure, scheduleClosingSoonAlert } from '@/lib/cloud-tasks';
 import { AuctionNotifier } from './auction-notifier';
 import { AuditService } from '@/services/admin/audit-service';
+import { indexAuction } from '@/lib/search-engine';
 
 export class AuctionWriter {
   /**
@@ -53,6 +54,11 @@ export class AuctionWriter {
       AuditService.logAuctionChange(id, null, auction, 'CREATE', userId).catch(() => {});
 
       incrementGlobalStat('totalAuctions').catch(() => {});
+
+      // Index into the external search engine (no-op until provisioned). Source
+      // of truth stays Firestore — this is a thin projection for keyword search.
+      indexAuction(auction as unknown as Record<string, unknown>)
+        .catch((e) => log.warn('[AuctionWriter] search index failed', { auctionId: id, error: String(e) }));
 
       AuctionNotifier.notifyFollowersOfNewListing(id, userId, sanitizedInput.title, sanitizedInput.images?.[0])
         .catch((e) => log.error('[AuctionWriter] follower fan-out failed', e, { auctionId: id }));

@@ -41,6 +41,7 @@ import { ReportModal } from "@/components/auction/ReportModal";
 import ChatInterface from "@/components/social/ChatInterface";
 import { isAdminEmail } from "@/lib/admin-guard";
 import { AdminAuctionControls } from "@/components/auction/AdminAuctionControls";
+import { FeatureListingButton } from "@/components/auction/FeatureListingButton";
 
 import { AuctionWithBids, Bid, AuctionWithSeller } from "@/types";
 import { auth } from "@/lib/auth";
@@ -188,6 +189,15 @@ export default async function AuctionDetailPage({ params }: Props) {
       />
       {isAdmin && (
         <AdminAuctionControls auctionId={id} auctionTitle={auction.title} />
+      )}
+      {session?.user?.id === auction.sellerId && auction.status === "ACTIVE" && (
+        <div className="mb-8">
+          <FeatureListingButton
+            auctionId={id}
+            isFeatured={!!auction.isFeatured}
+            featuredUntil={auction.featuredUntil}
+          />
+        </div>
       )}
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left: Details — uniform 8-unit vertical rhythm via space-y */}

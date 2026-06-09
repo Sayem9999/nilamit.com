@@ -87,6 +87,12 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             --data '{}' --max-time 300
+      - name: POST /api/cron/expire-featured
+        run: |
+          curl --fail-with-body -sS -X POST "$BASE_URL/api/cron/expire-featured" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --data '{}' --max-time 300
 
   # Daily managed Firestore export to GCS (autobackup). No-op until
   # BACKUP_GCS_BUCKET + IAM are provisioned — see src/app/api/cron/backup/route.ts.
