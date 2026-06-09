@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { Sparkles, Loader2, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { FEATURED_TIERS } from "@/services/finance/featured";
-import { initiateFeaturedPurchase } from "@/actions/featured";
 
 interface Props {
   auctionId: string;
@@ -46,17 +45,30 @@ export function FeatureListingButton({ auctionId, isFeatured, featuredUntil }: P
 
   const handlePurchase = () => {
     startTransition(async () => {
-      const res = await initiateFeaturedPurchase(auctionId, selected);
-      if (!res.success || !res.data) {
-        toast.error(res.error?.message || "Could not start featured purchase");
-        return;
+      try {
+        const res = await fetch("/api/payments/sslcommerz/init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ purpose: "featured", auctionId, days: selected }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.gatewayUrl) {
+          // Hand off to the hosted checkout. The signed callback activates the
+          // feature; the expire-featured cron winds it back down.
+          window.location.href = data.gatewayUrl as string;
+          return;
+        }
+
+        if (res.status === 503 && data.code === "GATEWAY_OFF") {
+          toast("Online payment isn't enabled yet — contact support to feature this listing.");
+          return;
+        }
+
+        toast.error(data.error || "Could not start featured purchase");
+      } catch {
+        toast.error("Network error — please try again.");
       }
-      // Hand off to the payment gateway here once the init endpoint exists:
-      //   const init = await fetch('/api/payments/sslcommerz/init', { ... res.data ... })
-      //   window.location.href = init.GatewayPageURL
-      toast.success(
-        `Reserved — pay ৳${res.data.amountBdt} to feature for ${selected} days.`,
-      );
     });
   };
 
