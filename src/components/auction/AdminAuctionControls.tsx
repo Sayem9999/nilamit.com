@@ -59,7 +59,7 @@ export function AdminAuctionControls({ auctionId, auctionTitle }: AdminAuctionCo
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
-          <div className="bg-red-500/10 p-2.5 rounded-xl text-red-500 border border-red-500/20 shrink-0">
+          <div className="bg-red-500/10 p-2.5 rounded-md text-red-500 border border-red-500/20 shrink-0">
             <Shield className="w-6 h-6" />
           </div>
           <div>
@@ -67,7 +67,7 @@ export function AdminAuctionControls({ auctionId, auctionTitle }: AdminAuctionCo
               <h4 className="font-heading font-bold text-lg tracking-tight text-white">
                 Admin Control Terminal
               </h4>
-              <span className="bg-red-500/20 text-red-400 text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded border border-red-500/30">
+              <span className="bg-red-500/20 text-red-400 text-[11px] font-bold tracking-wide uppercase px-2 py-0.5 rounded border border-red-500/30">
                 Authorized Only
               </span>
             </div>
@@ -85,7 +85,7 @@ export function AdminAuctionControls({ auctionId, auctionTitle }: AdminAuctionCo
               setReason('');
             }}
             disabled={isPending}
-            className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 transition-colors border border-amber-500/30 disabled:opacity-50"
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 px-4 rounded-md flex items-center gap-2 transition-colors border border-amber-500/30 disabled:opacity-50"
           >
             <Ban className="w-4 h-4" />
             Take Down / Suspend
@@ -98,7 +98,7 @@ export function AdminAuctionControls({ auctionId, auctionTitle }: AdminAuctionCo
               setReason('');
             }}
             disabled={isPending}
-            className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center gap-2 transition-colors border border-red-500/30 disabled:opacity-50"
+            className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-2.5 px-4 rounded-md flex items-center gap-2 transition-colors border border-red-500/30 disabled:opacity-50"
           >
             <Trash2 className="w-4 h-4" />
             Wipe Permanently
@@ -121,20 +121,20 @@ export function AdminAuctionControls({ auctionId, auctionTitle }: AdminAuctionCo
               placeholder={`Reason for taking down "${auctionTitle}" (Required)...`}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl p-3 text-xs focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full bg-slate-950 border border-slate-800 text-white rounded-md p-3 text-xs focus:ring-2 focus:ring-amber-500 outline-none"
               rows={3}
             />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowConfirmTakedown(false)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3.5 rounded-lg text-xs font-semibold"
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3.5 rounded-md text-xs font-semibold"
               >
                 Cancel
               </button>
               <button
                 onClick={handleTakedown}
                 disabled={isPending}
-                className="bg-amber-600 hover:bg-amber-700 text-white py-1.5 px-4 rounded-lg text-xs font-bold flex items-center gap-1.5"
+                className="bg-amber-600 hover:bg-amber-700 text-white py-1.5 px-4 rounded-md text-xs font-bold flex items-center gap-1.5"
               >
                 {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Ban className="w-3 h-3" />}
                 Confirm Suspend
@@ -159,20 +159,20 @@ export function AdminAuctionControls({ auctionId, auctionTitle }: AdminAuctionCo
               placeholder={`Reason for permanent database deletion of "${auctionTitle}" (Required)...`}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl p-3 text-xs focus:ring-2 focus:ring-red-500 outline-none"
+              className="w-full bg-slate-950 border border-slate-800 text-white rounded-md p-3 text-xs focus:ring-2 focus:ring-red-500 outline-none"
               rows={3}
             />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowConfirmDelete(false)}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3.5 rounded-lg text-xs font-semibold"
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3.5 rounded-md text-xs font-semibold"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isPending}
-                className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-4 rounded-lg text-xs font-bold flex items-center gap-1.5"
+                className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-4 rounded-md text-xs font-bold flex items-center gap-1.5"
               >
                 {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                 Permanently Wipe Database Record

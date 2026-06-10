@@ -76,7 +76,7 @@ export const CountdownTimer = memo(({
           state.isExpired
             ? "bg-gray-100/60 border-gray-200 text-gray-400"
             : state.isUrgent
-            ? "bg-red-50/80 border-red-200/60 text-red-600 shadow-sm shadow-red-500/10 backdrop-blur-md animate-pulse"
+            ? "bg-red-50/80 border-red-200/60 text-red-600 shadow-sm shadow-red-500/10 animate-pulse"
             : "bg-gray-50/80 border-gray-100/80 text-gray-500 group-hover:bg-primary-50 group-hover:border-primary-100/50 group-hover:text-primary-600"
         } ${className}`}
       >
@@ -99,7 +99,7 @@ export const CountdownTimer = memo(({
   if (variant === "badge") {
     return (
       <div
-        className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border transition-all duration-500 font-mono text-sm shadow-sm backdrop-blur-md ${
+        className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md border transition-all duration-500 font-mono text-sm shadow-sm ${
           state.isExpired
             ? "bg-gray-100/80 border-gray-200 text-gray-400"
             : state.isUrgent

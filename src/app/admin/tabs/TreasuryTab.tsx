@@ -171,7 +171,7 @@ export function TreasuryTab() {
           </h3>
           <p className="text-sm text-gray-500">Real-time oversight of automated MFS advance-payment transactions.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-200">
+        <button className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-200">
            <Download className="w-4 h-4" /> Export Ledger
         </button>
       </div>
@@ -180,25 +180,25 @@ export function TreasuryTab() {
       {ledger && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-gray-900 text-white rounded-md p-4 shadow-sm">
-            <div className="flex items-center gap-1.5 text-gray-300 text-[10px] font-bold uppercase tracking-wide">
+            <div className="flex items-center gap-1.5 text-gray-300 text-[11px] font-bold uppercase tracking-wide">
               <Wallet className="w-3.5 h-3.5" /> Held in Escrow
             </div>
             <p className="text-2xl font-bold mt-1">{formatBDT(ledger.heldBalance)}</p>
           </div>
           <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Total In</p>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Total In</p>
             <p className="text-2xl font-bold text-emerald-600 mt-1">{formatBDT(ledger.totalIn)}</p>
-            <p className="text-[10px] text-gray-400">{ledger.counts.in} entries</p>
+            <p className="text-[11px] text-gray-400">{ledger.counts.in} entries</p>
           </div>
           <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Released to Sellers</p>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Released to Sellers</p>
             <p className="text-2xl font-bold text-blue-600 mt-1">{formatBDT(ledger.totalOut)}</p>
-            <p className="text-[10px] text-gray-400">{ledger.counts.out} entries</p>
+            <p className="text-[11px] text-gray-400">{ledger.counts.out} entries</p>
           </div>
           <div className="bg-white rounded-md border border-gray-100 p-4 shadow-sm">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Refunded to Buyers</p>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Refunded to Buyers</p>
             <p className="text-2xl font-bold text-amber-600 mt-1">{formatBDT(ledger.totalRefund)}</p>
-            <p className="text-[10px] text-gray-400">{ledger.counts.refund} entries</p>
+            <p className="text-[11px] text-gray-400">{ledger.counts.refund} entries</p>
           </div>
         </div>
       )}
@@ -216,9 +216,9 @@ export function TreasuryTab() {
               {verificationQueue.map((item) => (
                 <div key={item.id} className="bg-white border border-amber-200/50 rounded-md p-5 shadow-sm flex items-center justify-between">
                    <div className="flex-1">
-                      <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Pending #{item.id.slice(-6)}</p>
+                      <p className="text-[11px] font-bold text-amber-600 uppercase mb-1">Pending #{item.id.slice(-6)}</p>
                       <h5 className="font-bold text-gray-900 text-sm truncate">{item.auction.title}</h5>
-                      <p className="text-[10px] text-gray-500 mt-0.5">
+                      <p className="text-[11px] text-gray-500 mt-0.5">
                         <span className="font-bold">{item.buyer.name}</span> | {item.providerRef || 'No Reference'}
                       </p>
                    </div>
@@ -227,7 +227,7 @@ export function TreasuryTab() {
                       <button 
                         onClick={() => handleApprovePayment(item.id)}
                         disabled={!!approving}
-                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase rounded-lg shadow-md shadow-emerald-500/20 transition-all flex items-center gap-2"
+                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold uppercase rounded-md shadow-md shadow-emerald-500/20 transition-all flex items-center gap-2"
                       >
                         {approving === item.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
                         Approve
@@ -265,17 +265,17 @@ export function TreasuryTab() {
                   <tr key={log.id} className="hover:bg-emerald-50/20 transition-colors">
                     <td className="px-6 py-4">
                       <p className="text-xs font-bold text-gray-900 font-mono">#{log.id.slice(-6)}</p>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase truncate max-w-[150px]">{log.auction.title}</p>
+                      <p className="text-[11px] text-gray-400 font-bold uppercase truncate max-w-[150px]">{log.auction.title}</p>
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm font-bold text-gray-900">{log.buyer.name || 'Anonymous'}</p>
-                      <p className="text-[10px] text-gray-500">{log.buyer.email}</p>
+                      <p className="text-[11px] text-gray-500">{log.buyer.email}</p>
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm font-bold text-gray-900">{formatBDT(log.amount)}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter shadow-sm border ${
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-tighter shadow-sm border ${
                         log.status === 'VERIFICATION_PENDING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                         log.verificationType === 'AUTOMATIC' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-500 border-gray-100'
                       }`}>
@@ -329,7 +329,7 @@ export function TreasuryTab() {
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
             <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wide">Active Advance Payment Control (HELD Status)</h4>
-            <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Manual Override</span>
+            <span className="bg-amber-100 text-amber-700 text-[11px] font-bold px-2 py-0.5 rounded uppercase">Manual Override</span>
         </div>
         
         {activeEscrows.length === 0 ? (
@@ -341,12 +341,12 @@ export function TreasuryTab() {
                 {activeEscrows.map((escrow) => (
                     <div key={escrow.id} className="bg-white border border-gray-100 rounded-md p-5 shadow-sm flex items-center justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">ID: {escrow.id.slice(-8)}</p>
+                            <p className="text-[11px] font-bold text-gray-400 uppercase mb-1">ID: {escrow.id.slice(-8)}</p>
                             <h5 className="font-bold text-gray-900 truncate">{escrow.auction.title}</h5>
                             <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] text-gray-500">Seller: <span className="font-bold">{escrow.auction.seller.name || 'Unknown'}</span></span>
-                                <span className="text-[10px] text-gray-300">|</span>
-                                <span className="text-[10px] text-gray-500">Buyer: <span className="font-bold">{escrow.buyer.name || 'Unknown'}</span></span>
+                                <span className="text-[11px] text-gray-500">Seller: <span className="font-bold">{escrow.auction.seller.name || 'Unknown'}</span></span>
+                                <span className="text-[11px] text-gray-300">|</span>
+                                <span className="text-[11px] text-gray-500">Buyer: <span className="font-bold">{escrow.buyer.name || 'Unknown'}</span></span>
                             </div>
                         </div>
                         <div className="text-right flex-shrink-0">
@@ -355,14 +355,14 @@ export function TreasuryTab() {
                                 <button 
                                     onClick={() => handleManualResolve(escrow.id, 'RELEASE')}
                                     disabled={!!resolving}
-                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors title='Release to Seller'"
+                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-md hover:bg-emerald-100 transition-colors title='Release to Seller'"
                                 >
                                     <Scale className="w-4 h-4" />
                                 </button>
                                 <button 
                                     onClick={() => handleProtectedRefund(escrow.id)}
                                     disabled={!!resolving}
-                                    className="p-2 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-100 transition-colors"
+                                    className="p-2 bg-amber-50 text-amber-600 rounded-md hover:bg-amber-100 transition-colors"
                                     title="Refund - 120 BDT Shipping"
                                 >
                                     <RotateCcw className="w-4 h-4" />
@@ -370,7 +370,7 @@ export function TreasuryTab() {
                                 <button 
                                     onClick={() => handleManualResolve(escrow.id, 'REFUND')}
                                     disabled={!!resolving}
-                                    className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                    className="p-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors"
                                     title="Full Refund"
                                 >
                                     <Trash2 className="w-4 h-4" />

@@ -19,13 +19,13 @@ export default function NotFound() {
       <div className="flex gap-3">
         <Link
           href="/"
-          className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-xl transition-all shadow-sm text-sm"
+          className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-md transition-all shadow-sm text-sm"
         >
           Go Home
         </Link>
         <Link
           href="/auctions"
-          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-8 py-3 rounded-xl transition-all text-sm"
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-8 py-3 rounded-md transition-all text-sm"
         >
           Browse Auctions
         </Link>

@@ -55,7 +55,7 @@ const TrustBadge = memo(({
   const tier = getTier(rating);
 
   const sizeClasses = {
-    sm: "h-5 text-[10px] gap-1 px-1.5",
+    sm: "h-5 text-[11px] gap-1 px-1.5",
     md: "h-7 text-xs gap-1.5 px-2.5",
     lg: "h-9 text-sm gap-2 px-4",
   };
@@ -86,12 +86,12 @@ const TrustBadge = memo(({
             {showText && <span className="bn">{rating.toFixed(1)} ★</span>}
           </div>
         </TooltipTrigger>
-        <TooltipContent className="p-3 bg-white/95 backdrop-blur-md border-slate-100 rounded-md shadow-premium max-w-[200px]">
+        <TooltipContent className="p-3 bg-white/95 border-slate-100 rounded-md shadow-premium max-w-[200px]">
           <div className="space-y-2">
             <p className="font-bold text-slate-900 border-b border-slate-50 pb-1 flex items-center gap-2 bn">
               <Info className="w-3.5 h-3.5 text-blue-500" /> {tier.label}
             </p>
-            <p className="text-[10px] text-slate-500 leading-relaxed italic bn">
+            <p className="text-[11px] text-slate-500 leading-relaxed italic bn">
               Based on {ratingCount} successful trades and community feedback.
             </p>
           </div>

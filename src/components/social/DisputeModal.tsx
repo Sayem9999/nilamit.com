@@ -78,7 +78,7 @@ export default function DisputeModal({ transactionId, isOpen, onClose }: Dispute
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-400 mb-2">
+              <label className="block text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2">
                 Reason for Dispute
               </label>
               <textarea

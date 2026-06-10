@@ -80,16 +80,16 @@ export function MfsPaymentModal({ amount, isOpen, onClose, onSuccess, provider, 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-md w-full relative"
+            className="bg-white rounded-md shadow-xl overflow-hidden max-w-md w-full relative"
           >
             <div className={`${colors.primary} p-6 flex items-center justify-between text-white`}>
               <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-xl">
+                <div className="bg-white/20 p-2 rounded-md">
                   <Smartphone className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="font-heading font-bold text-lg tracking-tight uppercase">{provider} Payment</h3>
-                  <p className="text-[10px] font-bold opacity-80 uppercase tracking-wide">Manual advance payment</p>
+                  <p className="text-[11px] font-bold opacity-80 uppercase tracking-wide">Manual advance payment</p>
                 </div>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors" aria-label="Close">
@@ -105,15 +105,15 @@ export function MfsPaymentModal({ amount, isOpen, onClose, onSuccess, provider, 
                     <h2 className="text-4xl font-bold text-gray-900">৳{amount.toLocaleString()}</h2>
                   </div>
 
-                  <ol className="text-xs text-gray-600 space-y-2 bg-gray-50 border border-gray-100 rounded-xl p-4 list-decimal list-inside">
+                  <ol className="text-xs text-gray-600 space-y-2 bg-gray-50 border border-gray-100 rounded-md p-4 list-decimal list-inside">
                     <li>Open your {provider} app and choose <strong>Send Money</strong>.</li>
                     <li>Send <strong>৳{amount.toLocaleString()}</strong> to the merchant number below.</li>
                     <li>Copy the <strong>Transaction ID (TrxID)</strong> from the confirmation SMS and paste it here.</li>
                   </ol>
 
-                  <div className="flex items-center justify-between gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex items-center justify-between gap-2 p-3 bg-gray-50 rounded-md border border-gray-100">
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Merchant number</p>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Merchant number</p>
                       <p className="font-mono font-bold text-gray-900 truncate">{merchantNumber || 'Not configured — contact support'}</p>
                     </div>
                     {merchantNumber && (
@@ -149,7 +149,7 @@ export function MfsPaymentModal({ amount, isOpen, onClose, onSuccess, provider, 
                     )}
                   </label>
 
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-md border border-gray-100">
                     <input
                       type="checkbox"
                       id="policy-consent"

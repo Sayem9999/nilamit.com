@@ -63,7 +63,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
 
   if (!mounted) {
     return (
-      <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex items-center justify-center text-gray-400">
+      <div className="border-2 border-dashed border-gray-200 rounded-md p-8 flex items-center justify-center text-gray-400">
         <Loader2 className="w-6 h-6 animate-spin" />
       </div>
     );
@@ -93,7 +93,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
 
       <div
         onClick={() => fileInputRef.current?.click()}
-        className="border-2 border-dashed border-primary-200 bg-primary-50/50 hover:bg-primary-50 cursor-pointer transition-colors rounded-xl p-8 flex flex-col items-center justify-center gap-2 group"
+        className="border-2 border-dashed border-primary-200 bg-primary-50/50 hover:bg-primary-50 cursor-pointer transition-colors rounded-md p-8 flex flex-col items-center justify-center gap-2 group"
       >
         <input
           type="file"

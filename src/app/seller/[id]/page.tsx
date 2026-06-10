@@ -226,13 +226,13 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                     </span>
                   )}
                   {seller.isTopRated && (
-                    <div className="flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full border border-yellow-200 text-[10px] font-bold uppercase tracking-wider animate-in fade-in zoom-in duration-500">
+                    <div className="flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full border border-yellow-200 text-[11px] font-bold uppercase tracking-wider animate-in fade-in zoom-in duration-500">
                       <Star className="w-3 h-3 fill-yellow-400" />
                       Top Rated
                     </div>
                   )}
                   {seller.isRetailer && (
-                    <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200 text-[10px] font-bold uppercase tracking-wider animate-in fade-in zoom-in duration-500 delay-75">
+                    <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200 text-[11px] font-bold uppercase tracking-wider animate-in fade-in zoom-in duration-500 delay-75">
                       <ShieldCheck className="w-3 h-3" />
                       Business Retailer
                     </div>
@@ -366,7 +366,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                         <div className="w-5 h-5 rounded-full bg-gray-100 overflow-hidden">
                           {review.from.image && <Image src={getProxiedAvatarUrl(review.from.image) || ""} alt="" width={20} height={20} referrerPolicy="no-referrer" unoptimized />}
                         </div>
-                        <span className="text-[10px] font-bold text-gray-500 uppercase">{review.from.name || "Anonymous"}</span>
+                        <span className="text-[11px] font-bold text-gray-500 uppercase">{review.from.name || "Anonymous"}</span>
                       </div>
                     </div>
                   ))}
@@ -388,12 +388,12 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                 All transactions with this seller are protected by our secure advance-payment system. Funds are only released when you confirm delivery.
               </p>
               <div className="flex items-center gap-3 relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-md bg-white/10 flex items-center justify-center">
                   <CheckCircle className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide">Safe Checkout</p>
-                  <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-tight">bKash • Nagad • Rocket</p>
+                  <p className="text-[11px] text-indigo-300 font-bold uppercase tracking-tight">bKash • Nagad • Rocket</p>
                 </div>
               </div>
             </div>

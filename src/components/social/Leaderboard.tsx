@@ -89,7 +89,7 @@ export default async function Leaderboard() {
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   {user.rating.toFixed(1)} ★
                   {user.ratingCount > 0 && (
-                    <span className="text-[10px] text-amber-600 font-normal">({user.ratingCount})</span>
+                    <span className="text-[11px] text-amber-600 font-normal">({user.ratingCount})</span>
                   )}
                 </div>
               </li>

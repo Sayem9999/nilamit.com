@@ -112,7 +112,7 @@ function handleNotification(data: UserNotification) {
             <div className="flex-1 min-w-0">
               <p className={`text-sm font-bold ${isTarget ? "text-primary-600" : "text-red-600"}`}>{isTarget ? "Target Hit!" : "Outbid!"}</p>
               <p className="text-xs text-gray-700 mt-1 font-medium leading-relaxed">{body}</p>
-              <a href={`/auctions/${data.auctionId}`} className={`mt-3 inline-block px-4 py-2 rounded-xl text-xs font-bold text-white transition-all ${isTarget ? "bg-primary-600 hover:bg-primary-700" : "bg-red-600 hover:bg-red-700"}`}>
+              <a href={`/auctions/${data.auctionId}`} className={`mt-3 inline-block px-4 py-2 rounded-md text-xs font-bold text-white transition-all ${isTarget ? "bg-primary-600 hover:bg-primary-700" : "bg-red-600 hover:bg-red-700"}`}>
                 Go to Auction →
               </a>
             </div>

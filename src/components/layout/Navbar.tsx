@@ -269,7 +269,7 @@ export const Navbar = memo(function Navbar() {
                 >
                   <Bell className="w-5 h-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white px-1">
+                    <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 text-[11px] font-bold text-white ring-2 ring-white px-1">
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
@@ -307,7 +307,7 @@ export const Navbar = memo(function Navbar() {
                   <div className="absolute right-0 top-full pt-1 w-60 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50">
                     <div className="bg-white rounded-md shadow-lg border border-gray-200 py-1">
                       <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">
                           {t("signedInAs")}
                         </p>
                         <p className="text-xs font-semibold text-gray-900 truncate">{session.user?.email}</p>
@@ -320,7 +320,7 @@ export const Navbar = memo(function Navbar() {
                           <User className="w-4 h-4" /> {t("profile")}
                         </span>
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                          className={`text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
                             isVerified ? "text-blue-700 bg-blue-50" : "text-amber-700 bg-amber-50"
                           }`}
                         >
@@ -486,7 +486,7 @@ export const Navbar = memo(function Navbar() {
                 >
                   <span>{t("notifications")}</span>
                   {unreadCount > 0 && (
-                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white px-1">
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 text-[11px] font-bold text-white px-1">
                       {unreadCount}
                     </span>
                   )}
@@ -534,7 +534,7 @@ export const Navbar = memo(function Navbar() {
               </Link>
             )}
             <div className="pt-3 mt-3 border-t border-gray-100">
-              <p className="px-3 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+              <p className="px-3 pb-2 text-[11px] font-bold text-gray-400 uppercase tracking-wide">
                 {t("categories")}
               </p>
               {navCategorySlugs.map((slug) => (

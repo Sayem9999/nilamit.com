@@ -118,7 +118,7 @@ export default async function CoordinationPage({
         <div className="mb-6 flex items-center gap-4">
           <Link
             href={`/dashboard?tab=coordination`}
-            className="p-2 bg-white rounded-xl border border-gray-100 hover:bg-gray-50 transition"
+            className="p-2 bg-white rounded-md border border-gray-100 hover:bg-gray-50 transition"
           >
             <ChevronLeft className="w-5 h-5" />
           </Link>
@@ -176,7 +176,7 @@ export default async function CoordinationPage({
                  <p className="text-sm opacity-80 mb-4">{t("helpDesc")}</p>
                  <Link 
                    href={`/support`}
-                   className="inline-block px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition"
+                   className="inline-block px-4 py-2 bg-white/10 hover:bg-white/20 rounded-md text-xs font-bold transition"
                  >
                    {t("guidelines")}
                  </Link>

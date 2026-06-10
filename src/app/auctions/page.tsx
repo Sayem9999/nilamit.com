@@ -80,7 +80,7 @@ export default async function AuctionsPage({ searchParams }: Props) {
               {t("found", { count: total })}
             </p>
             {/* eBay Grid/List Toggle Switcher */}
-            <div className="flex items-center bg-gray-100 dark:bg-slate-800 rounded-lg p-0.5 border border-gray-200/50">
+            <div className="flex items-center bg-gray-100 dark:bg-slate-800 rounded-md p-0.5 border border-gray-200/50">
               <Link
                 href={buildQs(params, { view: "grid" })}
                 className={`p-1.5 rounded-md transition-all ${

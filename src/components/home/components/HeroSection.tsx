@@ -60,7 +60,7 @@ export function HeroSection({ systemConfig, totalUsers, hasEndingSoon = false }:
             className="md:col-span-7 group relative overflow-hidden rounded-md bg-gradient-to-br from-primary-600 via-primary-700 to-blue-700 text-white p-5 sm:p-6 flex items-center gap-4 sm:gap-6 hover:shadow-md transition-shadow"
           >
             <div className="relative flex-1 min-w-0 z-10">
-              <div className="inline-flex items-center gap-1.5 bg-white/15 text-amber-300 backdrop-blur-sm rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide mb-2">
+              <div className="inline-flex items-center gap-1.5 bg-white/15 text-amber-300 backdrop-blur-sm rounded-sm px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide mb-2">
                 <Tag className="w-3 h-3" /> {t("promoTagFree")}
               </div>
               <h2 className="font-heading font-bold text-xl sm:text-2xl leading-tight tracking-tight">

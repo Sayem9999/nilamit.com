@@ -44,7 +44,7 @@ export function ConfigToggle({
           {icon}
           <span className="font-semibold text-gray-900 text-sm">{label}</span>
           {badge && (
-            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border ${BADGE_TONES[badge.tone]}`}>
+            <span className={`text-[11px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border ${BADGE_TONES[badge.tone]}`}>
               {badge.label}
             </span>
           )}

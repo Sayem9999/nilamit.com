@@ -35,7 +35,7 @@ export default function Error({
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={() => reset()}
-          className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-xl transition-all shadow-sm text-sm flex items-center justify-center gap-2"
+          className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-md transition-all shadow-sm text-sm flex items-center justify-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
           Try Again
@@ -43,14 +43,14 @@ export default function Error({
         
         <Link
           href="/"
-          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-8 py-3 rounded-xl transition-all text-sm flex items-center justify-center"
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-8 py-3 rounded-md transition-all text-sm flex items-center justify-center"
         >
           Return Home
         </Link>
       </div>
       
       {error.digest && (
-        <p className="mt-8 text-[10px] font-mono text-gray-300 uppercase tracking-wide">
+        <p className="mt-8 text-[11px] font-mono text-gray-300 uppercase tracking-wide">
           Error ID: {error.digest}
         </p>
       )}

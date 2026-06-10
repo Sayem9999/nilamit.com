@@ -249,7 +249,7 @@ export default function ChatInterface({
             if (isSystem) {
               return (
                 <div key={msg.id} className="flex justify-center my-3">
-                  <span className="px-3 py-1 bg-gray-100 text-[10px] font-semibold text-gray-500 rounded-full uppercase tracking-wide">
+                  <span className="px-3 py-1 bg-gray-100 text-[11px] font-semibold text-gray-500 rounded-full uppercase tracking-wide">
                     {msg.content}
                   </span>
                 </div>
@@ -298,14 +298,14 @@ export default function ChatInterface({
                 </div>
                 <div className="mt-1 flex items-center gap-1.5">
                   {msg._failed && (
-                    <span className="inline-flex items-center gap-1 text-[10px] text-red-600 font-semibold">
+                    <span className="inline-flex items-center gap-1 text-[11px] text-red-600 font-semibold">
                       <AlertCircle className="w-3 h-3" /> {t('failedToSend')}
                     </span>
                   )}
                   {msg._pending && (
                     <Loader2 className="w-3 h-3 text-gray-400 animate-spin" aria-label="Sending" />
                   )}
-                  <span className="text-[10px] text-gray-400 font-medium">
+                  <span className="text-[11px] text-gray-400 font-medium">
                     {format(new Date(msg.createdAt), 'HH:mm')}
                   </span>
                   {isMe && !msg._pending && !msg._failed && (

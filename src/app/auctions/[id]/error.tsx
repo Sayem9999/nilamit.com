@@ -22,13 +22,13 @@ export default function Error({
       <div className="flex gap-3 justify-center">
         <button
           onClick={reset}
-          className="bg-primary-600 hover:bg-primary-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
+          className="bg-primary-600 hover:bg-primary-700 text-white font-medium px-6 py-2.5 rounded-md text-sm transition-colors"
         >
           Try Again
         </button>
         <Link
           href="/auctions"
-          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-6 py-2.5 rounded-md text-sm transition-colors"
         >
           Browse Auctions
         </Link>

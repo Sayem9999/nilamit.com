@@ -124,17 +124,17 @@ export function SellerAnalyticsTab({
                 </div>
                 <div className="col-span-2 text-right">
                   <p className="text-sm font-bold text-gray-900">{(l.viewCount || 0).toLocaleString()}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide">views</p>
+                  <p className="text-[11px] text-gray-500 uppercase tracking-wide">views</p>
                 </div>
                 <div className="col-span-2 text-right">
                   <p className="text-sm font-bold text-gray-900">{(l.bidCount || 0).toLocaleString()}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide">bids</p>
+                  <p className="text-[11px] text-gray-500 uppercase tracking-wide">bids</p>
                 </div>
                 <div className="col-span-2 text-right">
                   <p className={`text-sm font-bold ${l.conversionRate >= 5 ? "text-emerald-600" : "text-gray-700"}`}>
                     {l.conversionRate.toFixed(1)}%
                   </p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide">conv.</p>
+                  <p className="text-[11px] text-gray-500 uppercase tracking-wide">conv.</p>
                 </div>
                 <div className="col-span-1 text-right">
                   <p className="text-sm font-bold text-primary-600 price">{formatBDT(l.currentPrice)}</p>

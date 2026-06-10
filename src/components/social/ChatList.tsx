@@ -108,7 +108,7 @@ export default function ChatList({ conversations }: ChatListProps) {
                     {convo.auction?.title || 'Auction Coordination'}
                   </h4>
                   {lastMsg && (
-                    <span className="text-[10px] text-gray-500 font-medium shrink-0">
+                    <span className="text-[11px] text-gray-500 font-medium shrink-0">
                       {formatRelativeTime(new Date(lastMsg.createdAt))}
                     </span>
                   )}

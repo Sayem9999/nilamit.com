@@ -276,7 +276,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                   {isOwner ? (
                     <Link
                       href="/dashboard?tab=profile"
-                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wide rounded-xl border border-slate-900 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0"
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wide rounded-md border border-slate-900 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 shrink-0"
                     >
                       <Edit3 className="w-3.5 h-3.5" /> Edit Profile / Settings
                     </Link>
@@ -290,18 +290,18 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                 </div>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                   {seller.isVerifiedSeller && (
-                    <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wide rounded-full border border-blue-100 flex items-center gap-1.5 shadow-sm">
+                    <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[11px] font-bold uppercase tracking-wide rounded-full border border-blue-100 flex items-center gap-1.5 shadow-sm">
                       <Shield className="w-3 h-3" /> VERIFIED TRADER
                     </span>
                   )}
                   {seller.isTopRated && (
-                    <div className="flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full border border-yellow-200 text-[10px] font-bold uppercase tracking-wider animate-in fade-in zoom-in duration-500">
+                    <div className="flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full border border-yellow-200 text-[11px] font-bold uppercase tracking-wider animate-in fade-in zoom-in duration-500">
                       <Star className="w-3 h-3 fill-yellow-400" />
                       Top Rated
                     </div>
                   )}
                   {seller.isRetailer && (
-                    <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200 text-[10px] font-bold uppercase tracking-wider animate-in fade-in zoom-in duration-500 delay-75">
+                    <div className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200 text-[11px] font-bold uppercase tracking-wider animate-in fade-in zoom-in duration-500 delay-75">
                       <ShieldCheck className="w-3 h-3" />
                       Business Retailer
                     </div>
@@ -344,11 +344,11 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1: Sales / Trades */}
           <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
-            <div className={`p-4 rounded-xl ${theme.bgLight} ${theme.textPrimary}`}>
+            <div className={`p-4 rounded-md ${theme.bgLight} ${theme.textPrimary}`}>
               <Package className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">
                 {seller.isRetailer ? "Items Sold" : "Trades Done"}
               </p>
               <p className="text-2xl font-bold text-gray-900 font-heading leading-none">
@@ -359,11 +359,11 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
 
           {/* Card 2: Positive Feedback */}
           <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
-            <div className={`p-4 rounded-xl ${theme.bgLight} ${theme.textPrimary}`}>
+            <div className={`p-4 rounded-md ${theme.bgLight} ${theme.textPrimary}`}>
               <Star className="w-6 h-6 fill-current" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Positive Rating</p>
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Positive Rating</p>
               <p className="text-2xl font-bold text-emerald-500 font-heading leading-none">
                 {feedbackPercentage}%
               </p>
@@ -372,11 +372,11 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
 
           {/* Card 3: Reputation Score */}
           <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
-            <div className={`p-4 rounded-xl ${theme.bgLight} ${theme.textPrimary}`}>
+            <div className={`p-4 rounded-md ${theme.bgLight} ${theme.textPrimary}`}>
               <Award className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Reputation Score</p>
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Reputation Score</p>
               <p className={`text-2xl font-bold font-heading leading-none ${theme.textPrimary}`}>
                 {seller.reputationScore}
               </p>
@@ -386,11 +386,11 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
           {/* Card 4: Dynamic Gamified Widget */}
           {seller.isRetailer ? (
             <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
-              <div className="p-4 rounded-xl bg-indigo-50 text-indigo-600">
+              <div className="p-4 rounded-md bg-indigo-50 text-indigo-600">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Fulfillment</p>
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Fulfillment</p>
                 <p className="text-2xl font-bold text-indigo-600 font-heading leading-none">
                   {fulfillmentRate}%
                 </p>
@@ -398,11 +398,11 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
             </div>
           ) : (
             <div className="bg-white p-5 rounded-md border border-gray-200 shadow-sm flex items-center gap-4">
-              <div className="p-4 rounded-xl bg-orange-50 text-orange-600">
+              <div className="p-4 rounded-md bg-orange-50 text-orange-600">
                 <Trophy className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">
                   {seller.winningStreak > 0 ? "Winning Streak" : "Total Bids"}
                 </p>
                 <p className="text-2xl font-bold text-orange-600 font-heading leading-none">
@@ -431,7 +431,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                     }`}
                   >
                     Active Auctions
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                       currentView === "active" 
                         ? (seller.isRetailer ? "bg-indigo-50 text-indigo-700" : "bg-emerald-50 text-emerald-700") 
                         : "bg-gray-100 text-gray-500"
@@ -448,7 +448,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                     }`}
                   >
                     Completed Sales
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                       currentView === "completed" 
                         ? (seller.isRetailer ? "bg-indigo-50 text-indigo-700" : "bg-emerald-50 text-emerald-700") 
                         : "bg-gray-100 text-gray-500"
@@ -518,7 +518,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                 
                 <div className="space-y-4">
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                    <div className="w-8 h-8 rounded-md bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <div>
@@ -528,7 +528,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                   </div>
                   
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                    <div className="w-8 h-8 rounded-md bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
                       <Package className="w-4 h-4" />
                     </div>
                     <div>
@@ -538,7 +538,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                   </div>
 
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                    <div className="w-8 h-8 rounded-md bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
                       <CheckCircle className="w-4 h-4" />
                     </div>
                     <div>
@@ -557,18 +557,18 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                 </h2>
                 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                  <div className="flex items-center justify-between p-3 rounded-md bg-gray-50 border border-gray-100">
                     <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Rank Title</span>
                     <span className="text-xs font-bold text-gray-900 uppercase tracking-wide">{rankTitle}</span>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                  <div className="flex items-center justify-between p-3 rounded-md bg-gray-50 border border-gray-100">
                     <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">User Level</span>
                     <span className="text-xs font-bold text-emerald-600 font-heading">Lv. {seller.userLevel}</span>
                   </div>
                   
                   {/* XP Progress Bar */}
-                  <div className="space-y-1.5 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                    <div className="flex justify-between text-[10px] font-bold text-gray-500">
+                  <div className="space-y-1.5 p-3 rounded-md bg-gray-50 border border-gray-100">
+                    <div className="flex justify-between text-[11px] font-bold text-gray-500">
                       <span>XP PROGRESS</span>
                       <span>{xpInCurrentLevel} / 1000 XP</span>
                     </div>
@@ -600,7 +600,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                             <Star key={s} className={`w-3 h-3 ${s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />
                           ))}
                         </div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide ml-auto">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide ml-auto">
                           {safeFormatDate(review.createdAt)}
                         </span>
                       </div>
@@ -609,7 +609,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                         <div className="w-5 h-5 rounded-full bg-gray-100 overflow-hidden">
                           {review.from.image && <Image src={getProxiedAvatarUrl(review.from.image) || ""} alt="" width={20} height={20} referrerPolicy="no-referrer" unoptimized />}
                         </div>
-                        <span className="text-[10px] font-bold text-gray-500 uppercase">{review.from.name || "Anonymous"}</span>
+                        <span className="text-[11px] font-bold text-gray-500 uppercase">{review.from.name || "Anonymous"}</span>
                       </div>
                     </div>
                   ))}
@@ -631,12 +631,12 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                 All transactions are protected by our secure escrow system. Funds are only released when you confirm delivery.
               </p>
               <div className="flex items-center gap-3 relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-md bg-white/10 flex items-center justify-center">
                   <CheckCircle className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide">Safe Checkout</p>
-                  <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-tight">bKash • Nagad • Rocket</p>
+                  <p className="text-[11px] text-indigo-300 font-bold uppercase tracking-tight">bKash • Nagad • Rocket</p>
                 </div>
               </div>
             </div>

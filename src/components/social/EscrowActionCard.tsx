@@ -159,7 +159,7 @@ export function EscrowActionCard({
           </CardTitle>
         </div>
         <span
-          className={`font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded bn ${
+          className={`font-mono text-[11px] font-bold uppercase px-2 py-0.5 rounded bn ${
             isDisputed
               ? "bg-red-100 text-red-700"
               : "bg-slate-200 dark:bg-slate-800 text-slate-600"
@@ -241,7 +241,7 @@ export function EscrowActionCard({
                     <span className={`text-xs md:text-sm transition-colors duration-300 ${textStyles}`}>
                       {step.title}
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                       {step.description}
                     </span>
                   </div>
@@ -268,11 +268,11 @@ export function EscrowActionCard({
               "mt-3 flex gap-2",
               layout === 'vertical' ? "flex-col items-start gap-1.5" : "items-center"
             )}>
-              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900 px-2.5 py-1 rounded-lg flex items-center gap-1.5 flex-shrink-0">
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900 px-2.5 py-1 rounded-md flex items-center gap-1.5 flex-shrink-0">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide bn">{t("logisticsProtected")}</span>
+                <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wide bn">{t("logisticsProtected")}</span>
               </div>
-              <span className="text-[10px] text-slate-400 font-medium bn italic">{t("logisticsProtectedDesc")}</span>
+              <span className="text-[11px] text-slate-400 font-medium bn italic">{t("logisticsProtectedDesc")}</span>
             </div>
 
             {/* Payment Split Breakdown */}
@@ -281,7 +281,7 @@ export function EscrowActionCard({
                 <span>{t("advanceDeposit")}</span>
                 <span className="font-bold text-slate-900 dark:text-white font-mono">{formatBDT(transaction.amount)}</span>
               </div>
-              <p className="text-[10px] text-slate-400 leading-normal bg-white dark:bg-slate-900/40 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/50">
+              <p className="text-[11px] text-slate-400 leading-normal bg-white dark:bg-slate-900/40 p-2 rounded-md border border-slate-100/50 dark:border-slate-800/50">
                 {t("advanceDescription")}
               </p>
 
@@ -291,7 +291,7 @@ export function EscrowActionCard({
                     <span>{t("cashOnDelivery")}</span>
                     <span className="font-bold text-slate-900 dark:text-white font-mono">{formatBDT(transaction.codAmount!)}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-normal bg-white dark:bg-slate-900/40 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/50">
+                  <p className="text-[11px] text-slate-400 leading-normal bg-white dark:bg-slate-900/40 p-2 rounded-md border border-slate-100/50 dark:border-slate-800/50">
                     {t("codDescription", { amount: formatBDT(transaction.codAmount!) })}
                   </p>
                 </>
@@ -324,7 +324,7 @@ export function EscrowActionCard({
             {isPending && (
               <div className="space-y-3">
                  {!hasMFS && (
-                    <div className="p-2 bg-amber-50 border border-amber-100 rounded text-[10px] text-amber-700 bn">
+                    <div className="p-2 bg-amber-50 border border-amber-100 rounded text-[11px] text-amber-700 bn">
                       <AlertTriangle className="w-3 h-3 inline mr-1" />
                       {t("linkMFSToPay")}
                     </div>
@@ -339,9 +339,9 @@ export function EscrowActionCard({
                 >
                    {loading ? t("processing") : (!hasMFS ? t("linkMFSBtn") : t("payAdvance"))}
                 </Button>
-                <div className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800">
+                <div className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-md border border-slate-100 dark:border-slate-800">
                   <AlertTriangle className="w-3 h-3 text-slate-400 mt-0.5" />
-                  <p className="text-[10px] text-slate-500 leading-tight bn">
+                  <p className="text-[11px] text-slate-500 leading-tight bn">
                     {t("rejectionPolicyWarning")}
                   </p>
                 </div>
@@ -349,12 +349,12 @@ export function EscrowActionCard({
             )}
             
             {isVerifying && (
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-600">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-md text-slate-600">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-4 h-4 text-amber-500 animate-spin" />
                   <p className="text-xs font-bold bn uppercase">{t("awaitingAdminReview")}</p>
                 </div>
-                <p className="text-[10px] leading-relaxed bn">
+                <p className="text-[11px] leading-relaxed bn">
                   {t("verificationQueueDesc")}
                 </p>
               </div>
@@ -362,7 +362,7 @@ export function EscrowActionCard({
 
             {isHeld && (
               <div className="space-y-3">
-                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-blue-800 mb-3">
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-md text-blue-800 mb-3">
                    <p className="text-xs font-bold flex items-center gap-1.5 mb-1 bn uppercase">
                     <ShieldCheck className="w-3.5 h-3.5" /> {t("paymentSecured")}
                   </p>
@@ -404,7 +404,7 @@ export function EscrowActionCard({
             )}
 
             {isDisputed && (
-              <div className="p-4 bg-red-50 border border-red-100 dark:bg-red-950/20 dark:border-red-900 rounded-lg text-red-800 dark:text-red-300">
+              <div className="p-4 bg-red-50 border border-red-100 dark:bg-red-950/20 dark:border-red-900 rounded-md text-red-800 dark:text-red-300">
                 <p className="text-sm font-bold mb-1 flex items-center gap-1.5 bn">
                   <AlertTriangle className="w-4 h-4" /> {t("underDispute")}
                 </p>
@@ -420,7 +420,7 @@ export function EscrowActionCard({
             )}
 
             {isReleased && (
-              <div className="p-4 bg-emerald-50 border border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900 rounded-lg text-emerald-800 dark:text-emerald-300">
+              <div className="p-4 bg-emerald-50 border border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900 rounded-md text-emerald-800 dark:text-emerald-300">
                 <p className="text-sm font-bold mb-1 flex items-center gap-1.5 bn">
                   <ShieldCheck className="w-4 h-4" /> {t("fundsReleased")}
                 </p>
@@ -431,7 +431,7 @@ export function EscrowActionCard({
             )}
 
             {isRefunded && (
-              <div className="p-4 bg-purple-50 border border-purple-100 rounded-lg text-purple-800">
+              <div className="p-4 bg-purple-50 border border-purple-100 rounded-md text-purple-800">
                 <p className="text-sm font-bold mb-1 flex items-center gap-1.5 bn">
                   {t("refunded")}
                 </p>

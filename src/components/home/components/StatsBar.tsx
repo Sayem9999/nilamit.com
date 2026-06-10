@@ -40,7 +40,7 @@ export function StatsBar({ totalAuctions, totalUsers, totalBids, verifiedSellers
                 <dd className={`text-2xl font-heading font-bold leading-none ${stat.color} tracking-tight`}>
                   {stat.value}
                 </dd>
-                <dt className="text-[10px] text-gray-500 font-bold mt-1.5 uppercase tracking-wide">
+                <dt className="text-[11px] text-gray-500 font-bold mt-1.5 uppercase tracking-wide">
                   {stat.label}
                 </dt>
               </motion.div>

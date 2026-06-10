@@ -36,7 +36,7 @@ export function StartChatButton({ auctionId }: Props) {
     <Button
       variant="default"
       size="sm"
-      className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md shadow-blue-500/10 font-bold py-2.5 h-10 text-xs"
+      className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-md shadow-blue-500/10 font-bold py-2.5 h-10 text-xs"
       onClick={handleTrigger}
       disabled={loading}
     >

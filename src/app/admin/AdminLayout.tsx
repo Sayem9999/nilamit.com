@@ -119,7 +119,7 @@ export function AdminLayout({
                   setIsSidebarOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all",
+                  "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md transition-all",
                   activeTab === tab.id
                     ? "bg-indigo-50 text-indigo-700 shadow-sm"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",

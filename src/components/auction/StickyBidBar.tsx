@@ -56,7 +56,7 @@ export function StickyBidBar({ currentPrice, endTime, serverTime, targetId }: St
         >
           <div className="bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_-8px_30px_rgb(0,0,0,0.12)] rounded-md p-4 flex items-center justify-between gap-4">
             <div className="flex flex-col">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary-600 uppercase tracking-wide mb-0.5">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary-600 uppercase tracking-wide mb-0.5">
                 <TrendingUp className="w-3 h-3" aria-hidden="true" /> Current Bid
               </div>
               <div className="flex items-center gap-2">
@@ -74,7 +74,7 @@ export function StickyBidBar({ currentPrice, endTime, serverTime, targetId }: St
               type="button"
               onClick={scrollToBid}
               aria-label="Jump to bid panel"
-              className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-primary-200 active:scale-95 transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2"
+              className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-md shadow-lg shadow-primary-200 active:scale-95 transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2"
             >
               <Gavel className="w-4 h-4" aria-hidden="true" />
               Bid Now

@@ -1,12 +1,12 @@
 export default function Loading() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="h-8 w-40 bg-gray-200 rounded-lg animate-pulse mb-8" />
+      <div className="h-8 w-40 bg-gray-200 rounded-md animate-pulse mb-8" />
       <div className="flex gap-4 mb-8">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-10 w-28 bg-gray-200 rounded-xl animate-pulse"
+            className="h-10 w-28 bg-gray-200 rounded-md animate-pulse"
           />
         ))}
       </div>

@@ -35,7 +35,7 @@ export const BidPanelHeader = memo(function BidPanelHeader({
         <button
           type="button"
           onClick={toggleSoundEffects}
-          className={`flex items-center justify-center w-8 h-8 rounded-xl border transition-colors shrink-0 ${
+          className={`flex items-center justify-center w-8 h-8 rounded-md border transition-colors shrink-0 ${
             soundEffectsEnabled 
               ? "text-primary-600 bg-primary-50 border-primary-100/50" 
               : "text-gray-400 bg-gray-50 border-gray-100"
@@ -43,7 +43,7 @@ export const BidPanelHeader = memo(function BidPanelHeader({
         >
           {soundEffectsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </button>
-        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-gray-50 border border-gray-100 px-3 h-8 rounded-xl shrink-0 select-none">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-gray-50 border border-gray-100 px-3 h-8 rounded-md shrink-0 select-none">
           <Clock className="w-3.5 h-3.5 text-gray-400" />
           <CountdownTimer endTime={displayEndTime} serverTime={serverTime} className="font-mono text-xs" />
         </div>
@@ -79,10 +79,10 @@ export const BidPriceInfo = memo(function BidPriceInfo({
 }: PriceInfoProps) {
   return (
     <>
-      <div className="bg-primary-50 rounded-xl p-4 mb-4">
+      <div className="bg-primary-50 rounded-md p-4 mb-4">
         <div className="flex items-baseline justify-between mb-1">
           <p className="text-xs text-primary-600 font-medium">{t("currentPrice")}</p>
-          <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tight flex items-center gap-1.5 bg-white/60 px-2 py-0.5 rounded-full border border-primary-100/50 shadow-sm select-none">
+          <div className="text-[11px] text-gray-400 font-bold uppercase tracking-tight flex items-center gap-1.5 bg-white/60 px-2 py-0.5 rounded-full border border-primary-100/50 shadow-sm select-none">
             <span>{bidCount} {bidCount === 1 ? 'Bid' : 'Bids'}</span>
             <span className="w-1 h-1 bg-gray-300 rounded-full" />
             <span>{biddersCount} {biddersCount === 1 ? 'Bidder' : 'Bidders'}</span>
@@ -95,15 +95,15 @@ export const BidPriceInfo = memo(function BidPriceInfo({
           </p>
         )}
         {reservePrice && (
-          <p className={`text-[10px] font-bold uppercase tracking-tighter mt-1 px-2 py-0.5 rounded inline-block ${
+          <p className={`text-[11px] font-bold uppercase tracking-tighter mt-1 px-2 py-0.5 rounded inline-block ${
             displayPrice < reservePrice ? "text-amber-600 bg-amber-50" : "text-green-600 bg-green-50"
           }`}>
             {displayPrice < reservePrice ? "Reserve not met" : "Reserve met"}
           </p>
         )}
         {proxyMaxBid && proxyBidderId === currentUserId && (
-          <div className="mt-2 p-2 bg-blue-50 border border-blue-100 rounded-lg">
-            <p className="text-[10px] text-blue-600 font-bold uppercase tracking-tight flex items-center gap-1">
+          <div className="mt-2 p-2 bg-blue-50 border border-blue-100 rounded-md">
+            <p className="text-[11px] text-blue-600 font-bold uppercase tracking-tight flex items-center gap-1">
               <Shield className="w-3 h-3" /> You are the high bidder
             </p>
             <p className="text-xs text-blue-700 font-medium">

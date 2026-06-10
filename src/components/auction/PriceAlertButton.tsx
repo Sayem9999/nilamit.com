@@ -59,7 +59,7 @@ export default function PriceAlertButton({
         <div className="grid grid-cols-2 gap-2 p-1 bg-gray-50 rounded-md">
           <button
             onClick={() => setMode("TARGET_REACHED")}
-            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+            className={`py-2 px-3 rounded-md text-xs font-bold flex items-center justify-center gap-2 transition-all ${
               mode === "TARGET_REACHED"
                 ? "bg-white text-primary-600 shadow-sm"
                 : "text-gray-500 hover:text-gray-700"
@@ -70,7 +70,7 @@ export default function PriceAlertButton({
           </button>
           <button
             onClick={() => setMode("OUTBID")}
-            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+            className={`py-2 px-3 rounded-md text-xs font-bold flex items-center justify-center gap-2 transition-all ${
               mode === "OUTBID"
                 ? "bg-white text-primary-600 shadow-sm"
                 : "text-gray-500 hover:text-gray-700"
@@ -98,7 +98,7 @@ export default function PriceAlertButton({
             </p>
           </div>
         ) : (
-          <p className="text-[11px] text-gray-500 leading-tight bg-primary-50 p-3 rounded-xl">
+          <p className="text-[11px] text-gray-500 leading-tight bg-primary-50 p-3 rounded-md">
             Get notified immediately every time another user outbids the current high bid.
           </p>
         )}

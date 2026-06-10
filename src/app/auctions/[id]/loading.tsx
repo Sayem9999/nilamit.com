@@ -9,7 +9,7 @@ export default function AuctionDetailLoading() {
           <Skeleton className="aspect-video w-full rounded-md" />
           <div className="flex gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="w-24 h-24 rounded-xl" />
+              <Skeleton key={i} className="w-24 h-24 rounded-md" />
             ))}
           </div>
           <div className="bg-white p-6 rounded-md border border-gray-100 space-y-4">
@@ -28,13 +28,13 @@ export default function AuctionDetailLoading() {
               <Skeleton className="h-10 w-32" />
             </div>
             <div className="space-y-4">
-              <Skeleton className="h-12 w-full rounded-xl" />
+              <Skeleton className="h-12 w-full rounded-md" />
               <div className="flex gap-2">
-                 <Skeleton className="h-10 flex-1 rounded-lg" />
-                 <Skeleton className="h-10 flex-1 rounded-lg" />
-                 <Skeleton className="h-10 flex-1 rounded-lg" />
+                 <Skeleton className="h-10 flex-1 rounded-md" />
+                 <Skeleton className="h-10 flex-1 rounded-md" />
+                 <Skeleton className="h-10 flex-1 rounded-md" />
               </div>
-              <Skeleton className="h-14 w-full rounded-xl" />
+              <Skeleton className="h-14 w-full rounded-md" />
             </div>
           </div>
           

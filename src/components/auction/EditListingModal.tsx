@@ -152,7 +152,7 @@ export function EditListingModal({
             onClick={() => { if (!isPending) onClose(); }}
             disabled={isPending}
             aria-label="Close"
-            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50"
+            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
@@ -166,7 +166,7 @@ export function EditListingModal({
               <label htmlFor="edit-desc" className="text-xs font-bold uppercase tracking-wider text-gray-500">
                 {t("descLabel")}
               </label>
-              <span className={`text-[10px] font-mono ${counterColor}`}>
+              <span className={`text-[11px] font-mono ${counterColor}`}>
                 {descLen.toLocaleString()} / {DESC_MAX.toLocaleString()}
               </span>
             </div>
@@ -181,7 +181,7 @@ export function EditListingModal({
               rows={6}
               maxLength={DESC_MAX}
               disabled={isPending}
-              className={`w-full border rounded-xl p-3 text-sm resize-none outline-none transition-colors ${
+              className={`w-full border rounded-md p-3 text-sm resize-none outline-none transition-colors ${
                 errors.description
                   ? "border-red-400 focus:ring-2 focus:ring-red-200"
                   : "border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -199,7 +199,7 @@ export function EditListingModal({
               <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
                 {t("photosLabel")}
               </label>
-              <span className="text-[10px] font-mono text-gray-400">
+              <span className="text-[11px] font-mono text-gray-400">
                 {images.length} / {IMG_MAX}
               </span>
             </div>
@@ -224,7 +224,7 @@ export function EditListingModal({
               type="button"
               onClick={() => { if (!isPending) onClose(); }}
               disabled={isPending}
-              className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 hover:bg-white rounded-xl transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 hover:bg-white rounded-md transition-colors disabled:opacity-50"
             >
               {t("cancel")}
             </button>
@@ -232,7 +232,7 @@ export function EditListingModal({
               type="button"
               onClick={handleSave}
               disabled={isPending || !isDirty}
-              className="px-5 py-2 text-sm font-bold text-white rounded-xl shadow-sm bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              className="px-5 py-2 text-sm font-bold text-white rounded-md shadow-sm bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               {isPending ? t("saving") : t("save")}

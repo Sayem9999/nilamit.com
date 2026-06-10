@@ -101,7 +101,7 @@ export default function AdminDisputesClient() {
           </p>
         </div>
         <div
-          className="bg-amber-50 text-amber-700 px-4 py-2 rounded-xl border border-amber-100 flex items-center gap-2 text-sm font-medium"
+          className="bg-amber-50 text-amber-700 px-4 py-2 rounded-md border border-amber-100 flex items-center gap-2 text-sm font-medium"
           role="status"
           aria-live="polite"
         >
@@ -134,7 +134,7 @@ export default function AdminDisputesClient() {
               <article className="p-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-amber-600 mb-2">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-amber-600 mb-2">
                       <Clock className="w-3 h-3" aria-hidden="true" />
                       <span>
                         Opened{" "}
@@ -161,7 +161,7 @@ export default function AdminDisputesClient() {
                             <User className="w-4 h-4 text-blue-500" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-gray-400 uppercase font-bold">
+                            <p className="text-[11px] text-gray-400 uppercase font-bold">
                               Buyer (opener)
                             </p>
                             <p className="text-sm font-medium text-gray-700">
@@ -177,7 +177,7 @@ export default function AdminDisputesClient() {
                             <User className="w-4 h-4 text-purple-500" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-gray-400 uppercase font-bold">
+                            <p className="text-[11px] text-gray-400 uppercase font-bold">
                               Seller
                             </p>
                             <p className="text-sm font-medium text-gray-700">
@@ -217,7 +217,7 @@ export default function AdminDisputesClient() {
                       type="button"
                       onClick={() => { setModal({ disputeId: dispute.id, ruling: "SELLER" }); setResolutionText(""); }}
                       disabled={isPending}
-                      className="w-full bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all motion-reduce:transition-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                      className="w-full bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 py-3 rounded-md text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all motion-reduce:transition-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                     >
                       <ShieldCheck className="w-4 h-4" aria-hidden="true" />
                       Release to seller
@@ -227,13 +227,13 @@ export default function AdminDisputesClient() {
                       type="button"
                       onClick={() => { setModal({ disputeId: dispute.id, ruling: "BUYER" }); setResolutionText(""); }}
                       disabled={isPending}
-                      className="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all motion-reduce:transition-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                      className="w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-md text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all motion-reduce:transition-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
                     >
                       <RefreshCw className="w-4 h-4" aria-hidden="true" />
                       Refund buyer
                     </button>
 
-                    <p className="text-[10px] text-gray-400 text-center mt-2 leading-tight">
+                    <p className="text-[11px] text-gray-400 text-center mt-2 leading-tight">
                       Ruling is final. Funds move instantly and both parties are notified.
                     </p>
                   </div>
@@ -280,10 +280,10 @@ export default function AdminDisputesClient() {
               required
               aria-required="true"
               placeholder="e.g. Item received in described condition; seller honored shipment SLA."
-              className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
+              className="w-full border border-gray-200 rounded-md p-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
               disabled={isPending}
             />
-            <p className="text-[10px] text-gray-400 mt-1 text-right">
+            <p className="text-[11px] text-gray-400 mt-1 text-right">
               {resolutionText.length}/2000
             </p>
             <div className="flex justify-end gap-2 mt-4">
@@ -291,7 +291,7 @@ export default function AdminDisputesClient() {
                 type="button"
                 onClick={() => { setModal(null); setResolutionText(""); }}
                 disabled={isPending}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
               >
                 Cancel
               </button>
@@ -299,7 +299,7 @@ export default function AdminDisputesClient() {
                 type="button"
                 onClick={submitResolution}
                 disabled={isPending || !resolutionText.trim()}
-                className={`px-4 py-2 text-sm font-bold text-white rounded-xl shadow-sm disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                className={`px-4 py-2 text-sm font-bold text-white rounded-md shadow-sm disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                   modal.ruling === "SELLER"
                     ? "bg-emerald-600 hover:bg-emerald-700 focus-visible:ring-emerald-500"
                     : "bg-red-600 hover:bg-red-700 focus-visible:ring-red-500"

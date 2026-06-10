@@ -59,7 +59,7 @@ function ViewerCountComponent({ auctionId }: { auctionId: string }) {
   if (viewers <= 0) return null;
 
   return (
-    <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 border border-blue-100 px-2.5 h-8 rounded-xl font-bold animate-pulse shrink-0 select-none">
+    <div className="flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 border border-blue-100 px-2.5 h-8 rounded-md font-bold animate-pulse shrink-0 select-none">
       <Users className="w-3.5 h-3.5" />
       <span>{viewers} {t("viewing", { fallback: "viewing" })}</span>
     </div>

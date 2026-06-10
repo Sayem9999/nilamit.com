@@ -312,7 +312,7 @@ export function BidPanel({
                 animation: shrink 5s linear forwards;
               }
             `}} />
-            <div className="bg-gradient-to-r from-primary-600 via-indigo-600 to-purple-600 text-white rounded-xl p-4 shadow-lg border border-white/10 relative overflow-hidden">
+            <div className="bg-gradient-to-r from-primary-600 via-indigo-600 to-purple-600 text-white rounded-md p-4 shadow-lg border border-white/10 relative overflow-hidden">
               <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center justify-end pr-4 pointer-events-none select-none">
                 <span className="text-7xl font-bold italic">BID</span>
               </div>
@@ -322,9 +322,9 @@ export function BidPanel({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold tracking-wide text-primary-200">Live Bid Alert</span>
+                    <span className="text-[11px] uppercase font-bold tracking-wide text-primary-200">Live Bid Alert</span>
                     {liveBidAlert.isAntiSnipe && (
-                      <span className="text-[10px] bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-bounce">
+                      <span className="text-[11px] bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-bounce">
                         Anti-Snipe Extended
                       </span>
                     )}
@@ -341,7 +341,7 @@ export function BidPanel({
       </AnimatePresence>
       
       {!isConnected && (
-        <div className="mb-4 bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-center gap-3 animate-pulse">
+        <div className="mb-4 bg-amber-50 border border-amber-100 rounded-md p-3 flex items-center gap-3 animate-pulse">
           <div className="w-2 h-2 bg-amber-400 rounded-full" />
           <p className="text-xs text-amber-700 font-medium">Live connection lost. Reconnecting...</p>
         </div>
@@ -355,7 +355,7 @@ export function BidPanel({
           {isProcessing && <p className="text-amber-600 text-xs font-semibold animate-pulse uppercase tracking-wider">{t("processingResult")}</p>}
         </div>
       ) : isOwnAuction ? (
-        <div className="text-center py-6 bg-gray-50 rounded-xl">
+        <div className="text-center py-6 bg-gray-50 rounded-md">
           <p className="text-gray-500 text-sm">{t("cannotBidOwn")}</p>
         </div>
       ) : (
@@ -383,7 +383,7 @@ export function BidPanel({
                   whileHover={isPending ? {} : { scale: 1.02 }}
                   whileTap={isPending ? {} : { scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                  className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center relative overflow-hidden cursor-pointer"
+                  className="w-full group bg-accent-600 hover:bg-accent-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-md shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center relative overflow-hidden cursor-pointer"
                 >
                   <div className="flex items-center gap-2 relative z-10 text-sm">
                     <span>BUY IT NOW</span>
@@ -398,7 +398,7 @@ export function BidPanel({
           <div className="mb-3">
             <label htmlFor="bid-amount-input" className="text-xs font-medium text-gray-500 mb-1 block">
               {t("yourBid")}
-              <span className="ml-1 text-[10px] font-bold text-primary-600 uppercase tracking-wide">
+              <span className="ml-1 text-[11px] font-bold text-primary-600 uppercase tracking-wide">
                 · {t("maxProxyHint")}
               </span>
             </label>
@@ -422,7 +422,7 @@ export function BidPanel({
                 key={amount}
                 type="button"
                 onClick={() => { userTouchedRef.current = true; setBidAmount(amount); }}
-                className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                className={`flex-1 py-2 text-xs font-medium rounded-md border transition-colors ${
                   bidAmount === amount ? "bg-primary-50 border-primary-200 text-primary-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}
               >
@@ -439,7 +439,7 @@ export function BidPanel({
               whileHover={isPending || bidAmount < minBid ? {} : { scale: 1.02 }}
               whileTap={isPending || bidAmount < minBid ? {} : { scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 text-white font-semibold py-3.5 rounded-md shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {isPending ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full" /> : <>{t("bidBtnPrefix")} {formatBDT(bidAmount)}</>}
             </motion.button>
@@ -450,7 +450,7 @@ export function BidPanel({
           </div>
 
           {result && (
-            <div className={`mt-3 p-3 rounded-xl text-sm flex items-start gap-2 ${result.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+            <div className={`mt-3 p-3 rounded-md text-sm flex items-start gap-2 ${result.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
               {result.success ? <CheckCircle className="w-4 h-4 mt-0.5" /> : <AlertCircle className="w-4 h-4 mt-0.5" />}
               <div>
                 <p className="font-medium">{result.success ? t("success") : (result.error?.message)}</p>
@@ -477,8 +477,8 @@ export function BidPanel({
             <p className="text-sm text-gray-600 mb-2">You are about to purchase this item instantly for:</p>
             <p className="price text-2xl text-primary-700 mb-4">{formatBDT(buyItNowPrice)}</p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setShowBinConfirm(false)} disabled={isPending} className="px-4 py-2 text-sm font-medium text-gray-600 rounded-xl">Cancel</button>
-              <button onClick={confirmBuyItNow} disabled={isPending} className="px-5 py-2 text-sm font-bold text-white rounded-xl bg-accent-600 hover:bg-accent-700">
+              <button onClick={() => setShowBinConfirm(false)} disabled={isPending} className="px-4 py-2 text-sm font-medium text-gray-600 rounded-md">Cancel</button>
+              <button onClick={confirmBuyItNow} disabled={isPending} className="px-5 py-2 text-sm font-bold text-white rounded-md bg-accent-600 hover:bg-accent-700">
                 {isPending ? "Processing..." : "Confirm Purchase"}
               </button>
             </div>

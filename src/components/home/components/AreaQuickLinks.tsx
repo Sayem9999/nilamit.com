@@ -52,7 +52,7 @@ export function AreaQuickLinks({ locale: _locale }: { locale?: string } = {}) {
                 <span className="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">
                   {label}
                 </span>
-                <span className="text-[10px] text-gray-400 uppercase tracking-wide font-bold">
+                <span className="text-[11px] text-gray-400 uppercase tracking-wide font-bold">
                   {t("dhaka")}
                 </span>
               </Link>

@@ -96,7 +96,7 @@ export function ReviewList({ userId }: ReviewListProps) {
                 <p className="text-sm font-bold text-gray-900">
                   {review.from.name || "User"}
                 </p>
-                <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold uppercase tracking-tight">
+                <div className="flex items-center gap-1 text-[11px] text-gray-400 font-bold uppercase tracking-tight">
                   <MessageSquare className="w-3 h-3" />
                   Reviewed on {review.auction.title}
                 </div>
@@ -117,12 +117,12 @@ export function ReviewList({ userId }: ReviewListProps) {
           </div>
 
           {review.comment && (
-            <p className="text-sm text-gray-600 font-medium bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+            <p className="text-sm text-gray-600 font-medium bg-gray-50/50 p-3 rounded-md border border-gray-50">
               &quot;{review.comment}&quot;
             </p>
           )}
 
-          <div className="mt-3 flex items-center gap-1.5 text-[10px] text-gray-400">
+          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-gray-400">
             <Clock className="w-3 h-3" />
             {formatRelativeTime(review.createdAt)}
           </div>

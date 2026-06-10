@@ -105,7 +105,7 @@ export function UsersTab() {
               setCursorStack([null]);
             }}
             placeholder="Search users..."
-            className="bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+            className="bg-gray-50 border border-gray-200 rounded-md pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
           />
         </div>
       </div>
@@ -115,7 +115,7 @@ export function UsersTab() {
           <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" />
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-md border border-gray-100 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
@@ -175,21 +175,21 @@ export function UsersTab() {
                             </p>
                             {user.isVerifiedSeller ? (
                               user.isTopRated ? (
-                                <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5">
+                                <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold uppercase tracking-wider flex items-center gap-0.5">
                                   ★ Top Seller
                                 </span>
                               ) : (
-                                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-bold uppercase tracking-wider">
+                                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-bold uppercase tracking-wider">
                                   Seller
                                 </span>
                               )
                             ) : (
-                              <span className="px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200/50 text-[10px] font-bold uppercase tracking-wider">
+                              <span className="px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200/50 text-[11px] font-bold uppercase tracking-wider">
                                 Bidder
                               </span>
                             )}
                             {user.isBanned && (
-                              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-bold uppercase tracking-wider">
+                              <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[11px] font-bold uppercase tracking-wider">
                                 Banned
                               </span>
                             )}
@@ -208,14 +208,14 @@ export function UsersTab() {
                         <span className="font-bold text-gray-900">{user.rating}</span>
                         <span className="text-amber-400">★</span>
                       </div>
-                      <span className="text-[10px] text-gray-400">{user.ratingCount} reviews</span>
+                      <span className="text-[11px] text-gray-400">{user.ratingCount} reviews</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">
                       <span className="font-bold text-gray-900">{user.salesCount || 0}</span>
                       {user.isTopRated && (
-                        <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Top Rated</span>
+                        <span className="text-[11px] font-bold text-amber-600 uppercase tracking-tighter">Top Rated</span>
                       )}
                     </div>
                   </td>
@@ -227,7 +227,7 @@ export function UsersTab() {
                     <button
                       onClick={() => handleToggleBan(user.id, user.isBanned)}
                       disabled={isPending}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                         user.isBanned
                           ? "bg-red-600 text-white hover:bg-red-700"
                           : "bg-red-50 text-red-700 hover:bg-red-100"
@@ -252,14 +252,14 @@ export function UsersTab() {
                 <button
                   onClick={() => setCursorStack((s) => (s.length > 1 ? s.slice(0, -1) : s))}
                   disabled={pageNumber === 1}
-                  className="px-3 py-1 rounded-lg border border-gray-200 text-xs font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="px-3 py-1 rounded-md border border-gray-200 text-xs font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => nextCursor && setCursorStack((s) => [...s, nextCursor])}
                   disabled={!nextCursor}
-                  className="px-3 py-1 rounded-lg border border-gray-200 text-xs font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
+                  className="px-3 py-1 rounded-md border border-gray-200 text-xs font-medium bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Next
                 </button>

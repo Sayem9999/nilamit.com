@@ -82,7 +82,7 @@ export function Footer() {
             <p className="text-xs text-gray-500 leading-relaxed mb-3">
               {t("brandDesc")}
             </p>
-            <div className="inline-flex items-center gap-1.5 text-[10px] text-gray-500 font-semibold">
+            <div className="inline-flex items-center gap-1.5 text-[11px] text-gray-500 font-semibold">
               <ShieldCheck className="w-3 h-3 text-blue-500" /> {t("secureMarketplace")}
             </div>
           </div>
@@ -105,7 +105,7 @@ export function Footer() {
           </div>
         </div>
 
-        <p className="text-[10px] text-gray-400 mt-3">
+        <p className="text-[11px] text-gray-400 mt-3">
           Protected by reCAPTCHA Enterprise.{" "}
           <a href="https://policies.google.com/privacy" className="hover:text-gray-600 hover:underline">Privacy</a>
           {" & "}

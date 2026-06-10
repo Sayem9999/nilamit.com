@@ -118,7 +118,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all snap-start ${
+                className={`relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all snap-start ${
                   index === currentIndex
                     ? "border-primary-500 scale-95 shadow-md"
                     : "border-transparent hover:border-primary-300 opacity-70 hover:opacity-100"

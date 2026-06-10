@@ -57,7 +57,7 @@ export function FeatureFlagsTab({ initialConfig }: { initialConfig: SystemConfig
     <div className="space-y-6">
       <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="bg-primary-50 p-3 rounded-xl">
+          <div className="bg-primary-50 p-3 rounded-md">
             <SlidersHorizontal className="w-8 h-8 text-primary-600" />
           </div>
           <div className="flex-1 min-w-0">
@@ -68,7 +68,7 @@ export function FeatureFlagsTab({ initialConfig }: { initialConfig: SystemConfig
             </p>
 
             {!config ? (
-              <div className="mt-8 text-center text-sm text-gray-400 py-6 border border-dashed border-gray-200 rounded-xl">
+              <div className="mt-8 text-center text-sm text-gray-400 py-6 border border-dashed border-gray-200 rounded-md">
                 Failed to load system configuration.
               </div>
             ) : (
@@ -131,7 +131,7 @@ export function FeatureFlagsTab({ initialConfig }: { initialConfig: SystemConfig
                             value={config.hybridCommitmentPercentage ?? 2}
                             onChange={(e) => setConfig({ ...config, hybridCommitmentPercentage: parseFloat(e.target.value) })}
                             onBlur={(e) => saveNumber('hybridCommitmentPercentage', parseFloat(e.target.value), 2)}
-                            className="w-20 text-xs text-center border border-gray-200 rounded-lg p-1.5 font-bold text-gray-900 focus:ring-primary-500 focus:border-primary-500"
+                            className="w-20 text-xs text-center border border-gray-200 rounded-md p-1.5 font-bold text-gray-900 focus:ring-primary-500 focus:border-primary-500"
                           />
                         </div>
                       )}
@@ -174,7 +174,7 @@ export function FeatureFlagsTab({ initialConfig }: { initialConfig: SystemConfig
                               value={config.commissionPercentage}
                               onChange={(e) => setConfig({ ...config, commissionPercentage: parseFloat(e.target.value) })}
                               onBlur={(e) => saveNumber('commissionPercentage', parseFloat(e.target.value), 1.5)}
-                              className="w-20 text-xs text-center border border-gray-200 rounded-lg p-1.5 font-bold text-gray-900 focus:ring-primary-500 focus:border-primary-500"
+                              className="w-20 text-xs text-center border border-gray-200 rounded-md p-1.5 font-bold text-gray-900 focus:ring-primary-500 focus:border-primary-500"
                             />
                           )}
                         </div>

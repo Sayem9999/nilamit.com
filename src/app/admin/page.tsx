@@ -157,7 +157,7 @@ function StatCard({
   return (
     <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm flex items-center gap-4">
       <div
-        className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}
+        className={`w-12 h-12 rounded-md flex items-center justify-center ${color}`}
       >
         {icon}
       </div>

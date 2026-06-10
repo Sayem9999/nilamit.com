@@ -34,7 +34,7 @@ export function VerificationToggle({ userId, initialStatus }: VerificationToggle
     <button
       onClick={handleToggle}
       disabled={isLoading}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase transition-all ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase transition-all ${
         isVerified 
           ? 'bg-blue-50 text-blue-700 border border-blue-100' 
           : 'bg-gray-50 text-gray-400 border border-transparent grayscale'

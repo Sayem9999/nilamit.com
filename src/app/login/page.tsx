@@ -162,7 +162,7 @@ function LoginContent() {
                 <div className="w-full border-t border-gray-100" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-wide text-[10px]">
+                <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-wide text-[11px]">
                   OR
                 </span>
               </div>

@@ -93,7 +93,7 @@ export function TrustFeatures({ systemConfig }: TrustFeaturesProps) {
                 key={i}
                 className="bg-primary-50/50 border border-primary-100 rounded-md p-6"
               >
-                <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mb-4" aria-hidden="true">
+                <div className="w-10 h-10 bg-primary-100 rounded-md flex items-center justify-center mb-4" aria-hidden="true">
                   <feature.icon className="w-5 h-5 text-primary-600" />
                 </div>
                 <h3 className="font-heading font-semibold text-gray-900 mb-1">
@@ -117,7 +117,7 @@ export function TrustFeatures({ systemConfig }: TrustFeaturesProps) {
           </p>
           <Link
             href={isAuthed ? "/auctions/create" : "/login"}
-            className="inline-flex items-center gap-2 bg-white text-primary-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-primary-50 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700"
+            className="inline-flex items-center gap-2 bg-white text-primary-700 font-semibold px-8 py-3.5 rounded-md hover:bg-primary-50 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700"
           >
             {isAuthed ? t("ctaFooterBtnAuthed") : t("ctaFooterBtn")}{" "}
             <ArrowRight className="w-4 h-4" aria-hidden="true" />

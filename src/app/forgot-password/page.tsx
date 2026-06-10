@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
     <p
       role="alert"
       aria-live="polite"
-      className="text-xs font-bold text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 text-center"
+      className="text-xs font-bold text-red-500 bg-red-50 p-4 rounded-md border border-red-100 text-center"
     >
       {error}
     </p>

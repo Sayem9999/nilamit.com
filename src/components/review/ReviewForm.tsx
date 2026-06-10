@@ -101,7 +101,7 @@ export function ReviewForm({ auctionId, toId, recipientName, onSuccess }: Review
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-bold flex gap-2 items-center">
+          <div className="p-4 bg-red-50 text-red-600 rounded-md text-sm font-bold flex gap-2 items-center">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
             {error}
           </div>

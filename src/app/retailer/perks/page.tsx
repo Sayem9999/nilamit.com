@@ -65,11 +65,11 @@ export default function RetailerPerksPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-slate-50 border border-slate-150 rounded-md p-6">
-              <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Current Tier</p>
+              <p className="text-[11px] font-bold uppercase text-slate-400 tracking-wider mb-1">Current Tier</p>
               <p className="text-xl font-bold text-slate-900 flex items-center gap-1.5 mt-1 font-heading">
                 {currentTier}
               </p>
-              <p className="text-[10px] text-slate-500 mt-2 font-medium leading-relaxed">
+              <p className="text-[11px] text-slate-500 mt-2 font-medium leading-relaxed">
                 {user.isRetailer 
                   ? "Maximum privileges unlocked: pro templates and lowest commission rates."
                   : user.isVerifiedSeller 
@@ -79,7 +79,7 @@ export default function RetailerPerksPage() {
             </div>
 
             <div className="bg-slate-50 border border-slate-150 rounded-md p-6">
-              <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Total Sales Count</p>
+              <p className="text-[11px] font-bold uppercase text-slate-400 tracking-wider mb-1">Total Sales Count</p>
               <p className="text-2xl font-bold text-slate-900 mt-1 font-heading">
                 {salesCount} <span className="text-xs text-slate-500 font-bold">Ended Auctions</span>
               </p>
@@ -89,13 +89,13 @@ export default function RetailerPerksPage() {
                   style={{ width: `${Math.min(100, (salesCount / 10) * 100)}%` }}
                 />
               </div>
-              <p className="text-[10px] text-slate-500 mt-2 font-medium">
+              <p className="text-[11px] text-slate-500 mt-2 font-medium">
                 {salesCount >= 10 ? "Benchmark satisfied for high-volume sales!" : `${10 - salesCount} more sales to reach Retailer standard.`}
               </p>
             </div>
 
             <div className="bg-slate-50 border border-slate-150 rounded-md p-6">
-              <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Feedback Rating</p>
+              <p className="text-[11px] font-bold uppercase text-slate-400 tracking-wider mb-1">Feedback Rating</p>
               <p className="text-2xl font-bold text-slate-900 mt-1 flex items-baseline gap-1 font-heading">
                 {rating.toFixed(1)} <span className="text-xs text-amber-500">★</span>
               </p>
@@ -105,7 +105,7 @@ export default function RetailerPerksPage() {
                   style={{ width: `${Math.min(100, (rating / 5) * 100)}%` }}
                 />
               </div>
-              <p className="text-[10px] text-slate-500 mt-2 font-medium">
+              <p className="text-[11px] text-slate-500 mt-2 font-medium">
                 {rating >= 4.5 ? "Top-rated seller status active!" : "Maintain at least 4.5 rating for Top Seller perks."}
               </p>
             </div>
@@ -121,7 +121,7 @@ export default function RetailerPerksPage() {
 
           <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-slate-50/50">
+              <tr className="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wide text-slate-400 bg-slate-50/50">
                 <th className="py-4 px-3">Feature / Privilege</th>
                 <th className="py-4 text-center">Standard Trader</th>
                 <th className="py-4 text-center">Pro Retailer</th>
@@ -180,7 +180,7 @@ export default function RetailerPerksPage() {
             </div>
             <Link 
               href="/retailer/settings"
-              className="px-6 py-3 bg-indigo-650 hover:bg-indigo-750 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-indigo-650/10 hover:shadow-lg transition-all text-center shrink-0"
+              className="px-6 py-3 bg-indigo-650 hover:bg-indigo-750 text-white text-xs font-bold uppercase tracking-wider rounded-md shadow-md shadow-indigo-650/10 hover:shadow-lg transition-all text-center shrink-0"
             >
               Go to Tier Settings
             </Link>

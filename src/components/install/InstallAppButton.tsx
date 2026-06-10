@@ -74,7 +74,7 @@ export function InstallAppButton() {
         <button
           type="button"
           onClick={install}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-bold shadow-sm hover:bg-primary-700 active:scale-95 transition-all"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary-600 text-white text-sm font-bold shadow-sm hover:bg-primary-700 active:scale-95 transition-all"
         >
           <Smartphone className="w-4 h-4" aria-hidden="true" /> Install app
         </button>
@@ -83,7 +83,7 @@ export function InstallAppButton() {
       <a
         href="/downloads/nilamit.apk"
         download
-        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-800 text-sm font-bold hover:border-primary-400 hover:text-primary-700 active:scale-95 transition-all"
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-gray-300 bg-white text-gray-800 text-sm font-bold hover:border-primary-400 hover:text-primary-700 active:scale-95 transition-all"
       >
         <Download className="w-4 h-4" aria-hidden="true" /> Download Android APK
       </a>

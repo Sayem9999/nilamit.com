@@ -38,7 +38,7 @@ export default function BrowsePage() {
             key={c.slug}
             href={`/auctions?category=${c.slug}`}
             aria-label={`Browse ${c.label}`}
-            className="group flex flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-4 sm:p-6 text-center shadow-sm hover:border-primary-400 hover:shadow-md transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+            className="group flex flex-col items-center justify-center gap-2 rounded-md border border-gray-200 bg-white p-4 sm:p-6 text-center shadow-sm hover:border-primary-400 hover:shadow-md transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
           >
             <span className="text-3xl sm:text-4xl leading-none transition-transform group-hover:scale-110" aria-hidden="true">
               {c.icon}
@@ -51,7 +51,7 @@ export default function BrowsePage() {
       </div>
 
       {/* Get-the-app CTA */}
-      <section className="mt-12 rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50/60 to-white p-6 sm:p-8 text-center">
+      <section className="mt-12 rounded-md border border-primary-100 bg-gradient-to-br from-primary-50/60 to-white p-6 sm:p-8 text-center">
         <div className="inline-flex items-center gap-1.5 text-primary-600 text-xs font-bold uppercase tracking-wider">
           <Sparkles className="w-4 h-4" aria-hidden="true" /> Nilamit on your phone
         </div>

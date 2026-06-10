@@ -106,7 +106,7 @@ export function ReportModal({ auctionId }: ReportModalProps) {
                         required
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
-                        className="w-full h-10 px-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
+                        className="w-full h-10 px-3 bg-gray-50 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
                       >
                         <option value="">Select a reason...</option>
                         {REASONS.map((r) => (
@@ -123,12 +123,12 @@ export function ReportModal({ auctionId }: ReportModalProps) {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Tell us more about why you are reporting this..."
-                        className="w-full h-24 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none transition-all"
+                        className="w-full h-24 p-3 bg-gray-50 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none transition-all"
                       />
                     </div>
 
                     {error && (
-                      <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs">
+                      <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-md text-red-600 text-xs">
                         <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                         <p>{error}</p>
                       </div>
@@ -138,7 +138,7 @@ export function ReportModal({ auctionId }: ReportModalProps) {
                       <button
                         type="submit"
                         disabled={isSubmitting || !reason}
-                        className="w-full h-11 bg-red-600 text-white rounded-xl font-semibold text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-red-500/10"
+                        className="w-full h-11 bg-red-600 text-white rounded-md font-semibold text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-red-500/10"
                       >
                         {isSubmitting ? 'Submitting...' : 'Submit Report'}
                       </button>

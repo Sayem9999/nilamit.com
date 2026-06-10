@@ -427,7 +427,7 @@ export function NotificationsList() {
         {notifications.length > 0 && (
           <button
             onClick={handleClearAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 text-xs font-bold uppercase tracking-wider rounded-xl transition-all border border-gray-100 hover:border-red-100"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-gray-100 hover:border-red-100"
           >
             <Trash2 className="w-3.5 h-3.5" />
             {t("clearAll")}
@@ -445,7 +445,7 @@ export function NotificationsList() {
                 className={`p-4 border rounded-md flex items-start justify-between gap-4 transition-all duration-300 ${config.bgColor} ${config.borderColor} hover:shadow-sm`}
               >
                 <div className="flex items-start gap-4 flex-1">
-                  <div className="p-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100/50 dark:border-slate-800 flex-shrink-0">
+                  <div className="p-2 bg-white dark:bg-slate-900 rounded-md shadow-sm border border-gray-100/50 dark:border-slate-800 flex-shrink-0">
                     {config.icon}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -453,7 +453,7 @@ export function NotificationsList() {
                       <p className="text-sm font-bold text-gray-900 dark:text-white leading-snug">
                         {config.title}
                       </p>
-                      <span className="text-[10px] text-gray-400 dark:text-slate-500 font-semibold whitespace-nowrap">
+                      <span className="text-[11px] text-gray-400 dark:text-slate-500 font-semibold whitespace-nowrap">
                         {formatTimeAgo(item._ts, now)}
                       </span>
                     </div>
@@ -473,7 +473,7 @@ export function NotificationsList() {
                 </div>
                 <button
                   onClick={() => handleDelete(item.id)}
-                  className="p-1 text-gray-300 hover:text-red-500 rounded-lg hover:bg-white/50 dark:hover:bg-slate-800 transition-colors self-start ml-2 flex-shrink-0"
+                  className="p-1 text-gray-300 hover:text-red-500 rounded-md hover:bg-white/50 dark:hover:bg-slate-800 transition-colors self-start ml-2 flex-shrink-0"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />

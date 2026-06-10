@@ -224,14 +224,14 @@ export function ModerationTab() {
           <div className="flex bg-gray-100 p-1.5 rounded-md self-start sm:self-center border border-gray-200">
             <button
               onClick={() => setMode("REPORTS")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 ${mode === "REPORTS" ? "bg-slate-900 shadow-sm text-white" : "text-gray-500 hover:text-gray-900"}`}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all flex items-center gap-2 ${mode === "REPORTS" ? "bg-slate-900 shadow-sm text-white" : "text-gray-500 hover:text-gray-900"}`}
             >
               <FileText className="w-3.5 h-3.5" />
               User Reports Queue
             </button>
             <button
               onClick={() => setMode("ALL_AUCTIONS")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 ${mode === "ALL_AUCTIONS" ? "bg-slate-900 shadow-sm text-white" : "text-gray-500 hover:text-gray-900"}`}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all flex items-center gap-2 ${mode === "ALL_AUCTIONS" ? "bg-slate-900 shadow-sm text-white" : "text-gray-500 hover:text-gray-900"}`}
             >
               <PackageOpen className="w-3.5 h-3.5" />
               All Listings
@@ -247,16 +247,16 @@ export function ModerationTab() {
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Filter queue status
             </span>
-            <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
+            <div className="flex bg-gray-100 p-1 rounded-md border border-gray-200">
               <button
                 onClick={() => { setReportFilter("PENDING"); setReportPage(1); }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${reportFilter === "PENDING" ? "bg-white text-gray-900 shadow-xs" : "text-gray-500 hover:text-gray-700"}`}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${reportFilter === "PENDING" ? "bg-white text-gray-900 shadow-xs" : "text-gray-500 hover:text-gray-700"}`}
               >
                 Pending Reports
               </button>
               <button
                 onClick={() => { setReportFilter("RESOLVED"); setReportPage(1); }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${reportFilter === "RESOLVED" ? "bg-white text-gray-900 shadow-xs" : "text-gray-500 hover:text-gray-700"}`}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${reportFilter === "RESOLVED" ? "bg-white text-gray-900 shadow-xs" : "text-gray-500 hover:text-gray-700"}`}
               >
                 Resolved Reports
               </button>
@@ -276,7 +276,7 @@ export function ModerationTab() {
               </p>
               <button
                 onClick={() => setReportsRetry((prev) => prev + 1)}
-                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all"
+                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-all"
               >
                 Retry Query
               </button>
@@ -297,7 +297,7 @@ export function ModerationTab() {
                   className="bg-white p-5 rounded-md border border-gray-100 shadow-xs hover:shadow-md transition-all flex flex-col lg:flex-row gap-6 relative"
                 >
                   {/* Image Preview */}
-                  <div className="w-full lg:w-48 h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
+                  <div className="w-full lg:w-48 h-32 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 relative border border-gray-100">
                     {report.auction.images[0] ? (
                       <Image
                         src={report.auction.images[0]}
@@ -311,7 +311,7 @@ export function ModerationTab() {
                         No image
                       </div>
                     )}
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-slate-900 text-white shadow-xs">
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wider uppercase bg-slate-900 text-white shadow-xs">
                       {report.auction.status}
                     </div>
                   </div>
@@ -336,8 +336,8 @@ export function ModerationTab() {
                       </span>
                     </div>
 
-                    <div className="bg-red-50/50 border border-red-100/50 text-red-900 p-3.5 rounded-xl text-xs mb-4">
-                      <strong className="block text-[10px] uppercase tracking-wider text-red-700 font-bold mb-1">
+                    <div className="bg-red-50/50 border border-red-100/50 text-red-900 p-3.5 rounded-md text-xs mb-4">
+                      <strong className="block text-[11px] uppercase tracking-wider text-red-700 font-bold mb-1">
                         Reason: {report.reason}
                       </strong>
                       <p className="text-slate-600 font-medium leading-relaxed">
@@ -350,14 +350,14 @@ export function ModerationTab() {
                         <button
                           onClick={() => handleDismissReport(report.id)}
                           disabled={isPending}
-                          className="px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                          className="px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-md text-xs font-bold transition-all flex items-center gap-1.5"
                         >
                           <XCircle className="w-4 h-4 text-gray-400" /> Dismiss Report
                         </button>
                         <button
                           onClick={() => handleSuspendReport(report.auction.id, report.id)}
                           disabled={isPending || report.auction.status !== "ACTIVE"}
-                          className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/50 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+                          className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/50 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
                         >
                           <Ban className="w-4 h-4" /> Suspend Listing
                         </button>
@@ -377,14 +377,14 @@ export function ModerationTab() {
                     <button
                       onClick={() => setReportPage((p) => Math.max(1, p - 1))}
                       disabled={reportPage === 1}
-                      className="px-3.5 py-1.5 rounded-xl border border-gray-200 text-xs font-bold bg-white hover:bg-gray-50 disabled:opacity-50"
+                      className="px-3.5 py-1.5 rounded-md border border-gray-200 text-xs font-bold bg-white hover:bg-gray-50 disabled:opacity-50"
                     >
                       Previous
                     </button>
                     <button
                       onClick={() => setReportPage((p) => Math.min(reportTotalPages, p + 1))}
                       disabled={reportPage === reportTotalPages}
-                      className="px-3.5 py-1.5 rounded-xl border border-gray-200 text-xs font-bold bg-white hover:bg-gray-50 disabled:opacity-50"
+                      className="px-3.5 py-1.5 rounded-md border border-gray-200 text-xs font-bold bg-white hover:bg-gray-50 disabled:opacity-50"
                     >
                       Next
                     </button>
@@ -403,7 +403,7 @@ export function ModerationTab() {
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Filter database listings by state
             </span>
-            <div className="flex flex-wrap bg-gray-100 p-1 rounded-xl border border-gray-200 self-start sm:self-center">
+            <div className="flex flex-wrap bg-gray-100 p-1 rounded-md border border-gray-200 self-start sm:self-center">
               {[
                 { id: "all", label: "All State" },
                 { id: "ACTIVE", label: "Active" },
@@ -414,7 +414,7 @@ export function ModerationTab() {
                 <button
                   key={filterTab.id}
                   onClick={() => { setAuctionFilter(filterTab.id); setAuctionPage(1); }}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${auctionFilter === filterTab.id ? "bg-slate-900 text-white shadow-xs" : "text-gray-500 hover:text-gray-700"}`}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${auctionFilter === filterTab.id ? "bg-slate-900 text-white shadow-xs" : "text-gray-500 hover:text-gray-700"}`}
                 >
                   {filterTab.label}
                 </button>
@@ -435,7 +435,7 @@ export function ModerationTab() {
               </p>
               <button
                 onClick={() => setAuctionsRetry((prev) => prev + 1)}
-                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all"
+                className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-all"
               >
                 Retry Query
               </button>
@@ -456,7 +456,7 @@ export function ModerationTab() {
                   className="bg-white p-5 rounded-md border border-gray-100 shadow-xs hover:shadow-md transition-all flex flex-col md:flex-row gap-6 items-start"
                 >
                   {/* Preview thumb */}
-                  <div className="w-full md:w-32 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
+                  <div className="w-full md:w-32 h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 relative border border-gray-100">
                     {auction.images[0] ? (
                       <Image
                         src={auction.images[0]}
@@ -466,7 +466,7 @@ export function ModerationTab() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-[10px] font-bold uppercase">
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-[11px] font-bold uppercase">
                         No image
                       </div>
                     )}
@@ -488,7 +488,7 @@ export function ModerationTab() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase shrink-0 ${
+                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase shrink-0 ${
                           auction.status === "ACTIVE" ? "bg-green-100 text-green-800" :
                           auction.status === "SOLD" ? "bg-indigo-100 text-indigo-800" :
                           auction.status === "CANCELLED" ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-800"
@@ -502,7 +502,7 @@ export function ModerationTab() {
                       <Link
                         href={`/auctions/${auction.id}`}
                         target="_blank"
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1"
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-bold transition-all flex items-center gap-1"
                       >
                         <FileText className="w-3 h-3" /> Inspect page
                       </Link>
@@ -510,7 +510,7 @@ export function ModerationTab() {
                       {auction.status === "ACTIVE" && (
                         <button
                           onClick={() => triggerAuctionAction(auction.id, "SUSPEND")}
-                          className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/50 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1"
+                          className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/50 rounded-md text-[11px] font-bold transition-all flex items-center gap-1"
                         >
                           <Ban className="w-3 h-3" /> Suspend / Take Down
                         </button>
@@ -518,7 +518,7 @@ export function ModerationTab() {
 
                       <button
                         onClick={() => triggerAuctionAction(auction.id, "DELETE")}
-                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/50 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1"
+                        className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/50 rounded-md text-[11px] font-bold transition-all flex items-center gap-1"
                       >
                         <Trash2 className="w-3 h-3" /> Permanently Delete
                       </button>
@@ -537,14 +537,14 @@ export function ModerationTab() {
                     <button
                       onClick={() => setAuctionPage((p) => Math.max(1, p - 1))}
                       disabled={auctionPage === 1}
-                      className="px-3.5 py-1.5 rounded-xl border border-gray-200 text-xs font-bold bg-white hover:bg-gray-50 disabled:opacity-50"
+                      className="px-3.5 py-1.5 rounded-md border border-gray-200 text-xs font-bold bg-white hover:bg-gray-50 disabled:opacity-50"
                     >
                       Previous
                     </button>
                     <button
                       onClick={() => setAuctionPage((p) => Math.min(auctionTotalPages, p + 1))}
                       disabled={auctionPage === auctionTotalPages}
-                      className="px-3.5 py-1.5 rounded-xl border border-gray-200 text-xs font-bold bg-white hover:bg-gray-50 disabled:opacity-50"
+                      className="px-3.5 py-1.5 rounded-md border border-gray-200 text-xs font-bold bg-white hover:bg-gray-50 disabled:opacity-50"
                     >
                       Next
                     </button>
@@ -579,21 +579,21 @@ export function ModerationTab() {
               placeholder="Reason for administrative intervention (Required)..."
               value={actionReason}
               onChange={(e) => setActionReason(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-slate-900 outline-none text-slate-800"
+              className="w-full bg-slate-50 border border-slate-200 rounded-md p-3 text-xs focus:ring-2 focus:ring-slate-900 outline-none text-slate-800"
               rows={3}
             />
 
             <div className="flex justify-end gap-2.5 mt-5">
               <button
                 onClick={() => { setActioningId(null); setActionType(null); }}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-md transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={submitAuctionAction}
                 disabled={isPending}
-                className={`px-4 py-2 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
+                className={`px-4 py-2 text-white text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
                   actionType === "SUSPEND" ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700"
                 }`}
               >

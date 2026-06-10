@@ -60,7 +60,7 @@ export function BidHistory({ auctionId, initialBids = [] }: BidHistoryProps) {
           <h3 className="font-heading font-semibold text-gray-900 text-sm flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-indigo-500" /> Bid History
           </h3>
-          <p className="text-[10px] text-gray-450 font-medium leading-none">
+          <p className="text-[11px] text-gray-450 font-medium leading-none">
             Bidder identities are masked for security and privacy.
           </p>
         </div>

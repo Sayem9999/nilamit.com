@@ -84,7 +84,7 @@ export default function AdminLiveFeed() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
               <span
-                className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20"
+                className="w-10 h-10 bg-primary-600 rounded-md flex items-center justify-center shadow-lg shadow-primary-500/20"
                 aria-hidden="true"
               >
                 <Activity className="w-6 h-6 text-white" />
@@ -98,7 +98,7 @@ export default function AdminLiveFeed() {
 
           <div className="flex items-center gap-4">
             <div
-              className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-gray-100 shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-white rounded-md border border-gray-100 shadow-sm"
               role="status"
               aria-live="polite"
             >
@@ -114,7 +114,7 @@ export default function AdminLiveFeed() {
               type="button"
               onClick={() => setIsLive(!isLive)}
               aria-pressed={!isLive}
-              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+              className={`px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                 isLive
                   ? "bg-red-50 text-red-600 hover:bg-red-100 focus-visible:ring-red-500"
                   : "bg-green-50 text-green-600 hover:bg-green-100 focus-visible:ring-green-500"
@@ -174,7 +174,7 @@ export default function AdminLiveFeed() {
               </p>
               <Link
                 href="/admin/disputes"
-                className="block w-full text-center py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold uppercase tracking-wide transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="block w-full text-center py-3 bg-white/10 hover:bg-white/20 rounded-md text-xs font-bold uppercase tracking-wide transition-all motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 Open dispute queue
               </Link>
@@ -192,7 +192,7 @@ export default function AdminLiveFeed() {
                   <Zap className="w-4 h-4 text-primary-600" aria-hidden="true" />
                   Recent activity
                 </h2>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">
                   Showing last {bids.length} events
                 </span>
               </div>
@@ -220,7 +220,7 @@ export default function AdminLiveFeed() {
                           className="group bg-gray-50/50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 border border-transparent hover:border-gray-100 p-5 rounded-md transition-all duration-300 motion-reduce:transition-none flex items-center gap-4"
                         >
                           <div
-                            className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-600 group-hover:border-primary-600 transition-colors motion-reduce:transition-none"
+                            className="w-12 h-12 bg-white rounded-md shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-600 group-hover:border-primary-600 transition-colors motion-reduce:transition-none"
                             aria-hidden="true"
                           >
                             <Gavel className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors motion-reduce:transition-none" />
@@ -231,12 +231,12 @@ export default function AdminLiveFeed() {
                               <span className="font-bold text-gray-900 tracking-tight uppercase text-xs">
                                 {bid.bidderName}
                               </span>
-                              <span className="text-[10px] text-gray-400 font-bold" aria-hidden="true">
+                              <span className="text-[11px] text-gray-400 font-bold" aria-hidden="true">
                                 •
                               </span>
                               <time
                                 dateTime={new Date(bid.timestamp).toISOString()}
-                                className="text-[10px] text-gray-400 font-bold uppercase tracking-wide"
+                                className="text-[11px] text-gray-400 font-bold uppercase tracking-wide"
                               >
                                 {new Date(bid.timestamp).toLocaleTimeString()}
                               </time>
@@ -254,7 +254,7 @@ export default function AdminLiveFeed() {
                             <Link
                               href={`/auctions/${bid.auctionId}`}
                               aria-label={`View details for ${bid.auctionTitle}`}
-                              className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-primary-600 uppercase tracking-wide transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-400 hover:text-primary-600 uppercase tracking-wide transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
                             >
                               Details <ExternalLink className="w-2.5 h-2.5" aria-hidden="true" />
                             </Link>

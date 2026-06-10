@@ -110,14 +110,14 @@ export function QnaSection({ auctionId, sellerId, initialQuestions, isActive }: 
             {t("title")}
           </h2>
         </div>
-        <span className="text-[10px] font-mono text-gray-400 bg-gray-50 border border-gray-100 px-2 py-1 rounded">
+        <span className="text-[11px] font-mono text-gray-400 bg-gray-50 border border-gray-100 px-2 py-1 rounded">
           {questions.length}
         </span>
       </div>
 
       {/* Compose */}
       {canAsk ? (
-        <div className="mb-6 bg-gray-50/60 border border-gray-100 rounded-xl p-3">
+        <div className="mb-6 bg-gray-50/60 border border-gray-100 rounded-md p-3">
           <div className="flex items-start gap-2">
             <textarea
               value={draft}
@@ -133,14 +133,14 @@ export function QnaSection({ auctionId, sellerId, initialQuestions, isActive }: 
               onClick={handleAsk}
               disabled={isPending || draft.trim().length < 5}
               aria-label="Post question"
-              className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl bg-primary-600 text-white hover:bg-primary-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md bg-primary-600 text-white hover:bg-primary-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </div>
           <div className="flex items-center justify-between mt-2 px-1">
-            <p className="text-[10px] text-gray-400">{t("askHint")}</p>
-            <span className={`text-[10px] font-mono ${draft.length >= QUESTION_MAX ? "text-red-600" : "text-gray-400"}`}>
+            <p className="text-[11px] text-gray-400">{t("askHint")}</p>
+            <span className={`text-[11px] font-mono ${draft.length >= QUESTION_MAX ? "text-red-600" : "text-gray-400"}`}>
               {draft.length} / {QUESTION_MAX}
             </span>
           </div>
@@ -157,7 +157,7 @@ export function QnaSection({ auctionId, sellerId, initialQuestions, isActive }: 
 
       {/* List */}
       {questions.length === 0 ? (
-        <div className="border border-dashed border-gray-200 rounded-xl py-10 text-center">
+        <div className="border border-dashed border-gray-200 rounded-md py-10 text-center">
           <MessageCircle className="w-8 h-8 text-gray-300 mx-auto mb-2" />
           <p className="text-sm text-gray-500">{t("noQuestions")}</p>
         </div>
@@ -168,7 +168,7 @@ export function QnaSection({ auctionId, sellerId, initialQuestions, isActive }: 
             const isAnswering = pendingAnswerId === q.id && isPending;
             const draftAnswer = answerDrafts[q.id] ?? "";
             return (
-              <li key={q.id} className="border border-gray-100 rounded-xl p-4">
+              <li key={q.id} className="border border-gray-100 rounded-md p-4">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
                     {(q.askerName ?? "?").slice(0, 1).toUpperCase()}
@@ -176,7 +176,7 @@ export function QnaSection({ auctionId, sellerId, initialQuestions, isActive }: 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2 mb-1">
                       <span className="text-xs font-bold text-gray-900">{q.askerName ?? t("buyerFallback")}</span>
-                      <span className="text-[10px] text-gray-400">{relativeTime(q.createdAt)}</span>
+                      <span className="text-[11px] text-gray-400">{relativeTime(q.createdAt)}</span>
                     </div>
                     <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">{q.question}</p>
                   </div>
@@ -187,12 +187,12 @@ export function QnaSection({ auctionId, sellerId, initialQuestions, isActive }: 
                     <div className="flex items-baseline gap-2 mb-1">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 self-center" />
                       <span className="text-xs font-bold text-emerald-700">{t("sellerLabel")}</span>
-                      <span className="text-[10px] text-gray-400">{q.answeredAt ? relativeTime(q.answeredAt) : ""}</span>
+                      <span className="text-[11px] text-gray-400">{q.answeredAt ? relativeTime(q.answeredAt) : ""}</span>
                     </div>
                     <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">{q.answer}</p>
                   </div>
                 ) : showAnswerBox ? (
-                  <div className="mt-3 ml-11 bg-emerald-50/40 border border-emerald-100 rounded-lg p-3">
+                  <div className="mt-3 ml-11 bg-emerald-50/40 border border-emerald-100 rounded-md p-3">
                     <textarea
                       value={draftAnswer}
                       onChange={(e) => setAnswerDrafts((prev) => ({ ...prev, [q.id]: e.target.value }))}
@@ -203,14 +203,14 @@ export function QnaSection({ auctionId, sellerId, initialQuestions, isActive }: 
                       className="w-full bg-transparent text-sm resize-none outline-none placeholder:text-gray-400 disabled:opacity-50"
                     />
                     <div className="flex items-center justify-between mt-2">
-                      <span className={`text-[10px] font-mono ${draftAnswer.length >= ANSWER_MAX ? "text-red-600" : "text-gray-400"}`}>
+                      <span className={`text-[11px] font-mono ${draftAnswer.length >= ANSWER_MAX ? "text-red-600" : "text-gray-400"}`}>
                         {draftAnswer.length} / {ANSWER_MAX}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleAnswer(q.id)}
                         disabled={isAnswering || draftAnswer.trim().length < 1}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors disabled:opacity-40"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors disabled:opacity-40"
                       >
                         {isAnswering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                         {t("postAnswer")}

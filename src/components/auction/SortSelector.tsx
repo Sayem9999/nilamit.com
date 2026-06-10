@@ -39,7 +39,7 @@ export default function SortSelector({
   };
 
   return (
-    <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-slate-800 border border-gray-200/50 rounded-lg px-2.5 py-1.5 transition-all text-xs">
+    <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-slate-800 border border-gray-200/50 rounded-md px-2.5 py-1.5 transition-all text-xs">
       <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
       <select
         value={activeKey}

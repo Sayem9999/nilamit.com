@@ -443,7 +443,7 @@ export default async function AuctionDetailPage({ params }: Props) {
             <div className="grid grid-cols-2 gap-y-3 text-xs">
               <div className="text-gray-400 font-medium">Condition</div>
               <div className="text-gray-900 font-bold uppercase tracking-wider">
-                <span className="bg-slate-100 border border-gray-200/50 rounded px-1.5 py-0.5 text-[10px]">
+                <span className="bg-slate-100 border border-gray-200/50 rounded px-1.5 py-0.5 text-[11px]">
                   {auction.condition || "Used"}
                 </span>
               </div>
@@ -523,11 +523,11 @@ export default async function AuctionDetailPage({ params }: Props) {
                   {auction.seller?.isTopRated && (
                     <span className="flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100 shrink-0">
                       <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                      <span className="text-[10px] font-bold text-amber-700">TOP RATED</span>
+                      <span className="text-[11px] font-bold text-amber-700">TOP RATED</span>
                     </span>
                   )}
                 </p>
-                <span className="text-[10px] text-indigo-600 font-bold tracking-wide block mt-0.5">
+                <span className="text-[11px] text-indigo-600 font-bold tracking-wide block mt-0.5">
                   View Storefront →
                 </span>
               </div>
@@ -548,8 +548,8 @@ export default async function AuctionDetailPage({ params }: Props) {
               {auction.status === AuctionStatus.SOLD && (session?.user?.id === auction.winnerId || session?.user?.id === auction.sellerId) && (
                 <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
                   {session?.user?.id === auction.sellerId && (
-                    <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                      <p className="text-[10px] font-bold text-amber-800 uppercase mb-2">Buyer not responding?</p>
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-md">
+                      <p className="text-[11px] font-bold text-amber-800 uppercase mb-2">Buyer not responding?</p>
                       <SecondChanceOfferButton auctionId={id} />
                     </div>
                   )}
@@ -582,7 +582,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                       />
                       <Link
                         href={`/dashboard/coordination/${id}`}
-                        className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition text-xs text-center shadow-md shadow-blue-500/10"
+                        className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-bold transition text-xs text-center shadow-md shadow-blue-500/10"
                       >
                         Open Full Coordination Page
                       </Link>
@@ -613,27 +613,27 @@ export default async function AuctionDetailPage({ params }: Props) {
 
                 <div className="flex justify-between items-center p-2 bg-white rounded border border-primary-50">
                   <div className="flex flex-col">
-                    <span className="text-[10px] uppercase font-bold text-primary-600 flex items-center gap-1">
+                    <span className="text-[11px] uppercase font-bold text-primary-600 flex items-center gap-1">
                       <Shield className="w-3 h-3" aria-hidden="true" /> {t("successFee")}
                     </span>
-                    <span className="text-[10px] text-slate-400">{t("platformCommission")}</span>
+                    <span className="text-[11px] text-slate-400">{t("platformCommission")}</span>
                   </div>
                   <span className="text-sm font-semibold text-primary-700">-{formatBDT(auction.commissionEarned || 0)}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
+                    <span className="text-[11px] uppercase font-bold text-slate-500 flex items-center gap-1">
                       <Truck className="w-3 h-3" aria-hidden="true" /> {t("deliveryCharge")}
                     </span>
-                    <span className="text-[10px] text-slate-400">{t("sellerProtection")}</span>
+                    <span className="text-[11px] text-slate-400">{t("sellerProtection")}</span>
                   </div>
                    <span className="text-sm font-semibold text-slate-700">{formatBDT(auction.deliveryCharge || 0)}</span>
                 </div>
 
                 <div className="p-4 border-t border-primary-100 flex flex-col gap-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-primary-900 uppercase">{t("netToYou")}</span>
+                    <span className="text-[11px] font-bold text-primary-900 uppercase">{t("netToYou")}</span>
                     <span className="text-xl font-bold text-primary-700">{formatBDT(auction.currentPrice - (auction.commissionEarned || 0))}</span>
                   </div>
 
@@ -643,7 +643,7 @@ export default async function AuctionDetailPage({ params }: Props) {
                   )}
                 </div>
 
-                <div className="p-2 bg-blue-50 rounded text-[10px] text-blue-700 flex items-start gap-2">
+                <div className="p-2 bg-blue-50 rounded text-[11px] text-blue-700 flex items-start gap-2">
                   <Info className="w-3 h-3 mt-0.5" aria-hidden="true" />
                   <p>{t("advanceUnlockNote", { amount: formatBDT(auction.currentPrice - (auction.commissionEarned || 0)) })}</p>
                 </div>

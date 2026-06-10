@@ -22,7 +22,7 @@ export default function PolicyPage() {
                 <Truck className="w-32 h-32 text-gray-900" />
              </div>
              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                <div className="p-2 bg-white rounded-xl shadow-sm">
+                <div className="p-2 bg-white rounded-md shadow-sm">
                   <Truck className="w-6 h-6 text-indigo-600" />
                 </div>
                 Direct Coordination & Shipping
@@ -46,7 +46,7 @@ export default function PolicyPage() {
           {/* Section: Escrow */}
           <section className="p-8">
              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="p-2 bg-gray-100 rounded-xl">
+                <div className="p-2 bg-gray-100 rounded-md">
                   <ShieldCheck className="w-6 h-6 text-emerald-600" />
                 </div>
                 Advance Payment Protection
@@ -70,7 +70,7 @@ export default function PolicyPage() {
           {/* Section: Prohibited */}
           <section className="p-8 border-2 border-red-50 bg-red-50/10 rounded-[2.5rem]">
              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-xl">
+                <div className="p-2 bg-red-100 rounded-md">
                   <AlertOctagon className="w-6 h-6 text-red-600" />
                 </div>
                 Zero Tolerance

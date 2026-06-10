@@ -95,7 +95,7 @@ export function AuditLogTab() {
             return (
               <div key={r.id} className="px-4 py-3 flex items-start gap-3 hover:bg-gray-50/50">
                 <span
-                  className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border ${colorClass} shrink-0`}
+                  className={`inline-flex items-center text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded border ${colorClass} shrink-0`}
                 >
                   {r.action.replace(/_/g, " ").toLowerCase()}
                 </span>
@@ -115,7 +115,7 @@ export function AuditLogTab() {
                     <p className="text-sm text-gray-700 mt-1 leading-snug">{r.reason}</p>
                   )}
                   {r.metadata && Object.keys(r.metadata).length > 0 && (
-                    <pre className="text-[10px] text-gray-500 mt-1 font-mono whitespace-pre-wrap break-all bg-gray-50 px-2 py-1 rounded">
+                    <pre className="text-[11px] text-gray-500 mt-1 font-mono whitespace-pre-wrap break-all bg-gray-50 px-2 py-1 rounded">
                       {JSON.stringify(r.metadata, null, 0).slice(0, 200)}
                     </pre>
                   )}

@@ -14,7 +14,7 @@ export default async function ForYouFeed() {
     return (
       <section className="py-12" aria-labelledby="for-you-heading">
         <div className="flex items-center gap-2 mb-8 px-4">
-          <div className="p-2 bg-primary-100 rounded-xl" aria-hidden="true">
+          <div className="p-2 bg-primary-100 rounded-md" aria-hidden="true">
             <Sparkles className="w-5 h-5 text-primary-600" />
           </div>
           <div>

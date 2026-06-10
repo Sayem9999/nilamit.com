@@ -148,7 +148,7 @@ export default function RegisterPage() {
                       <div className="w-full border-t border-gray-100"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-wide text-[10px]">
+                      <span className="px-4 bg-white text-gray-400 font-bold uppercase tracking-wide text-[11px]">
                         OR
                       </span>
                     </div>
@@ -201,7 +201,7 @@ export default function RegisterPage() {
                 <button 
                   type="button"
                   onClick={() => setStep("account-type")} 
-                  className="mb-4 text-[10px] font-bold text-gray-400 hover:text-primary-600 uppercase tracking-wide flex items-center gap-1 transition-colors"
+                  className="mb-4 text-[11px] font-bold text-gray-400 hover:text-primary-600 uppercase tracking-wide flex items-center gap-1 transition-colors"
                 >
                   <ArrowRight className="w-3 h-3 rotate-180" /> Back to Account Selection
                 </button>
@@ -276,7 +276,7 @@ export default function RegisterPage() {
                 </div>
 
                 {error && (
-                  <p className="text-xs font-bold text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 text-center">
+                  <p className="text-xs font-bold text-red-500 bg-red-50 p-4 rounded-md border border-red-100 text-center">
                     {error}
                   </p>
                 )}

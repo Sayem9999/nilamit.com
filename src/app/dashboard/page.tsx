@@ -329,13 +329,13 @@ export default async function DashboardPage({
                       <span>{t("watchlist")}</span>
                     </div>
                     {watchlistCount > 0 ? (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "watchlist" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {watchlistCount}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[11px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -356,13 +356,13 @@ export default async function DashboardPage({
                       <span>{t("activeBids")}</span>
                     </div>
                     {bidsCount > 0 ? (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "bids" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {bidsCount}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[11px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -383,13 +383,13 @@ export default async function DashboardPage({
                       <span>{t("wonEscrow")}</span>
                     </div>
                     {escrowCount > 0 ? (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "escrow" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {escrowCount}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[11px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -416,13 +416,13 @@ export default async function DashboardPage({
                       <span>{t("myListings")}</span>
                     </div>
                     {totalListingsCount > 0 ? (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "listings" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {totalListingsCount}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[11px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -449,13 +449,13 @@ export default async function DashboardPage({
                       <span>{t("chat")}</span>
                     </div>
                     {chatsCount > 0 ? (
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded transition-colors ${
                         currentTab === "coordination" ? "bg-primary-600 text-white" : "bg-slate-100 text-slate-600"
                       }`}>
                         {chatsCount}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
+                      <span className="text-[11px] font-bold px-1.5 py-0.5 bg-gray-50 text-gray-400 rounded">
                         0
                       </span>
                     )}
@@ -463,7 +463,7 @@ export default async function DashboardPage({
 
                   <Link
                     href="/dashboard?tab=notifications"
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md transition-all font-bold text-xs uppercase tracking-wider border group ${
                       currentTab === "notifications"
                         ? "bg-primary-50 text-primary-700 border-primary-200 border-l-2 border-l-primary-600"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
@@ -480,7 +480,7 @@ export default async function DashboardPage({
               <div className="pt-4 border-t border-slate-100">
                 <Link
                   href="/dashboard?tab=profile"
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all font-bold text-xs uppercase tracking-wider border group ${
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-md transition-all font-bold text-xs uppercase tracking-wider border group ${
                     currentTab === "profile"
                       ? "bg-primary-50 text-primary-700 border-primary-200 border-l-2 border-l-primary-600"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 border-transparent"
@@ -505,10 +505,10 @@ export default async function DashboardPage({
                   </span>
                   <span className="text-xs text-gray-400 font-bold ml-1">★</span>
                 </div>
-                <p className="text-[10px] text-gray-400 mb-3 font-medium">{session.user.ratingCount || 0} {t("tradesCompleted")}</p>
+                <p className="text-[11px] text-gray-400 mb-3 font-medium">{session.user.ratingCount || 0} {t("tradesCompleted")}</p>
                 <Link
                   href="/leaderboard"
-                  className="flex items-center justify-between w-full py-2 px-3 bg-white border border-gray-100 hover:border-primary-200 hover:bg-primary-50 rounded-xl text-[10px] font-bold uppercase text-gray-600 hover:text-primary-600 transition-all"
+                  className="flex items-center justify-between w-full py-2 px-3 bg-white border border-gray-100 hover:border-primary-200 hover:bg-primary-50 rounded-md text-[11px] font-bold uppercase text-gray-600 hover:text-primary-600 transition-all"
                 >
                   {t("viewLeaderboard")}
                   <ChevronRight className="w-3 h-3" />
@@ -521,28 +521,28 @@ export default async function DashboardPage({
                     {session.user.isTopRated ? (
                       <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100 animate-pulse">
                         <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                        <span className="text-[10px] font-bold text-amber-700">TOP RATED</span>
+                        <span className="text-[11px] font-bold text-amber-700">TOP RATED</span>
                       </div>
                     ) : session.user.isRetailer ? (
                       <div className="flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                         <Shield className="w-2.5 h-2.5 text-indigo-500 fill-indigo-500/10" />
-                        <span className="text-[10px] font-bold text-indigo-700">RETAILER</span>
+                        <span className="text-[11px] font-bold text-indigo-700">RETAILER</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                         <Shield className="w-2.5 h-2.5 text-blue-550 fill-blue-550/10" />
-                        <span className="text-[10px] font-bold text-blue-700">SELLER / BIDDER</span>
+                        <span className="text-[11px] font-bold text-blue-700">SELLER / BIDDER</span>
                       </div>
                     )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-white p-2 rounded-xl border border-gray-50">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Sales</p>
+                    <div className="bg-white p-2 rounded-md border border-gray-50">
+                      <p className="text-[11px] text-gray-400 font-bold uppercase tracking-tighter">Sales</p>
                       <p className="text-sm font-bold text-gray-900">{session.user.salesCount || 0}</p>
                     </div>
-                    <div className="bg-white p-2 rounded-xl border border-gray-50">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Defect Rate</p>
+                    <div className="bg-white p-2 rounded-md border border-gray-50">
+                      <p className="text-[11px] text-gray-400 font-bold uppercase tracking-tighter">Defect Rate</p>
                       <p className={`text-sm font-bold ${
                         (session.user.defectCount / (session.user.salesCount + session.user.defectCount || 1)) > 0.03 
                           ? "text-red-600" 
@@ -554,8 +554,8 @@ export default async function DashboardPage({
                   </div>
 
                   {!session.user.isTopRated && (
-                    <div className="p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                      <p className="text-[10px] text-gray-500 leading-tight">
+                    <div className="p-2 bg-gray-50 rounded-md border border-dashed border-gray-200">
+                      <p className="text-[11px] text-gray-500 leading-tight">
                         <span className="font-bold">Goal:</span> 10 sales & &lt;5% defect rate for <span className="text-amber-600 font-bold">Top Rated</span> status.
                       </p>
                     </div>
@@ -584,7 +584,7 @@ export default async function DashboardPage({
                     <p className="text-gray-500 mb-6 font-medium">{t("emptyWatchlist")}</p>
                     <Link
                       href="/auctions"
-                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-xl shadow-md shadow-primary-600/10 hover:shadow-lg transition-all"
+                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-md shadow-md shadow-primary-600/10 hover:shadow-lg transition-all"
                     >
                       Explore Trending Deals
                     </Link>
@@ -612,7 +612,7 @@ export default async function DashboardPage({
                     </p>
                     <Link
                       href="/auctions"
-                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-xl shadow-md shadow-primary-600/10 hover:shadow-lg transition-all"
+                      className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-md shadow-md shadow-primary-600/10 hover:shadow-lg transition-all"
                     >
                       Find Items to Bid On
                     </Link>
@@ -658,7 +658,7 @@ export default async function DashboardPage({
                   </h2>
                   <Link
                     href="/auctions/create"
-                    className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl shadow-sm transition-all"
+                    className="bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-md shadow-sm transition-all"
                   >
                     {tStats("newListingBtn")}
                   </Link>
@@ -671,22 +671,22 @@ export default async function DashboardPage({
                       <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("netEarnings")}</p>
                         <p className="text-lg font-bold text-emerald-600 truncate">{formatBDT(listingStats.netEarnings)}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{tStats("afterCommission", { amount: formatBDT(listingStats.totalCommission) })}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{tStats("afterCommission", { amount: formatBDT(listingStats.totalCommission) })}</p>
                       </div>
                       <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("grossSales")}</p>
                         <p className="text-lg font-bold text-gray-900 truncate">{formatBDT(listingStats.grossSales)}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{tStats("soldSuffix", { count: listingStats.sold })}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{tStats("soldSuffix", { count: listingStats.sold })}</p>
                       </div>
                       <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("liveNow")}</p>
                         <p className="text-lg font-bold text-primary-600">{listingStats.active}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{tStats("activeAuctions")}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{tStats("activeAuctions")}</p>
                       </div>
                       <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("closedNoSale")}</p>
                         <p className="text-lg font-bold text-gray-700">{listingStats.expired + listingStats.cancelled}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{tStats("closedDetail", { expired: listingStats.expired, cancelled: listingStats.cancelled })}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{tStats("closedDetail", { expired: listingStats.expired, cancelled: listingStats.cancelled })}</p>
                       </div>
                     </div>
 
@@ -705,14 +705,14 @@ export default async function DashboardPage({
                           <Link
                             key={key}
                             href={href}
-                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors ${
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wide transition-colors ${
                               isActive
                                 ? "bg-primary-600 text-white shadow-sm"
                                 : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
                             }`}
                           >
                             {label}
-                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                            <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded ${
                               isActive ? "bg-white/20 text-white/90" : "bg-gray-100 text-gray-500"
                             }`}>{count}</span>
                           </Link>
@@ -739,7 +739,7 @@ export default async function DashboardPage({
                     {listingStats.totalListings === 0 ? (
                       <Link
                         href="/auctions/create"
-                        className="inline-block bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl shadow-sm transition-all"
+                        className="inline-block bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-md shadow-sm transition-all"
                       >
                         {tStats("createFirst")}
                       </Link>
@@ -771,7 +771,7 @@ export default async function DashboardPage({
                         href={`/dashboard/coordination/${conv.id}`}
                         className="bg-white p-5 rounded-md border border-gray-200 shadow-sm hover:shadow-md transition-all group flex items-center gap-4"
                       >
-                         <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+                         <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                             {conv.auction.images?.[0] ? (
                               <Image 
                                 src={conv.auction.images[0]} 
@@ -789,7 +789,7 @@ export default async function DashboardPage({
                          <div className="flex-1">
                            <div className="flex items-center justify-between">
                               <h3 className="font-bold text-gray-900 group-hover:text-primary-600 transition-colors">{conv.auction.title}</h3>
-                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border bn ${
+                              <span className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded border bn ${
                                 conv.auction.escrowTransaction?.status === 'DISPUTED' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                               }`}>
                                 {te(`status_${conv.auction.escrowTransaction?.status || 'PENDING'}`)}
@@ -799,14 +799,14 @@ export default async function DashboardPage({
                              {conv.messages?.[0]?.content || t("noMessagesYet")}
                            </p>
                             {conv.auction.logistics?.status ? (
-                              <div className="flex items-center gap-2 mt-2 bg-blue-50 px-2 py-0.5 rounded-lg w-fit">
+                              <div className="flex items-center gap-2 mt-2 bg-blue-50 px-2 py-0.5 rounded-md w-fit">
                                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                                <span className="text-[10px] font-bold text-blue-700 uppercase tracking-tight">
+                                <span className="text-[11px] font-bold text-blue-700 uppercase tracking-tight">
                                   {conv.auction.logistics?.status.replace(/_/g, ' ')}
                                 </span>
                               </div>
                             ) : (
-                              <p className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
+                              <p className="text-[11px] text-gray-400 mt-2 uppercase tracking-wide">
                                 {t("sharedLogistics")}
                               </p>
                             )}

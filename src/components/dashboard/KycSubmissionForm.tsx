@@ -185,7 +185,7 @@ export function KycSubmissionForm({ status = "NONE", rejectReason }: Props) {
           )}
         </button>
 
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[11px] text-gray-400 leading-relaxed">
           Your documents are stored privately — only Nilamit moderators can view
           them via short-lived signed URLs. We never share KYC docs with buyers
           or other sellers.
@@ -227,7 +227,7 @@ function DocUpload({
           <FileText className="w-5 h-5 text-gray-400" />
         )}
         <span className="text-[11px] font-semibold text-gray-700">{label}</span>
-        <span className="text-[10px] text-gray-400">
+        <span className="text-[11px] text-gray-400">
           {value ? "Uploaded" : uploading ? "Uploading..." : "Click to upload"}
         </span>
       </div>

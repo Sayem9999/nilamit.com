@@ -259,7 +259,7 @@ export default function CreateAuctionPage() {
                     key={cond}
                     type="button"
                     onClick={() => updateForm("condition", cond)}
-                    className={`py-2 text-xs font-medium rounded-lg border transition-all ${
+                    className={`py-2 text-xs font-medium rounded-md border transition-all ${
                       form.condition === cond 
                         ? "bg-primary-50 border-primary-200 text-primary-700 shadow-sm" 
                         : "border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -307,18 +307,18 @@ export default function CreateAuctionPage() {
                   <div className="bg-gradient-to-br from-primary-50/40 via-white to-primary-50/10 border border-primary-100/80 rounded-md p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-lg bg-primary-100/60 text-primary-600">
+                        <div className="p-1.5 rounded-md bg-primary-100/60 text-primary-600">
                           <Sparkles className="w-4 h-4 animate-pulse" />
                         </div>
                         <div>
                           <h3 className="font-heading font-semibold text-sm text-gray-900">
                             Smart Pricing Engine
                           </h3>
-                          <p className="text-[10px] text-gray-500">Real-time market analysis powered by Nilamit AI</p>
+                          <p className="text-[11px] text-gray-500">Real-time market analysis powered by Nilamit AI</p>
                         </div>
                       </div>
                       <div className="flex gap-1.5">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border transition-all ${
                           suggestion.demandLevel === 'HIGH'
                             ? "bg-violet-50 text-violet-700 border-violet-100"
                             : suggestion.demandLevel === 'MODERATE'
@@ -328,7 +328,7 @@ export default function CreateAuctionPage() {
                           <TrendingUp className="w-3 h-3" />
                           {suggestion.demandLevel} DEMAND
                         </span>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border transition-all ${
                           suggestion.confidence === 'HIGH'
                             ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                             : suggestion.confidence === 'MEDIUM'
@@ -350,7 +350,7 @@ export default function CreateAuctionPage() {
                         onClick={() => updateForm("startingPrice", suggestion.suggestedStart)}
                         className="group relative text-left bg-white p-3.5 rounded-md border border-gray-100 hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                       >
-                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-wider">Suggested Start Price</div>
+                        <div className="text-[11px] uppercase font-bold text-gray-400 mb-1 tracking-wider">Suggested Start Price</div>
                         <div className="text-lg font-extrabold text-primary-600 group-hover:text-primary-700 flex items-baseline gap-0.5">
                           <span className="text-xs font-semibold">৳</span>{suggestion.suggestedStart.toLocaleString()}
                         </div>
@@ -364,7 +364,7 @@ export default function CreateAuctionPage() {
                         onClick={() => updateForm("buyItNowPrice", suggestion.suggestedBuyNow)}
                         className="group relative text-left bg-white p-3.5 rounded-md border border-gray-100 hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                       >
-                        <div className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-wider">Suggested Buy-Now</div>
+                        <div className="text-[11px] uppercase font-bold text-gray-400 mb-1 tracking-wider">Suggested Buy-Now</div>
                         <div className="text-lg font-extrabold text-primary-600 group-hover:text-primary-700 flex items-baseline gap-0.5">
                           <span className="text-xs font-semibold">৳</span>{suggestion.suggestedBuyNow.toLocaleString()}
                         </div>
@@ -374,7 +374,7 @@ export default function CreateAuctionPage() {
                       </button>
                     </div>
 
-                    <div className="mt-4 flex items-center justify-between pt-3.5 border-t border-gray-100/60 text-[10px] text-gray-400">
+                    <div className="mt-4 flex items-center justify-between pt-3.5 border-t border-gray-100/60 text-[11px] text-gray-400">
                       <div className="flex items-center gap-1">
                         <Info className="w-3.5 h-3.5 text-gray-400" />
                         <span>Average bids per sold listing: <strong>{suggestion.avgBids}</strong></span>
@@ -428,7 +428,7 @@ export default function CreateAuctionPage() {
               </label>
               <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">
+                  <label className="text-[11px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">
                     {t("reservePrice")}
                   </label>
                   <input
@@ -445,12 +445,12 @@ export default function CreateAuctionPage() {
                     placeholder={t("reservePricePlaceholder")}
                     className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                   />
-                  <p className="text-[10px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 mt-1">
                     {t("reservePriceDesc") || "Item won't sell unless bidding reaches this amount."}
                   </p>
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">
+                  <label className="text-[11px] uppercase tracking-wider font-bold text-gray-400 mb-1 block">
                     {t("buyNowPrice")}
                   </label>
                   <input
@@ -467,7 +467,7 @@ export default function CreateAuctionPage() {
                     placeholder={t("buyNowPricePlaceholder")}
                     className="w-full bg-gray-50 border border-gray-200 rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                   />
-                  <p className="text-[10px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-gray-400 mt-1">
                     {t("buyNowPriceDesc") || "Allow buyers to skip bidding and buy instantly."}
                   </p>
                 </div>

@@ -32,7 +32,7 @@ function MetricCard({
     <div className="bg-white rounded-md border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}
+          className={`w-10 h-10 rounded-md flex items-center justify-center ${color}`}
         >
           {icon}
         </div>
@@ -199,7 +199,7 @@ export function MetricsTab() {
             </div>
           </div>
           <MiniBarChart data={metrics.dailyBids} color="bg-indigo-500" />
-          <div className="flex justify-between mt-2 text-[10px] text-gray-400">
+          <div className="flex justify-between mt-2 text-[11px] text-gray-400">
             <span>{metrics.dailyBids[0]?.date.slice(5)}</span>
             <span>
               {metrics.dailyBids[metrics.dailyBids.length - 1]?.date.slice(5)}
@@ -221,7 +221,7 @@ export function MetricsTab() {
             </div>
           </div>
           <MiniBarChart data={metrics.dailySignups} color="bg-emerald-500" />
-          <div className="flex justify-between mt-2 text-[10px] text-gray-400">
+          <div className="flex justify-between mt-2 text-[11px] text-gray-400">
             <span>{metrics.dailySignups[0]?.date.slice(5)}</span>
             <span>
               {metrics.dailySignups[
@@ -257,7 +257,7 @@ export function MetricsTab() {
               );
             })}
           </div>
-          <div className="flex justify-between mt-2 text-[10px] text-gray-400">
+          <div className="flex justify-between mt-2 text-[11px] text-gray-400">
             <span>{metrics.dailyGMV[0]?.date.slice(5)}</span>
             <span>
               {metrics.dailyGMV[

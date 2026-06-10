@@ -30,7 +30,7 @@ import React, { memo, useState, useTransition } from "react";
 // Premium dynamic styling and Lucide icons for categories
 const getCategoryBadgeStyles = (cat?: string) => {
   const normalized = (cat || 'other').toLowerCase().replace(/_/g, '-');
-  const className = "bg-slate-100/70 text-slate-600 dark:text-slate-300 border-slate-200/60 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border uppercase tracking-wider";
+  const className = "bg-slate-100/70 text-slate-600 dark:text-slate-300 border-slate-200/60 rounded px-2 py-0.5 text-[11px] font-bold flex items-center gap-1 border uppercase tracking-wider";
   switch (normalized) {
     case 'mobile-phones': return { className, icon: Smartphone };
     case 'computers-laptops': return { className, icon: Laptop };
@@ -54,17 +54,17 @@ const getConditionBadgeStyles = (cond?: string) => {
   switch (normalized) {
     case 'NEW':
       return {
-        className: "bg-emerald-50 text-emerald-700 dark:text-emerald-350 border-emerald-200/60 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border uppercase tracking-wider",
+        className: "bg-emerald-50 text-emerald-700 dark:text-emerald-350 border-emerald-200/60 rounded px-2 py-0.5 text-[11px] font-bold flex items-center gap-1 border uppercase tracking-wider",
         icon: Sparkles
       };
     case 'USED':
       return {
-        className: "bg-slate-50 text-slate-700 dark:text-slate-400 border-slate-200/60 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border uppercase tracking-wider",
+        className: "bg-slate-50 text-slate-700 dark:text-slate-400 border-slate-200/60 rounded px-2 py-0.5 text-[11px] font-bold flex items-center gap-1 border uppercase tracking-wider",
         icon: RefreshCw
       };
     case 'REFURBISHED':
       return {
-        className: "bg-blue-50 text-blue-700 dark:text-blue-350 border-blue-200/60 rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 border uppercase tracking-wider",
+        className: "bg-blue-50 text-blue-700 dark:text-blue-350 border-blue-200/60 rounded px-2 py-0.5 text-[11px] font-bold flex items-center gap-1 border uppercase tracking-wider",
         icon: Wrench
       };
     default:
@@ -214,7 +214,7 @@ export const AuctionCard = memo(({
                   type="button"
                   onClick={handleToggleFeatured}
                   disabled={isPending}
-                  className={`w-7 h-7 rounded-full backdrop-blur-md flex items-center justify-center border transition-all ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center border transition-all ${
                     isFeatured ? "bg-amber-500 text-white border-amber-400" : "bg-white/20 text-white/70 border-white/15"
                   }`}
                 >
@@ -250,7 +250,7 @@ export const AuctionCard = memo(({
                   const styles = getCategoryBadgeStyles(auction.category);
                   const CatIcon = styles.icon;
                   return (
-                    <span className="bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 backdrop-blur-md rounded-full px-2 py-0.5 text-[10px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
+                    <span className="bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 rounded-full px-2 py-0.5 text-[11px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
                       <CatIcon className="w-2.5 h-2.5" />
                       {tCat(auction.category || 'other')}
                     </span>
@@ -261,7 +261,7 @@ export const AuctionCard = memo(({
                   if (!styles) return null;
                   const CondIcon = styles.icon;
                   return (
-                    <span className="bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20 backdrop-blur-md rounded-full px-2 py-0.5 text-[10px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
+                    <span className="bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20 rounded-full px-2 py-0.5 text-[11px] font-extrabold flex items-center gap-1 border uppercase tracking-wider">
                       <CondIcon className="w-2.5 h-2.5" />
                       {auction.condition}
                     </span>
@@ -287,7 +287,7 @@ export const AuctionCard = memo(({
                   />
                 </button>
 
-                <span className="text-gray-400 font-bold flex items-center gap-1 bg-gray-50 border border-gray-100 rounded px-1.5 py-0.5 text-[10px]">
+                <span className="text-gray-400 font-bold flex items-center gap-1 bg-gray-50 border border-gray-100 rounded px-1.5 py-0.5 text-[11px]">
                   <MapPin className="w-3 h-3 text-primary-500" />
                   {auction.location ? tLoc(auction.location) : tLoc("mirpur")}
                 </span>
@@ -297,7 +297,7 @@ export const AuctionCard = memo(({
             {/* Bottom pricing section */}
             <div className="mt-4 pt-3 border-t border-gray-100/60 flex flex-wrap items-end justify-between gap-4">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block leading-none">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide block leading-none">
                   {t("currentPrice")}
                 </span>
                 <div className="flex items-baseline gap-2">
@@ -313,14 +313,14 @@ export const AuctionCard = memo(({
               </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                <div className="flex items-center gap-1 text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-1.5 rounded-lg whitespace-nowrap flex-shrink-0">
+                <div className="flex items-center gap-1 text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-1.5 rounded-md whitespace-nowrap flex-shrink-0">
                   <Users className="w-3.5 h-3.5 flex-shrink-0" />
                   <span>{bidCount} {bidCount === 1 ? t("bid") : t("bids")}</span>
                 </div>
                 <CountdownTimer
                   endTime={auction.endTime}
                   variant="card-footer"
-                  className="py-1 px-2.5 text-xs rounded-lg whitespace-nowrap flex-shrink-0 w-auto h-auto font-sans"
+                  className="py-1 px-2.5 text-xs rounded-md whitespace-nowrap flex-shrink-0 w-auto h-auto font-sans"
                 />
               </div>
             </div>
@@ -338,7 +338,7 @@ export const AuctionCard = memo(({
           {lightweightMode ? (
             <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center gap-2 p-4 text-center">
               <Zap className="w-8 h-8 text-amber-500 animate-pulse" aria-hidden="true" />
-              <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+              <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
                 {t("liteModeActive")}
               </span>
             </div>
@@ -357,7 +357,7 @@ export const AuctionCard = memo(({
               ) : (
                 <div className="w-full h-full bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center gap-1.5 p-4 text-center text-slate-300 dark:text-slate-700">
                   <Package className="w-8 h-8 stroke-[1.5]" aria-hidden="true" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400/60">{t("noImage")}</span>
+                  <span className="text-[11px] uppercase font-bold tracking-wider text-slate-400/60">{t("noImage")}</span>
                 </div>
               )}
             </div>
@@ -372,7 +372,7 @@ export const AuctionCard = memo(({
                 type="button"
                 onClick={handleToggleFeatured}
                 disabled={isPending}
-                className={`w-8 h-8 md:w-10 md:h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all border ${
+                className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all border ${
                   isFeatured 
                     ? "bg-amber-500 text-white border-amber-400 shadow-lg scale-110 animate-in zoom-in duration-300" 
                     : "bg-white/10 text-white/60 border-white/20 hover:bg-white/20 hover:scale-105"
@@ -400,7 +400,7 @@ export const AuctionCard = memo(({
 
           {/* Location pill (bottom-left of image) */}
           <div className="absolute bottom-2 left-2 z-10">
-            <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] flex items-center gap-1 border border-white/40 shadow-sm">
+            <div className="bg-white/90 px-2 py-0.5 rounded text-[11px] flex items-center gap-1 border border-white/40 shadow-sm">
               <div className="flex items-center gap-1 text-gray-700 font-semibold">
                 <MapPin className="w-2.5 h-2.5 text-primary-500" aria-hidden="true" />
                 {auction.location ? tLoc(auction.location) : tLoc("mirpur")}
@@ -441,7 +441,7 @@ export const AuctionCard = memo(({
             })()}
 
             {auction.isFeatured && (
-              <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
+              <span className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
                 <Star className="w-2.5 h-2.5 fill-white text-white" aria-hidden="true" />
                 Featured
               </span>
@@ -481,14 +481,14 @@ export const AuctionCard = memo(({
           {/* Price & Bid Count */}
           <div className="mt-2 pt-2 border-t border-gray-100 flex flex-col gap-0.5">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-none">
+              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide leading-none">
                 {displayStatus === "ACTIVE"
                   ? t("currentPrice")
                   : displayStatus === "SOLD"
                     ? t("finalPrice")
                     : t("auctionEnded")}
               </span>
-              <span className="flex items-center gap-1 text-[10px] font-bold text-primary-700 bg-primary-50 px-1.5 py-0.5 rounded">
+              <span className="flex items-center gap-1 text-[11px] font-bold text-primary-700 bg-primary-50 px-1.5 py-0.5 rounded">
                 <Users className="w-2.5 h-2.5" aria-hidden="true" />
                 {bidCount} {bidCount === 1 ? t("bid") : t("bids")}
               </span>
@@ -508,11 +508,11 @@ export const AuctionCard = memo(({
           {/* Seller Protection View */}
           {session?.user?.id === auction.sellerId && (displayStatus === "SOLD" || displayStatus === "AWAITING_PAYMENT" || displayStatus === "OFFER_PENDING") && auction.commissionEarned && (
             <div className="mt-4 p-4 bg-primary-50/30 rounded-md border border-primary-100/50 space-y-2">
-              <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              <div className="flex justify-between text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                 <span>{t("finalPrice")}</span>
                 <span className="text-gray-900">{formatBDT(auction.currentPrice)}</span>
               </div>
-              <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              <div className="flex justify-between text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                 <span>{t("successFee")} ({((auction.commissionEarned / auction.currentPrice) * 100).toFixed(1)}%)</span>
                 <span className="text-red-500">- {formatBDT(auction.commissionEarned)}</span>
               </div>
@@ -528,7 +528,7 @@ export const AuctionCard = memo(({
             <CountdownTimer
               endTime={auction.endTime}
               variant="card-footer"
-              className="py-1 px-2 text-[10px] rounded"
+              className="py-1 px-2 text-[11px] rounded"
             />
           </div>
 
@@ -541,7 +541,7 @@ export const AuctionCard = memo(({
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEditModal(true); }}
                   disabled={isPending}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
                 >
                   <Pencil className="w-3.5 h-3.5" /> {tOwner("edit")}
                 </button>
@@ -551,7 +551,7 @@ export const AuctionCard = memo(({
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCancelConfirm(true); }}
                   disabled={isPending}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
                 >
                   <X className="w-3.5 h-3.5" /> {tOwner("cancel")}
                 </button>
@@ -561,7 +561,7 @@ export const AuctionCard = memo(({
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRelist(); }}
                   disabled={isPending}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-primary-200 text-primary-600 hover:bg-primary-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md border border-primary-200 text-primary-600 hover:bg-primary-50 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> {isPending ? tOwner("relisting") : tOwner("relist")}
                 </button>
@@ -599,14 +599,14 @@ export const AuctionCard = memo(({
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCancelConfirm(false); }}
                 disabled={isPending}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md disabled:opacity-50"
               >
                 {tOwner("keepListing")}
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCancel(); }}
                 disabled={isPending}
-                className="px-5 py-2 text-sm font-bold text-white rounded-xl shadow-sm bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                className="px-5 py-2 text-sm font-bold text-white rounded-md shadow-sm bg-red-600 hover:bg-red-700 disabled:opacity-50"
               >
                 {isPending ? tOwner("cancelling") : tOwner("confirmCancel")}
               </button>

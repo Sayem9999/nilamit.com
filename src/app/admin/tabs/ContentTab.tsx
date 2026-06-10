@@ -156,7 +156,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
               type="text"
               value={config.heroTitle || ''}
               onChange={e => setConfig({ ...config, heroTitle: e.target.value })}
-              className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              className="w-full mt-1 px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
             />
           </div>
           <div>
@@ -166,7 +166,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
               type="text"
               value={config.heroSubtitle || ''}
               onChange={e => setConfig({ ...config, heroSubtitle: e.target.value })}
-              className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              className="w-full mt-1 px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
             />
           </div>
           <div>
@@ -182,7 +182,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
           <button
             onClick={handleSaveBanner}
             disabled={isSaving}
-            className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-indigo-700 flex items-center gap-2 transition-all shadow-sm hover:shadow active:scale-95 disabled:opacity-50"
+            className="bg-indigo-600 text-white px-5 py-2.5 rounded-md font-medium hover:bg-indigo-700 flex items-center gap-2 transition-all shadow-sm hover:shadow active:scale-95 disabled:opacity-50"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Changes
@@ -208,7 +208,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
               value={config.treasuryBkash || ''}
               onChange={e => setConfig({ ...config, treasuryBkash: e.target.value.replace(/\D/g, '') })}
               placeholder="017XXXXXXXX"
-              className="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono transition-all"
+              className="w-full mt-1 px-4 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none font-mono transition-all"
             />
           </div>
           <div>
@@ -221,7 +221,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
               value={config.treasuryNagad || ''}
               onChange={e => setConfig({ ...config, treasuryNagad: e.target.value.replace(/\D/g, '') })}
               placeholder="018XXXXXXXX"
-              className="w-full mt-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono transition-all"
+              className="w-full mt-1 px-4 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-emerald-500 outline-none font-mono transition-all"
             />
           </div>
         </div>
@@ -229,7 +229,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
           <button 
             onClick={handleSaveTreasury}
             disabled={isSaving}
-            className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-emerald-700 flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50"
+            className="bg-emerald-600 text-white px-6 py-2.5 rounded-md font-bold hover:bg-emerald-700 flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Sync Treasury
@@ -263,7 +263,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
                 auctions.map((auction) => (
                   <div key={auction.id} className="flex items-center justify-between p-3.5 bg-gray-50/50 hover:bg-gray-50 rounded-md border border-gray-100 transition-all group">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-12 relative rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                      <div className="w-12 h-12 relative rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
                         {auction.images?.[0] ? (
                           <Image src={auction.images[0]} alt={auction.title} fill sizes="48px" className="object-cover" />
                         ) : (
@@ -276,22 +276,22 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
                         <p className="font-semibold text-sm text-gray-900 truncate group-hover:text-amber-600 transition-colors">{auction.title}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-xs font-bold text-primary-600">৳{auction.currentPrice.toLocaleString()}</span>
-                          <span className="text-gray-300 text-[10px]">•</span>
-                          <span className="text-[10px] font-mono text-gray-400 truncate max-w-[120px]">{auction.id}</span>
+                          <span className="text-gray-300 text-[11px]">•</span>
+                          <span className="text-[11px] font-mono text-gray-400 truncate max-w-[120px]">{auction.id}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
                       <button 
                         onClick={() => handleCopyId(auction.id)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all"
                         title="Copy Auction ID"
                       >
                         <Copy className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleToggleFeatured(auction.id)}
-                        className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-xl transition-all"
+                        className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-md transition-all"
                         title="Remove from Featured"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -311,11 +311,11 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
                   placeholder="Enter or paste Auction ID" 
                   value={newAuctionId}
                   onChange={e => setNewAuctionId(e.target.value)}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500 transition-all font-mono"
+                  className="flex-1 px-4 py-2.5 border border-gray-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-amber-500 transition-all font-mono"
                 />
                 <button 
                   onClick={() => handleToggleFeatured(newAuctionId)}
-                  className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-black active:scale-95 transition-all shadow-sm flex items-center gap-1.5"
+                  className="bg-gray-900 text-white px-5 py-2.5 rounded-md text-sm font-semibold hover:bg-black active:scale-95 transition-all shadow-sm flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" />
                   Add
@@ -341,7 +341,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
                 placeholder="Search active listings by title or ID..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all bg-white"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-md text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all bg-white"
               />
             </div>
 
@@ -356,9 +356,9 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
                 filteredActiveAuctions.map((auction) => {
                   const isFeatured = auctions.some(f => f.id === auction.id);
                   return (
-                    <div key={auction.id} className="flex items-center justify-between p-2.5 bg-white hover:border-gray-200 rounded-xl border border-gray-100 transition-all shadow-xs">
+                    <div key={auction.id} className="flex items-center justify-between p-2.5 bg-white hover:border-gray-200 rounded-md border border-gray-100 transition-all shadow-xs">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-10 h-10 relative rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
+                        <div className="w-10 h-10 relative rounded-md overflow-hidden bg-gray-50 flex-shrink-0">
                           {auction.images?.[0] ? (
                             <Image src={auction.images[0]} alt={auction.title} fill sizes="40px" className="object-cover" />
                           ) : (
@@ -370,11 +370,11 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
                         <div className="min-w-0">
                           <p className="font-semibold text-xs text-gray-900 truncate leading-snug">{auction.title}</p>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] font-bold text-primary-600">৳{auction.currentPrice.toLocaleString()}</span>
-                            <span className="text-gray-300 text-[10px]">•</span>
+                            <span className="text-[11px] font-bold text-primary-600">৳{auction.currentPrice.toLocaleString()}</span>
+                            <span className="text-gray-300 text-[11px]">•</span>
                             <button
                               onClick={() => handleCopyId(auction.id)}
-                              className="text-[10px] font-mono text-gray-400 hover:text-indigo-600 hover:underline flex items-center gap-0.5 select-all"
+                              className="text-[11px] font-mono text-gray-400 hover:text-indigo-600 hover:underline flex items-center gap-0.5 select-all"
                               title="Copy ID"
                             >
                               <span>{auction.id.slice(0, 8)}...</span>
@@ -394,7 +394,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
                           href={`/auctions/${auction.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                          className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all"
                           title="View on site"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
@@ -403,7 +403,7 @@ export function ContentTab({ initialConfig, featuredAuctions, activeAuctions }: 
                         {/* Feature Toggle Star Button */}
                         <button
                           onClick={() => handleToggleFeatured(auction.id)}
-                          className={`p-1.5 rounded-lg border transition-all ${
+                          className={`p-1.5 rounded-md border transition-all ${
                             isFeatured 
                               ? "bg-amber-500/10 text-amber-500 border-amber-300 hover:bg-amber-500/20" 
                               : "bg-white text-gray-400 border-gray-100 hover:text-amber-500 hover:border-amber-200"

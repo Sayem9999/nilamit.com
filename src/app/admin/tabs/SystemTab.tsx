@@ -203,7 +203,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
       {/* Global Announcement */}
       <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
         <div className="flex items-start gap-4">
-          <div className="bg-orange-50 p-3 rounded-xl">
+          <div className="bg-orange-50 p-3 rounded-md">
             <Megaphone className="w-8 h-8 text-orange-600" />
           </div>
           <div className="flex-1">
@@ -248,7 +248,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
                       onChange={(e) => setConfig({ ...config, announcement: e.target.value })}
                       onBlur={(e) => handleTextChange('announcement', e.target.value)}
                       placeholder="Enter the announcement message..."
-                      className="w-full min-h-[100px] p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900"
+                      className="w-full min-h-[100px] p-3 text-sm border border-gray-200 rounded-md focus:ring-primary-500 focus:border-primary-500 text-gray-900"
                     />
                     <p className="text-xs text-gray-500">Saves automatically when you click outside the box.</p>
                   </div>
@@ -263,7 +263,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
       {/* Treasury Configuration */}
       <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300 mt-6">
         <div className="flex items-start gap-4">
-          <div className="bg-emerald-50 p-3 rounded-xl">
+          <div className="bg-emerald-50 p-3 rounded-md">
             <Landmark className="w-8 h-8 text-emerald-600" />
           </div>
           <div className="flex-1">
@@ -289,7 +289,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
                       onChange={(e) => setConfig({ ...config, treasuryBkash: e.target.value })}
                       onBlur={(e) => handleTextChange('treasuryBkash', e.target.value)}
                       placeholder="e.g. 01700000000"
-                      className="w-full p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900 font-bold"
+                      className="w-full p-3 text-sm border border-gray-200 rounded-md focus:ring-primary-500 focus:border-primary-500 text-gray-900 font-bold"
                     />
                   </div>
 
@@ -301,7 +301,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
                       onChange={(e) => setConfig({ ...config, treasuryNagad: e.target.value })}
                       onBlur={(e) => handleTextChange('treasuryNagad', e.target.value)}
                       placeholder="e.g. 01600000000"
-                      className="w-full p-3 text-sm border border-gray-200 rounded-xl focus:ring-primary-500 focus:border-primary-500 text-gray-900 font-bold"
+                      className="w-full p-3 text-sm border border-gray-200 rounded-md focus:ring-primary-500 focus:border-primary-500 text-gray-900 font-bold"
                     />
                   </div>
 
@@ -315,7 +315,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
 
       <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="bg-primary-50 p-3 rounded-xl">
+          <div className="bg-primary-50 p-3 rounded-md">
             <FileText className="w-8 h-8 text-primary-600" />
           </div>
           <div className="flex-1">
@@ -335,7 +335,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
                 <button
                   onClick={handleExport}
                   disabled={isExporting}
-                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 border border-gray-200 shadow-sm"
+                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 border border-gray-200 shadow-sm"
                 >
                   {isExporting ? (
                     <span className="animate-spin w-4 h-4 border-2 border-primary-600/30 border-t-primary-600 rounded-full" />
@@ -352,7 +352,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
 
       <div className="bg-white rounded-md border border-gray-100 p-6 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="bg-primary-50 p-3 rounded-xl">
+          <div className="bg-primary-50 p-3 rounded-md">
             <Database className="w-8 h-8 text-primary-600" />
           </div>
           <div className="flex-1">
@@ -372,7 +372,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
                 <button
                   onClick={handleExportBackup}
                   disabled={isExportingBackup}
-                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 border border-gray-200 shadow-sm active:scale-95 disabled:opacity-50"
+                  className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md text-sm font-semibold transition-all flex items-center gap-2 border border-gray-200 shadow-sm active:scale-95 disabled:opacity-50"
                 >
                   {isExportingBackup ? (
                     <span className="animate-spin w-4 h-4 border-2 border-primary-600/30 border-t-primary-600 rounded-full" />
@@ -389,7 +389,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
                   Select a previously exported JSON backup file to restore. Note that restoring may overwrite existing documents.
                 </p>
 
-                <div className="mt-4 flex flex-col md:flex-row md:items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div className="mt-4 flex flex-col md:flex-row md:items-center gap-4 bg-gray-50 p-4 rounded-md border border-gray-200">
                   <div className="flex-1">
                     <input
                       type="file"
@@ -400,7 +400,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
                     />
                     <label
                       htmlFor="backup-file-input"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 cursor-pointer shadow-sm transition-all active:scale-95"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 border border-gray-200 rounded-md text-sm font-semibold text-gray-700 cursor-pointer shadow-sm transition-all active:scale-95"
                     >
                       <Upload className="w-4 h-4 text-gray-500" />
                       {selectedFile ? 'Change File' : 'Select Backup File'}
@@ -426,7 +426,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
                     <button
                       onClick={() => setIsRestoreConfirmOpen(true)}
                       disabled={!backupEntries || isImportingBackup}
-                      className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                      className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-semibold transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                     >
                       {isImportingBackup ? (
                         <span className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
@@ -445,7 +445,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
 
       <div className="bg-white rounded-md border border-red-100 p-6 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="bg-red-50 p-3 rounded-xl">
+          <div className="bg-red-50 p-3 rounded-md">
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
           <div className="flex-1">
@@ -465,7 +465,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
                 <button
                   onClick={() => setIsConfirmOpen(true)}
                   disabled={isPending}
-                  className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 border border-red-200"
+                  className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2 border border-red-200"
                 >
                   <Trash2 className="w-4 h-4" />
                   Wipe Data
@@ -478,7 +478,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
 
       {/* Status Toasts */}
       {status === 'success' && (
-        <div className="bg-green-50 text-green-700 p-4 rounded-xl flex items-center gap-2 border border-green-200">
+        <div className="bg-green-50 text-green-700 p-4 rounded-md flex items-center gap-2 border border-green-200">
             <AlertCircle className="w-5 h-5" /> {message}
         </div>
       )}
@@ -498,14 +498,14 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
               <button
                 onClick={() => setIsConfirmOpen(false)}
                 disabled={isPending}
-                className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-md transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleWipe}
                 disabled={isPending}
-                className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-red-600 text-white font-bold rounded-md hover:bg-red-700 transition-colors flex items-center gap-2"
               >
                 {isPending ? 'Wiping...' : 'Yes, Delete Everything'}
               </button>
@@ -526,7 +526,7 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
               Are you sure you want to restore the database from <strong>{selectedFile?.name}</strong>?
             </p>
             {wipeBeforeRestore && (
-              <div className="text-red-600 text-sm font-semibold mb-6 flex items-start gap-2 bg-red-50 p-3 rounded-lg border border-red-100">
+              <div className="text-red-600 text-sm font-semibold mb-6 flex items-start gap-2 bg-red-50 p-3 rounded-md border border-red-100">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <span>Warning: This will permanently delete ALL current database records in all root collections and subcollections before writing the backup data.</span>
               </div>
@@ -535,14 +535,14 @@ export function SystemTab({ initialConfig }: { initialConfig: SystemConfig | nul
               <button
                 onClick={() => setIsRestoreConfirmOpen(false)}
                 disabled={isImportingBackup}
-                className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-md transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRestoreBackup}
                 disabled={isImportingBackup}
-                className="px-4 py-2 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-primary-600 text-white font-bold rounded-md hover:bg-primary-700 transition-colors flex items-center gap-2"
               >
                 {isImportingBackup ? 'Restoring...' : 'Yes, Restore Backup'}
               </button>

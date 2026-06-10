@@ -105,7 +105,7 @@ function VerificationGuardComponent({ children }: VerificationGuardProps) {
 
               <div className="space-y-4 mb-8 shadow-none">
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-md border border-gray-100 text-left shadow-none">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-none ${session?.user?.emailVerified ? 'bg-green-100 text-green-600' : 'bg-accent-100 text-accent-600'}`}>
+                  <div className={`w-10 h-10 rounded-md flex items-center justify-center shadow-none ${session?.user?.emailVerified ? 'bg-green-100 text-green-600' : 'bg-accent-100 text-accent-600'}`}>
                     {session?.user?.emailVerified ? <CheckCircle className="w-6 h-6 shadow-none" /> : <Mail className="w-6 h-6 shadow-none" />}
                   </div>
                   <div className="flex-1 shadow-none">

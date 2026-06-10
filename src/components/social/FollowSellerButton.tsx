@@ -63,7 +63,7 @@ export function FollowSellerButton({
       onClick={handleClick}
       disabled={isPending}
       aria-pressed={following}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 ${
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-colors disabled:opacity-50 ${
         following
           ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
           : "bg-primary-600 text-white hover:bg-primary-700 shadow-sm"
@@ -71,7 +71,7 @@ export function FollowSellerButton({
     >
       {following ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
       <span>{following ? t("following") : t("follow")}</span>
-      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+      <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded ${
         following ? "bg-white/60 text-gray-600" : "bg-white/20 text-white/90"
       }`}>
         {count}

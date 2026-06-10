@@ -38,7 +38,7 @@ export default async function BannedPage({
             <ul className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
                 <li key={i} className="flex items-start gap-3 text-gray-600 text-sm">
-                  <div className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold">
+                  <div className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5 text-[11px] font-bold">
                     {i}
                   </div>
                   {t(`reason${i}` as "reason1" | "reason2" | "reason3" | "reason4")}

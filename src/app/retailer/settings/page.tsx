@@ -237,7 +237,7 @@ export default function RetailerSettingsPage() {
                         <Camera className="w-5 h-5 text-white" />
                       </div>
                       <span className="text-xs font-semibold uppercase tracking-wide text-white">No Banner Uploaded</span>
-                      <span className="text-[10px] text-white/80 mt-1">Click to upload custom cover photo (1200 x 400 suggested)</span>
+                      <span className="text-[11px] text-white/80 mt-1">Click to upload custom cover photo (1200 x 400 suggested)</span>
                     </div>
                   )}
 
@@ -294,7 +294,7 @@ export default function RetailerSettingsPage() {
                       onChange={(e) => setBusinessName(e.target.value)}
                       placeholder="e.g. Dhaka Electronics Hub"
                       required
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-md px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400"
                     />
                   </div>
 
@@ -310,7 +310,7 @@ export default function RetailerSettingsPage() {
                         value={businessLocation}
                         onChange={(e) => setBusinessLocation(e.target.value)}
                         placeholder="e.g. Mirpur, Dhaka"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400"
                       />
                     </div>
                   </div>
@@ -327,7 +327,7 @@ export default function RetailerSettingsPage() {
                         onChange={(e) => setBio(e.target.value)}
                         placeholder="Tell buyers about your shop, shipping speed, and specialty..."
                         rows={4}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400 resize-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400 resize-none"
                       />
                     </div>
                   </div>
@@ -355,7 +355,7 @@ export default function RetailerSettingsPage() {
                       value={bkashNumber}
                       onChange={(e) => setBkashNumber(e.target.value)}
                       placeholder="e.g. 017XXXXXXXX"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-md px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400"
                     />
                   </div>
 
@@ -369,7 +369,7 @@ export default function RetailerSettingsPage() {
                       value={nagadNumber}
                       onChange={(e) => setNagadNumber(e.target.value)}
                       placeholder="e.g. 019XXXXXXXX"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-md px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-slate-800 placeholder-slate-400"
                     />
                   </div>
                 </div>
@@ -397,11 +397,11 @@ export default function RetailerSettingsPage() {
 
               <div className="space-y-4">
                 <div className="p-4 bg-slate-50 border border-slate-150 rounded-md">
-                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Current Level</p>
+                  <p className="text-[11px] font-bold uppercase text-slate-400 tracking-wider mb-1">Current Level</p>
                   <p className="text-lg font-bold text-slate-900 flex items-center gap-1.5 font-heading">
                     {user.isRetailer ? "Professional Retailer" : "Verified Seller"}
                   </p>
-                  <p className="text-[10px] text-slate-500 mt-1 leading-relaxed font-medium">
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed font-medium">
                     {user.isRetailer 
                       ? "Full access to pro badges and 0% advance-payment promotional fees."
                       : "Access to the standard Seller Hub, unlimited single listings, and standard buyer coordination tools."}
@@ -412,7 +412,7 @@ export default function RetailerSettingsPage() {
                   <p className="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide">
                     Self-Service Upgrade
                   </p>
-                  <p className="text-[10px] text-slate-500 mb-4 leading-relaxed font-medium">
+                  <p className="text-[11px] text-slate-500 mb-4 leading-relaxed font-medium">
                     For testing and massive high-volume integrations, you can toggle between **Verified Seller** and **Professional Retailer** instantly.
                   </p>
 
@@ -420,7 +420,7 @@ export default function RetailerSettingsPage() {
                     type="button"
                     onClick={handleToggleTier}
                     disabled={isUpgrading}
-                    className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                    className={`w-full py-3 rounded-md font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
                       user.isRetailer
                         ? "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
                         : "bg-indigo-650 hover:bg-indigo-750 text-white shadow-md shadow-indigo-650/10 hover:shadow-lg"
@@ -439,7 +439,7 @@ export default function RetailerSettingsPage() {
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-heading">Standard Seller Protections</h4>
-              <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+              <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
                 Our dynamic advance-payment system automatically protects sellers from fraudulent bids while maintaining a 100% transparency standard.
               </p>
             </div>

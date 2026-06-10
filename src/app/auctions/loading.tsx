@@ -12,11 +12,11 @@ export default function AuctionsLoading() {
 
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="lg:w-56 flex-shrink-0 space-y-8">
-          <Skeleton className="h-10 w-full rounded-xl" />
+          <Skeleton className="h-10 w-full rounded-md" />
           <div className="space-y-4">
              <Skeleton className="h-4 w-24" />
              <div className="space-y-2">
-                {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8 w-full rounded-lg" />)}
+                {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-8 w-full rounded-md" />)}
              </div>
           </div>
         </aside>
@@ -25,7 +25,7 @@ export default function AuctionsLoading() {
           <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="bg-white rounded-md border border-gray-100 p-4 space-y-4 shadow-sm">
-                <Skeleton className="aspect-square w-full rounded-xl" />
+                <Skeleton className="aspect-square w-full rounded-md" />
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-6 w-1/2" />

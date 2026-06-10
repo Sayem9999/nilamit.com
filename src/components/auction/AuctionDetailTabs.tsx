@@ -56,7 +56,7 @@ export function AuctionDetailTabs({
           aria-selected={activeTab === "description"}
           aria-controls="tab-panel-description"
           onClick={() => setActiveTab("description")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
             activeTab === "description"
               ? "bg-white text-primary-600 shadow-sm border border-gray-100"
               : "text-gray-400 hover:text-gray-600 hover:bg-gray-100/50"
@@ -72,7 +72,7 @@ export function AuctionDetailTabs({
           aria-selected={activeTab === "shipping"}
           aria-controls="tab-panel-shipping"
           onClick={() => setActiveTab("shipping")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
             activeTab === "shipping"
               ? "bg-white text-primary-600 shadow-sm border border-gray-100"
               : "text-gray-400 hover:text-gray-600 hover:bg-gray-100/50"
@@ -88,7 +88,7 @@ export function AuctionDetailTabs({
           aria-selected={activeTab === "seller"}
           aria-controls="tab-panel-seller"
           onClick={() => setActiveTab("seller")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
             activeTab === "seller"
               ? "bg-white text-primary-600 shadow-sm border border-gray-100"
               : "text-gray-400 hover:text-gray-600 hover:bg-gray-100/50"
@@ -197,43 +197,43 @@ export function AuctionDetailTabs({
             {/* Scoreboard */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white border border-gray-100 p-4 rounded-md shadow-sm text-center space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Positive Feedback</span>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide block">Positive Feedback</span>
                 <span className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight block">
                   {feedbackPercentage !== null ? `${feedbackPercentage}%` : "—"}
                 </span>
-                <span className="text-[10px] text-slate-400 font-bold block">
+                <span className="text-[11px] text-slate-400 font-bold block">
                   {seller.ratingCount || 0} reviews
                 </span>
               </div>
 
               <div className="bg-white border border-gray-100 p-4 rounded-md shadow-sm text-center space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Seller Level</span>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide block">Seller Level</span>
                 <span className="text-xl sm:text-2xl font-bold text-primary-600 tracking-tight flex items-center justify-center gap-1">
                   <Award className="w-5 h-5 text-primary-500 animate-pulse" />
                   Level {seller.userLevel || 1}
                 </span>
-                <span className="text-[10px] text-slate-400 font-bold block">Active Bidding Shield</span>
+                <span className="text-[11px] text-slate-400 font-bold block">Active Bidding Shield</span>
               </div>
 
               <div className="bg-white border border-gray-100 p-4 rounded-md shadow-sm text-center space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Winning Streak</span>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide block">Winning Streak</span>
                 <span className="text-xl sm:text-2xl font-bold text-orange-600 tracking-tight flex items-center justify-center gap-1">
                   <Flame className="w-5 h-5 text-orange-500" />
                   {seller.winningStreak || 0}
                 </span>
-                <span className="text-[10px] text-slate-400 font-bold block">Consecutive sales</span>
+                <span className="text-[11px] text-slate-400 font-bold block">Consecutive sales</span>
               </div>
 
               <div className="bg-white border border-gray-100 p-4 rounded-md shadow-sm text-center space-y-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Seller Badges</span>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide block">Seller Badges</span>
                 <div className="flex justify-center gap-1.5 pt-1">
                   {seller.isVerifiedSeller && (
-                    <span className="bg-blue-50 border border-blue-200 text-blue-600 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="bg-blue-50 border border-blue-200 text-blue-600 rounded-md px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider">
                       VERIFIED
                     </span>
                   )}
                   {seller.isTopRated && (
-                    <span className="bg-amber-50 border border-amber-200 text-amber-600 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="bg-amber-50 border border-amber-200 text-amber-600 rounded-md px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider">
                       TOP RATED
                     </span>
                   )}
@@ -241,7 +241,7 @@ export function AuctionDetailTabs({
                     <span className="text-xs text-gray-400 italic">No extra badges</span>
                   )}
                 </div>
-                <span className="text-[10px] text-slate-400 block pt-0.5">Trust markers</span>
+                <span className="text-[11px] text-slate-400 block pt-0.5">Trust markers</span>
               </div>
             </div>
 
