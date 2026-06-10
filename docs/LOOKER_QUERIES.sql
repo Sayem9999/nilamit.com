@@ -167,3 +167,52 @@ WHERE event_type = 'web_vital'
   AND ts >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
 GROUP BY connection
 ORDER BY samples DESC;
+
+-- ────────────────────────────────────────────────────────────────────
+-- 9. Growth pulse — signups, new listings, bids per day (last 30 days)
+--    THE adoption dashboard. If listings/day is flat at 0, nothing else
+--    matters (see docs/GROWTH.md). Events: user_signup, auction_created,
+--    bid_placed.
+-- ────────────────────────────────────────────────────────────────────
+SELECT
+  DATE(ts, 'Asia/Dhaka') AS day,
+  COUNTIF(event_type = 'user_signup')     AS signups,
+  COUNTIF(event_type = 'auction_created') AS new_listings,
+  COUNTIF(event_type = 'bid_placed')      AS bids
+FROM `nilamit-52073.nilamit_events.events`
+WHERE event_type IN ('user_signup', 'auction_created', 'bid_placed')
+  AND ts >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
+GROUP BY day
+ORDER BY day DESC;
+
+-- ────────────────────────────────────────────────────────────────────
+-- 10. Seller activation — % of new users who post a FIRST listing
+--     within 7 days of signup. The single most important cold-start
+--     conversion. auction_created carries metadata.firstListing=true
+--     on a seller's first-ever listing.
+-- ────────────────────────────────────────────────────────────────────
+WITH signups AS (
+  SELECT user_id, MIN(ts) AS signed_up_at
+  FROM `nilamit-52073.nilamit_events.events`
+  WHERE event_type = 'user_signup'
+    AND ts >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 60 DAY)
+  GROUP BY user_id
+),
+first_listings AS (
+  SELECT user_id, MIN(ts) AS first_listed_at
+  FROM `nilamit-52073.nilamit_events.events`
+  WHERE event_type = 'auction_created'
+    AND JSON_VALUE(metadata, '$.firstListing') = 'true'
+  GROUP BY user_id
+)
+SELECT
+  DATE_TRUNC(DATE(s.signed_up_at, 'Asia/Dhaka'), WEEK) AS signup_week,
+  COUNT(*) AS signups,
+  COUNTIF(f.first_listed_at IS NOT NULL
+          AND TIMESTAMP_DIFF(f.first_listed_at, s.signed_up_at, DAY) <= 7) AS activated_7d,
+  ROUND(100 * COUNTIF(f.first_listed_at IS NOT NULL
+          AND TIMESTAMP_DIFF(f.first_listed_at, s.signed_up_at, DAY) <= 7) / COUNT(*), 1) AS activation_pct
+FROM signups s
+LEFT JOIN first_listings f USING (user_id)
+GROUP BY signup_week
+ORDER BY signup_week DESC;

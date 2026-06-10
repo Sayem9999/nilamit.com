@@ -98,7 +98,15 @@ export async function createAuction(input: unknown): Promise<ServiceResponse<{ a
         updatedAt: new Date()
       });
     }
-    
+
+    // Activation-funnel core: supply creation. `firstListing` marks seller
+    // activation — the metric that matters most at cold-start (Looker #10).
+    log.event('auction_created', {
+      userId: session.user.id,
+      auctionId: response.data!.id,
+      metadata: { category: parsed.data.category, firstListing: !userData?.isVerifiedSeller },
+    });
+
     revalidatePath('/auctions');
     revalidatePath('/');
     revalidatePath('/dashboard');

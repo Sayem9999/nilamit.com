@@ -70,6 +70,10 @@ export async function registerUser(data: unknown): Promise<ServiceResponse<{ mes
       updatedAt: now,
     });
 
+    // Activation-funnel head: registrations/day vs listings/day vs first bids
+    // (Looker queries #9-10). No-ops without BIGQUERY_DATASET.
+    log.event('user_signup', { userId: userRef.id, metadata: { isRetailer } });
+
     return successResponse({
       message: "Registration successful! Please log in — a verification email will be sent to your inbox automatically.",
     });
