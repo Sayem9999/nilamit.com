@@ -184,7 +184,9 @@
     "ctaFooterBtnAuthed": "Start Selling",
     "currentPrice": "Current Price",
     "placeYourBid": "Join Live Auction",
-    "verifiedSeller": "Verified Trader"
+    "verifiedSeller": "Verified Trader",
+    "promoHowTitle": "New here? How it works",
+    "promoHowCta": "Learn the basics"
   },
   "Auction": {
     "live": "Live",
@@ -261,7 +263,10 @@
     "buyNowPricePlaceholder": "Instant purchase price...",
     "uploaded": "uploaded",
     "sold": "Sold",
-    "ended": "Ended"
+    "ended": "Ended",
+    "notFoundDesc": "This listing may have ended, been removed, or the link is out of date.",
+    "notFoundBrowse": "Browse live auctions",
+    "notFoundHome": "Go to homepage"
   },
   "BidPanel": {
     "placeBid": "Place Your Bid",
@@ -666,7 +671,10 @@
     "allCategories": "All Categories",
     "condition": "Condition",
     "allConditions": "All Conditions",
-    "searchPlaceholder": "Search auctions..."
+    "searchPlaceholder": "Search auctions...",
+    "emptyMarketTitle": "Be the first to sell",
+    "emptyMarketDesc": "New listings are coming soon. List your item free and reach buyers across Bangladesh.",
+    "emptyMarketCta": "List your item — free"
   },
   "Categories": {
     "mobile-phones": "Mobile Phones",

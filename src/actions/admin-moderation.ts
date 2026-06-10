@@ -2,7 +2,8 @@
 
 import { db, snapDocs, FieldValue, batchDelete } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { removeAuctionFromIndex, updateAuctionInIndex } from '@/lib/search-engine';
 import { Auction, User, Report } from '@/types';
 import { updateSellerPerformance } from '@/lib/seller-performance';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
@@ -201,7 +202,11 @@ export async function suspendAuction(auctionId: string, reportId: string, reason
       await updateSellerPerformance(auctionData.sellerId);
     }
 
+    // Same staleness class as takedown/delete: drop from ACTIVE search results
+    // and clear the tag-cached home/listing rails.
+    updateAuctionInIndex(auctionId, { status: 'CANCELLED' }).catch(() => {});
     revalidatePath('/admin');
+    revalidateTag('auctions', { expire: 0 });
     return successResponse(null);
   } catch (e) {
     log.error('[Action] suspendAuction failed', e);
@@ -261,9 +266,16 @@ export async function adminTakeDownAuction(auctionId: string, reason: string): P
       log.error('Failed to clean up RTDB bid on takedown', e);
     }
 
+    // Drop it from ACTIVE search results (no-op until engine provisioned).
+    updateAuctionInIndex(auctionId, { status: 'CANCELLED' }).catch(() => {});
+
     revalidatePath('/admin');
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/');
+    // revalidatePath does NOT clear unstable_cache tag entries — the homepage
+    // feeds are tag-cached, so without this a taken-down auction can keep
+    // appearing in home rails until the TTL lapses.
+    revalidateTag('auctions', { expire: 0 });
     return successResponse(null);
   } catch (e) {
     log.error('[Action] adminTakeDownAuction failed', e);
@@ -321,9 +333,17 @@ export async function adminDeleteAuction(auctionId: string, reason: string): Pro
       log.error('Failed to clean up RTDB on auction delete', e);
     }
 
+    // Remove from the search index — this is the platform's only hard-delete
+    // path, the gap called out in docs/SEARCH.md (no-op until provisioned).
+    removeAuctionFromIndex(auctionId).catch(() => {});
+
     revalidatePath('/admin');
     revalidatePath(`/auctions/${auctionId}`);
     revalidatePath('/');
+    // Tag caches (homepage rails, listings) aren't cleared by revalidatePath —
+    // without this, the cached home keeps linking to the deleted auction
+    // (observed live in the June 2026 UX audit: hero rail → AUCTION NOT FOUND).
+    revalidateTag('auctions', { expire: 0 });
     return successResponse(null);
   } catch (e) {
     log.error('[Action] adminDeleteAuction failed', e);

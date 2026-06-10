@@ -228,18 +228,29 @@ export default async function AuctionsPage({ searchParams }: Props) {
           {initialAuctions.length === 0 ? (
             <div className="text-center py-20 bg-gray-50 rounded-md border border-dashed border-gray-200">
               <SearchIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" aria-hidden="true" />
+              {/* Two distinct zero states: a filtered search with no hits gets
+                  "adjust your filters"; an EMPTY MARKETPLACE (no filters, no
+                  inventory) gets a supply-side CTA — telling a visitor to
+                  adjust filters when nothing is listed is a dead end. */}
               <h2 className="text-lg font-semibold text-gray-900">
-                {t("noResults")}
+                {hasActiveFilter ? t("noResults") : t("emptyMarketTitle")}
               </h2>
               <p className="text-gray-500 max-w-xs mx-auto mt-2">
-                {t("noResultsDesc")}
+                {hasActiveFilter ? t("noResultsDesc") : t("emptyMarketDesc")}
               </p>
-              {hasActiveFilter && (
+              {hasActiveFilter ? (
                 <Link
                   href="/auctions"
                   className="inline-block mt-4 text-sm font-bold text-primary-600 hover:text-primary-700"
                 >
                   {t("clearFilters")}
+                </Link>
+              ) : (
+                <Link
+                  href="/auctions/create"
+                  className="inline-block mt-5 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-md transition-colors"
+                >
+                  {t("emptyMarketCta")}
                 </Link>
               )}
             </div>

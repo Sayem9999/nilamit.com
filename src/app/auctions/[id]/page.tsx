@@ -121,7 +121,36 @@ export default async function AuctionDetailPage({ params }: Props) {
   const response = await getAuction(id);
   const auction = (response.success && response.data) ? response.data as AuctionWithBids : null;
   const t = await getTranslations("Auction");
-  if (!auction) return <div className="min-h-[50vh] flex items-center justify-center font-bold text-gray-500 uppercase tracking-wide">{t("notFound")}</div>;
+  if (!auction) {
+    // Recovery page, not a dead end — stale links land here (expired shares,
+    // cached rails pointing at a deleted listing), so route users back into
+    // the marketplace instead of stranding them on grey text.
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Eye className="w-7 h-7 text-gray-400" aria-hidden="true" />
+          </div>
+          <h1 className="text-xl font-heading font-bold text-gray-900">{t("notFound")}</h1>
+          <p className="text-sm text-gray-500 mt-2 leading-relaxed">{t("notFoundDesc")}</p>
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/auctions"
+              className="w-full sm:w-auto px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-bold rounded-md transition-colors"
+            >
+              {t("notFoundBrowse")}
+            </Link>
+            <Link
+              href="/"
+              className="w-full sm:w-auto px-6 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-md transition-colors"
+            >
+              {t("notFoundHome")}
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const [bidsRes, watchedRes, chatRes, reviewRes, questionsRes, relatedRes, configRes] = await Promise.all([
     getAuctionBids(id).catch((e) => { log.error('[AuctionDetail] getAuctionBids failed', e); return errorResponse(ErrorType.INTERNAL, 'Failed'); }),

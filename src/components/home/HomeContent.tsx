@@ -91,7 +91,7 @@ export function HomeContent({
       <LiveTicker initialActivity={latestActivity} />
 
       {/* Slim promo strip (Sell · Escrow · Ending Soon teaser) */}
-      <HeroSection systemConfig={systemConfig} totalUsers={stats?.totalUsers} />
+      <HeroSection systemConfig={systemConfig} totalUsers={stats?.totalUsers} hasEndingSoon={endingSoon.length > 0} />
 
       {/* Categories — first thing below the fold, marketplace-style */}
       <CategoryGrid />

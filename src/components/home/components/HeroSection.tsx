@@ -1,15 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ShieldCheck, Gavel, Clock, Tag } from "lucide-react";
+import { ArrowRight, ShieldCheck, Gavel, Clock, Tag, HelpCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SystemConfig } from "@/types";
 
 interface HeroSectionProps {
   systemConfig?: SystemConfig;
   totalUsers?: number;
+  /** Whether any auctions are actually ending soon — gates the teaser card so
+   *  we never render a "Bid now →" husk pointing at an empty list. */
+  hasEndingSoon?: boolean;
 }
+
+/** Below this, the member count hurts more than it helps — "13+ members" reads
+ *  as a ghost town. Hide the stat until the number is itself a trust signal. */
+const MIN_MEMBERS_TO_SHOW = 100;
 
 /**
  * Slim eBay-style promo strip. Replaces the previous full-page hero pitch.
@@ -17,11 +25,14 @@ interface HeroSectionProps {
  * Total height ~200–240px — leaves the categories grid and product rails to
  * dominate the actual fold, which is how real marketplaces order things.
  */
-export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
+export function HeroSection({ systemConfig, totalUsers, hasEndingSoon = false }: HeroSectionProps) {
   const t = useTranslations("Home");
 
   const escrowEnabled = systemConfig?.escrowRequired ?? true;
-  const heroImage = systemConfig?.heroImage || "/hero_c2c.png";
+  // Admin-set heroImage can rot (revoked signed URL, deleted object) — fall
+  // back to the bundled asset on load error instead of an empty bordered box.
+  const [heroImageError, setHeroImageError] = useState(false);
+  const heroImage = (!heroImageError && systemConfig?.heroImage) || "/hero_c2c.png";
 
   // Admin-editable copy (Admin → Content → Homepage Banner). Fall back to the
   // localized default when an admin hasn't set a custom value, so the promo
@@ -30,7 +41,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
   const heroTitle = systemConfig?.heroTitle?.trim() || t("promoSellTitle");
   const heroSubtitle = systemConfig?.heroSubtitle?.trim() || t("promoSellSubtitle");
 
-  const formattedUsers = totalUsers
+  const formattedUsers = totalUsers && totalUsers >= MIN_MEMBERS_TO_SHOW
     ? totalUsers >= 1000
       ? `${(totalUsers / 1000).toFixed(1)}k+`
       : `${totalUsers}+`
@@ -70,6 +81,7 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
                 priority
                 sizes="160px"
                 className="object-cover rounded-md ring-2 ring-white/20"
+                onError={() => setHeroImageError(true)}
               />
             </div>
             <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
@@ -94,21 +106,40 @@ export function HeroSection({ systemConfig, totalUsers }: HeroSectionProps) {
             </span>
           </Link>
 
-          {/* Ending soon teaser */}
-          <Link
-            href="/auctions?sortBy=endTime&sortOrder=asc"
-            className="md:col-span-2 group bg-white border border-gray-200 hover:border-orange-300 rounded-md p-4 sm:p-5 flex flex-col justify-center hover:shadow-sm transition-all"
-          >
-            <div className="w-9 h-9 bg-orange-50 rounded-md flex items-center justify-center mb-2">
-              <Clock className="w-5 h-5 text-orange-600" />
-            </div>
-            <h3 className="font-heading font-bold text-sm text-gray-900 leading-tight">
-              {t("promoEndingTitle")}
-            </h3>
-            <span className="mt-2 text-[11px] font-bold text-orange-600 group-hover:underline">
-              {t("promoEndingCta")} →
-            </span>
-          </Link>
+          {/* Third card: Ending-soon teaser when there IS something ending,
+              otherwise a How-it-works card. Never a "Bid now →" husk that
+              points at an empty list (Data Purity — CLAUDE.md rule 18). */}
+          {hasEndingSoon ? (
+            <Link
+              href="/auctions?sortBy=endTime&sortOrder=asc"
+              className="md:col-span-2 group bg-white border border-gray-200 hover:border-orange-300 rounded-md p-4 sm:p-5 flex flex-col justify-center hover:shadow-sm transition-all"
+            >
+              <div className="w-9 h-9 bg-orange-50 rounded-md flex items-center justify-center mb-2">
+                <Clock className="w-5 h-5 text-orange-600" />
+              </div>
+              <h3 className="font-heading font-bold text-sm text-gray-900 leading-tight">
+                {t("promoEndingTitle")}
+              </h3>
+              <span className="mt-2 text-[11px] font-bold text-orange-600 group-hover:underline">
+                {t("promoEndingCta")} →
+              </span>
+            </Link>
+          ) : (
+            <Link
+              href="/how-it-works"
+              className="md:col-span-2 group bg-white border border-gray-200 hover:border-primary-300 rounded-md p-4 sm:p-5 flex flex-col justify-center hover:shadow-sm transition-all"
+            >
+              <div className="w-9 h-9 bg-blue-50 rounded-md flex items-center justify-center mb-2">
+                <HelpCircle className="w-5 h-5 text-primary-600" />
+              </div>
+              <h3 className="font-heading font-bold text-sm text-gray-900 leading-tight">
+                {t("promoHowTitle")}
+              </h3>
+              <span className="mt-2 text-[11px] font-bold text-primary-600 group-hover:underline">
+                {t("promoHowCta")} →
+              </span>
+            </Link>
+          )}
         </div>
 
         {/* Tiny trust strip beneath promo cards */}

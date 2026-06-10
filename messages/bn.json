@@ -184,7 +184,9 @@
     "ctaFooterBtnAuthed": "বিক্রি শুরু করুন",
     "currentPrice": "বর্তমান মূল্য",
     "placeYourBid": "লাইভ নিলামে যোগ দিন",
-    "verifiedSeller": "যাচাইকৃত ব্যবসায়ী"
+    "verifiedSeller": "যাচাইকৃত ব্যবসায়ী",
+    "promoHowTitle": "নতুন এসেছেন? কীভাবে কাজ করে",
+    "promoHowCta": "মূল বিষয়গুলো জানুন"
   },
   "Auction": {
     "live": "লাইভ",
@@ -261,7 +263,10 @@
     "buyNowPricePlaceholder": "তাৎক্ষণিক কেনার মূল্য...",
     "uploaded": "আপলোড হয়েছে",
     "sold": "বিক্রি হয়েছে",
-    "ended": "শেষ"
+    "ended": "শেষ",
+    "notFoundDesc": "এই নিলামটি শেষ হয়ে গেছে, সরিয়ে ফেলা হয়েছে, অথবা লিংকটি পুরনো।",
+    "notFoundBrowse": "চলমান নিলাম দেখুন",
+    "notFoundHome": "হোমপেজে যান"
   },
   "BidPanel": {
     "placeBid": "আপনার বিড দিন",
@@ -666,7 +671,10 @@
     "allCategories": "সব ক্যাটাগরি",
     "condition": "অবস্থা",
     "allConditions": "সব অবস্থা",
-    "searchPlaceholder": "নিলাম খুঁজুন..."
+    "searchPlaceholder": "নিলাম খুঁজুন...",
+    "emptyMarketTitle": "প্রথম বিক্রেতা হোন",
+    "emptyMarketDesc": "নতুন নিলাম শীঘ্রই আসছে। বিনামূল্যে আপনার পণ্য তালিকাভুক্ত করুন এবং সারা বাংলাদেশের ক্রেতাদের কাছে পৌঁছান।",
+    "emptyMarketCta": "বিনামূল্যে পণ্য তালিকাভুক্ত করুন"
   },
   "Categories": {
     "mobile-phones": "মোবাইল ফোন",
