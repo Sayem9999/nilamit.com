@@ -28,6 +28,7 @@ import {
 import { ReviewList } from "@/components/review/ReviewList";
 import TrustBadge from "@/components/social/TrustBadge";
 import VerificationBadge from "@/components/social/VerificationBadge";
+import { PhoneVerificationCard } from "@/components/verification/PhoneVerificationCard";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "next-auth/react";
@@ -908,6 +909,9 @@ export default function ProfileSettings() {
                 </div>
               )}
             </div>
+
+            {/* Phone Verification (Firebase SMS OTP) */}
+            <PhoneVerificationCard />
 
             {/* MFS Verification Card */}
             <div className="bg-white rounded-md p-6 border border-gray-100 shadow-sm space-y-4">
