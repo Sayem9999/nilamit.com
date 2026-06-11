@@ -23,8 +23,8 @@ export function StatsBar({ totalAuctions, totalUsers, totalBids, verifiedSellers
   return (
     <section className="relative -mt-10 z-20" aria-label="Marketplace statistics">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="glass shadow-premium rounded-[2.5rem] p-1 border border-white/50">
-          <dl className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-gray-100/60 bg-white/40 rounded-[2.25rem]">
+        <div className="glass shadow-premium rounded-md p-1 border border-white/50">
+          <dl className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-gray-100/60 bg-white/40 rounded-md">
             {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}

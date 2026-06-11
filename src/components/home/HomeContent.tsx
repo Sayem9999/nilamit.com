@@ -57,6 +57,22 @@ export function HomeContent({
 }: HomeContentProps) {
   const t = useTranslations("Home");
 
+  // Cold-start awareness: when there's no live merchandising to show, the page
+  // must sell the CONCEPT — so the "How it works / trust" section moves up to
+  // right after the categories instead of sitting at the bottom. Once real
+  // rails exist, products lead and trust drops back down (the normal
+  // marketplace order).
+  const isColdStart =
+    trendingAuctions.length === 0 &&
+    endingSoon.length === 0 &&
+    featuredAuctions.length === 0;
+
+  // A stats ribbon bragging about tiny numbers ("13 traders, 0 bids") reads as
+  // a ghost town and actively hurts trust. Show it only once the numbers are
+  // themselves a trust signal.
+  const statsAreImpressive =
+    !!stats && (stats.totalBids >= 100 || stats.totalUsers >= 100);
+
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -95,6 +111,11 @@ export function HomeContent({
 
       {/* Categories — first thing below the fold, marketplace-style */}
       <CategoryGrid />
+
+      {/* Cold start: no live rails to merchandise, so explain the model and
+          the escrow safety story immediately — that's what converts a first
+          visitor into a first lister. */}
+      {isColdStart && <TrustFeatures systemConfig={systemConfig} />}
 
       {/* Ending soon — most time-sensitive merchandising */}
       <EndingSoonSection endingSoon={endingSoon} />
@@ -155,12 +176,13 @@ export function HomeContent({
         <AreaQuickLinks locale={locale} />
       </div>
 
-      {/* Trust footer (was above the fold — now near the page bottom where
-          marketplaces actually put trust signals). */}
-      <TrustFeatures systemConfig={systemConfig} />
+      {/* Trust footer — bottom placement once the marketplace is liquid
+          (cold-start renders it up top instead, see above). */}
+      {!isColdStart && <TrustFeatures systemConfig={systemConfig} />}
 
-      {/* Stats bar — anchored to the bottom as a footer-adjacent ribbon */}
-      {stats && (
+      {/* Stats bar — only once the numbers are big enough to BE a trust
+          signal; small numbers advertise a ghost town. */}
+      {statsAreImpressive && stats && (
         <StatsBar
           totalAuctions={stats.totalAuctions}
           totalUsers={stats.totalUsers}
