@@ -1,6 +1,6 @@
 "use client";
 
-import { Share2, Facebook, Link2, MessageCircle, Send, Twitter } from "lucide-react";
+import { Share2, Facebook, Link2, MessageCircle, Send, Twitter, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslations } from "next-intl";
@@ -106,6 +106,13 @@ export function ShareButton({ title, auctionId, price, compact = false, classNam
     { platform: "copy", label: t("copy"), icon: <Link2 className="w-4 h-4 text-gray-500" /> },
   ];
 
+  // Live share-card PNG (current bid + countdown) — opens in a new tab so the
+  // poster can save it and drop it into FB groups / WhatsApp (GROWTH.md flow).
+  const openShareCard = () => {
+    window.open(`/api/share-card/${auctionId}`, "_blank", "noopener");
+    setOpen(false);
+  };
+
   return (
     <div className={`relative ${className}`}>
       <button
@@ -139,6 +146,13 @@ export function ShareButton({ title, auctionId, price, compact = false, classNam
                   {it.icon} {it.label}
                 </button>
               ))}
+            <button
+              role="menuitem"
+              onClick={openShareCard}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors border-t border-gray-100 mt-1 pt-2.5"
+            >
+              <ImageIcon className="w-4 h-4 text-amber-500" /> {t("shareCard")}
+            </button>
           </div>
         </>
       )}

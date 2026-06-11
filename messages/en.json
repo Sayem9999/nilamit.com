@@ -844,6 +844,7 @@
     "telegram": "Telegram",
     "x": "X (Twitter)",
     "copy": "Copy link",
-    "copied": "Link copied!"
+    "copied": "Link copied!",
+    "shareCard": "Download share card"
   }
 }

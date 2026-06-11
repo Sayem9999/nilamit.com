@@ -834,5 +834,8 @@
     "selectRating": "Tap a star to choose a rating before submitting.",
     "submitted": "Review submitted",
     "submitFailed": "Couldn't submit your review. Please try again."
+  },
+  "Share": {
+    "shareCard": "শেয়ার কার্ড ডাউনলোড করুন"
   }
 }
