@@ -50,7 +50,7 @@ async function OverviewTab({
           <li>
             <StatCard
               label={t("totalUsers")}
-              value={stats.totalUsers}
+              value={stats.totalUsers.toLocaleString()}
               icon={<Users className="w-5 h-5 text-blue-600" aria-hidden="true" />}
               color="bg-blue-50"
             />
@@ -58,7 +58,7 @@ async function OverviewTab({
           <li>
             <StatCard
               label={t("activeAuctions")}
-              value={stats.activeAuctions}
+              value={stats.activeAuctions.toLocaleString()}
               icon={<Package className="w-5 h-5 text-indigo-600" aria-hidden="true" />}
               color="bg-indigo-50"
             />
@@ -66,7 +66,7 @@ async function OverviewTab({
           <li>
             <StatCard
               label={t("totalBids")}
-              value={stats.totalBids}
+              value={stats.totalBids.toLocaleString()}
               icon={<TrendingUp className="w-5 h-5 text-green-600" aria-hidden="true" />}
               color="bg-green-50"
             />
@@ -74,7 +74,7 @@ async function OverviewTab({
           <li>
             <StatCard
               label={t("revenue")}
-              value={`৳${stats.totalRevenue}`}
+              value={`৳${stats.totalRevenue.toLocaleString()}`}
               icon={<DollarSign className="w-5 h-5 text-amber-600" aria-hidden="true" />}
               color="bg-amber-50"
             />

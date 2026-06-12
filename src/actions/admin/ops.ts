@@ -17,7 +17,6 @@
  * goes through bulkBroadcast which has its own throttling.
  */
 
-import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-guard';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
@@ -359,7 +358,3 @@ export async function recomputeGlobalStats(): Promise<ServiceResponse<null>> {
     return errorResponse(ErrorType.INTERNAL, 'Recompute failed');
   }
 }
-
-// Re-export for convenience; the auth import in this file is otherwise unused
-// because all the actions go through requireAdmin which calls auth internally.
-export { auth };

@@ -138,6 +138,28 @@ export function TreasuryTab() {
     }
   };
 
+  const handleExportLedger = () => {
+    if (logs.length === 0) {
+      toast.error('Nothing to export yet');
+      return;
+    }
+    const esc = (v: string | number | null | undefined) =>
+      `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const header = ['Transaction ID', 'Auction', 'Buyer', 'Buyer Email', 'Amount (BDT)', 'Status', 'Verification', 'Provider Ref'];
+    const rows = logs.map((l) => [
+      esc(l.id), esc(l.auction.title), esc(l.buyer.name), esc(l.buyer.email),
+      esc(l.amount), esc(l.status), esc(l.verificationType), esc(l.providerRef),
+    ].join(','));
+    const csv = [header.map(esc).join(','), ...rows].join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `treasury-ledger-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${logs.length} transactions`);
+  };
+
   const handleDownloadInvoice = async (log: TreasuryLog) => {
     try {
       // Lazy-load jsPDF (~150KB) only when an admin actually downloads an
@@ -171,7 +193,11 @@ export function TreasuryTab() {
           </h3>
           <p className="text-sm text-gray-500">Real-time oversight of automated MFS advance-payment transactions.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-200">
+        <button
+          onClick={handleExportLedger}
+          disabled={loading || logs.length === 0}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
            <Download className="w-4 h-4" /> Export Ledger
         </button>
       </div>
@@ -306,22 +332,22 @@ export function TreasuryTab() {
         </div>
       )}
 
-      {/* Audit Intelligence Panel */}
+      {/* Audit Intelligence Panel — real counts only (no fabricated metrics). */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-emerald-600 rounded-[2rem] p-6 text-white shadow-xl shadow-emerald-500/20">
              <Scale className="w-8 h-8 opacity-50 mb-4" />
-             <h4 className="text-sm font-bold opacity-80 uppercase tracking-wide mb-1 text-emerald-100">Treasury Velocity</h4>
-             <p className="text-3xl font-bold">{logs.length} <span className="text-xs font-bold uppercase opacity-50 tracking-tighter">Verified</span></p>
+             <h4 className="text-sm font-bold opacity-80 uppercase tracking-wide mb-1 text-emerald-100">Recent Transactions</h4>
+             <p className="text-3xl font-bold">{logs.length} <span className="text-xs font-bold uppercase opacity-50 tracking-tighter">Records</span></p>
           </div>
           <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
              <ShieldCheck className="w-8 h-8 text-blue-600 opacity-50 mb-4" />
-             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-1">Protection Coverage</h4>
-             <p className="text-3xl font-bold text-gray-900">100% <span className="text-xs font-bold uppercase text-blue-600 tracking-tighter">Automated</span></p>
+             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-1">Funds Held (Active)</h4>
+             <p className="text-3xl font-bold text-gray-900">{activeEscrows.length} <span className="text-xs font-bold uppercase text-blue-600 tracking-tighter">Escrows</span></p>
           </div>
           <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm">
              <Clock className="w-8 h-8 text-amber-600 opacity-50 mb-4" />
-             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-1">Avg. Verification</h4>
-             <p className="text-3xl font-bold text-gray-900">2.4s <span className="text-xs font-bold uppercase text-amber-600 tracking-tighter">Response</span></p>
+             <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-1">Awaiting Verification</h4>
+             <p className="text-3xl font-bold text-gray-900">{verificationQueue.length} <span className="text-xs font-bold uppercase text-amber-600 tracking-tighter">Pending</span></p>
           </div>
       </div>
 
@@ -352,10 +378,11 @@ export function TreasuryTab() {
                         <div className="text-right flex-shrink-0">
                             <p className="text-lg font-bold text-emerald-600 mb-2">{formatBDT(escrow.amount)}</p>
                             <div className="flex items-center gap-2">
-                                <button 
+                                <button
                                     onClick={() => handleManualResolve(escrow.id, 'RELEASE')}
                                     disabled={!!resolving}
-                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-md hover:bg-emerald-100 transition-colors title='Release to Seller'"
+                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-md hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                                    title="Release to Seller"
                                 >
                                     <Scale className="w-4 h-4" />
                                 </button>
