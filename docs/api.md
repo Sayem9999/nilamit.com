@@ -92,6 +92,43 @@ All Server Actions return `ServiceResponse<T>` — `{ success: true, data: T }` 
 
 ## REST API Routes
 
+### `POST /api/payments/sslcommerz/init`
+
+Create an SSLCommerz hosted-checkout session (the payment *init* half; the
+verify half is `POST /api/payments/callback`).
+
+**Auth:** Session required
+**Rate limit:** 100/60s per user
+**Body:** `{ purpose: "featured", auctionId, days }` or `{ purpose: "escrow", transactionId }`
+**Response:** `{ gatewayUrl }` → redirect the buyer; `503 { code: "GATEWAY_OFF" }` until `SSLCOMMERZ_STORE_ID/PASSWORD` are set.
+
+---
+
+### `GET /api/share-card/{auctionId}`
+
+Live 1200×630 share-card PNG for FB-group/WhatsApp posting: current bid +
+bid count + countdown (ACTIVE) or the green SOLD result card. Public data
+only; 5-minute shared cache; 404 for missing auctions.
+
+---
+
+### `POST /api/courier/webhook`
+
+Courier delivery-status updates → `logistics.history`. **Auth:**
+`X-Webhook-Secret: <COURIER_WEBHOOK_SECRET>` header. Locates the auction by
+`invoice` (= `logistics.trackingId`), maps the courier status to
+`LogisticsStatus`. Returns `{status:"ignored"}` for unknown invoices so the
+courier stops retrying.
+
+---
+
+### `POST /api/cron/expire-featured`
+
+Hourly: flips `isFeatured=false` where `featuredUntil <= now` (batched, also
+syncs the search index). **Auth:** `Bearer <CRON_SECRET>`.
+
+---
+
 ### `POST /api/upload`
 
 Upload an image to Firebase Storage.

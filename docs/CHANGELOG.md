@@ -2,7 +2,28 @@
 
 All notable changes to the Nilamit platform will be documented in this file.
 
-## [2.6.0] - 2026-05-17 (Latest)
+## [3.0.0] - 2026-06-12 (Latest)
+### Added 🆕
+- **External search engine (env-gated)**: Typesense adapter removes the 1000-doc in-memory keyword-scan ceiling — engine returns ranked ids, Firestore stays source of truth, reader self-heals stale statuses. Backfill script + `docs/SEARCH.md` + self-host runbook. Dormant until `TYPESENSE_*` set.
+- **Payments init (SSLCommerz)**: `POST /api/payments/sslcommerz/init` + `src/lib/sslcommerz.ts` — hosted-checkout sessions for `featured` purchases and `escrow` advances. Returns 503 `GATEWAY_OFF` until store credentials are set.
+- **Featured listings end-to-end**: pricing tiers + `feat_` tran codec, idempotent amount-guarded activation via the payment callback, hourly `expire-featured` cron, seller purchase UI on the auction page.
+- **Courier integration (env-gated)**: Steadfast adapter books real shipments in `createLogisticsOrder`; `/api/courier/webhook` feeds status back; falls back to internal tracking without `COURIER_*`.
+- **Escrow gateway + logistics-on-confirm**: `initEscrowGatewayPayment` seeds the automation token; `verifyAndReleaseEscrow` now creates the logistics order on gateway settlement (the automated path previously skipped shipping).
+- **Firebase phone OTP verification**: invisible reCAPTCHA → SMS → code, linked to the session-bound Firebase user; server verifies the ID token with UID binding + per-number uniqueness. Activate by enabling the Phone provider in Firebase Console.
+- **Live auction share cards**: `GET /api/share-card/{auctionId}` — branded 1200×630 PNG with the current bid + countdown (or green SOLD result card), surfaced via the Share menu. Built for the FB-group/WhatsApp posting playbook (`docs/GROWTH.md`).
+- **Growth instrumentation**: `user_signup` / `auction_created(firstListing)` / `user_verified` events → BigQuery; Looker growth-pulse + seller-activation queries; dynamic sitemap with every ACTIVE listing; RUM now captures connection type (TTFB-by-connection locality query).
+
+### Changed 🎨
+- **Design-system overhaul** (visually verified): one radius (`rounded-md`) across 89 files, 11px type floor (was 8–10px), `backdrop-blur` removed from repeated scroll-path elements, visible primary hover (500/600 were the same hex), duplicate Google-Fonts `@import` removed.
+- **Cold-start-aware landing page**: how-it-works/escrow story moves above the fold when no auction rails exist; StatsBar hidden until numbers are a trust signal; loading skeletons on browse/profile/seller/leaderboard/social.
+- **Empty states sell supply**: zero-inventory listings show "Be the first to sell"; auction-not-found is a recovery page; hero "Ending Soon" husk swaps to How-it-works; member-count trust strip threshold-gated.
+
+### Fixed 🐛
+- Admin delete/takedown/suspend now clear tag caches (`revalidateTag('auctions')`) and sync the search index — cached homepage rails no longer link to deleted auctions.
+- KYC moderator queue mints fresh 1-hour signed URLs (documents older than the 7-day upload window no longer 404).
+- Invalid `text-slate-350` class; stale `STYLE.md`/`ENTERPRISE_GAPS.md`/roadmap reconciled to code-verified reality.
+
+## [2.6.0] - 2026-05-17
 ### Added 🆕
 - **Dynamic Profile Photo Uploads**: Built an interactive client uploader component with instant hover overlay, responsive upload spinner, client-side WebP image compression (500x500 at 85% quality), and `/api/upload` API secure integration.
 - **NextAuth Session Synchronization**: Synchronized avatar updates in real-time across the navbar and header utilizing NextAuth's `update()` API.

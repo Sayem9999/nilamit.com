@@ -88,6 +88,20 @@ you'll move next week, and what you'll do offline to move it.
 - Referral program, push-notification campaigns, paid ads: multiplying zero
   is still zero. These come after organic word-of-mouth exists.
 
+## The posting loop (share cards — shipped)
+
+Every auction page's Share menu has **"Download share card"** — a branded
+1200×630 PNG showing the LIVE current bid, bid count, and countdown
+(`/api/share-card/{auctionId}` works directly too). It re-renders fresh every
+5 minutes, so reposting mid-bid-war shows the climbing price. When the
+auction is SOLD it automatically becomes the green result card ("FINAL PRICE
+Tk X") — the post-sale trust artifact for step 4 above. Daily loop:
+
+1. Open the auction → Share → Download share card.
+2. Post image + auction link into 2–3 relevant FB groups.
+3. After the sale: grab the card again (now the SOLD version) → post the
+   success story in the same groups.
+
 ## What the platform already does for growth (shipped)
 
 - Empty states funnel to "Be the first to sell" (supply-side CTA).

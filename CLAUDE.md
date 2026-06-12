@@ -8,7 +8,7 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **nilamit.app** is a live production C2C auction marketplace for Bangladesh. Users list items, others bid in real-time, and the winner pays through an escrow system backed by bKash/Nagad mobile money (with SSLCommerz card/net-banking as an additional gateway when configured).
 
-**Stack:** Next.js 16 App Router, Firebase (Firestore + RTDB + Storage + Auth + FCM + Remote Config), Auth.js v5, Upstash Redis, Sentry (EU region), Tailwind CSS 4, Zustand (UI store), TanStack Query (client fetches), BigQuery (analytics sink), SSLCommerz (card/net-banking gateway, env-gated). **No third-party search service** — Firestore-only search via `src/actions/search.ts`.
+**Stack:** Next.js 16 App Router, Firebase (Firestore + RTDB + Storage + Auth + FCM + Remote Config), Auth.js v5, Upstash Redis, Sentry (EU region), Tailwind CSS 4, Zustand (UI store), TanStack Query (client fetches), BigQuery (analytics sink), SSLCommerz (card/net-banking gateway, env-gated). **Search:** Firestore scan by default, with an env-gated Typesense adapter (`src/lib/search-engine.ts`) that takes over keyword search once `TYPESENSE_HOST`+`TYPESENSE_API_KEY` are set — see `docs/SEARCH.md`. **Courier:** env-gated Steadfast adapter (`src/lib/courier.ts`, `COURIER_*` secrets).
 
 **Deployed:** Firebase App Hosting (`nilamit` backend, project `nilamit-52073`). Push to `main` → auto-deploy via Cloud Build.
 
@@ -16,7 +16,7 @@ This file is loaded automatically by Claude Code at the start of every session.
 
 **Admin panel:** `/admin` — gated by `requireAdmin()` in [src/lib/admin-guard.ts](src/lib/admin-guard.ts) (DB-deep check, not JWT-only). Admin emails come from the `ADMIN_EMAILS` secret (in Secret Manager — not listed here).
 
-**Cron:** GitHub Actions workflow in [.github/workflows/cron.yml](.github/workflows/cron.yml) hits the `/api/cron/*` + `/api/tasks/*` POST endpoints with `Bearer ${CRON_SECRET}`. There is **no** Cloud Scheduler. Jobs: `close-auctions` + `process-alerts` (every 5 min), `closing-soon` + `saved-search-matches` (every 15 min), `enforce-policies` (hourly), `backup` (daily 03:00 UTC — managed Firestore export to GCS, env-gated on `BACKUP_GCS_BUCKET`), `gc-uploads` (weekly Sun 04:00 UTC).
+**Cron:** GitHub Actions workflow in [.github/workflows/cron.yml](.github/workflows/cron.yml) hits the `/api/cron/*` + `/api/tasks/*` POST endpoints with `Bearer ${CRON_SECRET}`. There is **no** Cloud Scheduler. Jobs: `close-auctions` + `process-alerts` (every 5 min), `closing-soon` + `saved-search-matches` (every 15 min), `enforce-policies` + `expire-featured` (hourly), `backup` (daily 03:00 UTC — managed Firestore export to GCS, env-gated on `BACKUP_GCS_BUCKET`), `gc-uploads` (weekly Sun 04:00 UTC).
 
 **Android APK:** [.github/workflows/android-apk.yml](.github/workflows/android-apk.yml) builds a signed TWA APK (Bubblewrap → direct Gradle build with AGP injected signing) and publishes it to `public/downloads/nilamit.apk` (served by the in-app install UI). Trigger: manual dispatch or `v*` tag. Requires `ANDROID_KEYSTORE_BASE64` + `ANDROID_KEYSTORE_PASSWORD` + `ANDROID_KEY_PASSWORD` repo secrets. See [docs/MOBILE.md](docs/MOBILE.md). The PWA itself (manifest + `public/sw.js` + `InstallAppButton`) is the cross-platform installable app.
 
@@ -117,6 +117,13 @@ Browser (React 19)
 | `src/components/layout/LocaleSwitcher.tsx` | EN \| বাং toggle in the navbar utility row. |
 | `src/actions/locale.ts` | Server Action: writes `NEXT_LOCALE` cookie + `revalidatePath('/', 'layout')`. |
 | `src/app/api/fcm/register/route.ts` | POST endpoint to persist a FCM token onto `users/{uid}.fcmTokens[]`. |
+| `src/lib/search-engine.ts` | Env-gated Typesense adapter (index/search/update). No-ops without `TYPESENSE_*`; reader falls back to the legacy scan. Backfill: `scripts/backfill-search.ts`. |
+| `src/lib/sslcommerz.ts` | Payment-session *init* (hosted checkout URL). Env-gated on `SSLCOMMERZ_STORE_ID/PASSWORD`; route: `POST /api/payments/sslcommerz/init` (`featured` \| `escrow`). |
+| `src/lib/courier.ts` | Steadfast courier adapter — books shipments inside `createLogisticsOrder`, status webhook at `/api/courier/webhook`. Falls back to internal `NILAMIT_EXPRESS` tracking without `COURIER_*`. |
+| `src/lib/featured-service.ts` + `src/services/finance/featured.ts` | Featured-listing purchase: pricing tiers + `feat_` tran-id codec (pure) and idempotent, amount-guarded activation driven by the payment callback. Hourly expiry: `/api/cron/expire-featured`. |
+| `src/actions/phone-verification.ts` + `src/components/verification/PhoneVerificationCard.tsx` | Firebase phone OTP: client links the phone to the session-bound Firebase user (custom-token UID === NextAuth id), server verifies the ID token (UID binding + per-number uniqueness) and sets `isPhoneVerified`. Activate: enable Phone provider in Firebase Console. |
+| `src/app/api/share-card/[auctionId]/route.tsx` | Live 1200×630 share-card PNG (current bid/SOLD result + countdown) for FB/WhatsApp posting — Node runtime, 5-min cache. Surfaced via the ShareButton dropdown. |
+| `src/lib/phone.ts` | Pure BD phone normalizer (`+8801[3-9]XXXXXXXX`) + display mask. |
 
 ---
 
