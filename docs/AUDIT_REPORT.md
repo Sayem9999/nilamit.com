@@ -1,7 +1,42 @@
 # Production Audit Report
 
-> Audit completed: April 29, 2026
-> All code fixes applied: April 29, 2026 — commits `951f31c` through `012fcf6`
+> **Session 3 (full-stack):** June 12, 2026 — commits `2c2e223` through `4312e84`
+> **Sessions 1–2:** April 29, 2026 — commits `951f31c` through `012fcf6`
+
+---
+
+## Session 3 — Full-Stack Audit (June 12, 2026)
+
+Sweep of server actions, API routes, middleware, admin panel, and client bid/escrow paths. **10 issues fixed, all merged to main.** Recurring theme: `'use server'` files exposing internals as public endpoints (now CLAUDE.md rule #19).
+
+### Critical — Unauthenticated Endpoints
+
+| # | Finding | File | Fix |
+|---|---|---|---|
+| S3-C1 | `export { auth }` from a `'use server'` module exposed NextAuth's `auth` as a public server-action endpoint | `actions/admin/ops.ts` | Removed re-export (`863dbac`) |
+| S3-C2 | Dead `'use server'` file with zero importers exposed `processSaleGamification(anyUserId)` — self-award XP/badges/streaks | `actions/gamification.ts` | Deleted (`fb425a3`) |
+| S3-C3 | Dead `'use server'` file exposed `sendEmailVerificationByEmail(anyEmail)` — unlimited arbitrary-recipient email spam | `actions/email-server.ts` | Deleted (`fb425a3`) |
+| S3-C4 | `'use server'` on internal lib made `recalculateUserRating(anyUserId)` a public write-trigger + read amplifier (100 review reads/call) | `lib/rating.ts` | Directive stripped — plain server lib (`fb425a3`) |
+| S3-C5 | Open redirect: `/en//evil.com` → prefix-strip left protocol-relative `//evil.com` → `new URL()` resolves off-origin | `middleware.ts` | Leading slashes collapsed; query string now preserved (`fb425a3`) |
+
+### High — Correctness / Abuse
+
+| # | Finding | Fix |
+|---|---|---|
+| S3-H1 | Admin broadcast skipped legacy users: `where('isBanned','!=',true)` only matches docs where the field exists | Recency-ordered fetch + in-app ban filter (`74f5c13`) |
+| S3-H2 | Payment webhook JSON branch with bad secret fell through to `req.formData()` on a consumed body → misleading 500 | Explicit 401 (`4312e84` range, `fb425a3`) |
+| S3-H3 | `getSmartPricingSuggestion` public + unauthenticated — anonymous Firestore-read amplifier over sold auctions | Auth-gated + per-user `apiLimiter` (`4312e84`) |
+| S3-H4 | `payEscrowAdvance` wrote unvalidated client-supplied `providerRef` to Firestore/ledger/admin screens | Trim, 64-char cap, charset check (`fb425a3`) |
+
+### Medium — Admin Panel Quality (`863dbac`)
+
+- Tab state deep-linked to URL hash (refresh/back/share no longer reset to Overview); mobile drawer backdrop + Escape-to-close; `aria-current`/`aria-expanded`/focus rings.
+- Treasury: `title` attribute was inside the `className` string (tooltip never rendered); fabricated metrics ("100% Automated", "2.4s Response") replaced with real counts (rule #18); dead "Export Ledger" button wired to CSV export.
+- Homepage CTA was signup-pitch for logged-in users → auth-aware Start Selling (`2c2e223`).
+
+### Verified Clean (no action needed)
+
+All 9 cron/task routes check `CRON_SECRET`; upload/FCM/courier-webhook routes authenticated; no `Math.random()` in OTP paths; no `makePublic()`; no inline admin checks; no client-side Firestore writes; no PII in public auction readers; BidPanel double-submit-guarded; escrow actions enforce ownership + state preconditions in transactions.
 
 ---
 

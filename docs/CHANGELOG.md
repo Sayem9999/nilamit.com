@@ -2,7 +2,22 @@
 
 All notable changes to the Nilamit platform will be documented in this file.
 
-## [3.0.0] - 2026-06-12 (Latest)
+## [3.0.1] - 2026-06-12 (Latest)
+### Security 🔒
+- **Closed 4 unauthenticated public endpoints** created by the `'use server'` directive: deleted dead `actions/gamification.ts` (self-award XP/badges) and `actions/email-server.ts` (arbitrary-recipient email spam); stripped the directive from `lib/rating.ts` (public rating-recompute write-trigger); removed `export { auth }` from `actions/admin/ops.ts`. Codified as CLAUDE.md critical rule #19.
+- **Open redirect fixed**: `/en//evil.com` resolved off-origin via a protocol-relative URL after legacy-prefix stripping; query strings on `/en/*` redirects now preserved.
+- **Smart-pricing action** auth-gated + per-user rate-limited (was an anonymous Firestore-read amplifier).
+- **Escrow `providerRef`** (buyer-typed MFS TrxID) now validated (trim / 64-char cap / charset) before reaching Firestore, the ledger, and admin screens.
+- **Payment webhook**: JSON trigger with a bad secret now returns 401 instead of crashing into a 500 on a consumed request body.
+
+### Fixed 🐛
+- **Admin broadcast reached only migrated users**: `where('isBanned','!=',true)` excludes docs missing the field — legacy accounts were silently skipped. Now recency-ordered fetch with in-app ban filtering.
+- **Admin panel**: tab deep-linking via URL hash (refresh/back/share keep the tab), mobile drawer backdrop + Escape, ARIA labels + focus rings, Treasury tooltip rendered (was inside `className`), fabricated Treasury metrics replaced with real counts, dead Export Ledger button now exports CSV, thousands separators on overview stats.
+- **Homepage CTA auth-aware**: logged-in users see "Start Selling" → `/auctions/create` instead of "Create Free Account" → `/login` (EN + BN).
+
+See `docs/AUDIT_REPORT.md` → Session 3 for the full finding-by-finding table.
+
+## [3.0.0] - 2026-06-12
 ### Added 🆕
 - **External search engine (env-gated)**: Typesense adapter removes the 1000-doc in-memory keyword-scan ceiling — engine returns ranked ids, Firestore stays source of truth, reader self-heals stale statuses. Backfill script + `docs/SEARCH.md` + self-host runbook. Dormant until `TYPESENSE_*` set.
 - **Payments init (SSLCommerz)**: `POST /api/payments/sslcommerz/init` + `src/lib/sslcommerz.ts` — hosted-checkout sessions for `featured` purchases and `escrow` advances. Returns 503 `GATEWAY_OFF` until store credentials are set.

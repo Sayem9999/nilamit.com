@@ -68,6 +68,8 @@ This file is loaded automatically by Claude Code at the start of every session.
 
   18. **Data Purity & Live Database Integrity** — Never return mock/seed array values on live production files, showcase pages, or server actions. If no data exists, let the client component gracefully degrade, render a clean empty state, or hide the section entirely. Mocks belong only in unit testing environments.
 
+  19. **`'use server'` makes every export a public unauthenticated POST endpoint.** Only put the directive on files whose every export is a real, auth-gated action. Internal helpers called from actions belong in plain server libs (`src/lib/`, `src/services/`) without the directive. Never re-export anything (e.g. `auth`) from a `'use server'` file. This bit three times in the June 2026 audit (`docs/AUDIT_REPORT.md` Session 3): a public rating-recompute trigger, a self-award-XP endpoint, and an email-spam endpoint.
+
 ---
 
 ## Architecture
