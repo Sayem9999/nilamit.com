@@ -109,6 +109,12 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ success: false, error: res.error?.message }, { status: 404 });
         }
       }
+
+      // JSON body with a bad/missing secret: reject here. Falling through to
+      // the form-data branch would crash — req.json() already consumed the
+      // body, so req.formData() throws and the caller gets a misleading 500.
+      log.warn('[PaymentCallback] JSON trigger with invalid webhook secret');
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
     // Otherwise, parse standard application/x-www-form-urlencoded payment callback

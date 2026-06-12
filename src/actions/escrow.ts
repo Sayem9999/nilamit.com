@@ -24,6 +24,16 @@ export async function payEscrowAdvance(transactionId: string, providerRef?: stri
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
 
+  // providerRef is client-supplied free text (an MFS TrxID) — bound it before
+  // it reaches Firestore, the ledger, and admin screens.
+  if (providerRef !== undefined) {
+    providerRef = providerRef.trim();
+    if (providerRef.length === 0) providerRef = undefined;
+    else if (providerRef.length > 64 || !/^[\w\- ]+$/.test(providerRef)) {
+      return errorResponse(ErrorType.VALIDATION, 'Invalid payment reference format.');
+    }
+  }
+
   try {
     const result = await db.runTransaction(async (tx) => {
       const txRef  = db.collection('escrowTransactions').doc(transactionId);

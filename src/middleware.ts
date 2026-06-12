@@ -27,7 +27,11 @@ export default auth((req) => {
     return NextResponse.redirect(new URL('/', redirectBase));
   }
   if (pathname.startsWith('/en/')) {
-    return NextResponse.redirect(new URL(pathname.replace(/^\/en/, ''), redirectBase));
+    // Collapse leading slashes after stripping the prefix: "/en//evil.com"
+    // would otherwise become the protocol-relative URL "//evil.com" and
+    // new URL() would resolve it to an external origin (open redirect).
+    const stripped = '/' + pathname.replace(/^\/en\/+/, '');
+    return NextResponse.redirect(new URL(stripped + req.nextUrl.search, redirectBase));
   }
 
   // 2. Global Security: Redirect banned users

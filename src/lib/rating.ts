@@ -1,5 +1,6 @@
-'use server';
-
+// NOTE: deliberately NOT 'use server' — this is an internal library, only
+// called from server actions. Marking it 'use server' would expose
+// recalculateUserRating(userId) as a public unauthenticated endpoint.
 import { db } from '@/lib/db';
 import { log } from '@/lib/logger';
 
