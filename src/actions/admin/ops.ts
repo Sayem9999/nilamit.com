@@ -233,17 +233,25 @@ export async function broadcastNotification(
   const { title, body, clickUrl, maxRecipients } = parsed.data;
 
   try {
-    // Fetch up to maxRecipients active (not-banned) users. Ordered by recent
-    // activity so we hit the most-engaged users first if the cap is small.
+    // Fetch the most recently-active users, then drop banned ones in-app.
+    //
+    // We deliberately do NOT filter banned at the query level: Firestore's
+    // `!=`/`==` on `isBanned` only matches docs where the field exists, which
+    // would silently exclude every legacy account that never had `isBanned`
+    // written — i.e. most of the user base. Banned users are a tiny minority,
+    // so over-fetching a small margin and filtering here costs almost nothing
+    // while guaranteeing legacy accounts are reachable.
+    const OVERFETCH = 50;
     const snap = await db
       .collection('users')
-      .where('isBanned', '!=', true)
-      .orderBy('isBanned')
       .orderBy('updatedAt', 'desc')
-      .limit(maxRecipients)
+      .limit(maxRecipients + OVERFETCH)
       .get();
 
-    const recipients = snap.docs.map((d) => d.id);
+    const recipients = snap.docs
+      .filter((d) => d.data().isBanned !== true)
+      .slice(0, maxRecipients)
+      .map((d) => d.id);
 
     // Fan out in parallel batches of 100 so we don't hold the request open
     // forever. notify() is fire-and-forget internally; this just waits for
