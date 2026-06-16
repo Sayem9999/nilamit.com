@@ -27,38 +27,14 @@ import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/li
 import { log } from '@/lib/logger';
 import { revalidatePath } from 'next/cache';
 import { FieldValue } from 'firebase-admin/firestore';
-import { z } from 'zod';
 import type { KycStatus } from '@/types';
-
-const SubmitSchema = z.object({
-  nidFrontUrl: z.string().url().max(2048),
-  nidBackUrl: z.string().url().max(2048),
-  selfieUrl: z.string().url().max(2048).optional(),
-  tradeLicenseUrl: z.string().url().max(2048).optional(),
-});
+import { submitKycForUser } from '@/services/kyc/kyc-core';
 
 export async function submitKyc(input: unknown): Promise<ServiceResponse<{ status: KycStatus }>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
-
-  const parsed = SubmitSchema.safeParse(input);
-  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, 'NID front + back are required');
-
-  try {
-    await db.collection('users').doc(session.user.id).update({
-      kycStatus: 'PENDING' as KycStatus,
-      kycSubmittedAt: FieldValue.serverTimestamp(),
-      kycDocsRef: parsed.data,
-      kycRejectReason: null,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    revalidatePath('/dashboard');
-    log.info('[kyc] submitted', { userId: session.user.id });
-    return successResponse({ status: 'PENDING' });
-  } catch (err) {
-    log.error('[kyc] submit failed', err, { userId: session.user.id });
-    return errorResponse(ErrorType.INTERNAL, 'Could not submit KYC');
-  }
+  // Shared with the native bridge (/api/mobile/kyc) via submitKycForUser.
+  return submitKycForUser(session.user.id, input);
 }
 
 /**
