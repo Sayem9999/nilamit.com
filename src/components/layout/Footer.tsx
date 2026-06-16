@@ -41,6 +41,7 @@ export function Footer() {
               <li><Link href="/safety" className="text-gray-600 hover:text-primary-600 hover:underline">{t("safety")}</Link></li>
               <li><Link href="/faq" className="text-gray-600 hover:text-primary-600 hover:underline">{t("faq")}</Link></li>
               <li><Link href="/contact" className="text-gray-600 hover:text-primary-600 hover:underline">{t("contact")}</Link></li>
+              <li><Link href="/download" className="text-gray-600 hover:text-primary-600 hover:underline">Android App</Link></li>
             </ul>
           </div>
 

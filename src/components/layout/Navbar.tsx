@@ -20,6 +20,7 @@ import {
   Heart,
   Clock,
   Flame,
+  Smartphone,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { logoutAction } from "@/actions/auth";
@@ -171,6 +172,12 @@ export const Navbar = memo(function Navbar() {
             )}
             <Link href="/browse" className="hidden sm:inline-flex hover:text-primary-600">
               Browse
+            </Link>
+            <Link
+              href="/download"
+              className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-semibold"
+            >
+              <Smartphone className="w-3.5 h-3.5" /> Get the App
             </Link>
             <Link href="/how-it-works" className="hidden md:inline-flex hover:text-primary-600">
               {t("help")}
@@ -455,6 +462,13 @@ export const Navbar = memo(function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             >
               {t("sell")}
+            </Link>
+            <Link
+              href="/download"
+              className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-primary-600 hover:bg-gray-50 rounded-md"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Smartphone className="w-4 h-4" /> Get the App
             </Link>
             {session ? (
               <>
