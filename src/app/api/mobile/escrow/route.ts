@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase-admin';
+import { db } from '@/lib/db';
 import {
   confirmItemReceivedForUser,
   markAsShippedForUser,
@@ -15,6 +16,53 @@ import { log } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+async function uidFrom(req: NextRequest): Promise<string | null> {
+  const authz = req.headers.get('authorization') || '';
+  const token = authz.startsWith('Bearer ') ? authz.slice(7).trim() : '';
+  if (!token) return null;
+  try {
+    return (await adminAuth.instance.verifyIdToken(token)).uid;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * GET /api/mobile/escrow?auctionId=...  → escrow status for a buyer/seller.
+ * escrowTransactions is not client-readable (firestore.rules catch-all denies),
+ * so the app reads status through this auth-gated endpoint.
+ */
+export async function GET(req: NextRequest) {
+  const uid = await uidFrom(req);
+  if (!uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const auctionId = req.nextUrl.searchParams.get('auctionId') || '';
+  if (!auctionId) return NextResponse.json({ error: 'auctionId required' }, { status: 400 });
+
+  try {
+    const snap = await db.collection('escrowTransactions').doc(auctionId).get();
+    if (!snap.exists) return NextResponse.json({ exists: false });
+    const t = snap.data()!;
+    if (t.buyerId !== uid && t.sellerId !== uid) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const aSnap = await db.collection('auctions').doc(auctionId).get();
+    const deliveryStatus = (aSnap.data()?.deliveryStatus as string | undefined) ?? null;
+    const trackingNumber = (aSnap.data()?.trackingNumber as string | undefined) ?? null;
+    return NextResponse.json({
+      exists: true,
+      status: t.status ?? null,
+      deliveryStatus,
+      trackingNumber,
+      amount: t.amount ?? 0,
+      role: t.buyerId === uid ? 'buyer' : 'seller',
+    });
+  } catch (e) {
+    log.error('[api/mobile/escrow] GET failed', e, { area: 'escrow', severity: 'warning' });
+    return NextResponse.json({ error: 'Failed to load escrow' }, { status: 500 });
+  }
+}
 
 function statusFor(type?: ErrorType): number {
   switch (type) {
