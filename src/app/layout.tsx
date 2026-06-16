@@ -16,22 +16,26 @@ if (typeof window === "undefined") {
   validateEnv();
 }
 
+// NOTE: these CSS variable names are deliberately distinct from the Tailwind
+// @theme token names (--font-heading/--font-body/--font-mono). The tokens in
+// globals.css reference these via var(--font-display) etc. If you rename one
+// side you MUST rename the other, or the self-hosted faces stop rendering.
 const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-heading",
+  variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
 const inter = Inter({
-  variable: "--font-body",
+  variable: "--font-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
   display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
+  variable: "--font-mono-var",
   subsets: ["latin"],
   weight: ["500", "600"],
   display: "swap",

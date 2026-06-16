@@ -9,23 +9,32 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-heading: "Inter", sans-serif;
-  --font-body: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  /* Fonts must reference the next/font runtime variables (set on <body> in
+   * layout.tsx) so the self-hosted faces actually render. A previous version
+   * hardcoded "Inter"/"Plus Jakarta" as static strings here, which shadowed the
+   * loaded fonts — headings silently fell back to Inter and body to whatever
+   * the OS happened to have. The var() form is the correct Tailwind v4 + next/
+   * font pattern (see --font-bengali, which always worked because it used it). */
+  --font-heading: var(--font-display), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: var(--font-sans), "Inter", system-ui, sans-serif;
+  --font-mono: var(--font-mono-var), "JetBrains Mono", ui-monospace, monospace;
   --font-bengali: var(--font-bengali), sans-serif;
 
-  --color-primary-50: #f4f7fd;
-  --color-primary-100: #e2e8f5;
-  --color-primary-200: #c8d6f0;
-  --color-primary-300: #9ab8f5;
-  --color-primary-400: #6490f8;
-  --color-primary-500: #3665f3;
-  /* Was identical to 500 (#3665f3), so hover:bg-primary-600 produced no visible
-   * change. Darkened one step so button hover/active states are perceptible. */
-  --color-primary-600: #2b51d0;
-  --color-primary-700: #0046d5;
-  --color-primary-800: #0036a3;
-  --color-primary-900: #0b2240;
+  /* Primary — Blue (Trust). Refreshed June 2026: a harmonized, MONOTONIC indigo-
+   * blue ramp. The old ramp inverted at 600/700 (700 #0046d5 was brighter than
+   * 600 #2b51d0), so emphasis text read lighter than buttons. Each step now gets
+   * strictly darker. Keep 500/600 distinct so button hover is visible, and keep
+   * the oklch --primary/--ring (below) roughly in sync with 600. */
+  --color-primary-50: #eff4ff;
+  --color-primary-100: #dce7ff;
+  --color-primary-200: #c1d3ff;
+  --color-primary-300: #97b4ff;
+  --color-primary-400: #6589fb;
+  --color-primary-500: #3f63f4;
+  --color-primary-600: #2b4ddb; /* primary buttons + hover; distinct from 500 */
+  --color-primary-700: #2440b5; /* emphasis — now darker than 600 (was lighter) */
+  --color-primary-800: #213a92;
+  --color-primary-900: #182a5c; /* dark text, footer */
 }
 
 /* Global smooth scrolling */
@@ -42,11 +51,11 @@ html {
   background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #93c5fd;
+  background: #c1d3ff; /* primary-200 */
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
+  background: #6589fb; /* primary-400 */
 }
 
 /* Hide-scrollbar utility for horizontal strips (navbar category row, image
@@ -137,6 +146,24 @@ html {
     0 10px 10px -5px rgba(0, 0, 0, 0.03);
 }
 
+/* Refreshed card elevation (June 2026). A two-layer, slightly blue-tinted shadow
+ * reads softer and more premium than a flat shadow-sm. Use `.card-elevated` on
+ * surfaces that should lift on hover (auction cards, category tiles). */
+.card-elevated {
+  box-shadow:
+    0 1px 2px rgba(24, 42, 92, 0.04),
+    0 1px 3px rgba(24, 42, 92, 0.06);
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.card-elevated:hover {
+  box-shadow:
+    0 6px 16px -4px rgba(24, 42, 92, 0.1),
+    0 2px 6px -2px rgba(24, 42, 92, 0.06);
+}
+
 /* Subtle mask for image gradients */
 .mask-gradient {
   mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
@@ -225,25 +252,29 @@ a:active:not(:disabled) {
 }
 
 :root {
-  --radius: 0.5rem;
+  /* Softened June 2026 (was 0.5rem). A slightly larger base radius makes cards,
+   * inputs and buttons read friendlier/more modern. All --radius-* steps in the
+   * @theme inline block scale off this single value, so components inherit it. */
+  --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.48 0.24 256);
+  /* Kept in sync with the refreshed primary-600 (#2b4ddb). */
+  --primary: oklch(0.452 0.198 266);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.48 0.24 256);
+  --secondary-foreground: oklch(0.452 0.198 266);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.48 0.24 256);
+  --accent-foreground: oklch(0.452 0.198 266);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.48 0.24 256);
+  --ring: oklch(0.452 0.198 266);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);

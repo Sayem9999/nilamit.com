@@ -57,7 +57,7 @@ export function HeroSection({ systemConfig, totalUsers, hasEndingSoon = false }:
           {/* Primary banner — Sell now */}
           <Link
             href="/auctions/create"
-            className="md:col-span-7 group relative overflow-hidden rounded-md bg-gradient-to-br from-primary-600 via-primary-700 to-blue-700 text-white p-5 sm:p-6 flex items-center gap-4 sm:gap-6 hover:shadow-md transition-shadow"
+            className="md:col-span-7 group relative overflow-hidden rounded-xl bg-gradient-to-br from-primary-500 via-primary-600 to-primary-800 text-white p-5 sm:p-6 flex items-center gap-4 sm:gap-6 shadow-sm hover:shadow-lg transition-shadow"
           >
             <div className="relative flex-1 min-w-0 z-10">
               <div className="inline-flex items-center gap-1.5 bg-white/15 text-amber-300 backdrop-blur-sm rounded-sm px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide mb-2">
@@ -90,7 +90,7 @@ export function HeroSection({ systemConfig, totalUsers, hasEndingSoon = false }:
           {/* Trust card */}
           <Link
             href="/safety"
-            className="md:col-span-3 group bg-white border border-gray-200 hover:border-primary-300 rounded-md p-4 sm:p-5 flex flex-col justify-center hover:shadow-sm transition-all"
+            className="md:col-span-3 group bg-white border border-gray-200 hover:border-primary-300 rounded-xl p-4 sm:p-5 flex flex-col justify-center card-elevated"
           >
             <div className="w-9 h-9 bg-blue-50 rounded-md flex items-center justify-center mb-2">
               <ShieldCheck className="w-5 h-5 text-blue-600" />
@@ -112,7 +112,7 @@ export function HeroSection({ systemConfig, totalUsers, hasEndingSoon = false }:
           {hasEndingSoon ? (
             <Link
               href="/auctions?sortBy=endTime&sortOrder=asc"
-              className="md:col-span-2 group bg-white border border-gray-200 hover:border-orange-300 rounded-md p-4 sm:p-5 flex flex-col justify-center hover:shadow-sm transition-all"
+              className="md:col-span-2 group bg-white border border-gray-200 hover:border-orange-300 rounded-xl p-4 sm:p-5 flex flex-col justify-center card-elevated"
             >
               <div className="w-9 h-9 bg-orange-50 rounded-md flex items-center justify-center mb-2">
                 <Clock className="w-5 h-5 text-orange-600" />
@@ -127,7 +127,7 @@ export function HeroSection({ systemConfig, totalUsers, hasEndingSoon = false }:
           ) : (
             <Link
               href="/how-it-works"
-              className="md:col-span-2 group bg-white border border-gray-200 hover:border-primary-300 rounded-md p-4 sm:p-5 flex flex-col justify-center hover:shadow-sm transition-all"
+              className="md:col-span-2 group bg-white border border-gray-200 hover:border-primary-300 rounded-xl p-4 sm:p-5 flex flex-col justify-center card-elevated"
             >
               <div className="w-9 h-9 bg-blue-50 rounded-md flex items-center justify-center mb-2">
                 <HelpCircle className="w-5 h-5 text-primary-600" />

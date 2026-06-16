@@ -179,8 +179,8 @@ export const AuctionCard = memo(({
   // CLASSIC HORIZONTAL EBAY LIST LAYOUT
   if (viewMode === "list") {
     return (
-      <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-md ${className}`} aria-label={cardLabel}>
-        <div className="bg-white rounded-md border border-gray-200 group-hover:border-primary-400 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col sm:flex-row h-full">
+      <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-xl ${className}`} aria-label={cardLabel}>
+        <div className="bg-white rounded-xl border border-gray-200 group-hover:border-primary-300 card-elevated overflow-hidden flex flex-col sm:flex-row h-full">
           {/* Image Area */}
           <div className="relative w-full sm:w-56 aspect-[16/10] sm:aspect-[4/3] bg-gray-50 overflow-hidden flex-shrink-0">
             {lightweightMode ? (
@@ -331,8 +331,8 @@ export const AuctionCard = memo(({
   }
 
   return (
-    <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-md ${className}`} aria-label={cardLabel}>
-      <div className="bg-white rounded-md border border-gray-200 group-hover:border-primary-400 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col h-full">
+    <Link href={`/auctions/${auction.id}`} className={`group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-xl ${className}`} aria-label={cardLabel}>
+      <div className="bg-white rounded-xl border border-gray-200 group-hover:border-primary-300 card-elevated overflow-hidden flex flex-col h-full">
         {/* Image Area */}
         <div className="relative aspect-square bg-gray-50 overflow-hidden">
           {lightweightMode ? (

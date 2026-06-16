@@ -35,7 +35,7 @@ export function CategoryGrid() {
               <Link
                 href={`/auctions?category=${cat.slug}`}
                 aria-label={`Browse ${tCat(cat.slug)} auctions`}
-                className="group flex flex-col items-center bg-white border border-gray-200 hover:border-primary-400 hover:shadow-sm rounded-md p-3 sm:p-4 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                className="group flex flex-col items-center bg-white border border-gray-200 hover:border-primary-300 card-elevated rounded-xl p-3 sm:p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               >
                 <div className="text-2xl sm:text-3xl mb-1.5 group-hover:scale-110 transition-transform" aria-hidden="true">
                   {cat.icon}

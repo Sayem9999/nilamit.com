@@ -205,7 +205,7 @@ export const Navbar = memo(function Navbar() {
           {/* Dominant search bar — takes the rest of the row */}
           <form
             action="/auctions"
-            className="flex-1 flex items-stretch h-11 max-w-3xl border-2 border-gray-900 rounded-sm focus-within:border-primary-600 focus-within:ring-2 focus-within:ring-primary-500/20 transition-colors bg-white"
+            className="flex-1 flex items-stretch h-11 max-w-3xl overflow-hidden border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/25 transition-colors bg-white"
           >
             <div className="relative flex-1 flex items-center">
               <Search className="w-4 h-4 text-gray-400 absolute left-3" aria-hidden="true" />
