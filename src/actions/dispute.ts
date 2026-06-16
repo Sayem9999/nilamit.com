@@ -12,50 +12,15 @@ import { raiseDisputeSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { AuditService } from '@/services/admin/audit-service';
 import { recordLedgerEntry } from '@/lib/ledger';
+import { raiseDisputeForUser } from '@/services/escrow/escrow-core';
 
 const REFUNDABLE_ESCROW_STATES = new Set(['HELD', 'DISPUTED', 'PENDING', 'VERIFICATION_PENDING']);
 
 export async function raiseDispute(transactionId: string, reason: string): Promise<ServiceResponse<null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated');
-
-  const parsed = raiseDisputeSchema.safeParse({ transactionId, reason });
-  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
-
-  const disputeRef = db.collection('disputes').doc(transactionId);
-  const escrowRef  = db.collection('escrowTransactions').doc(transactionId);
-
-  try {
-    await db.runTransaction(async (tx) => {
-      const [escrowSnap, disputeSnap] = await Promise.all([
-        tx.get(escrowRef),
-        tx.get(disputeRef),
-      ]);
-
-      if (!escrowSnap.exists) throw new Error('Transaction not found');
-      const escrow = escrowSnap.data()!;
-      if (escrow.buyerId !== session.user.id) throw new Error('Unauthorized');
-      if (escrow.status !== 'HELD')           throw new Error('Dispute only valid for held escrow.');
-      if (disputeSnap.exists)                 throw new Error('Dispute already exists.');
-
-      const now = new Date();
-      tx.set(disputeRef, {
-        id: transactionId, transactionId, openerId: session.user.id,
-        reason: parsed.data.reason, status: 'OPEN', resolution: null, createdAt: now, updatedAt: now,
-      });
-      const beforeState = { ...escrow };
-      const updateData = { status: 'DISPUTED', updatedAt: now };
-      const afterState = { ...beforeState, ...updateData };
-      tx.update(escrowRef, updateData);
-      await AuditService.logEscrowChange(transactionId, beforeState, afterState, 'UPDATE', session.user.id, tx);
-    });
-
-    revalidatePath('/dashboard/escrow');
-    return successResponse(null);
-  } catch (e) {
-    log.error('[dispute] raiseDispute failed', e, { area: 'dispute', severity: 'warning' });
-    return errorResponse(ErrorType.INTERNAL, e instanceof Error ? e.message : 'Failed to raise dispute.');
-  }
+  // Shared with the native bridge (/api/mobile/escrow) via raiseDisputeForUser.
+  return raiseDisputeForUser(session.user.id, transactionId, reason);
 }
 
 export async function resolveDispute(disputeId: string, ruling: 'SELLER' | 'BUYER', resolution: string): Promise<ServiceResponse<null>> {

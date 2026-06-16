@@ -9,84 +9,13 @@ import { log } from '@/lib/logger';
 import { sendMessageSchema, formatZodError } from '@/lib/schemas';
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
 import { ChatData } from '@/types';
+import { sendMessageForUser } from '@/services/chat/chat-core';
 
 export async function sendMessage(conversationId: string, content: string, imageUrl?: string): Promise<ServiceResponse<{ id: string, content: string, createdAt: Date }>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Unauthorized');
-
-  const parsed = sendMessageSchema.safeParse({ conversationId, content, imageUrl });
-  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
-
-  const convSnap = await db.collection('conversations').doc(parsed.data.conversationId).get();
-  if (!convSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Conversation not found');
-  const conv = convSnap.data()!;
-
-  if (conv.buyerId !== session.user.id && conv.sellerId !== session.user.id) {
-    return errorResponse(ErrorType.FORBIDDEN, 'Forbidden');
-  }
-
-  // Escrow must not be REFUNDED for chat to be active
-  const escrowSnap = await db.collection('escrowTransactions').doc(conv.auctionId).get();
-  if (!escrowSnap.exists) return errorResponse(ErrorType.NOT_FOUND, 'Escrow not found');
-  if (escrowSnap.data()!.status === 'REFUNDED') {
-    return errorResponse(ErrorType.FORBIDDEN, 'Chat is closed because escrow was refunded.');
-  }
-
-  const filtered = filterPII(parsed.data.content);
-  const now      = new Date();
-  const msgId    = db.collection('messages').doc().id;
-
-  // buyerId/sellerId denormalized here so firestore.rules can authorize reads
-  // with resource.data fields instead of a per-read get() call on conversations.
-  await db.collection('messages').doc(msgId).set({
-    id: msgId, conversationId: parsed.data.conversationId, senderId: session.user.id,
-    buyerId: conv.buyerId, sellerId: conv.sellerId,
-    content: filtered, imageUrl: parsed.data.imageUrl ?? null,
-    isSystemMessage: false, isRead: false, createdAt: now,
-  });
-
-  await db.collection('conversations').doc(conversationId).update({ 
-    lastMessageAt: now,
-    lastMessageContent: filtered.slice(0, 200), // Denormalized for hub performance
-    lastMessageSenderId: session.user.id,
-    updatedAt: now,
-  });
-  // Decouple Realtime Database signaling from transactional Firestore writes to ensure
-  // high availability if RTDB is temporarily throttled or offline.
-  try {
-    await adminDB.ref(`${RTDB_PATHS.conversation(conversationId)}/meta`).update({
-      auctionId: conv.auctionId,
-      participants: {
-        [conv.buyerId]: true,
-        [conv.sellerId]: true,
-      },
-    });
-    await rtdbPush(RTDB_PATHS.conversation(conversationId), {
-      event: FIREBASE_EVENTS.NEW_MESSAGE,
-      id: msgId,
-      senderId: session.user.id,
-      content: filtered,
-      imageUrl: imageUrl ?? null,
-      createdAt: now.toISOString(),
-    });
-
-    const recipientId = session.user.id === conv.buyerId ? conv.sellerId : conv.buyerId;
-    // Deliver notification in background
-    rtdbPush(RTDB_PATHS.userNotifications(recipientId), {
-      event: FIREBASE_EVENTS.NEW_MESSAGE, conversationId, auctionId: conv.auctionId,
-      senderName: session.user.name ?? 'Someone', preview: filtered.slice(0, 60),
-      timestamp: Date.now(),
-    }).catch((e) => log.error('[chat] recipient notification push failed', e, { area: 'chat', severity: 'warning' }));
-  } catch (rtdbErr) {
-    log.error('[chat] RTDB real-time signaling failed; gracefully falling back to Firestore', rtdbErr, {
-      area: 'chat',
-      severity: 'warning',
-      conversationId,
-      messageId: msgId,
-    });
-  }
-
-  return successResponse({ id: msgId, content: filtered, createdAt: now });
+  // Shared with the native bridge (/api/mobile/chat) via sendMessageForUser.
+  return sendMessageForUser(session.user.id, session.user.name ?? null, conversationId, content, imageUrl);
 }
 
 export async function markAsRead(conversationId: string): Promise<ServiceResponse<null>> {
