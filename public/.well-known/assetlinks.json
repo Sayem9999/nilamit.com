@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.nilamit.twa",
+    "sha256_cert_fingerprints": ["40:84:70:FB:4E:B9:06:F8:AA:1D:0F:99:E3:4E:62:E9:6E:87:84:0F:4C:32:D9:80:21:D3:8D:70:0F:69:BD:7C"]
+  }
+}]
