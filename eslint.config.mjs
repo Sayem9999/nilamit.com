@@ -37,6 +37,8 @@ const eslintConfig = defineConfig([
     "functions/node_modules/**",
     "scratch/**",
     "scripts/**",
+    // Native app — separate Expo project with its own toolchain/config.
+    "mobile/**",
   ]),
 ]);
 
