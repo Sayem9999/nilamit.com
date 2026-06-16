@@ -1,7 +1,6 @@
 'use server';
 
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
 import { headers } from 'next/headers';
 import { bidLimiter } from '@/lib/ratelimit';
 import { ERROR_CODES } from '@/lib/constants';
@@ -10,148 +9,27 @@ import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { log } from '@/lib/logger';
 
 import { ErrorType, errorResponse, successResponse, ServiceResponse } from '@/lib/errors';
-import { placeBidSchema, formatZodError } from '@/lib/schemas';
 import { getSystemConfig } from '@/actions/admin-content';
-import { BidWithBidder, PlaceBidResult, SystemConfig } from '@/types';
-
-async function requireBiddingPrivileges(userId: string, systemConfig?: SystemConfig | null): Promise<ServiceResponse<Record<string, unknown>>> {
-  const fetchPrivileges = unstable_cache(
-    async (uid: string) => {
-      const userSnap = await db.collection('users').doc(uid).get();
-      if (!userSnap.exists) return { error: ERROR_CODES.NOT_FOUND };
-      return { data: userSnap.data() };
-    },
-    [`user-privileges-${userId}`],
-    { revalidate: 30, tags: [`user-${userId}`] }
-  );
-
-  const result = await fetchPrivileges(userId);
-  if (result.error) return errorResponse(ErrorType.NOT_FOUND, 'User not found', result.error);
-  
-  const user = result.data!;
-  const biddingReqs = systemConfig?.biddingRequirementsEnabled ?? true;
-  if (biddingReqs) {
-    const isEmailVerified = user.emailVerified != null;
-    if (!isEmailVerified) return errorResponse(ErrorType.UNAUTHORIZED, 'Verification required. Please verify your email.', ERROR_CODES.UNAUTHORIZED);
-  }
-  if (user.isBanned) return errorResponse(ErrorType.FORBIDDEN, 'Your account has been banned for policy violations.', 'BANNED');
-  if (user.isMinor) return errorResponse(ErrorType.FORBIDDEN, 'Users under 18 are not eligible to place binding bids or purchases.', 'MINOR');
-
-  return successResponse(user as Record<string, unknown>);
-}
+import { BidWithBidder, PlaceBidResult } from '@/types';
+import { placeBidForUser, requireBiddingPrivileges } from '@/services/bidding/place-bid-core';
 
 /**
- * Server Action: Place a bid on an auction
+ * Server Action: Place a bid on an auction.
+ *
+ * Thin wrapper: resolve the NextAuth session → userId + client IP/UA, then
+ * delegate to placeBidForUser (shared with the native-app bridge at
+ * /api/mobile/bid so both surfaces share one vetted code path).
  */
 export async function placeBid(auctionId: string, amount: number): Promise<ServiceResponse<PlaceBidResult | null>> {
   const session = await auth();
   if (!session?.user?.id) return errorResponse(ErrorType.UNAUTHORIZED, 'Not authenticated', ERROR_CODES.NOT_AUTHENTICATED);
   const userId = session.user.id;
 
-  const parsed = placeBidSchema.safeParse({ auctionId, amount });
-  if (!parsed.success) return errorResponse(ErrorType.VALIDATION, formatZodError(parsed.error));
-
   const h = await headers();
   const ip = h.get('fastly-client-ip') ?? h.get('x-apphosting-client-ip') ?? h.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
   const userAgent = h.get('user-agent') ?? 'unknown';
-  // bidLimiter is fail-closed in production (see ratelimit.ts).
-  const { success: rateLimitOk } = await bidLimiter.limit(`bid_${userId}_${ip}`);
-  if (!rateLimitOk) return errorResponse(ErrorType.RATE_LIMIT, 'Too many bids placed rapidly. Please wait a moment.');
 
-  try {
-    // Asynchronously update bidder's last active IP and UA in Firestore
-    db.collection('users').doc(userId).update({
-      lastActiveIp: ip,
-      lastActiveUserAgent: userAgent,
-      updatedAt: new Date(),
-    }).catch(e => log.error('[bid] Failed to update user last active IP/UA', e, { userId }));
-
-    const configRes = await getSystemConfig();
-    const systemConfig = configRes.success ? configRes.data : null;
-
-    const privileges = await requireBiddingPrivileges(userId, systemConfig);
-    if (!privileges.success) return privileges as ServiceResponse<never>;
-    const user = privileges.data!;
-
-    // ─── TIER 2: MFS Linkage Check (৳50,000+) ────────────────────────────────
-    // Deter "fun bidders" by requiring a traceable payment account linked.
-    const mfsReq = systemConfig?.mfsLinkageRequired ?? true;
-    if (mfsReq && amount >= 50000 && !user.bkashNumber && !user.nagadNumber) {
-      return errorResponse(
-        ErrorType.FORBIDDEN,
-        'MFS account linkage required for high-stake bidding (৳50,000+). Please link bKash or Nagad in your profile.',
-        ERROR_CODES.MFS_LINKAGE_REQUIRED
-      );
-    }
-
-    // ─── TIER 3: Elite Trust Gate (৳150,000+) ────────────────────────────────
-    // For very high-value items, we require the user to be a "Vetted Seller"
-    // OR have high performance metrics (Rating + Volume).
-    const ELITE_THRESHOLD = 150000;
-    const MIN_RATING = 4.5;
-    const MIN_SALES = 5;
-
-    // When > 0, BidProcessor re-verifies this held-deposit amount INSIDE the bid
-    // transaction (audit finding H4), so the check below is a fast-fail UX guard
-    // and the transaction is the authoritative gate.
-    let eliteDepositRequired = 0;
-
-    if (amount >= ELITE_THRESHOLD) {
-      // "Vetted" must mean genuinely KYC-approved — NOT the isVerifiedSeller
-      // flag, which is auto-granted on email verification / first listing and
-      // would let anyone bypass the elite trust gate.
-      const isVetted = user.kycStatus === 'APPROVED';
-      const currentRating = (user.rating as number) ?? 0;
-      const salesCount = (user.ratingCount as number) ?? 0;
-
-      // Trust Waiver Check
-      if (!isVetted && (currentRating < MIN_RATING || salesCount < MIN_SALES)) {
-        // Fallback: Check for a 1% Security Deposit
-        eliteDepositRequired = Math.floor(amount * 0.01);
-        const depositSnap = await db.collection('bidDeposits')
-          .where('bidderId', '==', userId)
-          .where('auctionId', '==', auctionId)
-          .where('status', '==', 'held')
-          .get();
-
-        const totalHeld = depositSnap.docs.reduce((acc, doc) => acc + (doc.data().amount || 0), 0);
-
-        if (totalHeld < eliteDepositRequired) {
-          return errorResponse(
-            ErrorType.FORBIDDEN,
-            `Elite auctions (৳150k+) require a 4.5★ rating or a 1% security deposit (৳${eliteDepositRequired.toLocaleString()}).`,
-            ERROR_CODES.ELITE_DEPOSIT_REQUIRED
-          );
-        }
-      }
-    }
-
-    // BidProcessor runs the bid in a Firestore transaction (the SDK retries
-    // internally on contention) and returns a structured ServiceResponse —
-    // including BID_TOO_LOW with `details.newMinimum`. No throw-based retry
-    // needed here; side-effects fire after the commit, inside the service.
-    const result = await BiddingService.placeBid(
-      auctionId,
-      amount,
-      userId,
-      ip,
-      userAgent,
-      eliteDepositRequired
-    );
-
-    revalidateTag('auctions', { expire: 0 });
-    revalidateTag('bids',     { expire: 0 });
-    revalidateTag('stats',    { expire: 0 });
-    revalidatePath(`/auctions/${auctionId}`);
-    revalidatePath('/auctions');
-    revalidatePath('/dashboard');
-
-    if (!result.success) return result as ServiceResponse<never>;
-    return successResponse(result.data!);
-  } catch (error) {
-    log.error('[bid] placeBid outer failed', error, { userId, auctionId, amount, area: 'bid', severity: 'critical' });
-    return errorResponse(ErrorType.INTERNAL, 'An unexpected error occurred.');
-  }
+  return placeBidForUser(userId, auctionId, amount, ip, userAgent);
 }
 
 /**
