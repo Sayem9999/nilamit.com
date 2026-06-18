@@ -22,10 +22,9 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { adminAuth } from '@/lib/firebase-admin';
 import { mfsOtpVerifyLimiter } from '@/lib/ratelimit';
-import { normalizeBdPhone } from '@/lib/phone';
 import { ErrorType, ServiceResponse, successResponse, errorResponse } from '@/lib/errors';
 import { log } from '@/lib/logger';
-import { revalidatePath } from 'next/cache';
+import { setVerifiedPhoneForUser } from '@/services/phone/phone-core';
 
 export interface PhoneStatus {
   phoneNumber: string | null;
@@ -85,34 +84,8 @@ export async function confirmPhoneVerification(
     if (!rawPhone) {
       return errorResponse(ErrorType.VALIDATION, 'No verified phone number on this account yet');
     }
-
-    const phoneNumber = normalizeBdPhone(rawPhone) ?? rawPhone; // non-BD numbers kept as-is (E.164 from Firebase)
-
-    // Uniqueness — one verified account per phone number.
-    const dupSnap = await db
-      .collection('users')
-      .where('phoneNumber', '==', phoneNumber)
-      .limit(5)
-      .get();
-    const takenByOther = dupSnap.docs.some(
-      (d) => d.id !== userId && (d.data().isPhoneVerified || d.data().phoneVerified != null),
-    );
-    if (takenByOther) {
-      return errorResponse(ErrorType.CONFLICT, 'This phone number is already verified on another account.');
-    }
-
-    const now = new Date();
-    await db.collection('users').doc(userId).update({
-      phoneNumber,
-      isPhoneVerified: true,
-      phoneVerified: now,
-      updatedAt: now,
-    });
-
-    log.event('user_verified', { userId, metadata: { method: 'firebase_phone_otp' } });
-    log.info('[phone] verified', { userId });
-    revalidatePath('/dashboard');
-    return successResponse({ phoneNumber });
+    // Shared with the native bridge (/api/mobile/phone) via setVerifiedPhoneForUser.
+    return setVerifiedPhoneForUser(userId, rawPhone);
   } catch (err) {
     log.error('[phone] confirm failed', err, { userId, area: 'auth', severity: 'warning' });
     return errorResponse(ErrorType.INTERNAL, 'Phone verification failed. Please try again.');
