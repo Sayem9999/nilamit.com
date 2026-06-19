@@ -35,21 +35,40 @@ type Step = "loading" | "verified" | "enter-phone" | "enter-code";
 
 const FIREBASE_ERROR_MESSAGES: Record<string, string> = {
   "auth/operation-not-allowed":
-    "Phone verification isn't enabled yet — please check back soon.",
+    "Phone sign-in isn't enabled for this project. Enable it in Firebase Console → Authentication → Sign-in method → Phone.",
   "auth/too-many-requests":
     "Too many attempts from this device. Please try again later.",
   "auth/invalid-phone-number": "That phone number doesn't look valid.",
+  "auth/missing-phone-number": "Enter a phone number first.",
   "auth/invalid-verification-code": "Wrong code — please check the SMS and try again.",
   "auth/code-expired": "That code expired. Request a new one.",
   "auth/account-exists-with-different-credential":
     "This phone number is already linked to another account.",
   "auth/credential-already-in-use":
     "This phone number is already verified on another account.",
+  "auth/provider-already-linked":
+    "A phone number is already linked — reload the page and try again.",
+  // Config-level failures (surface the cause so it's actionable):
+  "auth/unauthorized-domain":
+    "This domain isn't authorized for phone sign-in. Add it in Firebase Console → Authentication → Settings → Authorized domains.",
+  "auth/captcha-check-failed":
+    "reCAPTCHA verification failed. Reload the page and try again.",
+  "auth/billing-not-enabled":
+    "SMS sign-in requires the Blaze plan to be active on the Firebase project.",
+  "auth/quota-exceeded": "The SMS quota has been reached. Please try again later.",
+  "auth/app-not-authorized":
+    "This app isn't authorized to use Firebase Authentication with the provided API key.",
+  "auth/internal-error":
+    "Authentication service error. If this persists, check that reCAPTCHA/App Check aren't blocking the request.",
 };
 
 function firebaseErrorMessage(err: unknown): string {
   const code = (err as { code?: string })?.code ?? "";
-  return FIREBASE_ERROR_MESSAGES[code] || "Something went wrong. Please try again.";
+  if (FIREBASE_ERROR_MESSAGES[code]) return FIREBASE_ERROR_MESSAGES[code];
+  // Surface the raw code/message for unmapped failures so issues are diagnosable
+  // in the field instead of a dead-end "Something went wrong".
+  const raw = code || (err as { message?: string })?.message || "unknown error";
+  return `Couldn't complete phone verification (${raw}). Please try again.`;
 }
 
 export function PhoneVerificationCard() {
@@ -90,7 +109,12 @@ export function PhoneVerificationCard() {
       await ensureFirebaseAuth();
       const auth = getClientAuth();
       const user = auth.currentUser;
-      if (!user) throw new Error("Not signed into Firebase");
+      if (!user) {
+        // Custom-token sign-in (ensureFirebaseAuth → /api/firebase/token) didn't
+        // complete — phone linking needs a signed-in Firebase user.
+        toast.error("Couldn't establish a secure session. Reload the page and sign in again.");
+        return;
+      }
 
       // Re-verification: a phone provider from a previous attempt must be
       // unlinked before a new number can be linked.
@@ -102,6 +126,10 @@ export function PhoneVerificationCard() {
         recaptchaRef.current = new RecaptchaVerifier(auth, "phone-recaptcha-anchor", {
           size: "invisible",
         });
+        // Pre-render the invisible widget. Without an explicit render(), the
+        // first linkWithPhoneNumber() can intermittently fail/hang before the
+        // reCAPTCHA token is ready — a common production-only flake.
+        await recaptchaRef.current.render();
       }
 
       confirmationRef.current = await linkWithPhoneNumber(user, e164, recaptchaRef.current);
