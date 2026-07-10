@@ -7,6 +7,7 @@ import { getAuctionBids } from "@/actions/bid";
 import { formatBDT, formatRelativeTime } from "@/lib/format";
 import { CountdownTimer } from "@/components/auction/CountdownTimer";
 import BidPanelWrapper from "@/components/auction/BidPanelWrapper";
+import { SellerOffersPanel } from "@/components/auction/SellerOffersPanel";
 import { StickyBidBar } from "@/components/auction/StickyBidBar";
 import { ImageGallery } from "@/components/auction/ImageGallery";
 import { AuctionViewTracker } from "@/components/auction/AuctionViewTracker";
@@ -434,6 +435,11 @@ export default async function AuctionDetailPage({ params }: Props) {
               createdAt:  b.createdAt.toString(),
             }))}
           />
+
+          {/* Best Offer inbox — seller only, live listings only */}
+          {session?.user?.id === auction.sellerId && auction.status === "ACTIVE" && (
+            <SellerOffersPanel auctionId={id} />
+          )}
 
           {/* eBay Specifications Table */}
           <div className="bg-white border border-gray-100 rounded-md p-5 space-y-4 shadow-sm">

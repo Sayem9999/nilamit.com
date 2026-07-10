@@ -164,6 +164,26 @@ function handleNotification(data: UserNotification) {
       break;
     }
 
+    case FIREBASE_EVENTS.OFFER_RECEIVED: {
+      // Pushed to the seller when a buyer makes a Best Offer on their listing.
+      const body = `${data.buyerName ?? "A buyer"} offered ৳${(data.amount as number)?.toLocaleString()} on "${data.auctionTitle}".`;
+      showNotification("💰 New offer received", { body });
+      toast(body, { icon: "💰", duration: 8000 });
+      break;
+    }
+
+    case FIREBASE_EVENTS.OFFER_ACCEPTED: {
+      const body = `Your offer of ৳${(data.amount as number)?.toLocaleString()} on "${data.auctionTitle}" was accepted — complete payment to secure it!`;
+      showNotification("🎉 Offer accepted!", { body });
+      toast(body, { icon: "🎉", duration: 10000 });
+      break;
+    }
+
+    case FIREBASE_EVENTS.OFFER_DECLINED: {
+      toast(`Your offer of ৳${(data.amount as number)?.toLocaleString()} on "${data.auctionTitle}" was declined.`, { duration: 6000 });
+      break;
+    }
+
     case 'badge_earned': {
       const badge = data.badge as { label?: string; icon?: string } | undefined;
       toast(`${badge?.icon ?? "🏅"} Badge earned: ${badge?.label ?? "New Badge"}!`, { duration: 6000 });

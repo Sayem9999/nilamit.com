@@ -13,7 +13,7 @@ import { calculateSuccessFee } from '@/services/finance/commission';
 export { calculateSuccessFee };
 
 // ─── Post-sale notification payload ─────────────────────────────────────────
-interface SaleNotifyPayload {
+export interface SaleNotifyPayload {
   winnerId:    string;
   sellerId:    string;
   winnerEmail: string | null;

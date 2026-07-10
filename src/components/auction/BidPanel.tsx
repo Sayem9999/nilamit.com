@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { placeBid, executeBuyItNow } from "@/actions/bid";
+import { MakeOfferButton } from "./MakeOfferButton";
 import { formatBDT } from "@/lib/format";
 import { ErrorType, ServiceResponse } from "@/lib/errors";
 import { ERROR_CODES } from "@/lib/constants";
@@ -394,6 +395,13 @@ export function BidPanel({
               </VerificationGuard>
             </div>
           )}
+
+          <MakeOfferButton
+            auctionId={auctionId}
+            currentPrice={displayPrice}
+            bidCount={rtBidCount}
+            buyItNowPrice={buyItNowPrice}
+          />
 
           <div className="mb-3">
             <label htmlFor="bid-amount-input" className="text-xs font-medium text-gray-500 mb-1 block">

@@ -108,6 +108,18 @@ const imageUrlSchema = z
   .url('Invalid image URL')
   .max(2048, 'Image URL is too long');
 
+/** Best Offer — buyer proposes a price on a live listing; seller accepts or declines. */
+export const makeOfferSchema = z.object({
+  auctionId: z.string().trim().min(10).max(40),
+  amount: priceSchema,
+  message: z.string().trim().max(300, 'Message is too long').optional(),
+});
+
+export const respondToOfferSchema = z.object({
+  offerId: z.string().trim().min(10).max(90),
+  response: z.enum(['ACCEPT', 'DECLINE']),
+});
+
 /**
  * ISO-8601 datetime string or Date object. We accept both forms and validate
  * parseability at the boundary with clear, user-friendly error messages.

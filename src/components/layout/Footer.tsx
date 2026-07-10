@@ -38,6 +38,7 @@ export function Footer() {
             <h4 className="font-bold text-[11px] uppercase tracking-wide text-gray-500 mb-3">{t("support")}</h4>
             <ul className="space-y-2">
               <li><Link href="/how-it-works" className="text-gray-600 hover:text-primary-600 hover:underline">{t("howItWorks")}</Link></li>
+              <li><Link href="/buyer-protection" className="text-gray-600 hover:text-primary-600 hover:underline">Buyer Protection</Link></li>
               <li><Link href="/safety" className="text-gray-600 hover:text-primary-600 hover:underline">{t("safety")}</Link></li>
               <li><Link href="/faq" className="text-gray-600 hover:text-primary-600 hover:underline">{t("faq")}</Link></li>
               <li><Link href="/contact" className="text-gray-600 hover:text-primary-600 hover:underline">{t("contact")}</Link></li>

@@ -25,7 +25,10 @@ export type MarketplaceEventType =
   | 'dispute_opened'
   | 'dispute_resolved'
   | 'user_signup'
-  | 'user_verified';
+  | 'user_verified'
+  | 'offer_made'
+  | 'offer_accepted'
+  | 'offer_declined';
 
 /**
  * Structured Production Logger

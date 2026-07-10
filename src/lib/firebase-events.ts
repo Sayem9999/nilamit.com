@@ -70,6 +70,11 @@ export const FIREBASE_EVENTS = {
   NEW_LISTING:          'new_listing',          // pushed to followers when a seller publishes
   NEW_QUESTION:         'new_question',         // pushed to seller when a buyer asks a Q
   QUESTION_ANSWERED:    'question_answered',    // pushed to asker when seller answers
+
+  // Best Offer
+  OFFER_RECEIVED:       'offer_received',       // pushed to seller when a buyer makes an offer
+  OFFER_ACCEPTED:       'offer_accepted',       // pushed to buyer when seller accepts
+  OFFER_DECLINED:       'offer_declined',       // pushed to buyer when seller declines
 } as const;
 
 export type FirebaseEvent = typeof FIREBASE_EVENTS[keyof typeof FIREBASE_EVENTS];
@@ -103,5 +108,8 @@ export type UserNotification =
   | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.NEW_LISTING; auctionTitle: string; sellerId?: string; coverImage?: string | null })
   | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.NEW_QUESTION; auctionTitle: string; questionId?: string })
   | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.QUESTION_ANSWERED; auctionTitle?: string | null; questionId?: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.OFFER_RECEIVED; auctionTitle: string; amount: number; buyerName?: string })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.OFFER_ACCEPTED; auctionTitle: string; amount: number })
+  | (UserNotificationBase & { event: typeof FIREBASE_EVENTS.OFFER_DECLINED; auctionTitle: string; amount: number })
   | (UserNotificationBase & { event: 'ITEM_SHIPPED'; message: string })
   | (UserNotificationBase & { event: 'badge_earned'; badge?: { label?: string; icon?: string } });
