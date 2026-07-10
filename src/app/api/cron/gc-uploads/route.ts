@@ -53,7 +53,14 @@ export async function POST(req: Request) {
         // literal `auctions/...` path. Without this, indexOf returns -1 for every
         // modern URL, the referenced set is empty, and the GC below deletes every
         // in-use auction image once it ages past the grace window.
-        const decoded = decodeURIComponent(url);
+        let decoded: string;
+        try {
+          decoded = decodeURIComponent(url);
+        } catch {
+          // Malformed percent-encoding in one stored URL must not abort the
+          // whole run — treat the raw string as the reference instead.
+          decoded = url;
+        }
         const idx = decoded.indexOf(STORAGE_PREFIX);
         if (idx < 0) continue;
         // Stop at the first `?` (query string) to get just the object name.
