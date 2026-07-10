@@ -39,6 +39,19 @@ interface ListingStats {
   grossSales: number;
   /** Total platform commission paid across all SOLD listings. */
   totalCommission: number;
+  // ── Engagement (Seller Hub-style) ──
+  totalViews: number;
+  totalWatchers: number;
+  totalBids: number;
+}
+
+/** Per-listing engagement row for the "top listings" analytics table. */
+interface ListingEngagement {
+  id: string;
+  title: string;
+  views: number;
+  watchers: number;
+  bids: number;
 }
 
 export default async function DashboardPage({
@@ -129,7 +142,9 @@ export default async function DashboardPage({
   const listingStats: ListingStats = {
     totalListings: 0, active: 0, sold: 0, expired: 0, cancelled: 0,
     netEarnings: 0, grossSales: 0, totalCommission: 0,
+    totalViews: 0, totalWatchers: 0, totalBids: 0,
   };
+  let topListings: ListingEngagement[] = [];
   let activeBids: AuctionWithSeller[] = [];
   let escrowTransactions: HydratedEscrowTransaction[] = [];
   let coordinationItems: CoordinationHubItem[] = [];
@@ -144,15 +159,21 @@ export default async function DashboardPage({
     if (!rawSnap.empty) {
       const auctionIds = rawSnap.docs.map(d => d.id);
 
-      // Seller is always the current user — fetch once, not per-auction
-      const [sellerSnap, bidCountSnaps] = await Promise.all([
+      // Seller is always the current user — fetch once, not per-auction.
+      // Watcher counts ride the same batch: cheap aggregate count() queries,
+      // one per listing, same pattern as the bid counts.
+      const [sellerSnap, bidCountSnaps, watcherCountSnaps] = await Promise.all([
         db.collection('users').doc(userId).get(),
         Promise.all(auctionIds.map(id =>
           db.collection('bids').where('auctionId', '==', id).count().get()
         )),
+        Promise.all(auctionIds.map(id =>
+          db.collection('watchlist').where('auctionId', '==', id).count().get()
+        )),
       ]);
       const seller = sellerSnap.data() ?? {};
       const bidCountMap = new Map(auctionIds.map((id, i) => [id, bidCountSnaps[i].data().count]));
+      const watcherCountMap = new Map(auctionIds.map((id, i) => [id, watcherCountSnaps[i].data().count]));
 
       // docData() recursively converts ALL Firestore Timestamps to Dates so the
       // object is safe to pass to the AuctionCard client component. The previous
@@ -181,7 +202,24 @@ export default async function DashboardPage({
         }
         if (status === "EXPIRED")   listingStats.expired++;
         if (status === "CANCELLED") listingStats.cancelled++;
+
+        listingStats.totalViews    += Number(a.viewCount ?? 0);
+        listingStats.totalWatchers += watcherCountMap.get(a.id) ?? 0;
+        listingStats.totalBids     += bidCountMap.get(a.id) ?? 0;
       }
+
+      // Top live listings by views — the "what's getting traction" table.
+      topListings = allListings
+        .filter(a => (a.status as string) === "ACTIVE")
+        .map(a => ({
+          id: a.id,
+          title: a.title,
+          views: Number(a.viewCount ?? 0),
+          watchers: watcherCountMap.get(a.id) ?? 0,
+          bids: bidCountMap.get(a.id) ?? 0,
+        }))
+        .sort((x, y) => y.views - x.views)
+        .slice(0, 5);
 
       // Apply user-selected status filter for rendering.
       const matches = (status: string): boolean => {
@@ -689,6 +727,64 @@ export default async function DashboardPage({
                         <p className="text-[11px] text-gray-400 mt-0.5">{tStats("closedDetail", { expired: listingStats.expired, cancelled: listingStats.cancelled })}</p>
                       </div>
                     </div>
+
+                    {/* Engagement analytics (Seller Hub-style) */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                      <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("totalViews")}</p>
+                        <p className="text-lg font-bold text-gray-900">{listingStats.totalViews.toLocaleString()}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{tStats("totalViewsHint")}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("totalWatchers")}</p>
+                        <p className="text-lg font-bold text-gray-900">{listingStats.totalWatchers.toLocaleString()}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{tStats("totalWatchersHint")}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("totalBids")}</p>
+                        <p className="text-lg font-bold text-gray-900">{listingStats.totalBids.toLocaleString()}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{tStats("totalBidsHint")}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-md border border-gray-200 shadow-sm">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-1">{tStats("sellThrough")}</p>
+                        <p className="text-lg font-bold text-gray-900">
+                          {listingStats.sold + listingStats.expired + listingStats.cancelled > 0
+                            ? `${Math.round((listingStats.sold / (listingStats.sold + listingStats.expired + listingStats.cancelled)) * 100)}%`
+                            : "—"}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{tStats("sellThroughHint")}</p>
+                      </div>
+                    </div>
+
+                    {/* Top live listings by views */}
+                    {topListings.length > 0 && (
+                      <div className="bg-white rounded-md border border-gray-200 shadow-sm mb-6 overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-100 text-left">
+                              <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">{tStats("topListings")}</th>
+                              <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 text-right">{tStats("colViews")}</th>
+                              <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 text-right">{tStats("colWatchers")}</th>
+                              <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 text-right">{tStats("colBids")}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {topListings.map((l) => (
+                              <tr key={l.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
+                                <td className="px-4 py-2.5 max-w-[280px]">
+                                  <Link href={`/auctions/${l.id}`} className="font-medium text-gray-900 hover:text-primary-600 truncate block">
+                                    {l.title}
+                                  </Link>
+                                </td>
+                                <td className="px-4 py-2.5 text-right font-bold text-gray-700">{l.views.toLocaleString()}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-600">{l.watchers}</td>
+                                <td className="px-4 py-2.5 text-right text-gray-600">{l.bids}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
                     {/* Status filter pills */}
                     <div className="flex flex-wrap gap-2 mb-6">

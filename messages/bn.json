@@ -354,7 +354,19 @@
     "newListingBtn": "+ New Listing",
     "createFirst": "Create your first listing",
     "showAll": "Show all listings",
-    "noFiltered": "No {status} listings."
+    "noFiltered": "No {status} listings.",
+    "totalViews": "মোট ভিউ",
+    "totalViewsHint": "আপনার সব লিস্টিং মিলিয়ে",
+    "totalWatchers": "ওয়াচার",
+    "totalWatchersHint": "যারা আপনার আইটেম দেখছেন",
+    "totalBids": "মোট বিড",
+    "totalBidsHint": "সর্বমোট প্রাপ্ত বিড",
+    "sellThrough": "বিক্রয়ের হার",
+    "sellThroughHint": "শেষ হওয়া লিস্টিংয়ের মধ্যে বিক্রীত",
+    "topListings": "শীর্ষ লাইভ লিস্টিং",
+    "colViews": "ভিউ",
+    "colWatchers": "ওয়াচার",
+    "colBids": "বিড"
   },
   "Escrow": {
     "totalDealValue": "Total Deal Value",

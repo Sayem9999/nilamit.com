@@ -354,7 +354,19 @@
     "newListingBtn": "+ New Listing",
     "createFirst": "Create your first listing",
     "showAll": "Show all listings",
-    "noFiltered": "No {status} listings."
+    "noFiltered": "No {status} listings.",
+    "totalViews": "Total views",
+    "totalViewsHint": "Across all your listings",
+    "totalWatchers": "Watchers",
+    "totalWatchersHint": "Buyers watching your items",
+    "totalBids": "Total bids",
+    "totalBidsHint": "Bids received all-time",
+    "sellThrough": "Sell-through",
+    "sellThroughHint": "Sold share of ended listings",
+    "topListings": "Top live listings",
+    "colViews": "Views",
+    "colWatchers": "Watchers",
+    "colBids": "Bids"
   },
   "Escrow": {
     "totalDealValue": "Total Deal Value",
