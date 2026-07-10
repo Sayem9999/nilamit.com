@@ -14,9 +14,9 @@
  * Returns the public URL on success, throws on error.
  *
  * @param file  - The File object to upload
- * @param type  - 'auction' (max 4 MB) | 'chat' (max 2 MB)
+ * @param type  - 'auction' (max 4 MB) | 'chat' (max 2 MB) | 'profile' (max 2 MB)
  */
-export async function uploadFile(file: File, type: 'auction' | 'chat' = 'auction'): Promise<string> {
+export async function uploadFile(file: File, type: 'auction' | 'chat' | 'profile' = 'auction'): Promise<string> {
   const form = new FormData();
   form.append('file', file);
   form.append('type', type);

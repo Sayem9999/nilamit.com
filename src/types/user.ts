@@ -44,6 +44,8 @@ export interface User {
   userLevel: number;
   isTopRated: boolean;
   isRetailer: boolean;
+  /** First-party listings sold by the platform itself — renders the "Official Store" badge and appears on /store. Admin-granted. */
+  isOfficialStore?: boolean;
   salesCount: number;
   defectCount: number;
   bio?: string | null;
@@ -81,6 +83,8 @@ export interface SellerPublic {
   emailVerified: Date | null;
   isVerifiedSeller: boolean;
   isRetailer: boolean;
+  /** Platform's own storefront — "Official Store" badge. */
+  isOfficialStore?: boolean;
   winningStreak: number;
   userLevel: number;
   isTopRated: boolean;

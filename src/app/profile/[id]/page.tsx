@@ -2,7 +2,7 @@ import { db, docData } from "@/lib/db";
 export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import AuctionCard from "@/components/auction/AuctionCard";
-import { Star, ShieldCheck, MapPin, Calendar, Award, Shield, Package, CheckCircle, Search, Edit3, Store, Trophy } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, Calendar, Award, Shield, Package, CheckCircle, Search, Edit3, Store, Trophy, BadgeCheck } from 'lucide-react';
 import Image from "next/image";
 import Link from "next/link";
 import { type User, type Auction, type Review, type AuctionWithSeller } from "@/types";
@@ -75,6 +75,7 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
     isBanned: sellerData.isBanned,
     isTopRated: sellerData.isTopRated,
     isRetailer: !!sellerData.isRetailer,
+    isOfficialStore: !!sellerData.isOfficialStore,
     salesCount: sellerData.salesCount || 0,
     defectCount: sellerData.defectCount || 0,
     bio: sellerData.bio,
@@ -289,6 +290,11 @@ export default async function SellerProfilePage({ params, searchParams }: Props)
                   )}
                 </div>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                  {seller.isOfficialStore && (
+                    <span className="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] font-bold uppercase tracking-wide rounded-full flex items-center gap-1.5 shadow-sm">
+                      <BadgeCheck className="w-3 h-3" /> Official Nilamit Store
+                    </span>
+                  )}
                   {seller.isVerifiedSeller && (
                     <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[11px] font-bold uppercase tracking-wide rounded-full border border-blue-100 flex items-center gap-1.5 shadow-sm">
                       <Shield className="w-3 h-3" /> VERIFIED TRADER

@@ -20,3 +20,20 @@ export async function adminToggleVerification(userId: string, reason: string) {
     return errorResponse(error.type || ErrorType.INTERNAL, error.message);
   }
 }
+
+/**
+ * Toggle a user's "Official Store" flag — the platform's own first-party
+ * storefront. Grants the badge and inclusion on /store.
+ */
+export async function adminToggleOfficialStore(userId: string, reason: string) {
+  try {
+    const session = await requireAdmin();
+    const result = await AdminService.toggleOfficialStore(session.user.id, userId, reason);
+    revalidatePath('/admin');
+    revalidatePath('/store');
+    return successResponse(result);
+  } catch (e: unknown) {
+    const error = e as { type?: ErrorType; message: string };
+    return errorResponse(error.type || ErrorType.INTERNAL, error.message);
+  }
+}

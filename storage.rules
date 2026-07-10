@@ -12,6 +12,13 @@ service firebase.storage {
       allow write: if false;
     }
 
+    // Profile avatars + banners — publicly readable (they render on public
+    // profile pages). Server-only writes, same moderation pipeline as auctions.
+    match /profiles/{userId}/{allPaths=**} {
+      allow read:  if true;
+      allow write: if false;
+    }
+
     // Chat attachments — only the uploader can read directly; other
     // conversation participants receive a short-lived signed URL minted by
     // /api/upload (which performs an app-level conversation-membership check).

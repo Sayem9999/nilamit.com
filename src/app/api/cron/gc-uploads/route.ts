@@ -37,36 +37,47 @@ export async function POST(req: Request) {
     const bucket = adminStorage.bucket();
     const cutoff = Date.now() - GRACE_MS;
 
-    // 1. Build the set of referenced paths from all auction docs.
-    //    Auctions store image URLs in `images: string[]`. We extract the encoded
-    //    object path from each URL so we can match against listFiles entries.
-    const auctionsSnap = await db.collection('auctions').select('images').get();
-    const referenced   = new Set<string>();
+    // 1. Build the set of referenced paths from all auction docs AND all user
+    //    profile media. Profile avatars/banners historically uploaded to the
+    //    auctions/ prefix (before the dedicated profiles/ prefix existed), so
+    //    users.image + users.banner MUST count as references — the GC used to
+    //    delete every custom avatar/banner a week after upload because it only
+    //    consulted auction docs.
+    const [auctionsSnap, usersSnap] = await Promise.all([
+      db.collection('auctions').select('images').get(),
+      db.collection('users').select('image', 'banner').get(),
+    ]);
+    const referenced = new Set<string>();
+    const referencedUrls: unknown[] = [];
     for (const doc of auctionsSnap.docs) {
       const images = (doc.data().images ?? []) as unknown[];
-      if (!Array.isArray(images)) continue;
-      for (const url of images) {
-        if (typeof url !== 'string') continue;
-        // Auction URLs encode the object path with slashes as `%2F` (firebase
-        // download URLs: `.../o/auctions%2Fuid%2Fuuid.webp?alt=media`) — legacy
-        // signed URLs kept them literal. Decode first so BOTH forms expose a
-        // literal `auctions/...` path. Without this, indexOf returns -1 for every
-        // modern URL, the referenced set is empty, and the GC below deletes every
-        // in-use auction image once it ages past the grace window.
-        let decoded: string;
-        try {
-          decoded = decodeURIComponent(url);
-        } catch {
-          // Malformed percent-encoding in one stored URL must not abort the
-          // whole run — treat the raw string as the reference instead.
-          decoded = url;
-        }
-        const idx = decoded.indexOf(STORAGE_PREFIX);
-        if (idx < 0) continue;
-        // Stop at the first `?` (query string) to get just the object name.
-        const clean = decoded.slice(idx).split('?')[0];
-        referenced.add(clean);
+      if (Array.isArray(images)) referencedUrls.push(...images);
+    }
+    for (const doc of usersSnap.docs) {
+      const d = doc.data() as { image?: unknown; banner?: unknown };
+      referencedUrls.push(d.image, d.banner);
+    }
+    for (const url of referencedUrls) {
+      if (typeof url !== 'string') continue;
+      // Auction URLs encode the object path with slashes as `%2F` (firebase
+      // download URLs: `.../o/auctions%2Fuid%2Fuuid.webp?alt=media`) — legacy
+      // signed URLs kept them literal. Decode first so BOTH forms expose a
+      // literal `auctions/...` path. Without this, indexOf returns -1 for every
+      // modern URL, the referenced set is empty, and the GC below deletes every
+      // in-use auction image once it ages past the grace window.
+      let decoded: string;
+      try {
+        decoded = decodeURIComponent(url);
+      } catch {
+        // Malformed percent-encoding in one stored URL must not abort the
+        // whole run — treat the raw string as the reference instead.
+        decoded = url;
       }
+      const idx = decoded.indexOf(STORAGE_PREFIX);
+      if (idx < 0) continue;
+      // Stop at the first `?` (query string) to get just the object name.
+      const clean = decoded.slice(idx).split('?')[0];
+      referenced.add(clean);
     }
 
     // 2. Walk Storage in pages, delete orphans up to MAX_DELETES.

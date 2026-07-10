@@ -37,8 +37,11 @@ export async function POST(req: NextRequest) {
   if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
   // 'chat' yields a private 7-day signed URL (used for PII like KYC docs);
+  // 'profile' yields a public URL under the GC-safe profiles/ prefix;
   // 'auction' (default) yields a public CDN URL for listing photos.
-  const type: 'auction' | 'chat' = formData.get('type') === 'chat' ? 'chat' : 'auction';
+  const rawType = formData.get('type');
+  const type: 'auction' | 'chat' | 'profile' =
+    rawType === 'chat' ? 'chat' : rawType === 'profile' ? 'profile' : 'auction';
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const result = await validateAndStoreImage(uid, buffer, type, file.name);

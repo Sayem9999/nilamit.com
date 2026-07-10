@@ -6,7 +6,8 @@ import {
   banUser,
   unbanUser,
 } from "@/actions/admin-users";
-import { Search, Users, Ban } from "lucide-react";
+import { adminToggleOfficialStore } from "@/actions/admin/moderation";
+import { Search, Users, Ban, BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
@@ -17,6 +18,7 @@ export function UsersTab() {
     email: string | null;
     image: string | null;
     isVerifiedSeller: boolean;
+    isOfficialStore?: boolean;
     winningStreak: number;
     userLevel: number;
     isRetailer: boolean;
@@ -66,6 +68,23 @@ export function UsersTab() {
   }, [cursorStack, debouncedSearch]);
 
 
+
+  const handleToggleOfficial = (userId: string, isOfficial: boolean) => {
+    if (!confirm(`${isOfficial ? 'Revoke' : 'Grant'} Official Store status for this user?`)) return;
+    startTransition(async () => {
+      const result = await adminToggleOfficialStore(userId, 'Admin panel toggle');
+      if (result.success) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === userId ? { ...u, isOfficialStore: !isOfficial } : u,
+          ),
+        );
+        toast.success(isOfficial ? 'Official Store status revoked' : 'Official Store status granted');
+      } else {
+        toast.error(result.error?.message || 'Toggle failed');
+      }
+    });
+  };
 
   const handleToggleBan = (userId: string, isBanned: boolean) => {
     if (!confirm(`Are you sure you want to ${isBanned ? 'unban' : 'ban'} this user?`)) return;
@@ -188,6 +207,11 @@ export function UsersTab() {
                                 Bidder
                               </span>
                             )}
+                            {user.isOfficialStore && (
+                              <span className="px-1.5 py-0.5 rounded bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] font-bold uppercase tracking-wider flex items-center gap-0.5">
+                                <BadgeCheck className="w-3 h-3" /> Official
+                              </span>
+                            )}
                             {user.isBanned && (
                               <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[11px] font-bold uppercase tracking-wider">
                                 Banned
@@ -224,6 +248,19 @@ export function UsersTab() {
                   </td>
 
                   <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => handleToggleOfficial(user.id, !!user.isOfficialStore)}
+                      disabled={isPending}
+                      title={user.isOfficialStore ? 'Revoke Official Store status' : 'Grant Official Store status'}
+                      className={`mr-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        user.isOfficialStore
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                      }`}
+                    >
+                      <BadgeCheck className="w-3.5 h-3.5" />
+                      {user.isOfficialStore ? 'Official' : 'Make Official'}
+                    </button>
                     <button
                       onClick={() => handleToggleBan(user.id, user.isBanned)}
                       disabled={isPending}

@@ -16,6 +16,7 @@ import { log } from '@/lib/logger';
 export const UPLOAD_LIMITS = {
   auction: 4 * 1024 * 1024, // 4 MB
   chat: 2 * 1024 * 1024, // 2 MB
+  profile: 2 * 1024 * 1024, // 2 MB — avatars + profile banners
 } as const;
 
 const MIME_TO_EXT: Record<string, string> = {
@@ -27,7 +28,7 @@ const MIME_TO_EXT: Record<string, string> = {
 
 function sanitizeFilenameForStorage(name: unknown): string {
   if (typeof name !== 'string') return '';
-  // eslint-disable-next-line no-control-regex
+   
   return name.replace(/[\x00-\x1f\x7f<>"'`]/g, '').slice(0, 256);
 }
 
@@ -35,10 +36,12 @@ export type UploadResult =
   | { ok: true; url: string }
   | { ok: false; status: number; error: string };
 
+export type UploadType = keyof typeof UPLOAD_LIMITS;
+
 export async function validateAndStoreImage(
   userId: string,
   buffer: Buffer,
-  type: 'auction' | 'chat',
+  type: UploadType,
   originalName: unknown,
 ): Promise<UploadResult> {
   const maxSize = UPLOAD_LIMITS[type];
@@ -60,7 +63,10 @@ export async function validateAndStoreImage(
 
   try {
     const ext = MIME_TO_EXT[detectedMime];
-    const folder = type === 'chat' ? 'chat' : 'auctions';
+    // 'profile' gets its own prefix — profile media used to ride the auctions/
+    // prefix, where the gc-uploads cron (which only knows about auction docs'
+    // images[]) deleted every avatar/banner a week after upload.
+    const folder = type === 'chat' ? 'chat' : type === 'profile' ? 'profiles' : 'auctions';
     const filename = `${folder}/${userId}/${uuidv4()}.${ext}`;
     const bucket = adminStorage.bucket();
     const fileRef = bucket.file(filename);
@@ -78,7 +84,8 @@ export async function validateAndStoreImage(
       },
     });
 
-    if (type === 'auction') {
+    if (type === 'auction' || type === 'profile') {
+      // Public-read prefixes (see storage.rules) — a stable, never-expiring URL.
       return {
         ok: true,
         url: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileRef.name)}?alt=media`,

@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
 
   const file = formData.get('file') as File | null;
   const rawType = formData.get('type');
-  const type: 'auction' | 'chat' = rawType === 'chat' ? 'chat' : 'auction';
+  const type: 'auction' | 'chat' | 'profile' =
+    rawType === 'chat' ? 'chat' : rawType === 'profile' ? 'profile' : 'auction';
 
   if (!file) {
     return NextResponse.json({ error: 'No file provided' }, { status: 400 });

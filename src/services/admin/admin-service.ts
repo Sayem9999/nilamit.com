@@ -97,6 +97,37 @@ export class AdminService {
   }
 
   /**
+   * Toggles a user's "Official Store" flag (the platform's own first-party
+   * storefront — badge everywhere the seller shows + inclusion on /store).
+   */
+  static async toggleOfficialStore(adminId: string, userId: string, reason: string) {
+    const userRef = db.collection('users').doc(userId);
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) {
+      throw new AppError(ErrorType.NOT_FOUND, 'User not found');
+    }
+
+    const current = Boolean(userSnap.data()?.isOfficialStore);
+    const next = !current;
+    const now = new Date();
+
+    const batch = db.batch();
+    batch.update(userRef, { isOfficialStore: next, updatedAt: now });
+
+    const logRef = db.collection('admin_logs').doc();
+    batch.set(logRef, {
+      adminId,
+      action: next ? 'GRANT_OFFICIAL_STORE' : 'REVOKE_OFFICIAL_STORE',
+      targetId: userId,
+      details: { previous: current, next, reason },
+      createdAt: now,
+    });
+
+    await batch.commit();
+    return { isOfficialStore: next };
+  }
+
+  /**
    * Toggles the "Featured" flag on an auction.
    */
   static async toggleFeaturedAuction(auctionId: string, isFeatured: boolean) {

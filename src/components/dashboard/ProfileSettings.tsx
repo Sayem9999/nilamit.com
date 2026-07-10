@@ -116,9 +116,11 @@ export default function ProfileSettings() {
 
       // Compress client-side for maximum bandwidth efficiency
       const file = await compressImage(rawFile, { maxWidth: 500, maxHeight: 500, quality: 0.85 });
-      
-      // Upload using secure server-side upload endpoint
-      const publicUrl = await uploadFile(file, 'auction');
+
+      // Upload using secure server-side upload endpoint. 'profile' — NOT
+      // 'auction': the auctions/ prefix is garbage-collected against auction
+      // docs, which is what was silently deleting avatars after 7 days.
+      const publicUrl = await uploadFile(file, 'profile');
 
       // Update database profile
       const res = await updateProfile({ image: publicUrl });
@@ -173,9 +175,10 @@ export default function ProfileSettings() {
 
       // Compress client-side for maximum bandwidth efficiency (landscape aspect ratio)
       const file = await compressImage(rawFile, { maxWidth: 1200, maxHeight: 400, quality: 0.85 });
-      
-      // Upload using secure server-side upload endpoint
-      const publicUrl = await uploadFile(file, 'auction');
+
+      // Upload using secure server-side upload endpoint ('profile' — see note
+      // in handlePhotoUpload).
+      const publicUrl = await uploadFile(file, 'profile');
 
       // Update database profile
       const res = await updateProfile({ banner: publicUrl });
